@@ -80,11 +80,11 @@ const SensorMonitor = ({ sensorData, isPLCConnected }) => {
     };
 
     return (
-        <div className="bg-white rounded-lg shadow-md p-6">
-            <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-bold text-gray-800">센서 데이터 모니터</h2>
-                <div className="flex items-center space-x-2 text-sm text-gray-500">
-                    <span>마지막 업데이트:</span>
+        <div className="bg-white rounded-lg shadow-md p-4 md:p-6 overflow-hidden">
+            <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-4 space-y-2 md:space-y-0">
+                <h2 className="text-lg md:text-xl font-bold text-gray-800">센서 데이터 모니터</h2>
+                <div className="flex items-center space-x-2 text-xs md:text-sm text-gray-500">
+                    <span>업데이트:</span>
                     <span className="font-medium">{formatTimestamp(sensorData.timestamp)}</span>
                 </div>
             </div>
@@ -105,12 +105,12 @@ const SensorMonitor = ({ sensorData, isPLCConnected }) => {
             </div>
 
             {/* 컨트롤 패널 */}
-            <div className="mb-4 flex flex-wrap gap-4 items-center">
+            <div className="mb-4 space-y-3 md:space-y-0">
                 {/* 표시 모드 선택 */}
-                <div className="flex space-x-2">
+                <div className="flex flex-wrap gap-2">
                     <button
                         onClick={() => setViewMode('parsed')}
-                        className={`px-3 py-1 rounded text-sm font-medium transition-colors ${viewMode === 'parsed'
+                        className={`px-2 md:px-3 py-1 rounded text-xs md:text-sm font-medium transition-colors ${viewMode === 'parsed'
                                 ? 'bg-blue-500 text-white'
                                 : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                             }`}
@@ -119,7 +119,7 @@ const SensorMonitor = ({ sensorData, isPLCConnected }) => {
                     </button>
                     <button
                         onClick={() => setViewMode('raw')}
-                        className={`px-3 py-1 rounded text-sm font-medium transition-colors ${viewMode === 'raw'
+                        className={`px-2 md:px-3 py-1 rounded text-xs md:text-sm font-medium transition-colors ${viewMode === 'raw'
                                 ? 'bg-blue-500 text-white'
                                 : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                             }`}
@@ -128,7 +128,7 @@ const SensorMonitor = ({ sensorData, isPLCConnected }) => {
                     </button>
                     <button
                         onClick={() => setViewMode('hex')}
-                        className={`px-3 py-1 rounded text-sm font-medium transition-colors ${viewMode === 'hex'
+                        className={`px-2 md:px-3 py-1 rounded text-xs md:text-sm font-medium transition-colors ${viewMode === 'hex'
                                 ? 'bg-blue-500 text-white'
                                 : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                             }`}
@@ -138,7 +138,7 @@ const SensorMonitor = ({ sensorData, isPLCConnected }) => {
 
                     <button
                         onClick={() => setShowRawStream(!showRawStream)}
-                        className={`px-3 py-1 rounded text-sm font-medium transition-colors ${showRawStream ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                        className={`px-2 md:px-3 py-1 rounded text-xs md:text-sm font-medium transition-colors ${showRawStream ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                             }`}
                     >
                         실시간 스트림
@@ -146,25 +146,27 @@ const SensorMonitor = ({ sensorData, isPLCConnected }) => {
 
                 </div>
 
-                {/* 필터 옵션 */}
-                <label className="flex items-center space-x-2">
-                    <input
-                        type="checkbox"
-                        checked={showZeroValues}
-                        onChange={(e) => setShowZeroValues(e.target.checked)}
-                        className="rounded"
-                    />
-                    <span className="text-sm text-gray-700">0값 표시</span>
-                </label>
+                <div className="flex flex-col sm:flex-row sm:items-center gap-3 mt-3 md:mt-0">
+                    {/* 필터 옵션 */}
+                    <label className="flex items-center space-x-2">
+                        <input
+                            type="checkbox"
+                            checked={showZeroValues}
+                            onChange={(e) => setShowZeroValues(e.target.checked)}
+                            className="rounded"
+                        />
+                        <span className="text-xs md:text-sm text-gray-700">0값 표시</span>
+                    </label>
 
-                {/* 검색 */}
-                <input
-                    type="text"
-                    placeholder="주소 또는 값 검색..."
-                    value={searchFilter}
-                    onChange={(e) => setSearchFilter(e.target.value)}
-                    className="px-3 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
+                    {/* 검색 */}
+                    <input
+                        type="text"
+                        placeholder="주소 또는 값 검색..."
+                        value={searchFilter}
+                        onChange={(e) => setSearchFilter(e.target.value)}
+                        className="w-full sm:w-auto px-3 py-1 border border-gray-300 rounded text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                </div>
             </div>
 
             {/* 실시간 바이트 스트림 */}
@@ -194,14 +196,14 @@ const SensorMonitor = ({ sensorData, isPLCConnected }) => {
             ) : (
                 <div className="space-y-4">
                     {/* 그리드 표시 */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 md:gap-4">
                         {filteredData.slice(0, 50).map((item, index) => (
-                            <div key={index} className="border border-gray-200 rounded-lg p-3">
-                                <div className="flex justify-between items-start mb-2">
-                                    <span className="text-sm font-medium text-blue-600">
+                            <div key={index} className="border border-gray-200 rounded-lg p-2 md:p-3">
+                                <div className="flex flex-col space-y-1">
+                                    <span className="text-xs md:text-sm font-medium text-blue-600">
                                         {item.address}
                                     </span>
-                                    <span className="text-lg font-mono text-gray-900">
+                                    <span className="text-sm md:text-lg font-mono text-gray-900 break-words">
                                         {item.displayValue}
                                     </span>
                                 </div>
