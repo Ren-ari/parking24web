@@ -1,0 +1,6 @@
+@Parking24web.Server_HostAddress = http://localhost:5124
+
+GET {{Parking24web.Server_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

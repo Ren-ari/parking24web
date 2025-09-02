@@ -1,0 +1,33 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.11.35312.102
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Parking24web.Server", "Parking24web.Server\Parking24web.Server.csproj", "{A7CD7956-132D-4AAB-AF1B-84352E8D037C}"
+EndProject
+Project("{54A90642-561A-4BB1-A94E-469ADEE60C69}") = "parking24web.client", "parking24web.client\parking24web.client.esproj", "{032E615C-D314-40D8-863E-264006211BD5}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{A7CD7956-132D-4AAB-AF1B-84352E8D037C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A7CD7956-132D-4AAB-AF1B-84352E8D037C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A7CD7956-132D-4AAB-AF1B-84352E8D037C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A7CD7956-132D-4AAB-AF1B-84352E8D037C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{032E615C-D314-40D8-863E-264006211BD5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{032E615C-D314-40D8-863E-264006211BD5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{032E615C-D314-40D8-863E-264006211BD5}.Debug|Any CPU.Deploy.0 = Debug|Any CPU
+		{032E615C-D314-40D8-863E-264006211BD5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{032E615C-D314-40D8-863E-264006211BD5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{032E615C-D314-40D8-863E-264006211BD5}.Release|Any CPU.Deploy.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {0A9D91AD-1A88-4A11-9054-A4126A87245A}
+	EndGlobalSection
+EndGlobal
