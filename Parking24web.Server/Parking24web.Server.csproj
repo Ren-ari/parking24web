@@ -8,7 +8,7 @@
     <!-- 개발환경에서만 SPA 설정 활성화 -->
     <SpaRoot Condition="'$(Configuration)' == 'Debug'">..\parking24web.client</SpaRoot>
     <SpaProxyLaunchCommand Condition="'$(Configuration)' == 'Debug'">npm run dev</SpaProxyLaunchCommand>
-    <SpaProxyServerUrl Condition="'$(Configuration)' == 'Debug'">https://localhost:5173</SpaProxyServerUrl>
+    <SpaProxyServerUrl Condition="'$(Configuration)' == 'Debug'">http://localhost:5173</SpaProxyServerUrl>
 
     <!-- 독립실행파일 빌드시 wwwroot 정적 파일 포함 -->
     <DefaultItemExcludes Condition="'$(Configuration)' == 'Release'">$(DefaultItemExcludes);..\parking24web.client\**</DefaultItemExcludes>
