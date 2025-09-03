@@ -3,7 +3,7 @@ using Parking24web.Server.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.WebHost.UseUrls("http://localhost:5124");
+builder.WebHost.UseUrls("http://0.0.0.0:5124");
 
 // 기존 서비스들
 builder.Services.AddControllers();
@@ -79,7 +79,7 @@ app.MapFallbackToFile("index.html");
 // 애플리케이션 시작 로그
 var logger = app.Services.GetRequiredService<ILogger<Program>>();
 var environment = app.Environment;
-var urls = "http://localhost:5124";
+var urls = "http://0.0.0.0:5124";
 
 logger.LogInformation($"=== PLC 웹 제어 시스템 시작 ===");
 logger.LogInformation($"환경: {environment.EnvironmentName}");
