@@ -8,6 +8,7 @@ import ParkingMonitor from './ParkingMonitor';
 const PLCControl = () => {
     const [activeTab, setActiveTab] = useState('connection');
     const [showLogs, setShowLogs] = useState(false);
+    const [isDataPanelExpanded, setIsDataPanelExpanded] = useState(false);
 
     // PLC 연결 훅 사용
     const {
@@ -65,7 +66,7 @@ const PLCControl = () => {
     };
 
     return (
-        <div className="min-h-screen bg-gray-100 p-2 md:p-4 overflow-x-hidden">
+        <div className="min-h-screen bg-gray-100 p-2 md:p-4 overflow-x-hidden lg:w-[1200px] lg:mx-auto">
             <div className="w-full">
             {/* 헤더 */}
             <div className="mb-6">
@@ -74,66 +75,176 @@ const PLCControl = () => {
             </div>
 
             {/* 상단 상태 표시 탭들 */}
-            <div className="mb-4 bg-white rounded-lg shadow-md overflow-hidden">
-                <div className="flex">
+                         <div className="mb-4 bg-white rounded-lg shadow-md overflow-hidden mx-auto lg:w-4/5">
+                <div className="flex items-stretch">
                     <div className="flex-1 min-w-0 flex flex-col">
-                        <div className={`text-white text-sm font-medium px-2 py-1 text-center flex-1 md:flex-none md:h-8 flex items-center justify-center ${sensorData.rawData[18] === 1 ? 'bg-blue-500' : 'bg-gray-400'}`}>
+                        <div className={`text-white text-sm font-medium px-2 py-2 text-center h-10 flex items-center justify-center ${sensorData.rawData[18] === 1 ? 'bg-blue-500' : 'bg-gray-400'}`}>
                             원격조작
                         </div>
-                        <div className={`text-sm px-2 py-3 text-center border-r flex-1 md:flex-auto md:h-16 flex items-center justify-center ${sensorData.rawData[18] === 1 ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'}`}>
+                        <div className={`text-sm px-2 py-3 text-center border-r h-16 flex items-center justify-center ${sensorData.rawData[18] === 1 ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'}`}>
                             {sensorData.rawData[18] === 1 ? '활성' : '비활성'}
                         </div>
                     </div>
                  
                     <div className="flex-1 min-w-0 flex flex-col">
-                        <div className="bg-green-500 text-white text-sm font-medium px-2 py-1 text-center flex-1 md:flex-none md:h-8 flex items-center justify-center">
+                        <div className="bg-green-500 text-white text-sm font-medium px-2 py-2 text-center h-10 flex items-center justify-center">
                             위치정보
                         </div>
-                        <div className="bg-green-100 text-green-800 text-sm px-2 py-3 text-center border-r flex-1 md:flex-auto md:h-16 flex items-center justify-center">
+                        <div className="bg-green-100 text-green-800 text-sm px-2 py-3 text-center border-r h-16 flex items-center justify-center">
                             속초써밋베이
                         </div>
                     </div>
-
+        
                     <div className="flex-1 min-w-0 flex flex-col">
-                        <div className="bg-green-500 text-white text-sm font-medium px-2 py-1 text-center flex-1 md:flex-none md:h-8 flex items-center justify-center">
+                        <div className="bg-green-500 text-white text-sm font-medium px-2 py-2 text-center h-10 flex items-center justify-center">
                             호기번호
                         </div>
-                        <div className="bg-green-100 text-green-800 text-sm px-2 py-3 text-center border-r flex-1 md:flex-auto md:h-16 flex items-center justify-center">
+                        <div className="bg-green-100 text-green-800 text-sm px-2 py-3 text-center border-r h-16 flex items-center justify-center">
                             1호기
                         </div>
                     </div>
 
                     <div className="flex-1 min-w-0 flex flex-col">
-                        <div className="bg-green-500 text-white text-sm font-medium px-2 py-1 text-center flex-1 md:flex-none md:h-8 flex items-center justify-center">
+                        <div className="bg-green-500 text-white text-sm font-medium px-2 py-2 text-center h-10 flex items-center justify-center">
                             운전모드
                         </div>
-                        <div className="bg-green-100 text-green-800 text-sm px-2 py-3 text-center border-r flex-1 md:flex-auto md:h-16 flex items-center justify-center">
+                        <div className="bg-green-100 text-green-800 text-sm px-2 py-3 text-center border-r h-16 flex items-center justify-center">
                             {sensorData.rawData[15] === 1 ? '자동' : '수동'}
                         </div>
                     </div>
 
                     <div className="flex-1 min-w-0 flex flex-col">
-                        <div className={`text-white text-sm font-medium px-2 py-1 text-center flex-1 md:flex-none md:h-8 flex items-center justify-center ${sensorData.rawData[16] === 1 ? 'bg-red-500' : 'bg-green-500'}`}>
+                        <div className={`text-white text-sm font-medium px-2 py-2 text-center h-10 flex items-center justify-center ${sensorData.rawData[16] === 1 ? 'bg-red-500' : 'bg-green-500'}`}>
                             에러상태
                         </div>
-                        <div className={`text-sm px-2 py-3 text-center border-r flex-1 md:flex-auto md:h-16 flex items-center justify-center ${sensorData.rawData[16] === 1 ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'}`}>
+                        <div className={`text-sm px-2 py-3 text-center border-r h-16 flex items-center justify-center ${sensorData.rawData[16] === 1 ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'}`}>
                             {sensorData.rawData[16] === 1 ? '고장발생' : '정상'}
                         </div>
                     </div>
 
                     <div className="flex-1 min-w-0 flex flex-col">
-                        <div className={`text-white text-sm font-medium px-2 py-1 text-center flex-1 md:flex-none md:h-8 flex items-center justify-center ${sensorData.rawData[0] === 1 ? 'bg-green-500' : 'bg-red-500'}`}>
+                        <div className={`text-white text-sm font-medium px-2 py-2 text-center h-10 flex items-center justify-center ${sensorData.rawData[0] === 1 ? 'bg-green-500' : 'bg-red-500'}`}>
                             하트비트
                         </div>
-                        <div className={`text-sm px-2 py-3 text-center flex-1 md:flex-auto md:h-16 flex items-center justify-center ${sensorData.rawData[0] === 1 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                        <div className={`text-sm px-2 py-3 text-center h-16 flex items-center justify-center ${sensorData.rawData[0] === 1 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
                             {sensorData.rawData[0] === 1 ? '활성' : '비활성'}
                         </div>
                     </div>
                 </div>
             </div>
 
+            {/* 차량 및 주차 현황 데이터 */}
+            <div className="mb-6 bg-white rounded-lg shadow-md mx-auto lg:w-4/5">
+                {/* 헤더 (모바일에서 클릭 가능) */}
+                <div 
+                    className="p-4 sm:p-6 flex justify-between items-center sm:block"
+                >
+                    <h3 className="text-lg font-bold text-gray-800">차량 및 주차 현황 데이터</h3>
+                    <button 
+                        className="sm:hidden p-1 hover:bg-gray-100 rounded"
+                        onClick={() => setIsDataPanelExpanded(!isDataPanelExpanded)}
+                    >
+                        <svg 
+                            className={`w-5 h-5 transform transition-transform ${isDataPanelExpanded ? 'rotate-180' : ''}`} 
+                            fill="none" 
+                            stroke="currentColor" 
+                            viewBox="0 0 24 24"
+                        >
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </button>
+                </div>
+
+                {/* 컨텐츠 (모바일에서 접었다 폈다 가능) */}
+                <div className={`${isDataPanelExpanded ? 'block' : 'hidden'} sm:block px-4 sm:px-6 pb-4 sm:pb-6`}>
+                    {/* 첫 번째 행 */}
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-4">
+                    <div className="p-3 rounded-lg border" style={{backgroundColor: '#F0F8FF'}}>
+                        <label className="block text-xs font-medium text-blue-700 mb-1">차량번호</label>
+                        <div className="bg-white border rounded px-3 py-2 text-sm text-gray-500">----</div>
+                    </div>
+                    
+                    <div className="p-3 rounded-lg border" style={{backgroundColor: '#F0F8FF'}}>
+                        <label className="block text-xs font-medium text-blue-700 mb-1">적재차판</label>
+                        <div className="bg-white border rounded px-3 py-2 text-sm font-medium">
+                            {sensorData.rawData?.[75] || 0}
+                        </div>
+                    </div>
+                    
+                    <div className="p-3 rounded-lg border" style={{backgroundColor: '#F0F8FF'}}>
+                        <label className="block text-xs font-medium text-blue-700 mb-1">출고차판</label>
+                        <div className="bg-white border border-gray-300 rounded px-3 py-2 text-sm font-medium text-black">
+                            {sensorData.rawData?.[76] || 0}
+                        </div>
+                    </div>
+                </div>
+
+                {/* 두 번째 행 */}
+                <div className="grid grid-cols-2 md:grid-cols-6 gap-3 mb-4">
+                    <div className="bg-gray-50 p-3 rounded-lg border">
+                        <label className="block text-xs font-medium text-gray-600 mb-1">전체주차</label>
+                        <div className="bg-blue-400 text-white text-center rounded px-2 py-1 text-sm font-bold">
+                            {sensorData.rawData?.[77] || 0}
+                        </div>
+                    </div>
+                    
+                    <div className="bg-gray-50 p-3 rounded-lg border">
+                        <label className="block text-xs font-medium text-gray-600 mb-1">전체공차</label>
+                        <div className="bg-blue-400 text-white text-center rounded px-2 py-1 text-sm font-bold">
+                            {sensorData.rawData?.[78] || 0}
+                        </div>
+                    </div>
+                    
+                    <div className="bg-gray-50 p-3 rounded-lg border">
+                        <label className="block text-xs font-medium text-gray-600 mb-1">일반입고</label>
+                        <div className="bg-blue-400 text-white text-center rounded px-2 py-1 text-sm font-bold">
+                            {sensorData.rawData?.[79] || 32}
+                        </div>
+                    </div>
+                    
+                    <div className="bg-gray-50 p-3 rounded-lg border">
+                        <label className="block text-xs font-medium text-gray-600 mb-1">일반출차</label>
+                        <div className="bg-blue-400 text-white text-center rounded px-2 py-1 text-sm font-bold">
+                            {sensorData.rawData?.[80] || 0}
+                        </div>
+                    </div>
+                    
+                    <div className="bg-gray-50 p-3 rounded-lg border">
+                        <label className="block text-xs font-medium text-gray-600 mb-1">RV입고</label>
+                        <div className="bg-blue-400 text-white text-center rounded px-2 py-1 text-sm font-bold">
+                            {sensorData.rawData?.[82] || 3}
+                        </div>
+                    </div>
+                    
+                    <div className="bg-gray-50 p-3 rounded-lg border">
+                        <label className="block text-xs font-medium text-gray-600 mb-1">RV출차</label>
+                        <div className="bg-blue-400 text-white text-center rounded px-2 py-1 text-sm font-bold">
+                            {sensorData.rawData?.[81] || 25}
+                        </div>
+                    </div>
+                </div>
+
+                {/* 세 번째 행 */}
+                <div className="grid grid-cols-2 gap-4">
+                    <div className="bg-gray-50 p-3 rounded-lg border">
+                        <label className="block text-xs font-medium text-gray-600 mb-1">엔코더값</label>
+                        <div className="bg-blue-400 text-white text-center rounded px-3 py-2 text-sm font-bold">
+                            {sensorData.rawData?.[240] || 0}
+                        </div>
+                    </div>
+                    
+                    <div className="bg-gray-50 p-3 rounded-lg border">
+                        <label className="block text-xs font-medium text-gray-600 mb-1">카운터값</label>
+                        <div className="bg-blue-400 text-white text-center rounded px-3 py-2 text-sm font-bold">
+                            {sensorData.rawData?.[200] || 0}
+                        </div>
+                    </div>
+                </div>
+                </div>
+            </div>
+
             {/* 전역 상태 표시 */}
-            <div className="mb-6 p-3 md:p-4 bg-white rounded-lg shadow-md">
+            <div className="mb-6 p-3 md:p-4 bg-white rounded-lg shadow-md lg:w-4/5 mx-auto">
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-3 md:space-y-0">
                     <div className="flex items-center flex-wrap gap-3 md:gap-6">
                         <div className="flex items-center space-x-2">
@@ -198,8 +309,8 @@ const PLCControl = () => {
 
             {/* 탭 네비게이션 */}
             <div className="mb-6">
-                <div className="border-b border-gray-200">
-                    <nav className="flex space-x-2">
+                                 <div className="border-b border-gray-200 lg:w-4/5 mx-auto">
+                    <nav className="flex space-x-2 justify-center">
                         <button
                             onClick={() => setActiveTab('connection')}
                             className={getTabStyle('connection')}
@@ -229,7 +340,7 @@ const PLCControl = () => {
             </div>
 
             {/* 탭 컨텐츠 */}
-            <div className="space-y-6">
+            <div className="space-y-6 lg:w-4/5 mx-auto">
                 {/* 연결 관리 탭 */}
                 {activeTab === 'connection' && (
                     <ConnectionPanel
@@ -275,7 +386,7 @@ const PLCControl = () => {
             {/* 개발자 정보 (개발 모드에서만) */}
             {/* eslint-disable-next-line no-undef */}
             {process.env.NODE_ENV === 'development' && (
-                <div className="mt-8 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                <div className="hidden sm:block mt-8 p-4 bg-yellow-50 border border-yellow-200 rounded-lg lg:w-4/5 mx-auto">
                     <h4 className="font-semibold text-yellow-800 mb-2">개발자 정보</h4>
                     <div className="text-xs text-yellow-700 space-y-1">
                         <div>SignalR Hub: https://localhost:7229/plcHub</div>
@@ -288,7 +399,7 @@ const PLCControl = () => {
             )}
 
             {/* Footer */}
-            <footer className="mt-8 text-center text-sm text-gray-500">
+            <footer className="mt-8 text-center text-sm text-gray-500 lg:w-4/5 mx-auto">
                 <p>PLC 웹 제어 시스템 v1.0 - Parking24web</p>
             </footer>
             </div>

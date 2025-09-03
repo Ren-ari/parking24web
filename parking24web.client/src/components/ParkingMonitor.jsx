@@ -3,10 +3,23 @@
 const ParkingMonitor = ({ sensorData, isPLCConnected, onVehicleEdit }) => {
     const [isEditMode, setIsEditMode] = useState(false);
     const [addressMapping, setAddressMapping] = useState({});
+    const [isMobile, setIsMobile] = useState(false);
     const scrollContainerRef = useRef(null);
 
     // 박스 타입 정의
     const boxTypes = ['홀수차량', '홀수차판상태', '리프트카운터', '짝수차판상태', '짝수차량'];
+
+    // 화면 크기 감지
+    useEffect(() => {
+        const checkIsMobile = () => {
+            setIsMobile(window.innerWidth < 640);
+        };
+
+        checkIsMobile();
+        window.addEventListener('resize', checkIsMobile);
+
+        return () => window.removeEventListener('resize', checkIsMobile);
+    }, []);
 
     // 초기 주소 매핑 설정
     useEffect(() => {
@@ -211,10 +224,10 @@ const ParkingMonitor = ({ sensorData, isPLCConnected, onVehicleEdit }) => {
 
     return (
         <div className="bg-white rounded-lg shadow-md p-6">
-            <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-bold text-gray-800">주차 현황 모니터링</h2>
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 gap-2">
+                <h2 className="text-lg sm:text-xl font-bold text-gray-800">주차 현황 모니터링</h2>
 
-                <div className="flex items-center space-x-4">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
                     <div className="flex items-center space-x-2 text-sm">
                         <div className={`w-3 h-3 rounded-full ${isPLCConnected ? 'bg-green-400' : 'bg-red-400'}`}></div>
                         <span>PLC {isPLCConnected ? '연결됨' : '연결 안됨'}</span>
@@ -233,8 +246,8 @@ const ParkingMonitor = ({ sensorData, isPLCConnected, onVehicleEdit }) => {
             </div>
 
             {/* 범례 */}
-            <div className="mb-4 p-3 bg-gray-50 rounded-lg">
-                <div className="flex flex-wrap gap-4 text-xs">
+            <div className="hidden sm:block mb-4 p-3 bg-gray-50 rounded-lg">
+                <div className="flex flex-wrap gap-2 sm:gap-4 text-xs">
                     <div className="flex items-center space-x-1">
                         <div className="w-4 h-4 bg-blue-300 rounded"></div>
                         <span>차량있음</span>
@@ -257,7 +270,7 @@ const ParkingMonitor = ({ sensorData, isPLCConnected, onVehicleEdit }) => {
 
             {/* 주차장 레이아웃 */}
             <div className="border border-gray-300 rounded-lg">
-                <div ref={scrollContainerRef} className="h-96 overflow-y-auto p-4 space-y-2">
+                <div ref={scrollContainerRef} className="h-[70vh] sm:h-96 overflow-y-auto p-2 sm:p-4 space-y-1 sm:space-y-2">
                     {/* 38단부터 0단(진입층)까지 역순으로 표시 */}
                     {Array.from({ length: 39 }, (_, i) => 38 - i).map(level => {
                         const levelText = level === 0 ? '진입층' : `${level}단`;
@@ -265,23 +278,24 @@ const ParkingMonitor = ({ sensorData, isPLCConnected, onVehicleEdit }) => {
                         return (
                             <div
                                 key={level}
-                                className={`border rounded-lg p-3 ${level === 0 ? 'bg-yellow-50 border-yellow-300' : 'bg-gray-50 border-gray-200'
+                                className={`border rounded-lg p-2 sm:p-3 ${level === 0 ? 'bg-yellow-50 border-yellow-300' : 'bg-gray-50 border-gray-200'
                                     }`}
                             >
                                 <div className="flex items-center space-x-4">
                                     {/* 층 라벨 */}
-                                    <div className="w-16 text-center">
-                                        <div className={`font-bold text-sm ${level === 0 ? 'text-orange-600' : 'text-gray-700'
+                                    <div className="w-12 sm:w-16 text-center flex-shrink-0">
+                                        <div className={`font-bold text-xs sm:text-sm ${level === 0 ? 'text-orange-600' : 'text-gray-700'
                                             }`}>
                                             {levelText}
                                         </div>
                                     </div>
 
                                     {/* 5개 박스 */}
-                                    <div className="flex space-x-2 flex-1">
-                                        {Array.from({ length: 5 }, (_, box) => {
+                                    <div className="flex flex-wrap sm:flex-nowrap gap-1 sm:gap-2 flex-1">
+                                        {/* 모바일에서는 박스 순서 변경: 0,1,4,3,2 (리프트카운터를 맨 오른쪽으로) */}
+                                        {(isMobile ? [0, 1, 4, 3, 2] : [0, 1, 2, 3, 4]).map((box) => {
                                             if (!shouldShowBox(level, box)) {
-                                                return <div key={box} className="w-32"></div>;
+                                                return <div key={box} className="w-16 sm:w-24 md:w-32"></div>;
                                             }
 
                                             const key = `${level}_${box}`;
@@ -297,10 +311,10 @@ const ParkingMonitor = ({ sensorData, isPLCConnected, onVehicleEdit }) => {
                                             }
 
                                             return (
-                                                <div key={box} className="w-32">
-                                                    <div className={`border border-gray-300 rounded p-2 h-16 ${boxColor}`}>
+                                                <div key={box} className="w-16 sm:w-24 md:w-32 min-w-0">
+                                                    <div className={`border border-gray-300 rounded p-1 sm:p-2 h-16 sm:h-14 md:h-16 ${boxColor}`}>
                                                         {/* 박스 타입 라벨 */}
-                                                        <div className="text-xs font-bold text-center text-blue-800 mb-1">
+                                                        <div className="text-[8px] sm:text-xs font-bold text-center text-blue-800 mb-1 leading-tight">
                                                             {boxTypes[box]}
                                                         </div>
 
@@ -310,7 +324,7 @@ const ParkingMonitor = ({ sensorData, isPLCConnected, onVehicleEdit }) => {
                                                                 type="text"
                                                                 value={address}
                                                                 onChange={(e) => handleAddressChange(level, box, e.target.value)}
-                                                                className="w-full text-xs px-1 py-0.5 border rounded mb-1"
+                                                                className="w-full text-[8px] sm:text-xs px-0.5 sm:px-1 py-0.5 border rounded mb-1"
                                                                 placeholder="주소"
                                                             />
                                                         )}
@@ -358,7 +372,7 @@ const ParkingMonitor = ({ sensorData, isPLCConnected, onVehicleEdit }) => {
             </div>
 
             {/* 하단 정보 */}
-            <div className="mt-4 p-3 bg-gray-50 rounded-lg text-sm text-gray-600">
+            <div className="hidden sm:block mt-4 p-3 bg-gray-50 rounded-lg text-sm text-gray-600">
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <div>
                         <span className="font-medium">총 층수:</span> 39층 (진입층 + 38단)
