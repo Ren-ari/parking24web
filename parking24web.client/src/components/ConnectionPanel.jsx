@@ -36,24 +36,11 @@ const ConnectionPanel = ({
     };
 
     return (
-        <div className="bg-white rounded-lg shadow-md p-4 md:p-6 mb-6 overflow-hidden">
-            <h2 className="text-lg md:text-xl font-bold mb-4 text-gray-800">PLC 연결 관리</h2>
+        <div className="bg-gradient-to-br from-blue-50 to-indigo-100 rounded-2xl shadow-2xl p-4 md:p-6 mb-6 overflow-hidden border border-blue-200">
+            <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-6 space-y-2 md:space-y-0">
+                <h2 className="text-lg md:text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">PLC 연결 관리</h2>
+                <div className="flex items-center gap-3">
 
-            {/* 연결 상태 표시 */}
-            <div className="mb-4 flex items-center space-x-3">
-                <div className={`w-4 h-4 rounded-full ${getConnectionStatusColor()}`}></div>
-                <span className="text-sm font-medium text-gray-700">
-                    {getConnectionStatusText()}
-                </span>
-            </div>
-
-            {/* SignalR 연결 상태 */}
-            <div className="mb-4 p-3 bg-gray-50 rounded">
-                <div className="flex items-center space-x-2">
-                    <div className={`w-3 h-3 rounded-full ${isSignalRConnected ? 'bg-green-400' : 'bg-red-400'}`}></div>
-                    <span className="text-sm text-gray-600">
-                        SignalR: {isSignalRConnected ? '연결됨' : '연결 안됨'}
-                    </span>
                 </div>
             </div>
 

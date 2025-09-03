@@ -223,116 +223,158 @@ const SensorMonitor = ({ sensorData, isPLCConnected }) => {
     };
 
     return (
-        <div className="bg-white rounded-lg shadow-md p-4 md:p-6 overflow-hidden">
-            <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-4 space-y-2 md:space-y-0">
-                <h2 className="text-lg md:text-xl font-bold text-gray-800">센서 데이터 모니터</h2>
-                <div className="flex items-center space-x-2 text-xs md:text-sm text-gray-500">
-                    <span>업데이트:</span>
-                    <span className="font-medium">{formatTimestamp(sensorData.timestamp)}</span>
-                </div>
-            </div>
-
-            {/* 연결 상태 */}
-            <div className="mb-4 p-3 rounded-md bg-gray-50">
-                <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2">
-                        <div className={`w-3 h-3 rounded-full ${isPLCConnected ? 'bg-green-400' : 'bg-red-400'}`}></div>
-                        <span className="text-sm font-medium">
-                            {isPLCConnected ? 'PLC 연결됨' : 'PLC 연결 안됨'}
-                        </span>
-                    </div>
-                    <span className="text-sm text-gray-500">
-                        총 데이터: {sensorData.rawData?.length || 0}개
-                    </span>
+        <div className="bg-gradient-to-br from-blue-50 to-indigo-100 rounded-2xl shadow-2xl p-4 md:p-6 overflow-hidden border border-blue-200">
+            <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-6 space-y-2 md:space-y-0">
+                <h2 className="text-lg md:text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">센서 데이터 모니터</h2>
+                <div className="flex items-center gap-3">
+                    <button
+                        onClick={() => setShowRawStream(!showRawStream)}
+                        className={`px-6 py-3 rounded-2xl text-sm font-semibold transition-all duration-500 ease-in-out transform ${
+                            showRawStream 
+                                ? 'bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-lg scale-105 shadow-green-500/25' 
+                                : 'bg-gray-100 text-gray-600 hover:bg-gradient-to-r hover:from-green-100 hover:to-emerald-100 hover:text-green-700 hover:scale-102'
+                        }`}
+                    >
+                        {showRawStream ? '실시간 스트림 ON' : '실시간 스트림'}
+                    </button>
                 </div>
             </div>
 
             {/* 컨트롤 패널 */}
-            <div className="mb-4 space-y-3 md:space-y-0">
-                {/* 표시 모드 선택 */}
-                <div className="flex flex-wrap gap-2">
-                    <button
-                        onClick={() => setViewMode('parsed')}
-                        className={`px-2 md:px-3 py-1 rounded text-xs md:text-sm font-medium transition-colors ${viewMode === 'parsed'
-                                ? 'bg-blue-500 text-white'
-                                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                            }`}
-                    >
-                        파싱된 데이터
-                    </button>
-                    <button
-                        onClick={() => setViewMode('raw')}
-                        className={`px-2 md:px-3 py-1 rounded text-xs md:text-sm font-medium transition-colors ${viewMode === 'raw'
-                                ? 'bg-blue-500 text-white'
-                                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                            }`}
-                    >
-                        원시 데이터
-                    </button>
-                    <button
-                        onClick={() => setViewMode('hex')}
-                        className={`px-2 md:px-3 py-1 rounded text-xs md:text-sm font-medium transition-colors ${viewMode === 'hex'
-                                ? 'bg-blue-500 text-white'
-                                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                            }`}
-                    >
-                        16진수
-                    </button>
-                    <button
-                        onClick={() => setViewMode('bits')}
-                        className={`px-2 md:px-3 py-1 rounded text-xs md:text-sm font-medium transition-colors ${viewMode === 'bits'
-                                ? 'bg-blue-500 text-white'
-                                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                            }`}
-                    >
-                        비트 모니터
-                    </button>
-
-                    <button
-                        onClick={() => setShowRawStream(!showRawStream)}
-                        className={`px-2 md:px-3 py-1 rounded text-xs md:text-sm font-medium transition-colors ${showRawStream ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                            }`}
-                    >
-                        실시간 스트림
-                    </button>
-
+            <div className="mb-6 space-y-4">
+                {/* 표시 모드 선택 - 세련된 탭 스타일 */}
+                <div className="bg-white p-1 rounded-2xl shadow-lg border border-gray-200">
+                    <div className="grid grid-cols-4 gap-1">
+                        <button
+                            onClick={() => setViewMode('parsed')}
+                            className={`flex-shrink-0 px-4 md:px-6 py-2 md:py-3 rounded-xl text-xs md:text-sm font-semibold transition-all duration-500 ease-in-out transform ${viewMode === 'parsed'
+                                    ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg scale-105 shadow-blue-500/25'
+                                    : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50 hover:scale-102'
+                                }`}
+                        >
+                            파싱된 데이터
+                        </button>
+                        <button
+                            onClick={() => setViewMode('raw')}
+                            className={`flex-shrink-0 px-4 md:px-6 py-2 md:py-3 rounded-xl text-xs md:text-sm font-semibold transition-all duration-500 ease-in-out transform ${viewMode === 'raw'
+                                    ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg scale-105 shadow-blue-500/25'
+                                    : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50 hover:scale-102'
+                                }`}
+                        >
+                            원시 데이터
+                        </button>
+                        <button
+                            onClick={() => setViewMode('hex')}
+                            className={`flex-shrink-0 px-4 md:px-6 py-2 md:py-3 rounded-xl text-xs md:text-sm font-semibold transition-all duration-500 ease-in-out transform ${viewMode === 'hex'
+                                    ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg scale-105 shadow-blue-500/25'
+                                    : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50 hover:scale-102'
+                                }`}
+                        >
+                            16진수
+                        </button>
+                        <button
+                            onClick={() => setViewMode('bits')}
+                            className={`flex-shrink-0 px-4 md:px-6 py-2 md:py-3 rounded-xl text-xs md:text-sm font-semibold transition-all duration-500 ease-in-out transform ${viewMode === 'bits'
+                                    ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg scale-105 shadow-blue-500/25'
+                                    : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50 hover:scale-102'
+                                }`}
+                        >
+                            비트 모니터
+                        </button>
+                    </div>
                 </div>
 
-                <div className="flex flex-col sm:flex-row sm:items-center gap-3 mt-3 md:mt-0">
-                    {/* 필터 옵션 */}
-                    <label className="flex items-center space-x-2">
-                        <input
-                            type="checkbox"
-                            checked={showZeroValues}
-                            onChange={(e) => setShowZeroValues(e.target.checked)}
-                            className="rounded"
-                        />
-                        <span className="text-xs md:text-sm text-gray-700">0값 표시</span>
-                    </label>
 
-                    {/* 검색 */}
-                    <input
-                        type="text"
-                        placeholder="주소 또는 값 검색..."
-                        value={searchFilter}
-                        onChange={(e) => setSearchFilter(e.target.value)}
-                        className="w-full sm:w-auto px-3 py-1 border border-gray-300 rounded text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
+
+                {/* 필터 및 검색 영역 */}
+                <div className="bg-white p-4 rounded-2xl shadow-lg border border-gray-200">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                        {/* 0값 표시 토글 - 세련된 스위치 스타일 */}
+                        <div className="flex items-center space-x-3">
+                            <span className="text-sm font-medium text-gray-700">0값 표시</span>
+                            <button
+                                onClick={() => setShowZeroValues(!showZeroValues)}
+                                className={`relative inline-flex items-center h-6 rounded-full w-11 transition-all duration-300 ease-in-out transform ${
+                                    showZeroValues 
+                                        ? 'bg-gradient-to-r from-blue-500 to-purple-600 shadow-lg scale-110' 
+                                        : 'bg-gray-300 hover:bg-gray-400'
+                                }`}
+                            >
+                                <span
+                                    className={`inline-block w-4 h-4 bg-white rounded-full transition-all duration-300 ease-in-out transform shadow-md ${
+                                        showZeroValues ? 'translate-x-6' : 'translate-x-1'
+                                    }`}
+                                />
+                            </button>
+                        </div>
+
+                        {/* 검색창 - 세련된 디자인 */}
+                        <div className="flex-1 relative">
+                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <svg className="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                </svg>
+                            </div>
+                            <input
+                                type="text"
+                                placeholder="주소 또는 값으로 검색..."
+                                value={searchFilter}
+                                onChange={(e) => setSearchFilter(e.target.value)}
+                                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 hover:border-blue-400 bg-gray-50 focus:bg-white"
+                            />
+                            {searchFilter && (
+                                <button
+                                    onClick={() => setSearchFilter('')}
+                                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 transition-colors"
+                                >
+                                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
+                            )}
+                        </div>
+                    </div>
                 </div>
             </div>
 
             {/* 실시간 바이트 스트림 */}
             {showRawStream && (
-                <div className="mb-4 bg-black text-green-400 p-4 rounded-lg h-64 overflow-y-auto font-mono text-xs">
-                    <div className="mb-2 text-yellow-400">실시간 PLC 데이터 스트림:</div>
-                    {rawLog.map((entry, index) => (
-                        <div key={index} className="mb-1">
-                            <span className="text-blue-400">[{entry.timestamp}]</span>
-                            <span className="ml-2">
-                                {entry.data.map(byte => byte.toString(16).padStart(2, '0')).join(' ')}...
-                            </span>
+                <div className="mb-6 bg-gradient-to-br from-gray-900 via-black to-gray-900 text-green-400 p-6 rounded-2xl shadow-2xl border border-gray-700 transform transition-all duration-700 ease-in-out">
+                    <div className="mb-4 flex items-center space-x-2">
+                        <div className="animate-pulse w-3 h-3 bg-green-500 rounded-full"></div>
+                        <div className="text-yellow-400 font-semibold">실시간 PLC 데이터 스트림</div>
+                        <div className="flex space-x-1">
+                            <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{animationDelay: '0ms'}}></div>
+                            <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{animationDelay: '150ms'}}></div>
+                            <div className="w-2 h-2 bg-pink-400 rounded-full animate-bounce" style={{animationDelay: '300ms'}}></div>
                         </div>
-                    ))}
+                    </div>
+                    <div className="h-64 overflow-y-auto font-mono text-xs space-y-1 custom-scrollbar">
+                        {rawLog.map((entry, index) => (
+                            <div 
+                                key={index} 
+                                className={`transition-all duration-500 ease-in-out transform ${
+                                    index === 0 ? 'scale-105 bg-green-900/30 rounded px-2 py-1' : ''
+                                }`}
+                                style={{
+                                    animationDelay: `${index * 50}ms`
+                                }}
+                            >
+                                <span className="text-blue-400 font-semibold">[{entry.timestamp}]</span>
+                                <span className="ml-2 text-green-300">
+                                    {entry.data.map((byte, byteIndex) => (
+                                        <span 
+                                            key={byteIndex}
+                                            className="hover:bg-yellow-400 hover:text-black rounded px-1 transition-colors duration-200"
+                                        >
+                                            {byte.toString(16).padStart(2, '0')}
+                                        </span>
+                                    )).reduce((prev, curr, index) => [prev, <span key={`sep-${index}`} className="text-gray-500"> </span>, curr])}
+                                    <span className="text-purple-400">...</span>
+                                </span>
+                            </div>
+                        ))}
+                    </div>
                 </div>
             )}
 
@@ -349,29 +391,45 @@ const SensorMonitor = ({ sensorData, isPLCConnected }) => {
                 <div className="space-y-4">
                     {/* 비트 모니터 모드 */}
                     {viewMode === 'bits' ? (
-                        <div className="bg-gray-900 p-4 rounded-lg">
-                            <div className="mb-4 text-green-400 font-mono text-sm">
-                                PLC 비트 상태 모니터링
+                        <div className="bg-gradient-to-br from-gray-900 via-black to-gray-900 p-6 rounded-2xl shadow-2xl border border-gray-700">
+                            <div className="mb-6 flex items-center space-x-3">
+                                <div className="animate-pulse w-4 h-4 bg-green-500 rounded-full"></div>
+                                <div className="text-green-400 font-mono text-lg font-semibold">
+                                    PLC 비트 상태 모니터링
+                                </div>
+                                <div className="flex space-x-1">
+                                    <div className="w-2 h-2 bg-cyan-400 rounded-full animate-ping"></div>
+                                    <div className="w-2 h-2 bg-yellow-400 rounded-full animate-ping" style={{animationDelay: '200ms'}}></div>
+                                </div>
                             </div>
-                            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2">
+                            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3">
                                 {filteredData.map((item, index) => (
                                     <div 
                                         key={index} 
-                                        className={`p-3 rounded-lg border-2 transition-all duration-200 ${
+                                        className={`p-4 rounded-xl border-2 transition-all duration-700 ease-in-out transform hover:scale-110 ${
                                             item.status === 'active' 
-                                                ? 'bg-green-500 border-green-400 text-white shadow-lg' 
-                                                : 'bg-gray-700 border-gray-600 text-gray-300'
+                                                ? 'bg-gradient-to-br from-green-500 to-emerald-600 border-green-400 text-white shadow-2xl shadow-green-500/25 animate-pulse-slow' 
+                                                : 'bg-gradient-to-br from-gray-700 to-gray-800 border-gray-600 text-gray-300 hover:border-gray-500 hover:shadow-lg'
                                         }`}
+                                        style={{
+                                            animationDelay: `${index * 30}ms`,
+                                            opacity: 0,
+                                            animation: `slideInScale 0.8s ease-out ${index * 30}ms forwards`
+                                        }}
                                     >
-                                        <div className="text-center">
-                                            <div className="text-xs font-mono mb-1">
+                                        <div className="text-center space-y-1">
+                                            <div className="text-xs font-mono font-bold">
                                                 {item.address}
                                             </div>
-                                            <div className="text-xs mb-1 text-gray-200">
+                                            <div className="text-xs font-medium">
                                                 {item.name}
                                             </div>
                                             {item.category && (
-                                                <div className="text-xs mb-1 opacity-60 bg-gray-600 rounded px-1">
+                                                <div className={`text-xs px-2 py-1 rounded-full ${
+                                                    item.status === 'active'
+                                                        ? 'bg-white/20 text-white'
+                                                        : 'bg-gray-600 text-gray-300'
+                                                }`}>
                                                     {item.category}
                                                 </div>
                                             )}
@@ -386,15 +444,23 @@ const SensorMonitor = ({ sensorData, isPLCConnected }) => {
                             </div>
                         </div>
                     ) : (
-                        /* 기존 그리드 표시 */
+                        /* 기존 그리드 표시 - 애니메이션 카드 */
                         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 md:gap-4">
                             {filteredData.slice(0, 50).map((item, index) => (
-                                <div key={index} className="border border-gray-200 rounded-lg p-2 md:p-3">
-                                    <div className="flex flex-col space-y-1">
-                                        <span className="text-xs md:text-sm font-medium text-blue-600">
+                                <div 
+                                    key={index} 
+                                    className="bg-white border border-gray-200 rounded-xl p-3 md:p-4 transition-all duration-500 ease-in-out transform hover:scale-105 hover:shadow-xl hover:border-blue-300 hover:-translate-y-1 group"
+                                    style={{
+                                        animationDelay: `${index * 50}ms`,
+                                        opacity: 0,
+                                        animation: `fadeInUp 0.6s ease-out ${index * 50}ms forwards`
+                                    }}
+                                >
+                                    <div className="flex flex-col space-y-2">
+                                        <span className="text-xs md:text-sm font-semibold text-blue-600 group-hover:text-purple-600 transition-colors duration-300">
                                             {item.address}
                                         </span>
-                                        <span className="text-sm md:text-lg font-mono text-gray-900 break-words">
+                                        <span className="text-sm md:text-lg font-mono text-gray-900 break-words bg-gray-50 rounded-lg px-2 py-1 group-hover:bg-blue-50 transition-colors duration-300">
                                             {item.displayValue}
                                         </span>
                                     </div>
@@ -433,33 +499,7 @@ const SensorMonitor = ({ sensorData, isPLCConnected }) => {
                 </div>
             )}
 
-            {/* 통계 정보 */}
-            <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-                    <div>
-                        <div className="text-sm text-gray-500">총 센서</div>
-                        <div className="text-lg font-semibold">{sensorData.rawData?.length || 0}</div>
-                    </div>
-                    <div>
-                        <div className="text-sm text-gray-500">활성 센서</div>
-                        <div className="text-lg font-semibold text-green-600">
-                            {sensorData.rawData?.filter(val => val > 0).length || 0}
-                        </div>
-                    </div>
-                    <div>
-                        <div className="text-sm text-gray-500">파싱된 센서</div>
-                        <div className="text-lg font-semibold text-blue-600">
-                            {Object.keys(sensorData.parsedData || {}).length}
-                        </div>
-                    </div>
-                    <div>
-                        <div className="text-sm text-gray-500">연결 상태</div>
-                        <div className={`text-lg font-semibold ${sensorData.connected ? 'text-green-600' : 'text-red-600'}`}>
-                            {sensorData.connected ? '정상' : '끊김'}
-                        </div>
-                    </div>
-                </div>
-            </div>
+
         </div>
     );
 };
