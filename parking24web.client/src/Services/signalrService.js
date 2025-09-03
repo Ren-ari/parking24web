@@ -19,7 +19,7 @@ class SignalRService {
         try {
             // 연결 빌더 설정
             this.connection = new signalR.HubConnectionBuilder()
-                .withUrl("http://localhost:5124/plcHub", {
+                .withUrl("/plcHub", {
                     withCredentials: true,
                     transport: signalR.HttpTransportType.WebSockets
                 })
