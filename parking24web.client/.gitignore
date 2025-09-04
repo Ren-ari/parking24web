@@ -22,3 +22,8 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# 자동 생성 프로젝트 파일 (빌드 시 생성)
+*.g.props
+*.cache
+*.FileListAbsolute.txt
