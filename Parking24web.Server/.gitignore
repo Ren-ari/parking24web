@@ -1,0 +1,26 @@
+# .NET
+bin/
+obj/
+*.user
+*.userosscache
+*.sln.docstates
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Visual Studio
+.vs/
+.vscode/
+
+# 기타
+*.log
+.env
+dist/
+
+# 자동 생성 프로젝트 파일 (빌드 시 생성)
+*.g.props
+*.cache
+*.FileListAbsolute.txt
