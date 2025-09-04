@@ -17,9 +17,23 @@ class SignalRService {
     // SignalR 연결 초기화
     async initialize() {
         try {
+            // 환경별 SignalR URL 자동 생성
+            const getSignalRUrl = () => {
+                const currentHost = window.location.host;
+                const currentProtocol = window.location.protocol;
+
+                // 개발환경 감지 (포트 5173은 Vite 개발서버)
+                if (currentHost.includes(':5173')) {
+                    return `${currentProtocol}//localhost:5124/plcHub`;
+                }
+
+                // 프로덕션 환경 (상대경로 사용)
+                return "/plcHub";
+            };
+
             // 연결 빌더 설정
             this.connection = new signalR.HubConnectionBuilder()
-                .withUrl("/plcHub", {
+                .withUrl(getSignalRUrl(), {
                     withCredentials: true,
                     transport: signalR.HttpTransportType.WebSockets
                 })
@@ -27,14 +41,12 @@ class SignalRService {
                 .configureLogging(signalR.LogLevel.Information)
                 .build();
 
-            // 이벤트 핸들러 등록
+            // 나머지 코드는 그대로...
             this.setupEventHandlers();
-
-            // 연결 시작
             await this.connection.start();
             this.isConnected = true;
             console.log("SignalR 연결 성공!");
-            
+
             return true;
         } catch (error) {
             console.error("SignalR 연결 실패:", error);
