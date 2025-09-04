@@ -5,6 +5,14 @@
     text-align: center;
 }
 
+/* 모바일에서 패딩 최소화 */
+@media (max-width: 768px) {
+    #root {
+        padding: 0.5rem;
+        max-width: 100%;
+    }
+}
+
 th, td {
     padding-left: 1rem;
     padding-right: 1rem;
@@ -12,4 +20,6 @@ th, td {
 
 body {
     font-family: -apple-system, BlinkMacSystemFont, 'Malgun Gothic', '맑은 고딕', 'Segoe UI', Roboto, sans-serif;
+    /* 모바일에서 스크롤바 공간 최적화 */
+    overflow-x: hidden;
 }

@@ -35,12 +35,12 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sendCommand }) => {
     const isDisabled = !isPLCConnected || !isAuthenticated;
 
     return (
-        <div className="bg-gradient-to-br from-blue-50 to-indigo-100 rounded-2xl shadow-2xl p-4 md:p-6 overflow-hidden border border-blue-200">
-            <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-6 space-y-2 md:space-y-0">
-                <h2 className="text-lg md:text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">수동 제어</h2>
-                <div className="flex items-center flex-wrap gap-3">
+                 <div className="bg-white rounded-2xl shadow-lg p-3 md:p-4 overflow-hidden border-2 border-gray-300">
+            <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-6 md:mb-4 space-y-2 md:space-y-0">
+                <h2 className="text-base md:text-lg font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2 md:mb-0">수동 제어</h2>
+                <div className="flex items-center flex-wrap gap-3 justify-end sm:justify-start">
                     {isDisabled && (
-                        <div className="bg-red-100 border border-red-300 px-3 py-2 rounded-full shadow-md">
+                        <div className="bg-red-100 border border-red-300 px-3 py-2 rounded-2xl shadow-md">
                             <span className="text-red-700 font-semibold text-sm">🚫 제어 불가</span>
                         </div>
                     )}
@@ -58,11 +58,11 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sendCommand }) => {
                         onTouchStart={() => sendCommand('liftUp', 1)}
                         onTouchEnd={() => sendCommand('liftUp', 0)}
                         disabled={isDisabled}
-                        className={`relative p-4 md:p-6 rounded-lg font-semibold text-white transition-all duration-200 ${isDisabled
+                        className={`relative p-4 md:p-6 rounded-2xl font-semibold text-white transition-all duration-200 ${isDisabled
                             ? 'bg-gray-400 cursor-not-allowed'
                             : activeCommand === 'liftUp'
-                                ? 'bg-indigo-700 scale-95'
-                                : 'bg-indigo-600 hover:bg-indigo-700 active:scale-95'
+                                ? 'bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-700 scale-95'
+                                : 'bg-gradient-to-r from-blue-500 via-blue-600 to-indigo-600 hover:from-blue-600 hover:via-blue-700 hover:to-indigo-700 active:scale-95'
                             }`}
                     >
                         <div className="flex flex-col items-center space-y-1 md:space-y-2">
@@ -72,7 +72,7 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sendCommand }) => {
                             <span className="text-sm md:text-lg">상승</span>
                         </div>
                         {activeCommand === 'liftUp' && (
-                            <div className="absolute inset-0 bg-indigo-300 rounded-lg animate-pulse"></div>
+                            <div className="absolute inset-0 bg-indigo-300 rounded-2xl animate-pulse"></div>
                         )}
                     </button>
 
@@ -83,11 +83,11 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sendCommand }) => {
                         onTouchStart={() => sendCommand('liftDown', 1)}
                         onTouchEnd={() => sendCommand('liftDown', 0)}
                         disabled={isDisabled}
-                        className={`relative p-4 md:p-6 rounded-lg font-semibold text-white transition-all duration-200 ${isDisabled
+                        className={`relative p-4 md:p-6 rounded-2xl font-semibold text-white transition-all duration-200 ${isDisabled
                             ? 'bg-gray-400 cursor-not-allowed'
                             : activeCommand === 'liftDown'
-                                ? 'bg-indigo-700 scale-95'
-                                : 'bg-indigo-600 hover:bg-indigo-700 active:scale-95'
+                                ? 'bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-700 scale-95'
+                                : 'bg-gradient-to-r from-blue-500 via-blue-600 to-indigo-600 hover:from-blue-600 hover:via-blue-700 hover:to-indigo-700 active:scale-95'
                             }`}
                     >
                         <div className="flex flex-col items-center space-y-1 md:space-y-2">
@@ -97,7 +97,7 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sendCommand }) => {
                             <span className="text-sm md:text-lg">하강</span>
                         </div>
                         {activeCommand === 'liftDown' && (
-                            <div className="absolute inset-0 bg-indigo-300 rounded-lg animate-pulse"></div>
+                            <div className="absolute inset-0 bg-indigo-300 rounded-2xl animate-pulse"></div>
                         )}
                     </button>
                 </div>
@@ -114,11 +114,11 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sendCommand }) => {
                         onTouchStart={() => sendCommand('moveLeft', 1)}
                         onTouchEnd={() => sendCommand('moveLeft', 0)}
                         disabled={isDisabled}
-                        className={`relative p-4 md:p-6 rounded-lg font-semibold text-white transition-all duration-200 ${isDisabled
+                        className={`relative p-4 md:p-6 rounded-2xl font-semibold text-white transition-all duration-200 ${isDisabled
                             ? 'bg-gray-400 cursor-not-allowed'
                             : activeCommand === 'moveLeft'
-                                ? 'bg-indigo-700 scale-95'
-                                : 'bg-indigo-600 hover:bg-indigo-700 active:scale-95'
+                                ? 'bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-700 scale-95'
+                                : 'bg-gradient-to-r from-blue-500 via-blue-600 to-indigo-600 hover:from-blue-600 hover:via-blue-700 hover:to-indigo-700 active:scale-95'
                             }`}
                     >
                         <div className="flex flex-col items-center space-y-1 md:space-y-2">
@@ -128,7 +128,7 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sendCommand }) => {
                             <span className="text-sm md:text-lg">좌행</span>
                         </div>
                         {activeCommand === 'moveLeft' && (
-                            <div className="absolute inset-0 bg-indigo-300 rounded-lg animate-pulse"></div>
+                            <div className="absolute inset-0 bg-indigo-300 rounded-2xl animate-pulse"></div>
                         )}
                     </button>
 
@@ -139,11 +139,11 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sendCommand }) => {
                         onTouchStart={() => sendCommand('moveRight', 1)}
                         onTouchEnd={() => sendCommand('moveRight', 0)}
                         disabled={isDisabled}
-                        className={`relative p-4 md:p-6 rounded-lg font-semibold text-white transition-all duration-200 ${isDisabled
+                        className={`relative p-4 md:p-6 rounded-2xl font-semibold text-white transition-all duration-200 ${isDisabled
                             ? 'bg-gray-400 cursor-not-allowed'
                             : activeCommand === 'moveRight'
-                                ? 'bg-indigo-700 scale-95'
-                                : 'bg-indigo-600 hover:bg-indigo-700 active:scale-95'
+                                ? 'bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-700 scale-95'
+                                : 'bg-gradient-to-r from-blue-500 via-blue-600 to-indigo-600 hover:from-blue-600 hover:via-blue-700 hover:to-indigo-700 active:scale-95'
                             }`}
                     >
                         <div className="flex flex-col items-center space-y-1 md:space-y-2">
@@ -153,7 +153,7 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sendCommand }) => {
                             <span className="text-sm md:text-lg">우행</span>
                         </div>
                         {activeCommand === 'moveRight' && (
-                            <div className="absolute inset-0 bg-indigo-300 rounded-lg animate-pulse"></div>
+                            <div className="absolute inset-0 bg-indigo-300 rounded-2xl animate-pulse"></div>
                         )}
                     </button>
                 </div>
@@ -164,7 +164,7 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sendCommand }) => {
                 <button
                     onClick={handleEmergencyStop}
                     disabled={!isPLCConnected}
-                    className={`w-full p-4 md:p-6 rounded-lg font-bold text-white text-lg md:text-xl transition-all duration-200 ${!isPLCConnected
+                    className={`w-full p-4 md:p-6 rounded-2xl font-bold text-white text-lg md:text-xl transition-all duration-200 ${!isPLCConnected
                         ? 'bg-gray-400 cursor-not-allowed'
                         : isEmergencyMode
                             ? 'bg-red-800 animate-pulse'
@@ -182,7 +182,7 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sendCommand }) => {
             </div>
 
             {/* 사용법 안내 */}
-            <div className="mt-4 md:mt-6 p-3 md:p-4 bg-blue-50 rounded-lg">
+            <div className="mt-4 md:mt-6 p-3 md:p-4 bg-blue-50 rounded-2xl">
                 <h4 className="text-xs md:text-sm font-semibold text-blue-800 mb-2">사용법</h4>
                 <ul className="text-xs text-blue-700 space-y-1">
                     <li>• PLC 연결과 인증이 완료되어야 제어 가능합니다</li>
@@ -194,7 +194,7 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sendCommand }) => {
 
             {/* 디버그 정보 (개발용) */}
             {process.env.NODE_ENV === 'development' && (
-                <div className="mt-4 p-3 bg-gray-100 rounded text-xs">
+                <div className="mt-4 p-3 bg-gray-100 rounded-2xl text-xs">
                     <div>PLC 연결: {isPLCConnected ? 'O' : 'X'}</div>
                     <div>인증 상태: {isAuthenticated ? 'O' : 'X'}</div>
                     <div>활성 명령: {activeCommand || 'None'}</div>

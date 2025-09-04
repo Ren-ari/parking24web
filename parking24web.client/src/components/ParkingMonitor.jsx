@@ -249,11 +249,11 @@ const ParkingMonitor = ({ sensorData, isPLCConnected, onVehicleEdit }) => {
   };
 
   return (
-    <div className="bg-gradient-to-br from-blue-50 to-indigo-100 rounded-2xl shadow-2xl p-6 border border-blue-200">
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 gap-2">
+         <div className="bg-white rounded-2xl shadow-lg p-3 md:p-4 border-2 border-gray-300">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 sm:mb-4 gap-2">
         <div className="flex items-center gap-3">
           <div>
-            <h2 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            <h2 className="text-lg sm:text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2 sm:mb-0">
               주차 현황 모니터링
             </h2>
           </div>
@@ -264,10 +264,10 @@ const ParkingMonitor = ({ sensorData, isPLCConnected, onVehicleEdit }) => {
 
           <button
             onClick={() => setIsEditMode(!isEditMode)}
-            className={`px-6 py-2 rounded-full text-sm font-bold transition-all duration-300 transform hover:scale-105 shadow-lg ${
+            className={`px-6 py-3 rounded-xl font-semibold text-white transition-all duration-300 transform hover:scale-105 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
               isEditMode
-                ? "bg-gradient-to-r from-red-500 to-pink-500 text-white hover:from-red-600 hover:to-pink-600"
-                : "bg-gradient-to-r from-yellow-400 to-orange-400 text-white hover:from-yellow-500 hover:to-orange-500"
+                ? "bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 shadow-lg hover:shadow-xl"
+                : "bg-gradient-to-r from-blue-500 via-blue-600 to-indigo-600 hover:from-blue-600 hover:via-blue-700 hover:to-indigo-700 shadow-lg hover:shadow-xl"
             }`}
           >
             {isEditMode ? "✓ 수정 완료" : "주소 수정"}
@@ -276,7 +276,7 @@ const ParkingMonitor = ({ sensorData, isPLCConnected, onVehicleEdit }) => {
       </div>
 
       {/* 범례 */}
-      <div className="hidden sm:block mb-4 p-3 bg-gray-50 rounded-lg">
+      <div className="hidden sm:block mb-4 p-3 bg-gradient-to-br from-blue-50 to-indigo-100 rounded-lg">
         <div className="flex flex-wrap gap-2 sm:gap-4 text-xs">
           <div className="flex items-center space-x-1">
             <div className="w-4 h-4 bg-blue-300 rounded"></div>
@@ -314,8 +314,8 @@ const ParkingMonitor = ({ sensorData, isPLCConnected, onVehicleEdit }) => {
                 key={level}
                 className={`border rounded-lg p-2 sm:p-3 ${
                   level === 0
-                    ? "bg-yellow-50 border-yellow-300"
-                    : "bg-gray-50 border-gray-200"
+                    ? "bg-gradient-to-br from-yellow-50 to-orange-50 border-yellow-300"
+                    : "bg-gradient-to-br from-blue-50 to-indigo-100 border-gray-200"
                 }`}
               >
                 <div className="flex items-center space-x-4">
@@ -482,7 +482,7 @@ const ParkingMonitor = ({ sensorData, isPLCConnected, onVehicleEdit }) => {
       </div>
 
       {/* 하단 정보 */}
-      <div className="hidden sm:block mt-4 p-3 bg-gray-50 rounded-lg text-sm text-gray-600">
+      <div className="hidden sm:block mt-4 p-3 bg-gradient-to-br from-blue-50 to-indigo-100 rounded-lg text-sm text-gray-600">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div>
             <span className="font-medium">총 층수:</span> 39층 (진입층 + 38단)
