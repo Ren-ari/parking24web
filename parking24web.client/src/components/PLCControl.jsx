@@ -10,6 +10,7 @@ const PLCControl = () => {
     const [showLogs, setShowLogs] = useState(false);
     const [isDataPanelExpanded, setIsDataPanelExpanded] = useState(true);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const [isClosing, setIsClosing] = useState(false);
 
     // PLC 연결 훅 사용
     const {
@@ -57,13 +58,23 @@ const PLCControl = () => {
         }
     };
 
+    // 모바일 메뉴 탭 클릭 핸들러
+    const handleMobileTabClick = (tabName) => {
+        setIsClosing(true);
+        setTimeout(() => {
+            setActiveTab(tabName);
+            setIsMobileMenuOpen(false);
+            setIsClosing(false);
+        }, 300);
+    };
+
     // 탭 스타일 - 화려한 애니메이션 적용
     const getTabStyle = (tabName) => {
-        const baseStyle = "relative px-6 py-3 font-bold rounded-xl transition-all duration-500 ease-in-out text-sm transform hover:scale-105 hover:-translate-y-1 shadow-lg hover:shadow-2xl";
+        const baseStyle = "relative px-8 py-4 font-bold rounded-2xl transition-all duration-300 ease-in-out text-sm transform hover:scale-105 hover:-translate-y-1 shadow-lg hover:shadow-xl border-2";
         if (activeTab === tabName) {
-            return `${baseStyle} bg-gradient-to-r from-indigo-600 via-purple-600 to-blue-600 text-white shadow-2xl animate-pulse border-2 border-white`;
+            return `${baseStyle} bg-gradient-to-r from-blue-500 via-purple-500 to-indigo-600 text-white shadow-2xl border-blue-300 hover:from-blue-600 hover:via-purple-600 hover:to-indigo-700`;
         }
-        return `${baseStyle} bg-gradient-to-r from-gray-100 to-gray-200 text-gray-700 hover:from-indigo-100 hover:to-purple-100 hover:text-indigo-700 border-2 border-transparent hover:border-indigo-300`;
+        return `${baseStyle} bg-gradient-to-r from-white to-gray-50 text-gray-600 hover:from-blue-50 hover:to-indigo-50 hover:text-blue-700 border-gray-200 hover:border-blue-300 hover:shadow-lg`;
     };
 
     return (
@@ -87,34 +98,30 @@ const PLCControl = () => {
                     </div>
                     
                     {/* 탭 네비게이션 (중앙) - 화려한 애니메이션 */}
-                    <nav className="hidden md:flex space-x-3 flex-1 justify-center">
+                    <nav className="hidden md:flex space-x-4 flex-1 justify-center">
                         <button
                             onClick={() => setActiveTab('connection')}
                             className={`${getTabStyle('connection')} group overflow-hidden`}
                         >
                             <span className="relative z-10">연결 관리</span>
-                            <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-purple-400 opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
                         </button>
                         <button
                             onClick={() => setActiveTab('monitor')}
                             className={`${getTabStyle('monitor')} group overflow-hidden`}
                         >
                             <span className="relative z-10">센서 모니터</span>
-                            <div className="absolute inset-0 bg-gradient-to-r from-green-400 to-blue-400 opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
                         </button>
                         <button
                             onClick={() => setActiveTab('control')}
                             className={`${getTabStyle('control')} group overflow-hidden`}
                         >
                             <span className="relative z-10">수동 제어</span>
-                            <div className="absolute inset-0 bg-gradient-to-r from-orange-400 to-red-400 opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
                         </button>
                         <button
                             onClick={() => setActiveTab('parking')}
                             className={`${getTabStyle('parking')} group overflow-hidden`}
                         >
                             <span className="relative z-10">주차장 모니터</span>
-                            <div className="absolute inset-0 bg-gradient-to-r from-purple-400 to-pink-400 opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
                         </button>
                     </nav>
                     
@@ -138,7 +145,17 @@ const PLCControl = () => {
                     {/* 모바일 햄버거 메뉴 (오른쪽) */}
                     <div className="md:hidden flex-shrink-0">
                         <button 
-                            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                            onClick={() => {
+                                if (isMobileMenuOpen) {
+                                    setIsClosing(true);
+                                    setTimeout(() => {
+                                        setIsMobileMenuOpen(false);
+                                        setIsClosing(false);
+                                    }, 300);
+                                } else {
+                                    setIsMobileMenuOpen(true);
+                                }
+                            }}
                             className="p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100"
                         >
                             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -150,59 +167,81 @@ const PLCControl = () => {
                 
                 {/* 모바일 탭 메뉴 */}
                 {isMobileMenuOpen && (
-                    <div className="md:hidden border-t border-gray-200 px-4 py-2">
-                        <nav className="flex flex-wrap gap-2">
-                            <button
-                                onClick={() => {
-                                    setActiveTab('connection');
-                                    setIsMobileMenuOpen(false);
-                                }}
-                                className={getTabStyle('connection')}
-                            >
-                                연결 관리
-                            </button>
-                            <button
-                                onClick={() => {
-                                    setActiveTab('monitor');
-                                    setIsMobileMenuOpen(false);
-                                }}
-                                className={getTabStyle('monitor')}
-                            >
-                                센서 모니터
-                            </button>
-                            <button
-                                onClick={() => {
-                                    setActiveTab('control');
-                                    setIsMobileMenuOpen(false);
-                                }}
-                                className={getTabStyle('control')}
-                            >
-                                수동 제어
-                            </button>
-                            <button
-                                onClick={() => {
-                                    setActiveTab('parking');
-                                    setIsMobileMenuOpen(false);
-                                }}
-                                className={getTabStyle('parking')}
-                            >
-                                주차장 모니터
-                            </button>
-                        </nav>
+                    <div className={`md:hidden fixed inset-0 top-16 z-40 overflow-hidden mobile-menu-bg transition-all duration-300 ${isClosing ? 'opacity-0 scale-95' : 'opacity-100 scale-100'}`}>
+                        
+                        {/* 메뉴 컨테이너 */}
+                        <div className="h-full flex items-start justify-center p-4 pt-16 relative z-10">
+                            <div className={`w-full max-w-sm transform transition-all duration-500 ease-out ${isClosing ? 'animate-out slide-out-to-top-8 fade-out-0' : 'animate-in slide-in-from-top-8 fade-in-0'}`}>
+                                <nav className="grid grid-cols-2 gap-6 w-full">
+                                    <button
+                                        onClick={() => handleMobileTabClick('connection')}
+                                        className={`${getTabStyle('connection')} w-full h-20 flex items-center justify-center text-center transform transition-all duration-300 hover:scale-105 hover:rotate-1`}
+                                        style={{ 
+                                            animationName: isClosing ? 'slideOutToLeft' : 'slideInFromLeft',
+                                            animationDuration: isClosing ? '0.3s' : '0.6s',
+                                            animationTimingFunction: isClosing ? 'ease-in' : 'ease-out',
+                                            animationDelay: isClosing ? '0s' : '0.1s',
+                                            animationFillMode: 'both'
+                                        }}
+                                    >
+                                        <span className="text-base font-semibold">연결 관리</span>
+                                    </button>
+                                    <button
+                                        onClick={() => handleMobileTabClick('monitor')}
+                                        className={`${getTabStyle('monitor')} w-full h-20 flex items-center justify-center text-center transform transition-all duration-300 hover:scale-105 hover:-rotate-1`}
+                                        style={{ 
+                                            animationName: isClosing ? 'slideOutToRight' : 'slideInFromRight',
+                                            animationDuration: isClosing ? '0.3s' : '0.6s',
+                                            animationTimingFunction: isClosing ? 'ease-in' : 'ease-out',
+                                            animationDelay: isClosing ? '0s' : '0.2s',
+                                            animationFillMode: 'both'
+                                        }}
+                                    >
+                                        <span className="text-base font-semibold">센서 모니터</span>
+                                    </button>
+                                    <button
+                                        onClick={() => handleMobileTabClick('control')}
+                                        className={`${getTabStyle('control')} w-full h-20 flex items-center justify-center text-center transform transition-all duration-300 hover:scale-105 hover:rotate-1`}
+                                        style={{ 
+                                            animationName: isClosing ? 'slideOutToLeft' : 'slideInFromLeft',
+                                            animationDuration: isClosing ? '0.3s' : '0.6s',
+                                            animationTimingFunction: isClosing ? 'ease-in' : 'ease-out',
+                                            animationDelay: isClosing ? '0s' : '0.3s',
+                                            animationFillMode: 'both'
+                                        }}
+                                    >
+                                        <span className="text-base font-semibold">수동 제어</span>
+                                    </button>
+                                    <button
+                                        onClick={() => handleMobileTabClick('parking')}
+                                        className={`${getTabStyle('parking')} w-full h-20 flex items-center justify-center text-center transform transition-all duration-300 hover:scale-105 hover:-rotate-1`}
+                                        style={{ 
+                                            animationName: isClosing ? 'slideOutToRight' : 'slideInFromRight',
+                                            animationDuration: isClosing ? '0.3s' : '0.6s',
+                                            animationTimingFunction: isClosing ? 'ease-in' : 'ease-out',
+                                            animationDelay: isClosing ? '0s' : '0.4s',
+                                            animationFillMode: 'both'
+                                        }}
+                                    >
+                                        <span className="text-base font-semibold">주차장 모니터</span>
+                                    </button>
+                                </nav>
+                            </div>
+                        </div>
                     </div>
                 )}
             </header>
             
             {/* 메인 컨텐츠 */}
-            <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 pt-20" style={{width: '98vw'}}>
+            <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 pt-20" style={{width: '100vw'}}>
                 <main className="p-2 md:p-4 max-w-6xl mx-auto">
                 <div className="w-full">
 
             {/* 상단 상태 표시 탭들 */}
-                         <div className="mb-4 bg-gradient-to-br from-blue-50 to-indigo-100 rounded-2xl shadow-2xl overflow-hidden border border-blue-200">
+                                                                                                       <div className="mb-4 bg-gradient-to-br from-gray-50 to-slate-100 rounded-2xl shadow-lg overflow-hidden border-2 border-gray-300">
                 <div className="flex items-stretch">
                     <div className="flex-1 min-w-0 flex flex-col">
-                        <div className={`text-white text-sm font-medium px-2 py-2 text-center h-10 flex items-center justify-center ${sensorData.rawData[18] === 1 ? 'bg-blue-500' : 'bg-gray-400'}`}>
+                        <div className={`text-white text-xs font-medium px-1 py-2 text-center h-10 flex items-center justify-center ${sensorData.rawData[18] === 1 ? 'bg-blue-500' : 'bg-gray-400'}`}>
                             원격조작
                         </div>
                         <div className={`text-sm px-2 py-3 text-center border-r h-16 flex items-center justify-center ${sensorData.rawData[18] === 1 ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'}`}>
@@ -211,7 +250,7 @@ const PLCControl = () => {
                     </div>
                  
                     <div className="flex-1 min-w-0 flex flex-col">
-                        <div className="bg-green-500 text-white text-sm font-medium px-2 py-2 text-center h-10 flex items-center justify-center">
+                        <div className="bg-green-500 text-white text-xs font-medium px-1 py-2 text-center h-10 flex items-center justify-center">
                             위치정보
                         </div>
                         <div className="bg-green-100 text-green-800 text-sm px-2 py-3 text-center border-r h-16 flex items-center justify-center">
@@ -220,7 +259,7 @@ const PLCControl = () => {
                     </div>
         
                     <div className="flex-1 min-w-0 flex flex-col">
-                        <div className="bg-green-500 text-white text-sm font-medium px-2 py-2 text-center h-10 flex items-center justify-center">
+                        <div className="bg-green-500 text-white text-xs font-medium px-1 py-2 text-center h-10 flex items-center justify-center">
                             호기번호
                         </div>
                         <div className="bg-green-100 text-green-800 text-sm px-2 py-3 text-center border-r h-16 flex items-center justify-center">
@@ -229,7 +268,7 @@ const PLCControl = () => {
                     </div>
 
                     <div className="flex-1 min-w-0 flex flex-col">
-                        <div className="bg-green-500 text-white text-sm font-medium px-2 py-2 text-center h-10 flex items-center justify-center">
+                        <div className="bg-green-500 text-white text-xs font-medium px-1 py-2 text-center h-10 flex items-center justify-center">
                             운전모드
                         </div>
                         <div className="bg-green-100 text-green-800 text-sm px-2 py-3 text-center border-r h-16 flex items-center justify-center">
@@ -238,7 +277,7 @@ const PLCControl = () => {
                     </div>
 
                     <div className="flex-1 min-w-0 flex flex-col">
-                        <div className={`text-white text-sm font-medium px-2 py-2 text-center h-10 flex items-center justify-center ${sensorData.rawData[16] === 1 ? 'bg-red-500' : 'bg-green-500'}`}>
+                        <div className={`text-white text-xs font-medium px-1 py-2 text-center h-10 flex items-center justify-center ${sensorData.rawData[16] === 1 ? 'bg-red-500' : 'bg-green-500'}`}>
                             에러상태
                         </div>
                         <div className={`text-sm px-2 py-3 text-center border-r h-16 flex items-center justify-center ${sensorData.rawData[16] === 1 ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'}`}>
@@ -247,7 +286,7 @@ const PLCControl = () => {
                     </div>
 
                     <div className="flex-1 min-w-0 flex flex-col">
-                        <div className={`text-white text-sm font-medium px-2 py-2 text-center h-10 flex items-center justify-center ${sensorData.rawData[0] === 1 ? 'bg-green-500' : 'bg-red-500'}`}>
+                        <div className={`text-white text-xs font-medium px-1 py-2 text-center h-10 flex items-center justify-center ${sensorData.rawData[0] === 1 ? 'bg-green-500' : 'bg-red-500'}`}>
                             하트비트
                         </div>
                         <div className={`text-sm px-2 py-3 text-center h-16 flex items-center justify-center ${sensorData.rawData[0] === 1 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
@@ -258,7 +297,7 @@ const PLCControl = () => {
             </div>
 
             {/* 차량 및 주차 현황 데이터 */}
-            <div className="mb-6 bg-gradient-to-br from-blue-50 to-indigo-100 rounded-2xl shadow-2xl border border-blue-200">
+                                                   <div className="mb-6 bg-white rounded-2xl shadow-lg border-2 border-gray-300">
                 {/* 헤더 (클릭 가능) */}
                 <div 
                     className="p-4 sm:p-6 flex justify-between items-center cursor-pointer hover:bg-gradient-to-r hover:from-blue-100 hover:to-indigo-100 rounded-t-2xl transition-all duration-500 ease-in-out transform hover:scale-[1.01] hover:shadow-lg"
@@ -289,10 +328,10 @@ const PLCControl = () => {
                         ? 'max-h-screen opacity-100 transform translate-y-0' 
                         : 'max-h-0 opacity-0 transform -translate-y-4'
                 }`}>
-                    <div className="px-4 sm:px-6 pb-4 sm:pb-6">
+                    <div className="px-4 sm:px-6 pt-4 pb-4 sm:pb-6">
                     {/* 첫 번째 행 */}
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-4">
-                    <div className={`p-3 rounded-lg border transition-all duration-700 ease-out transform ${
+                <div className="grid grid-cols-3 gap-3 sm:gap-4 mb-4">
+                    <div className={`p-2 sm:p-3 rounded-lg border transition-all duration-700 ease-out transform ${
                         isDataPanelExpanded 
                             ? 'translate-y-0 opacity-100' 
                             : 'translate-y-4 opacity-0'
@@ -302,10 +341,10 @@ const PLCControl = () => {
                         transitionDelay: isDataPanelExpanded ? '100ms' : '0ms'
                     }}>
                         <label className="block text-xs font-medium text-blue-700 mb-1">차량번호</label>
-                        <div className="bg-white border rounded px-3 py-5 text-sm text-gray-500">----</div>
+                        <div className="bg-white border rounded-2xl px-2 sm:px-3 py-3 sm:py-5 text-lg sm:text-2xl md:text-3xl font-bold text-gray-700">----</div>
                     </div>
                     
-                    <div className={`p-3 rounded-lg border transition-all duration-700 ease-out transform ${
+                    <div className={`p-2 sm:p-3 rounded-lg border transition-all duration-700 ease-out transform ${
                         isDataPanelExpanded 
                             ? 'translate-y-0 opacity-100' 
                             : 'translate-y-4 opacity-0'
@@ -315,12 +354,12 @@ const PLCControl = () => {
                         transitionDelay: isDataPanelExpanded ? '200ms' : '0ms'
                     }}>
                         <label className="block text-xs font-medium text-blue-700 mb-1">적재차판</label>
-                        <div className="bg-white border rounded px-3 py-5 text-2xl md:text-3xl font-bold">
+                        <div className="bg-white border rounded-2xl px-2 sm:px-3 py-3 sm:py-5 text-lg sm:text-2xl md:text-3xl font-bold">
                             {sensorData.rawData?.[75] || 0}
                         </div>
                     </div>
                     
-                    <div className={`p-3 rounded-lg border transition-all duration-700 ease-out transform ${
+                    <div className={`p-2 sm:p-3 rounded-lg border transition-all duration-700 ease-out transform ${
                         isDataPanelExpanded 
                             ? 'translate-y-0 opacity-100' 
                             : 'translate-y-4 opacity-0'
@@ -330,7 +369,7 @@ const PLCControl = () => {
                         transitionDelay: isDataPanelExpanded ? '300ms' : '0ms'
                     }}>
                         <label className="block text-xs font-medium text-blue-700 mb-1">출고차판</label>
-                        <div className="bg-white border border-gray-300 rounded px-3 py-5 text-2xl md:text-3xl font-bold text-black">
+                        <div className="bg-white border border-gray-300 rounded-2xl px-2 sm:px-3 py-3 sm:py-5 text-lg sm:text-2xl md:text-3xl font-bold text-black">
                             {sensorData.rawData?.[76] || 0}
                         </div>
                     </div>
@@ -345,7 +384,7 @@ const PLCControl = () => {
                     }`}
                     style={{transitionDelay: isDataPanelExpanded ? '400ms' : '0ms'}}>
                         <label className="block text-xs font-medium text-gray-600 mb-1">전체주차</label>
-                        <div className="bg-indigo-600 text-white text-center rounded px-2 py-5 text-2xl md:text-3xl font-bold">
+                        <div className="bg-gradient-to-br from-blue-50 to-indigo-100 text-gray-700 text-center rounded-2xl px-1 sm:px-2 py-3 sm:py-5 text-lg sm:text-2xl md:text-3xl font-bold">
                             {sensorData.rawData?.[77] || 0}
                         </div>
                     </div>
@@ -357,7 +396,7 @@ const PLCControl = () => {
                     }`}
                     style={{transitionDelay: isDataPanelExpanded ? '500ms' : '0ms'}}>
                         <label className="block text-xs font-medium text-gray-600 mb-1">전체공차</label>
-                        <div className="bg-indigo-600 text-white text-center rounded px-2 py-5 text-2xl md:text-3xl font-bold">
+                        <div className="bg-gradient-to-br from-blue-50 to-indigo-100 text-gray-700 text-center rounded-2xl px-1 sm:px-2 py-3 sm:py-5 text-lg sm:text-2xl md:text-3xl font-bold">
                             {sensorData.rawData?.[78] || 0}
                         </div>
                     </div>
@@ -369,8 +408,8 @@ const PLCControl = () => {
                     }`}
                     style={{transitionDelay: isDataPanelExpanded ? '600ms' : '0ms'}}>
                         <label className="block text-xs font-medium text-gray-600 mb-1">일반입고</label>
-                        <div className="bg-indigo-600 text-white text-center rounded px-2 py-5 text-2xl md:text-3xl font-bold">
-                            {sensorData.rawData?.[79] || 32}
+                        <div className="bg-gradient-to-br from-blue-50 to-indigo-100 text-gray-700 text-center rounded-2xl px-1 sm:px-2 py-3 sm:py-5 text-lg sm:text-2xl md:text-3xl font-bold">
+                            {sensorData.rawData?.[79] || 0}
                         </div>
                     </div>
                     
@@ -381,7 +420,7 @@ const PLCControl = () => {
                     }`}
                     style={{transitionDelay: isDataPanelExpanded ? '700ms' : '0ms'}}>
                         <label className="block text-xs font-medium text-gray-600 mb-1">일반출차</label>
-                        <div className="bg-indigo-600 text-white text-center rounded px-2 py-5 text-2xl md:text-3xl font-bold">
+                        <div className="bg-gradient-to-br from-blue-50 to-indigo-100 text-gray-700 text-center rounded-2xl px-1 sm:px-2 py-3 sm:py-5 text-lg sm:text-2xl md:text-3xl font-bold">
                             {sensorData.rawData?.[80] || 0}
                         </div>
                     </div>
@@ -393,8 +432,8 @@ const PLCControl = () => {
                     }`}
                     style={{transitionDelay: isDataPanelExpanded ? '800ms' : '0ms'}}>
                         <label className="block text-xs font-medium text-gray-600 mb-1">RV입고</label>
-                        <div className="bg-indigo-600 text-white text-center rounded px-2 py-5 text-2xl md:text-3xl font-bold">
-                            {sensorData.rawData?.[82] || 3}
+                        <div className="bg-gradient-to-br from-blue-50 to-indigo-100 text-gray-700 text-center rounded-2xl px-1 sm:px-2 py-3 sm:py-5 text-lg sm:text-2xl md:text-3xl font-bold">
+                            {sensorData.rawData?.[82] || 0}
                         </div>
                     </div>
                     
@@ -405,8 +444,8 @@ const PLCControl = () => {
                     }`}
                     style={{transitionDelay: isDataPanelExpanded ? '900ms' : '0ms'}}>
                         <label className="block text-xs font-medium text-gray-600 mb-1">RV출차</label>
-                        <div className="bg-indigo-600 text-white text-center rounded px-2 py-5 text-2xl md:text-3xl font-bold">
-                            {sensorData.rawData?.[81] || 25}
+                        <div className="bg-gradient-to-br from-blue-50 to-indigo-100 text-gray-700 text-center rounded-2xl px-1 sm:px-2 py-3 sm:py-5 text-lg sm:text-2xl md:text-3xl font-bold">
+                            {sensorData.rawData?.[81] || 0}
                         </div>
                     </div>
                 </div>
@@ -420,7 +459,7 @@ const PLCControl = () => {
                     }`}
                     style={{transitionDelay: isDataPanelExpanded ? '1000ms' : '0ms'}}>
                         <label className="block text-xs font-medium text-gray-600 mb-1">엔코더값</label>
-                        <div className="bg-indigo-600 text-white text-center rounded px-3 py-5 text-2xl md:text-3xl font-bold">
+                        <div className="bg-gradient-to-br from-blue-50 to-indigo-100 text-gray-700 text-center rounded-2xl px-2 sm:px-3 py-3 sm:py-5 text-lg sm:text-2xl md:text-3xl font-bold">
                             {sensorData.rawData?.[240] || 0}
                         </div>
                     </div>
@@ -432,7 +471,7 @@ const PLCControl = () => {
                     }`}
                     style={{transitionDelay: isDataPanelExpanded ? '1100ms' : '0ms'}}>
                         <label className="block text-xs font-medium text-gray-600 mb-1">카운터값</label>
-                        <div className="bg-indigo-600 text-white text-center rounded px-3 py-5 text-2xl md:text-3xl font-bold">
+                        <div className="bg-gradient-to-br from-blue-50 to-indigo-100 text-gray-700 text-center rounded-2xl px-2 sm:px-3 py-3 sm:py-5 text-lg sm:text-2xl md:text-3xl font-bold">
                             {sensorData.rawData?.[200] || 0}
                         </div>
                     </div>

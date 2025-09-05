@@ -223,27 +223,15 @@ const SensorMonitor = ({ sensorData, isPLCConnected }) => {
     };
 
     return (
-        <div className="bg-gradient-to-br from-blue-50 to-indigo-100 rounded-2xl shadow-2xl p-4 md:p-6 overflow-hidden border border-blue-200">
-            <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-6 space-y-2 md:space-y-0">
-                <h2 className="text-lg md:text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">센서 데이터 모니터</h2>
-                <div className="flex items-center gap-3">
-                    <button
-                        onClick={() => setShowRawStream(!showRawStream)}
-                        className={`px-6 py-3 rounded-2xl text-sm font-semibold transition-all duration-500 ease-in-out transform ${
-                            showRawStream 
-                                ? 'bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-lg scale-105 shadow-green-500/25' 
-                                : 'bg-gray-100 text-gray-600 hover:bg-gradient-to-r hover:from-green-100 hover:to-emerald-100 hover:text-green-700 hover:scale-102'
-                        }`}
-                    >
-                        {showRawStream ? '실시간 스트림 ON' : '실시간 스트림'}
-                    </button>
-                </div>
+                 <div className="bg-white rounded-2xl shadow-lg p-3 md:p-4 overflow-hidden border-2 border-gray-300">
+            <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-6 md:mb-4 space-y-2 md:space-y-0">
+                <h2 className="text-base md:text-lg font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2 md:mb-0">센서 데이터 모니터</h2>
             </div>
 
             {/* 컨트롤 패널 */}
             <div className="mb-6 space-y-4">
                 {/* 표시 모드 선택 - 세련된 탭 스타일 */}
-                <div className="bg-white p-1 rounded-2xl shadow-lg border border-gray-200">
+                <div className="bg-gradient-to-br from-blue-50 to-indigo-100 p-1 rounded-2xl shadow-lg border border-gray-200">
                     <div className="grid grid-cols-4 gap-1">
                         <button
                             onClick={() => setViewMode('parsed')}
@@ -287,25 +275,45 @@ const SensorMonitor = ({ sensorData, isPLCConnected }) => {
 
 
                 {/* 필터 및 검색 영역 */}
-                <div className="bg-white p-4 rounded-2xl shadow-lg border border-gray-200">
+                <div className="bg-gradient-to-br from-blue-50 to-indigo-100 p-4 rounded-2xl shadow-lg border border-gray-200">
                     <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-                        {/* 0값 표시 토글 - 세련된 스위치 스타일 */}
-                        <div className="flex items-center space-x-3">
-                            <span className="text-sm font-medium text-gray-700">0값 표시</span>
-                            <button
-                                onClick={() => setShowZeroValues(!showZeroValues)}
-                                className={`relative inline-flex items-center h-6 rounded-full w-11 transition-all duration-300 ease-in-out transform ${
-                                    showZeroValues 
-                                        ? 'bg-gradient-to-r from-blue-500 to-purple-600 shadow-lg scale-110' 
-                                        : 'bg-gray-300 hover:bg-gray-400'
-                                }`}
-                            >
-                                <span
-                                    className={`inline-block w-4 h-4 bg-white rounded-full transition-all duration-300 ease-in-out transform shadow-md ${
-                                        showZeroValues ? 'translate-x-6' : 'translate-x-1'
+                        {/* 0값 표시 토글과 실시간 스트림 토글 */}
+                        <div className="flex items-center gap-6">
+                            <div className="flex items-center space-x-3">
+                                <span className="text-sm font-medium text-gray-700">0값 표시</span>
+                                <button
+                                    onClick={() => setShowZeroValues(!showZeroValues)}
+                                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                                        showZeroValues 
+                                            ? 'bg-gradient-to-r from-blue-500 to-indigo-600' 
+                                            : 'bg-gray-300'
                                     }`}
-                                />
-                            </button>
+                                >
+                                    <span
+                                        className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-lg transition-transform duration-300 ease-in-out ${
+                                            showZeroValues ? 'translate-x-6' : 'translate-x-1'
+                                        }`}
+                                    />
+                                </button>
+                            </div>
+
+                            <div className="flex items-center space-x-3">
+                                <span className="text-sm font-medium text-gray-700">실시간 스트림</span>
+                                <button
+                                    onClick={() => setShowRawStream(!showRawStream)}
+                                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                                        showRawStream 
+                                            ? 'bg-gradient-to-r from-blue-500 to-indigo-600' 
+                                            : 'bg-gray-300'
+                                    }`}
+                                >
+                                    <span
+                                        className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-lg transition-transform duration-300 ease-in-out ${
+                                            showRawStream ? 'translate-x-6' : 'translate-x-1'
+                                        }`}
+                                    />
+                                </button>
+                            </div>
                         </div>
 
                         {/* 검색창 - 세련된 디자인 */}
