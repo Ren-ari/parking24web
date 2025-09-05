@@ -35,7 +35,102 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sendCommand }) => {
     const isDisabled = !isPLCConnected || !isAuthenticated;
 
     return (
-                 <div className="bg-white rounded-2xl shadow-lg p-3 md:p-4 overflow-hidden border-2 border-gray-300">
+        <>
+            <style jsx>{`
+                @import url("https://fonts.googleapis.com/css?family=Rubik:700&display=swap");
+                
+                .learn-more {
+                    font-weight: 600;
+                    color: #1e3a8a;
+                    text-transform: uppercase;
+                    padding: 1.25em 2em;
+                    background: #dbeafe;
+                    border: 2px solid #3b82f6;
+                    border-radius: 0.75em;
+                    transform-style: preserve-3d;
+                    transition: transform 150ms cubic-bezier(0, 0, 0.58, 1), background 150ms cubic-bezier(0, 0, 0.58, 1);
+                    position: relative;
+                    display: inline-block;
+                    cursor: pointer;
+                    outline: none;
+                    vertical-align: middle;
+                    text-decoration: none;
+                    font-size: inherit;
+                    font-family: inherit;
+                    min-width: 120px;
+                }
+                
+                @media (min-width: 768px) {
+                    .learn-more {
+                        min-width: 160px;
+                        padding: 1.5em 3em;
+                    }
+                }
+                
+                .learn-more::before {
+                    position: absolute;
+                    content: "";
+                    width: 100%;
+                    height: 100%;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    bottom: 0;
+                    background: #93c5fd;
+                    border-radius: inherit;
+                    box-shadow: 0 0 0 2px #3b82f6, 0 0.625em 0 0 #bfdbfe;
+                    transform: translate3d(0, 0.75em, -1em);
+                    transition: transform 150ms cubic-bezier(0, 0, 0.58, 1), box-shadow 150ms cubic-bezier(0, 0, 0.58, 1);
+                }
+                
+                .learn-more:hover {
+                    background: #bfdbfe;
+                    transform: translate(0, 0.25em);
+                }
+                
+                .learn-more:hover::before {
+                    box-shadow: 0 0 0 2px #3b82f6, 0 0.5em 0 0 #bfdbfe;
+                    transform: translate3d(0, 0.5em, -1em);
+                }
+                
+                .learn-more:active {
+                    background: #bfdbfe;
+                    transform: translate(0em, 0.75em);
+                }
+                
+                .learn-more:active::before {
+                    box-shadow: 0 0 0 2px #3b82f6, 0 0 #bfdbfe;
+                    transform: translate3d(0, 0, -1em);
+                }
+
+                .emergency-button {
+                    color: #7f1d1d;
+                    background: #fecaca;
+                    border: 2px solid #dc2626;
+                }
+                
+                .emergency-button::before {
+                    background: #fca5a5;
+                    box-shadow: 0 0 0 2px #dc2626, 0 0.625em 0 0 #fecaca;
+                }
+                
+                .emergency-button:hover {
+                    background: #fca5a5;
+                }
+                
+                .emergency-button:hover::before {
+                    box-shadow: 0 0 0 2px #dc2626, 0 0.5em 0 0 #fecaca;
+                }
+                
+                .emergency-button:active {
+                    background: #fca5a5;
+                }
+                
+                .emergency-button:active::before {
+                    box-shadow: 0 0 0 2px #dc2626, 0 0 #fecaca;
+                }
+            `}</style>
+            <div className="bg-white rounded-2xl shadow-lg p-3 md:p-4 overflow-hidden border-2 border-gray-300">
             <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-6 md:mb-4 space-y-2 md:space-y-0">
                 <h2 className="text-base md:text-lg font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2 md:mb-0">수동 제어</h2>
                 <div className="flex items-center flex-wrap gap-3 justify-end sm:justify-start">
@@ -49,140 +144,77 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sendCommand }) => {
 
             {/* 승강 제어 */}
             <div className="mb-6">
-                <h3 className="text-base md:text-lg font-semibold mb-3 text-gray-700">승강 제어</h3>
-                <div className="grid grid-cols-2 gap-3 md:gap-4">
+                <div className="flex flex-wrap gap-6 md:gap-8 justify-center">
                     <button
                         onMouseDown={() => sendCommand('liftUp', 1)}
                         onMouseUp={() => sendCommand('liftUp', 0)}
-                        onMouseLeave={() => sendCommand('liftUp', 0)} // 버튼 밖으로 나가도 0
+                        onMouseLeave={() => sendCommand('liftUp', 0)}
                         onTouchStart={() => sendCommand('liftUp', 1)}
                         onTouchEnd={() => sendCommand('liftUp', 0)}
                         disabled={isDisabled}
-                        className={`relative p-4 md:p-6 rounded-2xl font-semibold text-white transition-all duration-200 ${isDisabled
-                            ? 'bg-gray-400 cursor-not-allowed'
-                            : activeCommand === 'liftUp'
-                                ? 'bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-700 scale-95'
-                                : 'bg-gradient-to-r from-blue-500 via-blue-600 to-indigo-600 hover:from-blue-600 hover:via-blue-700 hover:to-indigo-700 active:scale-95'
-                            }`}
+                        className={`learn-more ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
                     >
-                        <div className="flex flex-col items-center space-y-1 md:space-y-2">
-                            <svg className="w-6 h-6 md:w-8 md:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
-                            </svg>
-                            <span className="text-sm md:text-lg">상승</span>
-                        </div>
-                        {activeCommand === 'liftUp' && (
-                            <div className="absolute inset-0 bg-indigo-300 rounded-2xl animate-pulse"></div>
-                        )}
+                        상승
                     </button>
 
                     <button
                         onMouseDown={() => sendCommand('liftDown', 1)}
                         onMouseUp={() => sendCommand('liftDown', 0)}
-                        onMouseLeave={() => sendCommand('liftDown', 0)} // 버튼 밖으로 나가도 0
+                        onMouseLeave={() => sendCommand('liftDown', 0)}
                         onTouchStart={() => sendCommand('liftDown', 1)}
                         onTouchEnd={() => sendCommand('liftDown', 0)}
                         disabled={isDisabled}
-                        className={`relative p-4 md:p-6 rounded-2xl font-semibold text-white transition-all duration-200 ${isDisabled
-                            ? 'bg-gray-400 cursor-not-allowed'
-                            : activeCommand === 'liftDown'
-                                ? 'bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-700 scale-95'
-                                : 'bg-gradient-to-r from-blue-500 via-blue-600 to-indigo-600 hover:from-blue-600 hover:via-blue-700 hover:to-indigo-700 active:scale-95'
-                            }`}
+                        className={`learn-more ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
                     >
-                        <div className="flex flex-col items-center space-y-1 md:space-y-2">
-                            <svg className="w-6 h-6 md:w-8 md:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                            </svg>
-                            <span className="text-sm md:text-lg">하강</span>
-                        </div>
-                        {activeCommand === 'liftDown' && (
-                            <div className="absolute inset-0 bg-indigo-300 rounded-2xl animate-pulse"></div>
-                        )}
+                        하강
                     </button>
                 </div>
             </div>
 
             {/* 횡행 제어 */}
-            <div className="mb-6">
-                <h3 className="text-base md:text-lg font-semibold mb-3 text-gray-700">횡행 제어</h3>
-                <div className="grid grid-cols-2 gap-3 md:gap-4">
+            <div className="mb-6 mt-8">
+                <div className="flex flex-wrap gap-6 md:gap-8 justify-center">
                     <button
                         onMouseDown={() => sendCommand('moveLeft', 1)}
                         onMouseUp={() => sendCommand('moveLeft', 0)}
-                        onMouseLeave={() => sendCommand('moveLeft', 0)} // 버튼 밖으로 나가도 0
+                        onMouseLeave={() => sendCommand('moveLeft', 0)}
                         onTouchStart={() => sendCommand('moveLeft', 1)}
                         onTouchEnd={() => sendCommand('moveLeft', 0)}
                         disabled={isDisabled}
-                        className={`relative p-4 md:p-6 rounded-2xl font-semibold text-white transition-all duration-200 ${isDisabled
-                            ? 'bg-gray-400 cursor-not-allowed'
-                            : activeCommand === 'moveLeft'
-                                ? 'bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-700 scale-95'
-                                : 'bg-gradient-to-r from-blue-500 via-blue-600 to-indigo-600 hover:from-blue-600 hover:via-blue-700 hover:to-indigo-700 active:scale-95'
-                            }`}
+                        className={`learn-more ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
                     >
-                        <div className="flex flex-col items-center space-y-1 md:space-y-2">
-                            <svg className="w-6 h-6 md:w-8 md:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                            </svg>
-                            <span className="text-sm md:text-lg">좌행</span>
-                        </div>
-                        {activeCommand === 'moveLeft' && (
-                            <div className="absolute inset-0 bg-indigo-300 rounded-2xl animate-pulse"></div>
-                        )}
+                        좌행
                     </button>
 
                     <button
                         onMouseDown={() => sendCommand('moveRight', 1)}
                         onMouseUp={() => sendCommand('moveRight', 0)}
-                        onMouseLeave={() => sendCommand('moveRight', 0)} // 버튼 밖으로 나가도 0
+                        onMouseLeave={() => sendCommand('moveRight', 0)}
                         onTouchStart={() => sendCommand('moveRight', 1)}
                         onTouchEnd={() => sendCommand('moveRight', 0)}
                         disabled={isDisabled}
-                        className={`relative p-4 md:p-6 rounded-2xl font-semibold text-white transition-all duration-200 ${isDisabled
-                            ? 'bg-gray-400 cursor-not-allowed'
-                            : activeCommand === 'moveRight'
-                                ? 'bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-700 scale-95'
-                                : 'bg-gradient-to-r from-blue-500 via-blue-600 to-indigo-600 hover:from-blue-600 hover:via-blue-700 hover:to-indigo-700 active:scale-95'
-                            }`}
+                        className={`learn-more ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
                     >
-                        <div className="flex flex-col items-center space-y-1 md:space-y-2">
-                            <svg className="w-6 h-6 md:w-8 md:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                            </svg>
-                            <span className="text-sm md:text-lg">우행</span>
-                        </div>
-                        {activeCommand === 'moveRight' && (
-                            <div className="absolute inset-0 bg-indigo-300 rounded-2xl animate-pulse"></div>
-                        )}
+                        우행
                     </button>
                 </div>
             </div>
 
             {/* 비상정지 */}
             <div className="border-t pt-4 md:pt-6">
-                <button
-                    onClick={handleEmergencyStop}
-                    disabled={!isPLCConnected}
-                    className={`w-full p-4 md:p-6 rounded-2xl font-bold text-white text-lg md:text-xl transition-all duration-200 ${!isPLCConnected
-                        ? 'bg-gray-400 cursor-not-allowed'
-                        : isEmergencyMode
-                            ? 'bg-red-800 animate-pulse'
-                            : 'bg-red-600 hover:bg-red-700 active:scale-95'
-                        }`}
-                >
-                    <div className="flex flex-col items-center space-y-1 md:space-y-2">
-                        <svg className="w-8 h-8 md:w-12 md:h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                        </svg>
-                        <span>비상정지</span>
-                        {isEmergencyMode && <span className="text-xs md:text-sm">실행 중...</span>}
-                    </div>
-                </button>
+                <div className="flex justify-center">
+                    <button
+                        onClick={handleEmergencyStop}
+                        disabled={!isPLCConnected}
+                        className={`learn-more emergency-button ${!isPLCConnected ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    >
+                        비상정지
+                    </button>
+                </div>
             </div>
 
             {/* 사용법 안내 */}
-            <div className="mt-4 md:mt-6 p-3 md:p-4 bg-blue-50 rounded-2xl">
+            <div className="mt-8 md:mt-12 p-3 md:p-4 bg-blue-50 rounded-2xl">
                 <h4 className="text-xs md:text-sm font-semibold text-blue-800 mb-2">사용법</h4>
                 <ul className="text-xs text-blue-700 space-y-1">
                     <li>• PLC 연결과 인증이 완료되어야 제어 가능합니다</li>
@@ -201,7 +233,8 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sendCommand }) => {
                     <div>비상모드: {isEmergencyMode ? 'O' : 'X'}</div>
                 </div>
             )}
-        </div>
+            </div>
+        </>
     );
 };
 
