@@ -1,0 +1,578 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "C:\\Users\\USER\\Desktop\\Parking24web\\Parking24web\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{A7CD7956-132D-4AAB-AF1B-84352E8D037C}|Parking24web.Server\\Parking24web.Server.csproj|c:\\users\\user\\desktop\\parking24web\\parking24web\\parking24web.server\\services\\plcservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A7CD7956-132D-4AAB-AF1B-84352E8D037C}|Parking24web.Server\\Parking24web.Server.csproj|solutionrelative:parking24web.server\\services\\plcservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{032E615C-D314-40D8-863E-264006211BD5}|parking24web.client\\parking24web.client.esproj|c:\\users\\user\\desktop\\parking24web\\parking24web\\parking24web.client\\src\\components\\parkingmonitor.jsx||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
+      "RelativeMoniker": "D:0:0:{032E615C-D314-40D8-863E-264006211BD5}|parking24web.client\\parking24web.client.esproj|solutionrelative:parking24web.client\\src\\components\\parkingmonitor.jsx||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{032E615C-D314-40D8-863E-264006211BD5}|parking24web.client\\parking24web.client.esproj|c:\\users\\user\\desktop\\parking24web\\parking24web\\parking24web.client\\src\\components\\manualcontrol.jsx||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
+      "RelativeMoniker": "D:0:0:{032E615C-D314-40D8-863E-264006211BD5}|parking24web.client\\parking24web.client.esproj|solutionrelative:parking24web.client\\src\\components\\manualcontrol.jsx||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{032E615C-D314-40D8-863E-264006211BD5}|parking24web.client\\parking24web.client.esproj|c:\\users\\user\\desktop\\parking24web\\parking24web\\parking24web.client\\src\\components\\configpanel.jsx||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
+      "RelativeMoniker": "D:0:0:{032E615C-D314-40D8-863E-264006211BD5}|parking24web.client\\parking24web.client.esproj|solutionrelative:parking24web.client\\src\\components\\configpanel.jsx||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{032E615C-D314-40D8-863E-264006211BD5}|parking24web.client\\parking24web.client.esproj|c:\\users\\user\\desktop\\parking24web\\parking24web\\parking24web.client\\src\\config\\sensormappings.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
+      "RelativeMoniker": "D:0:0:{032E615C-D314-40D8-863E-264006211BD5}|parking24web.client\\parking24web.client.esproj|solutionrelative:parking24web.client\\src\\config\\sensormappings.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{032E615C-D314-40D8-863E-264006211BD5}|parking24web.client\\parking24web.client.esproj|c:\\users\\user\\desktop\\parking24web\\parking24web\\parking24web.client\\src\\components\\sensormonitor.jsx||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
+      "RelativeMoniker": "D:0:0:{032E615C-D314-40D8-863E-264006211BD5}|parking24web.client\\parking24web.client.esproj|solutionrelative:parking24web.client\\src\\components\\sensormonitor.jsx||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{032E615C-D314-40D8-863E-264006211BD5}|parking24web.client\\parking24web.client.esproj|c:\\users\\user\\desktop\\parking24web\\parking24web\\parking24web.client\\src\\hooks\\useplcconnection.jsx||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
+      "RelativeMoniker": "D:0:0:{032E615C-D314-40D8-863E-264006211BD5}|parking24web.client\\parking24web.client.esproj|solutionrelative:parking24web.client\\src\\hooks\\useplcconnection.jsx||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{032E615C-D314-40D8-863E-264006211BD5}|parking24web.client\\parking24web.client.esproj|c:\\users\\user\\desktop\\parking24web\\parking24web\\parking24web.client\\src\\services\\signalrservice.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
+      "RelativeMoniker": "D:0:0:{032E615C-D314-40D8-863E-264006211BD5}|parking24web.client\\parking24web.client.esproj|solutionrelative:parking24web.client\\src\\services\\signalrservice.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{032E615C-D314-40D8-863E-264006211BD5}|parking24web.client\\parking24web.client.esproj|c:\\users\\user\\desktop\\parking24web\\parking24web\\parking24web.client\\src\\app.jsx||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
+      "RelativeMoniker": "D:0:0:{032E615C-D314-40D8-863E-264006211BD5}|parking24web.client\\parking24web.client.esproj|solutionrelative:parking24web.client\\src\\app.jsx||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{032E615C-D314-40D8-863E-264006211BD5}|parking24web.client\\parking24web.client.esproj|c:\\users\\user\\desktop\\parking24web\\parking24web\\parking24web.client\\src\\main.jsx||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
+      "RelativeMoniker": "D:0:0:{032E615C-D314-40D8-863E-264006211BD5}|parking24web.client\\parking24web.client.esproj|solutionrelative:parking24web.client\\src\\main.jsx||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{032E615C-D314-40D8-863E-264006211BD5}|parking24web.client\\parking24web.client.esproj|c:\\users\\user\\desktop\\parking24web\\parking24web\\parking24web.client\\src\\components\\plccontrol.jsx||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
+      "RelativeMoniker": "D:0:0:{032E615C-D314-40D8-863E-264006211BD5}|parking24web.client\\parking24web.client.esproj|solutionrelative:parking24web.client\\src\\components\\plccontrol.jsx||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{032E615C-D314-40D8-863E-264006211BD5}|parking24web.client\\parking24web.client.esproj|c:\\users\\user\\desktop\\parking24web\\parking24web\\parking24web.client\\src\\components\\connectionpanel.jsx||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
+      "RelativeMoniker": "D:0:0:{032E615C-D314-40D8-863E-264006211BD5}|parking24web.client\\parking24web.client.esproj|solutionrelative:parking24web.client\\src\\components\\connectionpanel.jsx||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A7CD7956-132D-4AAB-AF1B-84352E8D037C}|Parking24web.Server\\Parking24web.Server.csproj|c:\\users\\user\\desktop\\parking24web\\parking24web\\parking24web.server\\services\\hubs\\plchub.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A7CD7956-132D-4AAB-AF1B-84352E8D037C}|Parking24web.Server\\Parking24web.Server.csproj|solutionrelative:parking24web.server\\services\\hubs\\plchub.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A7CD7956-132D-4AAB-AF1B-84352E8D037C}|Parking24web.Server\\Parking24web.Server.csproj|c:\\users\\user\\desktop\\parking24web\\parking24web\\parking24web.server\\services\\lsis_fenet.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A7CD7956-132D-4AAB-AF1B-84352E8D037C}|Parking24web.Server\\Parking24web.Server.csproj|solutionrelative:parking24web.server\\services\\lsis_fenet.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A7CD7956-132D-4AAB-AF1B-84352E8D037C}|Parking24web.Server\\Parking24web.Server.csproj|c:\\users\\user\\desktop\\parking24web\\parking24web\\parking24web.server\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A7CD7956-132D-4AAB-AF1B-84352E8D037C}|Parking24web.Server\\Parking24web.Server.csproj|solutionrelative:parking24web.server\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A7CD7956-132D-4AAB-AF1B-84352E8D037C}|Parking24web.Server\\Parking24web.Server.csproj|c:\\users\\user\\desktop\\parking24web\\parking24web\\parking24web.server\\appsettings.development.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
+      "RelativeMoniker": "D:0:0:{A7CD7956-132D-4AAB-AF1B-84352E8D037C}|Parking24web.Server\\Parking24web.Server.csproj|solutionrelative:parking24web.server\\appsettings.development.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A7CD7956-132D-4AAB-AF1B-84352E8D037C}|Parking24web.Server\\Parking24web.Server.csproj|c:\\users\\user\\desktop\\parking24web\\parking24web\\parking24web.server\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
+      "RelativeMoniker": "D:0:0:{A7CD7956-132D-4AAB-AF1B-84352E8D037C}|Parking24web.Server\\Parking24web.Server.csproj|solutionrelative:parking24web.server\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{032E615C-D314-40D8-863E-264006211BD5}|parking24web.client\\parking24web.client.esproj|c:\\users\\user\\desktop\\parking24web\\parking24web\\parking24web.client\\.vscode\\launch.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
+      "RelativeMoniker": "D:0:0:{032E615C-D314-40D8-863E-264006211BD5}|parking24web.client\\parking24web.client.esproj|solutionrelative:parking24web.client\\.vscode\\launch.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A7CD7956-132D-4AAB-AF1B-84352E8D037C}|Parking24web.Server\\Parking24web.Server.csproj|c:\\users\\user\\desktop\\parking24web\\parking24web\\parking24web.server\\parking24web.server.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|",
+      "RelativeMoniker": "D:0:0:{A7CD7956-132D-4AAB-AF1B-84352E8D037C}|Parking24web.Server\\Parking24web.Server.csproj|solutionrelative:parking24web.server\\parking24web.server.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A7CD7956-132D-4AAB-AF1B-84352E8D037C}|Parking24web.Server\\Parking24web.Server.csproj|c:\\users\\user\\desktop\\parking24web\\parking24web\\parking24web.server\\properties\\launchsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
+      "RelativeMoniker": "D:0:0:{A7CD7956-132D-4AAB-AF1B-84352E8D037C}|Parking24web.Server\\Parking24web.Server.csproj|solutionrelative:parking24web.server\\properties\\launchsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{032E615C-D314-40D8-863E-264006211BD5}|parking24web.client\\parking24web.client.esproj|c:\\users\\user\\desktop\\parking24web\\parking24web\\parking24web.client\\vite.config.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
+      "RelativeMoniker": "D:0:0:{032E615C-D314-40D8-863E-264006211BD5}|parking24web.client\\parking24web.client.esproj|solutionrelative:parking24web.client\\vite.config.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{032E615C-D314-40D8-863E-264006211BD5}|parking24web.client\\parking24web.client.esproj|c:\\users\\user\\desktop\\parking24web\\parking24web\\parking24web.client\\package.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
+      "RelativeMoniker": "D:0:0:{032E615C-D314-40D8-863E-264006211BD5}|parking24web.client\\parking24web.client.esproj|solutionrelative:parking24web.client\\package.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{032E615C-D314-40D8-863E-264006211BD5}|parking24web.client\\parking24web.client.esproj|c:\\users\\user\\desktop\\parking24web\\parking24web\\parking24web.client\\parking24web.client.esproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|",
+      "RelativeMoniker": "D:0:0:{032E615C-D314-40D8-863E-264006211BD5}|parking24web.client\\parking24web.client.esproj|solutionrelative:parking24web.client\\parking24web.client.esproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{032E615C-D314-40D8-863E-264006211BD5}|parking24web.client\\parking24web.client.esproj|c:\\users\\user\\desktop\\parking24web\\parking24web\\parking24web.client\\readme.md||{EFC0BB08-EA7D-40C6-A696-C870411A895B}",
+      "RelativeMoniker": "D:0:0:{032E615C-D314-40D8-863E-264006211BD5}|parking24web.client\\parking24web.client.esproj|solutionrelative:parking24web.client\\readme.md||{EFC0BB08-EA7D-40C6-A696-C870411A895B}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{032E615C-D314-40D8-863E-264006211BD5}|parking24web.client\\parking24web.client.esproj|c:\\users\\user\\desktop\\parking24web\\parking24web\\parking24web.client\\tailwind.config.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
+      "RelativeMoniker": "D:0:0:{032E615C-D314-40D8-863E-264006211BD5}|parking24web.client\\parking24web.client.esproj|solutionrelative:parking24web.client\\tailwind.config.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{032E615C-D314-40D8-863E-264006211BD5}|parking24web.client\\parking24web.client.esproj|c:\\users\\user\\desktop\\parking24web\\parking24web\\parking24web.client\\src\\index.css||{A5401142-F49D-43DB-90B1-F57BA349E55C}",
+      "RelativeMoniker": "D:0:0:{032E615C-D314-40D8-863E-264006211BD5}|parking24web.client\\parking24web.client.esproj|solutionrelative:parking24web.client\\src\\index.css||{A5401142-F49D-43DB-90B1-F57BA349E55C}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{032E615C-D314-40D8-863E-264006211BD5}|parking24web.client\\parking24web.client.esproj|c:\\users\\user\\desktop\\parking24web\\parking24web\\parking24web.client\\src\\app.css||{A5401142-F49D-43DB-90B1-F57BA349E55C}",
+      "RelativeMoniker": "D:0:0:{032E615C-D314-40D8-863E-264006211BD5}|parking24web.client\\parking24web.client.esproj|solutionrelative:parking24web.client\\src\\app.css||{A5401142-F49D-43DB-90B1-F57BA349E55C}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{032E615C-D314-40D8-863E-264006211BD5}|parking24web.client\\parking24web.client.esproj|c:\\users\\user\\desktop\\parking24web\\parking24web\\parking24web.client\\eslint.config.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
+      "RelativeMoniker": "D:0:0:{032E615C-D314-40D8-863E-264006211BD5}|parking24web.client\\parking24web.client.esproj|solutionrelative:parking24web.client\\eslint.config.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{032E615C-D314-40D8-863E-264006211BD5}|parking24web.client\\parking24web.client.esproj|c:\\users\\user\\desktop\\parking24web\\parking24web\\parking24web.client\\postcss.config.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
+      "RelativeMoniker": "D:0:0:{032E615C-D314-40D8-863E-264006211BD5}|parking24web.client\\parking24web.client.esproj|solutionrelative:parking24web.client\\postcss.config.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A7CD7956-132D-4AAB-AF1B-84352E8D037C}|Parking24web.Server\\Parking24web.Server.csproj|c:\\users\\user\\desktop\\parking24web\\parking24web\\parking24web.server\\parking24web.server.http||{5703B403-55E7-4C63-8C88-A8F52C7A45C5}",
+      "RelativeMoniker": "D:0:0:{A7CD7956-132D-4AAB-AF1B-84352E8D037C}|Parking24web.Server\\Parking24web.Server.csproj|solutionrelative:parking24web.server\\parking24web.server.http||{5703B403-55E7-4C63-8C88-A8F52C7A45C5}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{032E615C-D314-40D8-863E-264006211BD5}|parking24web.client\\parking24web.client.esproj|c:\\users\\user\\desktop\\parking24web\\parking24web\\parking24web.client\\package-lock.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
+      "RelativeMoniker": "D:0:0:{032E615C-D314-40D8-863E-264006211BD5}|parking24web.client\\parking24web.client.esproj|solutionrelative:parking24web.client\\package-lock.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{032E615C-D314-40D8-863E-264006211BD5}|parking24web.client\\parking24web.client.esproj|c:\\users\\user\\desktop\\parking24web\\parking24web\\parking24web.client\\index.html||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{032E615C-D314-40D8-863E-264006211BD5}|parking24web.client\\parking24web.client.esproj|solutionrelative:parking24web.client\\index.html||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{032E615C-D314-40D8-863E-264006211BD5}|parking24web.client\\parking24web.client.esproj|c:\\users\\user\\desktop\\parking24web\\parking24web\\parking24web.client\\parking24web.client.esproj||{04B8AB82-A572-4FEF-95CE-5222444B6B64}|",
+      "RelativeMoniker": "D:0:0:{032E615C-D314-40D8-863E-264006211BD5}|parking24web.client\\parking24web.client.esproj|solutionrelative:parking24web.client\\parking24web.client.esproj||{04B8AB82-A572-4FEF-95CE-5222444B6B64}|"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 4,
+          "Children": [
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{e5c86464-96be-4d7c-9a8b-abcb3bbf5f92}"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "ManualControl.jsx",
+              "DocumentMoniker": "C:\\Users\\USER\\Desktop\\Parking24web\\Parking24web\\parking24web.client\\src\\components\\ManualControl.jsx",
+              "RelativeDocumentMoniker": "parking24web.client\\src\\components\\ManualControl.jsx",
+              "ToolTip": "C:\\Users\\USER\\Desktop\\Parking24web\\Parking24web\\parking24web.client\\src\\components\\ManualControl.jsx",
+              "RelativeToolTip": "parking24web.client\\src\\components\\ManualControl.jsx",
+              "ViewState": "AgIAAA8AAAAAAAAAAAAAAC8AAAAxAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003663|",
+              "WhenOpened": "2025-08-27T08:36:35.775Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "ConfigPanel.jsx",
+              "DocumentMoniker": "C:\\Users\\USER\\Desktop\\Parking24web\\Parking24web\\parking24web.client\\src\\components\\ConfigPanel.jsx",
+              "RelativeDocumentMoniker": "parking24web.client\\src\\components\\ConfigPanel.jsx",
+              "ToolTip": "C:\\Users\\USER\\Desktop\\Parking24web\\Parking24web\\parking24web.client\\src\\components\\ConfigPanel.jsx",
+              "RelativeToolTip": "parking24web.client\\src\\components\\ConfigPanel.jsx",
+              "ViewState": "AgIAAGkAAAAAAAAAAAAAAJYAAAAOAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003663|",
+              "WhenOpened": "2025-08-28T07:48:56.736Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "ParkingMonitor.jsx",
+              "DocumentMoniker": "C:\\Users\\USER\\Desktop\\Parking24web\\Parking24web\\parking24web.client\\src\\components\\ParkingMonitor.jsx",
+              "RelativeDocumentMoniker": "parking24web.client\\src\\components\\ParkingMonitor.jsx",
+              "ToolTip": "C:\\Users\\USER\\Desktop\\Parking24web\\Parking24web\\parking24web.client\\src\\components\\ParkingMonitor.jsx",
+              "RelativeToolTip": "parking24web.client\\src\\components\\ParkingMonitor.jsx",
+              "ViewState": "AgIAAI4BAAAAAAAAAAAxwLoBAABHAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003663|",
+              "WhenOpened": "2025-08-29T01:05:37.733Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "PLCService.cs",
+              "DocumentMoniker": "C:\\Users\\USER\\Desktop\\Parking24web\\Parking24web\\Parking24web.Server\\Services\\PLCService.cs",
+              "RelativeDocumentMoniker": "Parking24web.Server\\Services\\PLCService.cs",
+              "ToolTip": "C:\\Users\\USER\\Desktop\\Parking24web\\Parking24web\\Parking24web.Server\\Services\\PLCService.cs",
+              "RelativeToolTip": "Parking24web.Server\\Services\\PLCService.cs",
+              "ViewState": "AgIAAGwAAAAAAAAAAAAowJoAAAArAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-08-27T07:42:02.985Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:1:0:{d212f56b-c48a-434c-a121-1c5d80b59b9f}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{34e76e81-ee4a-11d0-ae2e-00a0c90fffc3}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{d78612c7-9962-4b83-95d9-268046dad23a}"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "sensorMappings.js",
+              "DocumentMoniker": "C:\\Users\\USER\\Desktop\\Parking24web\\Parking24web\\parking24web.client\\src\\config\\sensorMappings.js",
+              "RelativeDocumentMoniker": "parking24web.client\\src\\config\\sensorMappings.js",
+              "ToolTip": "C:\\Users\\USER\\Desktop\\Parking24web\\Parking24web\\parking24web.client\\src\\config\\sensorMappings.js",
+              "RelativeToolTip": "parking24web.client\\src\\config\\sensorMappings.js",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAQAAAAjAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
+              "WhenOpened": "2025-09-05T11:38:22.785Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "SensorMonitor.jsx",
+              "DocumentMoniker": "C:\\Users\\USER\\Desktop\\Parking24web\\Parking24web\\parking24web.client\\src\\components\\SensorMonitor.jsx",
+              "RelativeDocumentMoniker": "parking24web.client\\src\\components\\SensorMonitor.jsx",
+              "ToolTip": "C:\\Users\\USER\\Desktop\\Parking24web\\Parking24web\\parking24web.client\\src\\components\\SensorMonitor.jsx",
+              "RelativeToolTip": "parking24web.client\\src\\components\\SensorMonitor.jsx",
+              "ViewState": "AgIAAAcAAAAAAAAAAAAAACcAAAAWAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003663|",
+              "WhenOpened": "2025-08-27T08:33:44.202Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "usePLCConnection.jsx",
+              "DocumentMoniker": "C:\\Users\\USER\\Desktop\\Parking24web\\Parking24web\\parking24web.client\\src\\hooks\\usePLCConnection.jsx",
+              "RelativeDocumentMoniker": "parking24web.client\\src\\hooks\\usePLCConnection.jsx",
+              "ToolTip": "C:\\Users\\USER\\Desktop\\Parking24web\\Parking24web\\parking24web.client\\src\\hooks\\usePLCConnection.jsx",
+              "RelativeToolTip": "parking24web.client\\src\\hooks\\usePLCConnection.jsx",
+              "ViewState": "AgIAAJAAAAAAAAAAAAA1wK8AAAA7AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003663|",
+              "WhenOpened": "2025-08-27T08:13:27.258Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 7,
+              "Title": "signalrService.js",
+              "DocumentMoniker": "C:\\Users\\USER\\Desktop\\Parking24web\\Parking24web\\parking24web.client\\src\\Services\\signalrService.js",
+              "RelativeDocumentMoniker": "parking24web.client\\src\\Services\\signalrService.js",
+              "ToolTip": "C:\\Users\\USER\\Desktop\\Parking24web\\Parking24web\\parking24web.client\\src\\Services\\signalrService.js",
+              "RelativeToolTip": "parking24web.client\\src\\Services\\signalrService.js",
+              "ViewState": "AgIAAJ8AAAAAAAAAAAAAALEAAAA4AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
+              "WhenOpened": "2025-08-27T08:08:50.035Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 8,
+              "Title": "App.jsx",
+              "DocumentMoniker": "C:\\Users\\USER\\Desktop\\Parking24web\\Parking24web\\parking24web.client\\src\\App.jsx",
+              "RelativeDocumentMoniker": "parking24web.client\\src\\App.jsx",
+              "ToolTip": "C:\\Users\\USER\\Desktop\\Parking24web\\Parking24web\\parking24web.client\\src\\App.jsx",
+              "RelativeToolTip": "parking24web.client\\src\\App.jsx",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA4AAAATAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003663|",
+              "WhenOpened": "2025-08-27T08:10:03.811Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 9,
+              "Title": "main.jsx",
+              "DocumentMoniker": "C:\\Users\\USER\\Desktop\\Parking24web\\Parking24web\\parking24web.client\\src\\main.jsx",
+              "RelativeDocumentMoniker": "parking24web.client\\src\\main.jsx",
+              "ToolTip": "C:\\Users\\USER\\Desktop\\Parking24web\\Parking24web\\parking24web.client\\src\\main.jsx",
+              "RelativeToolTip": "parking24web.client\\src\\main.jsx",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAkAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003663|",
+              "WhenOpened": "2025-08-27T10:39:22.857Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 10,
+              "Title": "PLCControl.jsx",
+              "DocumentMoniker": "C:\\Users\\USER\\Desktop\\Parking24web\\Parking24web\\parking24web.client\\src\\components\\PLCControl.jsx",
+              "RelativeDocumentMoniker": "parking24web.client\\src\\components\\PLCControl.jsx",
+              "ToolTip": "C:\\Users\\USER\\Desktop\\Parking24web\\Parking24web\\parking24web.client\\src\\components\\PLCControl.jsx",
+              "RelativeToolTip": "parking24web.client\\src\\components\\PLCControl.jsx",
+              "ViewState": "AgIAALQBAAAAAAAAAAA1wCgCAAAaAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003663|",
+              "WhenOpened": "2025-08-27T08:57:00.524Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 11,
+              "Title": "ConnectionPanel.jsx",
+              "DocumentMoniker": "C:\\Users\\USER\\Desktop\\Parking24web\\Parking24web\\parking24web.client\\src\\components\\ConnectionPanel.jsx",
+              "RelativeDocumentMoniker": "parking24web.client\\src\\components\\ConnectionPanel.jsx",
+              "ToolTip": "C:\\Users\\USER\\Desktop\\Parking24web\\Parking24web\\parking24web.client\\src\\components\\ConnectionPanel.jsx",
+              "RelativeToolTip": "parking24web.client\\src\\components\\ConnectionPanel.jsx",
+              "ViewState": "AgIAABQAAAAAAAAAAAAAABoAAAAcAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003663|",
+              "WhenOpened": "2025-08-27T08:25:56.396Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 16,
+              "Title": "appsettings.json",
+              "DocumentMoniker": "C:\\Users\\USER\\Desktop\\Parking24web\\Parking24web\\Parking24web.Server\\appsettings.json",
+              "RelativeDocumentMoniker": "Parking24web.Server\\appsettings.json",
+              "ToolTip": "C:\\Users\\USER\\Desktop\\Parking24web\\Parking24web\\Parking24web.Server\\appsettings.json",
+              "RelativeToolTip": "Parking24web.Server\\appsettings.json",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAkAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
+              "WhenOpened": "2025-09-04T01:05:19.796Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 13,
+              "Title": "LSIS_FEnet.cs",
+              "DocumentMoniker": "C:\\Users\\USER\\Desktop\\Parking24web\\Parking24web\\Parking24web.Server\\Services\\LSIS_FEnet.cs",
+              "RelativeDocumentMoniker": "Parking24web.Server\\Services\\LSIS_FEnet.cs",
+              "ToolTip": "C:\\Users\\USER\\Desktop\\Parking24web\\Parking24web\\Parking24web.Server\\Services\\LSIS_FEnet.cs",
+              "RelativeToolTip": "Parking24web.Server\\Services\\LSIS_FEnet.cs",
+              "ViewState": "AgIAACADAAAAAAAAAAD4vzYDAAA9AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-08-27T07:35:30.615Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 12,
+              "Title": "PLCHub.cs",
+              "DocumentMoniker": "C:\\Users\\USER\\Desktop\\Parking24web\\Parking24web\\Parking24web.Server\\Services\\Hubs\\PLCHub.cs",
+              "RelativeDocumentMoniker": "Parking24web.Server\\Services\\Hubs\\PLCHub.cs",
+              "ToolTip": "C:\\Users\\USER\\Desktop\\Parking24web\\Parking24web\\Parking24web.Server\\Services\\Hubs\\PLCHub.cs",
+              "RelativeToolTip": "Parking24web.Server\\Services\\Hubs\\PLCHub.cs",
+              "ViewState": "AgIAAK0AAAAAAAAAAAAywOwAAAARAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-08-27T07:46:01.022Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 17,
+              "Title": "launch.json",
+              "DocumentMoniker": "C:\\Users\\USER\\Desktop\\Parking24web\\Parking24web\\parking24web.client\\.vscode\\launch.json",
+              "RelativeDocumentMoniker": "parking24web.client\\.vscode\\launch.json",
+              "ToolTip": "C:\\Users\\USER\\Desktop\\Parking24web\\Parking24web\\parking24web.client\\.vscode\\launch.json",
+              "RelativeToolTip": "parking24web.client\\.vscode\\launch.json",
+              "ViewState": "AgIAAAAAAAAAAAAAAADwvwAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
+              "WhenOpened": "2025-09-04T01:08:55.278Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 14,
+              "Title": "Program.cs",
+              "DocumentMoniker": "C:\\Users\\USER\\Desktop\\Parking24web\\Parking24web\\Parking24web.Server\\Program.cs",
+              "RelativeDocumentMoniker": "Parking24web.Server\\Program.cs",
+              "ToolTip": "C:\\Users\\USER\\Desktop\\Parking24web\\Parking24web\\Parking24web.Server\\Program.cs",
+              "RelativeToolTip": "Parking24web.Server\\Program.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAFkAAAAKAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-08-27T07:29:01.809Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 15,
+              "Title": "appsettings.Development.json",
+              "DocumentMoniker": "C:\\Users\\USER\\Desktop\\Parking24web\\Parking24web\\Parking24web.Server\\appsettings.Development.json",
+              "RelativeDocumentMoniker": "Parking24web.Server\\appsettings.Development.json",
+              "ToolTip": "C:\\Users\\USER\\Desktop\\Parking24web\\Parking24web\\Parking24web.Server\\appsettings.Development.json",
+              "RelativeToolTip": "Parking24web.Server\\appsettings.Development.json",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
+              "WhenOpened": "2025-09-04T01:09:25.34Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 18,
+              "Title": "Parking24web.Server.csproj",
+              "DocumentMoniker": "C:\\Users\\USER\\Desktop\\Parking24web\\Parking24web\\Parking24web.Server\\Parking24web.Server.csproj",
+              "RelativeDocumentMoniker": "Parking24web.Server\\Parking24web.Server.csproj",
+              "ToolTip": "C:\\Users\\USER\\Desktop\\Parking24web\\Parking24web\\Parking24web.Server\\Parking24web.Server.csproj",
+              "RelativeToolTip": "Parking24web.Server\\Parking24web.Server.csproj",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAB0AAAAKAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000758|",
+              "WhenOpened": "2025-09-01T03:03:47.306Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 19,
+              "Title": "launchSettings.json",
+              "DocumentMoniker": "C:\\Users\\USER\\Desktop\\Parking24web\\Parking24web\\Parking24web.Server\\Properties\\launchSettings.json",
+              "RelativeDocumentMoniker": "Parking24web.Server\\Properties\\launchSettings.json",
+              "ToolTip": "C:\\Users\\USER\\Desktop\\Parking24web\\Parking24web\\Parking24web.Server\\Properties\\launchSettings.json",
+              "RelativeToolTip": "Parking24web.Server\\Properties\\launchSettings.json",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAACEAAAAUAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
+              "WhenOpened": "2025-08-29T02:20:47.648Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 20,
+              "Title": "vite.config.js",
+              "DocumentMoniker": "C:\\Users\\USER\\Desktop\\Parking24web\\Parking24web\\parking24web.client\\vite.config.js",
+              "RelativeDocumentMoniker": "parking24web.client\\vite.config.js",
+              "ToolTip": "C:\\Users\\USER\\Desktop\\Parking24web\\Parking24web\\parking24web.client\\vite.config.js",
+              "RelativeToolTip": "parking24web.client\\vite.config.js",
+              "ViewState": "AgIAAAYAAAAAAAAAAAAAADkAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
+              "WhenOpened": "2025-08-27T07:29:00.1Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 22,
+              "Title": "parking24web.client.esproj",
+              "DocumentMoniker": "C:\\Users\\USER\\Desktop\\Parking24web\\Parking24web\\parking24web.client\\parking24web.client.esproj",
+              "RelativeDocumentMoniker": "parking24web.client\\parking24web.client.esproj",
+              "ToolTip": "C:\\Users\\USER\\Desktop\\Parking24web\\Parking24web\\parking24web.client\\parking24web.client.esproj",
+              "RelativeToolTip": "parking24web.client\\parking24web.client.esproj",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAoAAAAKAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2025-08-27T08:04:45.292Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 21,
+              "Title": "package.json",
+              "DocumentMoniker": "C:\\Users\\USER\\Desktop\\Parking24web\\Parking24web\\parking24web.client\\package.json",
+              "RelativeDocumentMoniker": "parking24web.client\\package.json",
+              "ToolTip": "C:\\Users\\USER\\Desktop\\Parking24web\\Parking24web\\parking24web.client\\package.json",
+              "RelativeToolTip": "parking24web.client\\package.json",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAB8AAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
+              "WhenOpened": "2025-08-29T02:21:08.487Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 23,
+              "Title": "README.md",
+              "DocumentMoniker": "C:\\Users\\USER\\Desktop\\Parking24web\\Parking24web\\parking24web.client\\README.md",
+              "RelativeDocumentMoniker": "parking24web.client\\README.md",
+              "ToolTip": "C:\\Users\\USER\\Desktop\\Parking24web\\Parking24web\\parking24web.client\\README.md",
+              "RelativeToolTip": "parking24web.client\\README.md",
+              "ViewState": "AgIAAAAAAAAAAAAAAADwvwAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001818|",
+              "WhenOpened": "2025-08-27T07:29:03.513Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 24,
+              "Title": "tailwind.config.js",
+              "DocumentMoniker": "C:\\Users\\USER\\Desktop\\Parking24web\\Parking24web\\parking24web.client\\tailwind.config.js",
+              "RelativeDocumentMoniker": "parking24web.client\\tailwind.config.js",
+              "ToolTip": "C:\\Users\\USER\\Desktop\\Parking24web\\Parking24web\\parking24web.client\\tailwind.config.js",
+              "RelativeToolTip": "parking24web.client\\tailwind.config.js",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAsAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
+              "WhenOpened": "2025-09-02T06:39:16.25Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 25,
+              "Title": "index.css",
+              "DocumentMoniker": "C:\\Users\\USER\\Desktop\\Parking24web\\Parking24web\\parking24web.client\\src\\index.css",
+              "RelativeDocumentMoniker": "parking24web.client\\src\\index.css",
+              "ToolTip": "C:\\Users\\USER\\Desktop\\Parking24web\\Parking24web\\parking24web.client\\src\\index.css",
+              "RelativeToolTip": "parking24web.client\\src\\index.css",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003000|",
+              "WhenOpened": "2025-08-27T09:37:53.653Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 26,
+              "Title": "App.css",
+              "DocumentMoniker": "C:\\Users\\USER\\Desktop\\Parking24web\\Parking24web\\parking24web.client\\src\\App.css",
+              "RelativeDocumentMoniker": "parking24web.client\\src\\App.css",
+              "ToolTip": "C:\\Users\\USER\\Desktop\\Parking24web\\Parking24web\\parking24web.client\\src\\App.css",
+              "RelativeToolTip": "parking24web.client\\src\\App.css",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA4AAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003000|",
+              "WhenOpened": "2025-08-27T08:58:48.752Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 27,
+              "Title": "eslint.config.js",
+              "DocumentMoniker": "C:\\Users\\USER\\Desktop\\Parking24web\\Parking24web\\parking24web.client\\eslint.config.js",
+              "RelativeDocumentMoniker": "parking24web.client\\eslint.config.js",
+              "ToolTip": "C:\\Users\\USER\\Desktop\\Parking24web\\Parking24web\\parking24web.client\\eslint.config.js",
+              "RelativeToolTip": "parking24web.client\\eslint.config.js",
+              "ViewState": "AgIAAAAAAAAAAAAAAADwvx0AAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
+              "WhenOpened": "2025-08-27T07:28:48.326Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 28,
+              "Title": "postcss.config.js",
+              "DocumentMoniker": "C:\\Users\\USER\\Desktop\\Parking24web\\Parking24web\\parking24web.client\\postcss.config.js",
+              "RelativeDocumentMoniker": "parking24web.client\\postcss.config.js",
+              "ToolTip": "C:\\Users\\USER\\Desktop\\Parking24web\\Parking24web\\parking24web.client\\postcss.config.js",
+              "RelativeToolTip": "parking24web.client\\postcss.config.js",
+              "ViewState": "AgIAAAAAAAAAAAAAAADwvwAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
+              "WhenOpened": "2025-09-02T06:41:01.154Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 29,
+              "Title": "Parking24web.Server.http",
+              "DocumentMoniker": "C:\\Users\\USER\\Desktop\\Parking24web\\Parking24web\\Parking24web.Server\\Parking24web.Server.http",
+              "RelativeDocumentMoniker": "Parking24web.Server\\Parking24web.Server.http",
+              "ToolTip": "C:\\Users\\USER\\Desktop\\Parking24web\\Parking24web\\Parking24web.Server\\Parking24web.Server.http",
+              "RelativeToolTip": "Parking24web.Server\\Parking24web.Server.http",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAYAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003502|",
+              "WhenOpened": "2025-08-27T07:29:09.566Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 30,
+              "Title": "package-lock.json",
+              "DocumentMoniker": "C:\\Users\\USER\\Desktop\\Parking24web\\Parking24web\\parking24web.client\\package-lock.json",
+              "RelativeDocumentMoniker": "parking24web.client\\package-lock.json",
+              "ToolTip": "C:\\Users\\USER\\Desktop\\Parking24web\\Parking24web\\parking24web.client\\package-lock.json",
+              "RelativeToolTip": "parking24web.client\\package-lock.json",
+              "ViewState": "AgIAAAAAAAAAAAAAAADwvxAAAAAjAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
+              "WhenOpened": "2025-08-29T02:21:11.912Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 31,
+              "Title": "index.html",
+              "DocumentMoniker": "C:\\Users\\USER\\Desktop\\Parking24web\\Parking24web\\parking24web.client\\index.html",
+              "RelativeDocumentMoniker": "parking24web.client\\index.html",
+              "ToolTip": "C:\\Users\\USER\\Desktop\\Parking24web\\Parking24web\\parking24web.client\\index.html",
+              "RelativeToolTip": "parking24web.client\\index.html",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABYAAAAHAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001512|",
+              "WhenOpened": "2025-08-27T09:14:36.984Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 32,
+              "Title": "parking24web.client",
+              "DocumentMoniker": "C:\\Users\\USER\\Desktop\\Parking24web\\Parking24web\\parking24web.client\\parking24web.client.esproj",
+              "RelativeDocumentMoniker": "parking24web.client\\parking24web.client.esproj",
+              "ToolTip": "C:\\Users\\USER\\Desktop\\Parking24web\\Parking24web\\parking24web.client\\parking24web.client.esproj",
+              "RelativeToolTip": "parking24web.client\\parking24web.client.esproj",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2025-08-27T10:24:24.458Z"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
