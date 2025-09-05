@@ -819,6 +819,8 @@ namespace Parking24web.Server.Services
                     m_Socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
                     m_Socket.SendTimeout = 100;
                     m_Socket.ReceiveTimeout = 100;
+                    m_Socket.SendBufferSize = 8192;  // 추가
+                    m_Socket.ReceiveBufferSize = 8192;  // 추가
                     m_Socket.Bind(m_localEP);
                     m_bConnect = true;
                 }
@@ -1029,7 +1031,7 @@ namespace Parking24web.Server.Services
             {
                 double nTime = Environment.TickCount - m_nTick;
 
-                if (3000 < nTime)
+                if (500 < nTime)
                 {
                     try
                     {

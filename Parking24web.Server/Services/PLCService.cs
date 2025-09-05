@@ -84,38 +84,29 @@ namespace Parking24web.Server.Services
 
         public ushort[] GetSensorData()
         {
-            lock (_lock)
-            {
-                if (!IsConnected) return new ushort[256];
+            if (!IsConnected) return new ushort[256];
 
-                // 연속 읽기 요청
-                _plc.RegisterReadW("%CB0");
-                Thread.Sleep(100); // 응답 대기
+            // 연속 읽기 요청
+            _plc.RegisterReadW("%CB0");
+            // Sleep 제거 - LSIS_FENet이 내부적으로 처리
 
-                return _plc.DataBuff;
-            }
+            return _plc.DataBuff;
         }
 
         public void WriteWord(string deviceType, int address, ushort value)
         {
-            lock (_lock)
-            {
-                if (!IsConnected) return;
+            if (!IsConnected) return;
 
-                string plcAddress = $"%{deviceType}W{address}";
-                _plc.RegisterWriteW(plcAddress, value);
-            }
+            string plcAddress = $"%{deviceType}W{address}";
+            _plc.RegisterWriteW(plcAddress, value);
         }
 
         public void WriteBit(string deviceType, int address, int bitPosition, bool value)
         {
-            lock (_lock)
-            {
-                if (!IsConnected) return;
+            if (!IsConnected) return;
 
-                string plcAddress = $"%{deviceType}X{address}.{bitPosition:X}";
-                _plc.RegisterWriteBit(plcAddress, value);
-            }
+            string plcAddress = $"%{deviceType}X{address}.{bitPosition:X}";
+            _plc.RegisterWriteBit(plcAddress, value);
         }
 
         #endregion

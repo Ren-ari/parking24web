@@ -7,11 +7,13 @@ namespace Parking24web.Server.Hubs
     {
         private readonly PLCService _plcService;
         private readonly ILogger<PLCHub> _logger;
+        private readonly IHubContext<PLCHub> _hubContext;
 
-        public PLCHub(PLCService plcService, ILogger<PLCHub> logger)
+        public PLCHub(PLCService plcService, ILogger<PLCHub> logger, IHubContext<PLCHub> hubContext)
         {
             _plcService = plcService;
             _logger = logger;
+            _hubContext = hubContext;
         }
 
         #region 연결 관리
@@ -219,16 +221,48 @@ namespace Parking24web.Server.Hubs
 
         #region SignalR 이벤트
 
+        private static Timer? _broadcastTimer;
+        private static bool _isMonitoring = false;
+
         public override async Task OnConnectedAsync()
         {
             await Clients.Caller.SendAsync("PLCConnectionChanged", _plcService.IsConnected);
             _logger.LogInformation($"클라이언트 연결: {Context.ConnectionId}");
+
+            // 첫 클라이언트 연결시에만 타이머 시작
+            if (!_isMonitoring)
+            {
+                _isMonitoring = true;
+                _broadcastTimer = new Timer(async _ =>
+                {
+                    if (_plcService.IsConnected)
+                    {
+                        var data = _plcService.GetSensorData();
+                        var parsedData = _plcService.GetParsedSensorData();
+
+                        await _hubContext.Clients.All.SendAsync("SensorDataUpdate", new
+                        {
+                            timestamp = DateTime.Now,
+                            connected = _plcService.IsConnected,
+                            rawData = data,
+                            parsedData = parsedData
+                        });
+                    }
+                }, null, 0, 100);
+
+                _logger.LogInformation("실시간 모니터링 시작");
+            }
+
             await base.OnConnectedAsync();
         }
 
         public override async Task OnDisconnectedAsync(Exception? exception)
         {
             _logger.LogInformation($"클라이언트 연결 해제: {Context.ConnectionId}");
+
+            // 모든 클라이언트가 나갔는지 체크 (선택사항)
+            // 필요하면 타이머 정지 로직 추가 가능
+
             await base.OnDisconnectedAsync(exception);
         }
 
