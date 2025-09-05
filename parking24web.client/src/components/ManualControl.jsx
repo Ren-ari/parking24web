@@ -45,8 +45,8 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sendCommand }) => {
                     text-transform: uppercase;
                     padding: 1.25em 2em;
                     background: #dbeafe;
-                    border: 2px solid #3b82f6;
-                    border-radius: 0.75em;
+                    border: 1px solid #3b82f6;
+                    border-radius: 1.5em;
                     transform-style: preserve-3d;
                     transition: transform 150ms cubic-bezier(0, 0, 0.58, 1), background 150ms cubic-bezier(0, 0, 0.58, 1);
                     position: relative;
@@ -78,7 +78,7 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sendCommand }) => {
                     bottom: 0;
                     background: #93c5fd;
                     border-radius: inherit;
-                    box-shadow: 0 0 0 2px #3b82f6, 0 0.625em 0 0 #bfdbfe;
+                    box-shadow: 0 0 0 1px #3b82f6, 0 0.625em 0 0 #bfdbfe;
                     transform: translate3d(0, 0.75em, -1em);
                     transition: transform 150ms cubic-bezier(0, 0, 0.58, 1), box-shadow 150ms cubic-bezier(0, 0, 0.58, 1);
                 }
@@ -89,7 +89,7 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sendCommand }) => {
                 }
                 
                 .learn-more:hover::before {
-                    box-shadow: 0 0 0 2px #3b82f6, 0 0.5em 0 0 #bfdbfe;
+                    box-shadow: 0 0 0 1px #3b82f6, 0 0.5em 0 0 #bfdbfe;
                     transform: translate3d(0, 0.5em, -1em);
                 }
                 
@@ -99,19 +99,19 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sendCommand }) => {
                 }
                 
                 .learn-more:active::before {
-                    box-shadow: 0 0 0 2px #3b82f6, 0 0 #bfdbfe;
+                    box-shadow: 0 0 0 1px #3b82f6, 0 0 #bfdbfe;
                     transform: translate3d(0, 0, -1em);
                 }
 
                 .emergency-button {
                     color: #7f1d1d;
                     background: #fecaca;
-                    border: 2px solid #dc2626;
+                    border: 1px solid #dc2626;
                 }
                 
                 .emergency-button::before {
                     background: #fca5a5;
-                    box-shadow: 0 0 0 2px #dc2626, 0 0.625em 0 0 #fecaca;
+                    box-shadow: 0 0 0 1px #dc2626, 0 0.625em 0 0 #fecaca;
                 }
                 
                 .emergency-button:hover {
@@ -119,7 +119,7 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sendCommand }) => {
                 }
                 
                 .emergency-button:hover::before {
-                    box-shadow: 0 0 0 2px #dc2626, 0 0.5em 0 0 #fecaca;
+                    box-shadow: 0 0 0 1px #dc2626, 0 0.5em 0 0 #fecaca;
                 }
                 
                 .emergency-button:active {
@@ -127,7 +127,7 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sendCommand }) => {
                 }
                 
                 .emergency-button:active::before {
-                    box-shadow: 0 0 0 2px #dc2626, 0 0 #fecaca;
+                    box-shadow: 0 0 0 1px #dc2626, 0 0 #fecaca;
                 }
             `}</style>
             <div className="bg-white rounded-2xl shadow-lg p-3 md:p-4 overflow-hidden border-2 border-gray-300">
