@@ -5,54 +5,154 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sendCommand, sensorDat
     const [isEmergencyMode, setIsEmergencyMode] = useState(false);
     const [activeTab, setActiveTab] = useState('page1');
     const [showSensors, setShowSensors] = useState(true);
-    const [sensorStates, setSensorStates] = useState({
-        C28: false, // 턴 0도 확인정지
-        C29: false, // 턴 180도 확인정지
-        C31: false, // 턴 상승확인
-        C32: false, // 턴 하강확인
-        C39: false, // 도어열림확인
-        C40: false, // 도어닫힘확인
-        C41: false, // 도어잠확인
-        C42: false, // 좌측동작감지확인1
-        C43: false, // 우측동작감지확인1
-        C44: false, // 좌도어확인
-        C45: false, // 우도어확인
-        C53: false, // 도어내확인
-    });
+    const [sensorStates, setSensorStates] = useState({});
 
-    // 센서모니터에서 사용하는 비트 매핑을 활용한 센서 상태 업데이트
+    // AI parking 프로젝트의 센서 정의를 기반으로 한 센서 상태 업데이트
     const updateSensorStates = () => {
         if (!sensorData || !sensorData.rawData) return;
         
-        // 센서모니터의 비트 매핑에서 필요한 센서들만 추출
-        const sensorMappings = [
-            { wordIndex: 62, bitIndex: 0, address: 'C28', name: '턴0도확인' },
-            { wordIndex: 62, bitIndex: 1, address: 'C29', name: '턴180확인' },
-            { wordIndex: 61, bitIndex: 10, address: 'C31', name: '턴상승확인' },
-            { wordIndex: 61, bitIndex: 11, address: 'C32', name: '턴하강확인' },
-            { wordIndex: 60, bitIndex: 10, address: 'C39', name: '도어열림확인' },
-            { wordIndex: 60, bitIndex: 11, address: 'C40', name: '도어닫힘확인' },
-            { wordIndex: 60, bitIndex: 9, address: 'C41', name: '도어잠확인' },
-            { wordIndex: 60, bitIndex: 14, address: 'C42', name: '좌측동작감지확인1' },
-            { wordIndex: 60, bitIndex: 15, address: 'C43', name: '우측동작감지확인1' },
-            { wordIndex: 60, bitIndex: 12, address: 'C44', name: '좌도어확인' },
-            { wordIndex: 60, bitIndex: 13, address: 'C45', name: '우도어확인' },
-            { wordIndex: 60, bitIndex: 8, address: 'C53', name: '도어내확인' },
-        ];
+        // AI parking 프로젝트의 센서 정의를 기반으로 한 매핑
+        const sensorMappings = {
+            // 도어/턴테이블 탭 (page1) - 인풋 센서들
+            'Turn0': { wordIndex: 62, bitIndex: 0, address: 'C28', name: '턴 0도 확인정지' },
+            'Turn180': { wordIndex: 62, bitIndex: 1, address: 'C29', name: '턴 180도 확인정지' },
+            'Turnup': { wordIndex: 61, bitIndex: 10, address: 'C31', name: '턴 상승확인' },
+            'Turndown': { wordIndex: 61, bitIndex: 11, address: 'C32', name: '턴 하강확인' },
+            'DoorOpen': { wordIndex: 60, bitIndex: 10, address: 'C39', name: '도어열림확인' },
+            'DoorClose': { wordIndex: 60, bitIndex: 11, address: 'C40', name: '도어닫힘확인' },
+            'DoorCloseCheck': { wordIndex: 60, bitIndex: 9, address: 'C41', name: '도어잠확인' },
+            'LeftDoorCheck': { wordIndex: 60, bitIndex: 12, address: 'C44', name: '좌도어확인' },
+            'RightDoorCheck': { wordIndex: 60, bitIndex: 13, address: 'C45', name: '우도어확인' },
+            'IndoorCheck': { wordIndex: 60, bitIndex: 8, address: 'C53', name: '도어내확인' },
+            'LeftMoveCheck1': { wordIndex: 60, bitIndex: 14, address: 'C42', name: '좌측동작감지확인1' },
+            'RightMoveCheck1': { wordIndex: 60, bitIndex: 15, address: 'C43', name: '우측동작감지확인1' },
+            'CarLocation': { wordIndex: 60, bitIndex: 6, address: 'C47', name: '차량정위치' },
+            'FrontBumpCheck': { wordIndex: 60, bitIndex: 4, address: 'C46', name: '앞범퍼확인' },
+            'BackBumpCheck': { wordIndex: 60, bitIndex: 5, address: 'C50', name: '뒷범퍼확인' },
+            'RVheight': { wordIndex: 60, bitIndex: 7, address: 'C48', name: 'RV높이확인' },
+            'Carheight': { wordIndex: 60, bitIndex: 8, address: 'C49', name: '승용높이확인' },
+            
+            // 승강 제어 탭 (page2) - 인풋 센서들
+            'LiftLevel1': { wordIndex: 61, bitIndex: 0, address: 'C20', name: '리프트 레벨1' },
+            'LiftLevel2': { wordIndex: 61, bitIndex: 1, address: 'C21', name: '리프트 레벨2' },
+            'LiftHome': { wordIndex: 63, bitIndex: 3, address: 'C30', name: '리프트 홈 확인' },
+            'LiftDownDecel': { wordIndex: 61, bitIndex: 11, address: 'C37', name: '리프트 하강감속확인' },
+            'LiftDownLimit': { wordIndex: 61, bitIndex: 13, address: 'C38', name: '리프트 하강비상확인' },
+            'LiftUpLimit': { wordIndex: 61, bitIndex: 8, address: 'C51', name: '리프트 상승비상확인' },
+            'LiftUpDecel': { wordIndex: 61, bitIndex: 9, address: 'C52', name: '리프트 상승감속확인' },
+            'levelHigh': { wordIndex: 64, bitIndex: 8, address: 'C48', name: '레벨상' },
+            'levelLow': { wordIndex: 60, bitIndex: 12, address: 'C48', name: '레벨하' },
+            'wireCut': { wordIndex: 61, bitIndex: 5, address: 'C23', name: '와이어 절단' },
+            'Wire': { wordIndex: 61, bitIndex: 5, address: 'C23', name: '와이어 절단확인' },
+            'emgUp': { wordIndex: 61, bitIndex: 8, address: 'C51', name: '상승비상' },
+            'emgDown': { wordIndex: 61, bitIndex: 13, address: 'C38', name: '하강비상' },
+            'upDecel': { wordIndex: 61, bitIndex: 9, address: 'C52', name: '상승감속' },
+            'downDecel': { wordIndex: 61, bitIndex: 11, address: 'C37', name: '하강감속' },
+            
+            // 횡행/락킹 탭 (page3) - 인풋 센서들
+            'HookCenter': { wordIndex: 64, bitIndex: 0, address: 'C22', name: '후크중앙확인' },
+            'OddHookSensor': { wordIndex: 64, bitIndex: 4, address: 'C24', name: '홀수 후크 감지' },
+            'EvenHookSensor': { wordIndex: 64, bitIndex: 5, address: 'C25', name: '짝수 후크 감지' },
+            'evenHookCheck': { wordIndex: 62, bitIndex: 12, address: 'C44', name: '짝수후크확인' },
+            'oddHookCheck': { wordIndex: 62, bitIndex: 10, address: 'C42', name: '홀수후크확인' },
+            'centerHookCheck': { wordIndex: 62, bitIndex: 11, address: 'C43', name: '중앙후크확인' },
+            'OddLockingOn': { wordIndex: 67, bitIndex: 9, address: 'C33', name: '홀수측 록킹잠김확인' },
+            'OddLockingOff': { wordIndex: 67, bitIndex: 10, address: 'C34', name: '홀수측 록킹풀림확인' },
+            'EvenLockingOn': { wordIndex: 67, bitIndex: 12, address: 'C35', name: '짝수측 록킹잠김확인' },
+            'EvenLockingOff': { wordIndex: 67, bitIndex: 13, address: 'C36', name: '짝수측 록킹풀림확인' },
+            'oddLockingOpenCheck': { wordIndex: 67, bitIndex: 9, address: 'C33', name: '좌측락킹 열림확인' },
+            'evenLockingOpenCheck': { wordIndex: 67, bitIndex: 12, address: 'C35', name: '우측락킹 열림확인' },
+            'LeftFit': { wordIndex: 62, bitIndex: 2, address: 'C26', name: '좌측 피트확인' },
+            'RightFit': { wordIndex: 62, bitIndex: 3, address: 'C27', name: '우측 피트확인' },
+            'leftFeet': { wordIndex: 62, bitIndex: 13, address: 'C45', name: '좌측피트' },
+            'rightFeet': { wordIndex: 62, bitIndex: 14, address: 'C46', name: '우측피트' },
+            'leftChassisCheck': { wordIndex: 63, bitIndex: 14, address: 'C47', name: '좌측차판확인' },
+            'rightChassisCheck': { wordIndex: 63, bitIndex: 13, address: 'C48', name: '우측차판확인' },
+            
+            // 아웃풋 센서들 (출력 상태)
+            // 도어/턴테이블 탭 아웃풋
+            'redLight': { wordIndex: 69, bitIndex: 2, address: 'C69', name: '적색신호등' },
+            'greenLight': { wordIndex: 69, bitIndex: 3, address: 'C69', name: '녹색신호등' },
+            'guideFwd': { wordIndex: 69, bitIndex: 4, address: 'C69', name: '유도등 전진' },
+            'guideStop': { wordIndex: 69, bitIndex: 5, address: 'C69', name: '유도등 정지' },
+            'guideRev': { wordIndex: 69, bitIndex: 6, address: 'C69', name: '유도등 후진' },
+            'doorRotFwdMc': { wordIndex: 69, bitIndex: 8, address: 'C69', name: '도어모터 정회전 MC' },
+            'doorRotRightMc': { wordIndex: 69, bitIndex: 9, address: 'C69', name: '도어모터 우회전 MC' },
+            'turnLiftUp': { wordIndex: 68, bitIndex: 6, address: 'C68', name: '턴리프팅 상승' },
+            'turnLiftDown': { wordIndex: 68, bitIndex: 7, address: 'C68', name: '턴리프팅 하강' },
+            'turnMortor': { wordIndex: 68, bitIndex: 11, address: 'C68', name: '턴 모터' },
+            'turnMortorBK': { wordIndex: 68, bitIndex: 12, address: 'C68', name: '턴 모터 BK' },
+            'turnTableRotFwd': { wordIndex: 71, bitIndex: 0, address: 'C71', name: '턴테이블 인버터 정회전' },
+            'turnTableRotRev': { wordIndex: 71, bitIndex: 1, address: 'C71', name: '턴테이블 인버터 역회전' },
+            'turnTableReset': { wordIndex: 71, bitIndex: 7, address: 'C71', name: '턴테이블 인버터 리셋' },
+            'turnTableSp1': { wordIndex: 71, bitIndex: 2, address: 'C71', name: '턴테이블 인버터 SP1' },
+            'turnTableSp2': { wordIndex: 71, bitIndex: 3, address: 'C71', name: '턴테이블 인버터 SP2' },
+            'turnTableSp3': { wordIndex: 71, bitIndex: 4, address: 'C71', name: '턴테이블 인버터 SP3' },
+            'turnRotLeftStop': { wordIndex: 64, bitIndex: 3, address: 'C64', name: '턴 좌회전정지' },
+            'turnRotRightStop': { wordIndex: 64, bitIndex: 1, address: 'C64', name: '턴 우회전정지' },
+            'turnTableUpStop': { wordIndex: 66, bitIndex: 14, address: 'C66', name: '턴테이블 상승정지' },
+            'turnTableDownStop': { wordIndex: 66, bitIndex: 15, address: 'C66', name: '턴테이블 하강정지' },
+            
+            // 승강 제어 탭 아웃풋
+            'liftRotFwd': { wordIndex: 70, bitIndex: 0, address: 'C70', name: '리프트 인버터 정회전' },
+            'liftRotRev': { wordIndex: 70, bitIndex: 1, address: 'C70', name: '리프트 인버터 역회전' },
+            'liftReset': { wordIndex: 70, bitIndex: 7, address: 'C70', name: '리프트 인버터 리셋' },
+            'liftSp1': { wordIndex: 70, bitIndex: 2, address: 'C70', name: '리프트 인버터 SP1' },
+            'liftSp2': { wordIndex: 70, bitIndex: 3, address: 'C70', name: '리프트 인버터 SP2' },
+            'liftSp3': { wordIndex: 70, bitIndex: 4, address: 'C70', name: '리프트 인버터 SP3' },
+            'liftEmgLine': { wordIndex: 70, bitIndex: 6, address: 'C70', name: '리프트 인버터 비상라인' },
+            'liftBk': { wordIndex: 69, bitIndex: 10, address: 'C69', name: '리프트 인버터 리프트BK' },
+            
+            // 횡행/락킹 탭 아웃풋
+            'latRotFwd': { wordIndex: 71, bitIndex: 0, address: 'C71', name: '횡행 인버터 정회전' },
+            'latRotRev': { wordIndex: 71, bitIndex: 1, address: 'C71', name: '횡행 인버터 역회전' },
+            'latReset': { wordIndex: 71, bitIndex: 7, address: 'C71', name: '횡행 인버터 리셋' },
+            'latSp1': { wordIndex: 71, bitIndex: 2, address: 'C71', name: '횡행 인버터 SP1' },
+            'latSp2': { wordIndex: 71, bitIndex: 3, address: 'C71', name: '횡행 인버터 SP2' },
+            'latSp3': { wordIndex: 71, bitIndex: 4, address: 'C71', name: '횡행 인버터 SP3' },
+            'latMortor': { wordIndex: 68, bitIndex: 5, address: 'C68', name: '횡행 모터BK' },
+            'rotFwdMc': { wordIndex: 69, bitIndex: 13, address: 'C69', name: '정회전 MC' },
+            'rotRightMc': { wordIndex: 71, bitIndex: 1, address: 'C71', name: '우회전 MC' },
+        };
         
         const newStates = {};
         
-        sensorMappings.forEach(mapping => {
+        Object.entries(sensorMappings).forEach(([key, mapping]) => {
             if (mapping.wordIndex < sensorData.rawData.length) {
                 const wordValue = sensorData.rawData[mapping.wordIndex];
                 const bitValue = (wordValue >> mapping.bitIndex) & 1;
-                newStates[mapping.address] = bitValue === 1;
+                newStates[key] = {
+                    value: bitValue === 1,
+                    address: mapping.address,
+                    bitIndex: mapping.bitIndex,
+                    wordIndex: mapping.wordIndex
+                };
             } else {
-                newStates[mapping.address] = false;
+                newStates[key] = {
+                    value: false,
+                    address: mapping.address,
+                    bitIndex: mapping.bitIndex,
+                    wordIndex: mapping.wordIndex
+                };
             }
         });
         
         setSensorStates(newStates);
+    };  
+
+    // 센서 코드와 비트 정보를 표시하는 헬퍼 함수
+    const getSensorCode = (sensorKey) => {
+        const sensor = sensorStates[sensorKey];
+        if (sensor) {
+            return `C${sensor.wordIndex}.${sensor.bitIndex}`;
+        }
+        return 'C--.--';
+    };
+
+    // 센서 상태를 확인하는 헬퍼 함수
+    const getSensorValue = (sensorKey) => {
+        const sensor = sensorStates[sensorKey];
+        return sensor ? sensor.value : false;
     };
 
     // sensorData가 변경될 때마다 센서 상태 업데이트
@@ -271,18 +371,24 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sendCommand, sensorDat
                 
                 .sensor-panel-right {
                     position: fixed;
-                    top: 50%;
+                    top: 55%;
                     right: -300px;
                     width: 300px;
-                    height: 60vh;
+                    height: 85vh; /* Increased height */
                     transform: translateY(-50%);
                     background: white;
                     box-shadow: -5px 0 20px rgba(0, 0, 0, 0.1);
-                    transition: right 0.3s ease-in-out;
+                    transition: right 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55); /* More bouncy animation */
                     z-index: 1000;
                     overflow-y: auto;
                     padding: 20px;
                     border-radius: 20px 0 0 20px;
+                    /* Hide scrollbar */
+                    scrollbar-width: none; /* Firefox */
+                    -ms-overflow-style: none; /* IE and Edge */
+                }
+                .sensor-panel-right::-webkit-scrollbar {
+                    display: none; /* Chrome, Safari, Opera */
                 }
                 
                 .sensor-panel-right.show {
@@ -291,18 +397,24 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sendCommand, sensorDat
                 
                 .sensor-panel-left {
                     position: fixed;
-                    top: 50%;
+                    top: 55%; 
                     left: -300px;
                     width: 300px;
-                    height: 60vh;
+                    height: 85vh; /* Increased height */
                     transform: translateY(-50%);
                     background: white;
                     box-shadow: 5px 0 20px rgba(0, 0, 0, 0.1);
-                    transition: left 0.3s ease-in-out;
+                    transition: left 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55); /* More bouncy animation */
                     z-index: 1000;
                     overflow-y: auto;
                     padding: 20px;
                     border-radius: 0 20px 20px 0;
+                    /* Hide scrollbar */
+                    scrollbar-width: none; /* Firefox */
+                    -ms-overflow-style: none; /* IE and Edge */
+                }
+                .sensor-panel-left::-webkit-scrollbar {
+                    display: none; /* Chrome, Safari, Opera */
                 }
                 
                 .sensor-panel-left.show {
@@ -322,11 +434,37 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sendCommand, sensorDat
                 .sensor-item {
                     background: white;
                     border: 1px solid #d1d5db;
-                    border-radius: 8px;
+                    border-radius: 16px; /* More rounded */
                     padding: 15px;
                     margin-bottom: 15px;
                     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
                     transition: all 0.2s ease;
+                    opacity: 0;
+                    transform: translateX(-20px);
+                    animation: slideInFromLeft 0.4s ease-out forwards;
+                }
+                
+                .sensor-item:nth-child(1) { animation-delay: 0.1s; }
+                .sensor-item:nth-child(2) { animation-delay: 0.15s; }
+                .sensor-item:nth-child(3) { animation-delay: 0.2s; }
+                .sensor-item:nth-child(4) { animation-delay: 0.25s; }
+                .sensor-item:nth-child(5) { animation-delay: 0.3s; }
+                .sensor-item:nth-child(6) { animation-delay: 0.35s; }
+                .sensor-item:nth-child(7) { animation-delay: 0.4s; }
+                .sensor-item:nth-child(8) { animation-delay: 0.45s; }
+                .sensor-item:nth-child(9) { animation-delay: 0.5s; }
+                .sensor-item:nth-child(10) { animation-delay: 0.55s; }
+                .sensor-item:nth-child(11) { animation-delay: 0.6s; }
+                .sensor-item:nth-child(12) { animation-delay: 0.65s; }
+                .sensor-item:nth-child(13) { animation-delay: 0.7s; }
+                .sensor-item:nth-child(14) { animation-delay: 0.75s; }
+                .sensor-item:nth-child(15) { animation-delay: 0.8s; }
+                
+                @keyframes slideInFromLeft {
+                    to {
+                        opacity: 1;
+                        transform: translateX(0);
+                    }
                 }
                 
                 .sensor-item:hover {
@@ -852,65 +990,213 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sendCommand, sensorDat
             {/* 좌측 센서 패널 (PC만) */}
             {showSensors && (
                 <div className="sensor-panel-left show">
-                    {activeTab === 'page1' && (
-                        <div>
-                            <div className={`sensor-item ${sensorStates.C39 ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">C39</div>
-                                <div className="sensor-name">도어열림확인</div>
-                            </div>
-                            <div className={`sensor-item ${sensorStates.C40 ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">C40</div>
-                                <div className="sensor-name">도어닫힘확인</div>
-                            </div>
-                            <div className={`sensor-item ${sensorStates.C41 ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">C41</div>
-                                <div className="sensor-name">도어잠확인</div>
-                            </div>
-                            <div className={`sensor-item ${sensorStates.C44 ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">C44</div>
-                                <div className="sensor-name">좌도어확인</div>
-                            </div>
-                            <div className={`sensor-item ${sensorStates.C45 ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">C45</div>
-                                <div className="sensor-name">우도어확인</div>
-                            </div>
-                            <div className={`sensor-item ${sensorStates.C53 ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">C53</div>
-                                <div className="sensor-name">도어내확인</div>
-                            </div>
-                        </div>
-                    )}
-                    
-                    {activeTab === 'page2' && (
-                        <div>
-                            <div className={`sensor-item ${sensorStates.C31 ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">C31</div>
-                                <div className="sensor-name">턴 상승확인</div>
-                            </div>
-                            <div className={`sensor-item ${sensorStates.C32 ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">C32</div>
-                                <div className="sensor-name">턴 하강확인</div>
-                            </div>
-                        </div>
-                    )}
-                    
-                    {activeTab === 'page3' && (
-                        <div>
-                            <div className={`sensor-item ${sensorStates.C28 ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">C28</div>
+                        {activeTab === 'page1' && (
+                            <div>
+                            <div className={`sensor-item ${getSensorValue('Turn0') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('Turn0')}</div>
                                 <div className="sensor-name">턴 0도 확인정지</div>
                             </div>
-                            <div className={`sensor-item ${sensorStates.C29 ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">C29</div>
+                            <div className={`sensor-item ${getSensorValue('Turn180') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('Turn180')}</div>
                                 <div className="sensor-name">턴 180도 확인정지</div>
                             </div>
-                            <div className={`sensor-item ${sensorStates.C42 ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">C42</div>
+                            <div className={`sensor-item ${getSensorValue('Turnup') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('Turnup')}</div>
+                                <div className="sensor-name">턴 상승확인</div>
+                            </div>
+                            <div className={`sensor-item ${getSensorValue('Turndown') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('Turndown')}</div>
+                                <div className="sensor-name">턴 하강확인</div>
+                            </div>
+                            <div className={`sensor-item ${getSensorValue('DoorOpen') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('DoorOpen')}</div>
+                                <div className="sensor-name">도어열림확인</div>
+                            </div>
+                            <div className={`sensor-item ${getSensorValue('DoorClose') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('DoorClose')}</div>
+                                <div className="sensor-name">도어닫힘확인</div>
+                            </div>
+                            <div className={`sensor-item ${getSensorValue('DoorCloseCheck') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('DoorCloseCheck')}</div>
+                                <div className="sensor-name">도어잠확인</div>
+                            </div>
+                            <div className={`sensor-item ${getSensorValue('LeftDoorCheck') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('LeftDoorCheck')}</div>
+                                <div className="sensor-name">좌도어확인</div>
+                            </div>
+                            <div className={`sensor-item ${getSensorValue('RightDoorCheck') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('RightDoorCheck')}</div>
+                                <div className="sensor-name">우도어확인</div>
+                            </div>
+                            <div className={`sensor-item ${getSensorValue('IndoorCheck') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('IndoorCheck')}</div>
+                                <div className="sensor-name">도어내확인</div>
+                            </div>
+                            <div className={`sensor-item ${getSensorValue('LeftMoveCheck1') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('LeftMoveCheck1')}</div>
                                 <div className="sensor-name">좌측동작감지확인1</div>
                             </div>
-                            <div className={`sensor-item ${sensorStates.C43 ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">C43</div>
+                            <div className={`sensor-item ${getSensorValue('RightMoveCheck1') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('RightMoveCheck1')}</div>
                                 <div className="sensor-name">우측동작감지확인1</div>
+                            </div>
+                            <div className={`sensor-item ${getSensorValue('CarLocation') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('CarLocation')}</div>
+                                <div className="sensor-name">차량정위치</div>
+                            </div>
+                            <div className={`sensor-item ${getSensorValue('FrontBumpCheck') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('FrontBumpCheck')}</div>
+                                <div className="sensor-name">앞범퍼확인</div>
+                            </div>
+                            <div className={`sensor-item ${getSensorValue('BackBumpCheck') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('BackBumpCheck')}</div>
+                                <div className="sensor-name">뒷범퍼확인</div>
+                            </div>
+                            <div className={`sensor-item ${getSensorValue('RVheight') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('RVheight')}</div>
+                                <div className="sensor-name">RV높이확인</div>
+                            </div>
+                            <div className={`sensor-item ${getSensorValue('Carheight') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('Carheight')}</div>
+                                <div className="sensor-name">승용높이확인</div>
+                            </div>
+                        </div>
+                    )}
+                    
+                        {activeTab === 'page2' && (
+                            <div>
+                            <div className={`sensor-item ${getSensorValue('LiftLevel1') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('LiftLevel1')}</div>
+                                <div className="sensor-name">리프트 레벨1</div>
+                            </div>
+                            <div className={`sensor-item ${getSensorValue('LiftLevel2') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('LiftLevel2')}</div>
+                                <div className="sensor-name">리프트 레벨2</div>
+                            </div>
+                            <div className={`sensor-item ${getSensorValue('LiftHome') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('LiftHome')}</div>
+                                <div className="sensor-name">리프트 홈 확인</div>
+                            </div>
+                            <div className={`sensor-item ${getSensorValue('LiftDownDecel') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('LiftDownDecel')}</div>
+                                <div className="sensor-name">리프트 하강감속확인</div>
+                            </div>
+                            <div className={`sensor-item ${getSensorValue('LiftDownLimit') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('LiftDownLimit')}</div>
+                                <div className="sensor-name">리프트 하강비상확인</div>
+                            </div>
+                            <div className={`sensor-item ${getSensorValue('LiftUpLimit') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('LiftUpLimit')}</div>
+                                <div className="sensor-name">리프트 상승비상확인</div>
+                            </div>
+                            <div className={`sensor-item ${getSensorValue('LiftUpDecel') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('LiftUpDecel')}</div>
+                                <div className="sensor-name">리프트 상승감속확인</div>
+                            </div>
+                            <div className={`sensor-item ${getSensorValue('levelHigh') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('levelHigh')}</div>
+                                <div className="sensor-name">레벨상</div>
+                            </div>
+                            <div className={`sensor-item ${getSensorValue('levelLow') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('levelLow')}</div>
+                                <div className="sensor-name">레벨하</div>
+                            </div>
+                            <div className={`sensor-item ${getSensorValue('wireCut') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('wireCut')}</div>
+                                <div className="sensor-name">와이어 절단</div>
+                            </div>
+                            <div className={`sensor-item ${getSensorValue('emgUp') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('emgUp')}</div>
+                                <div className="sensor-name">상승비상</div>
+                            </div>
+                            <div className={`sensor-item ${getSensorValue('emgDown') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('emgDown')}</div>
+                                <div className="sensor-name">하강비상</div>
+                            </div>
+                            <div className={`sensor-item ${getSensorValue('upDecel') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('upDecel')}</div>
+                                <div className="sensor-name">상승감속</div>
+                            </div>
+                            <div className={`sensor-item ${getSensorValue('downDecel') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('downDecel')}</div>
+                                <div className="sensor-name">하강감속</div>
+                            </div>
+                        </div>
+                    )}
+                    
+                        {activeTab === 'page3' && (
+                            <div>
+                            <div className={`sensor-item ${getSensorValue('HookCenter') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('HookCenter')}</div>
+                                <div className="sensor-name">후크중앙확인</div>
+                            </div>
+                            <div className={`sensor-item ${getSensorValue('OddHookSensor') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('OddHookSensor')}</div>
+                                <div className="sensor-name">홀수 후크 감지</div>
+                            </div>
+                            <div className={`sensor-item ${getSensorValue('EvenHookSensor') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('EvenHookSensor')}</div>
+                                <div className="sensor-name">짝수 후크 감지</div>
+                            </div>
+                            <div className={`sensor-item ${getSensorValue('evenHookCheck') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('evenHookCheck')}</div>
+                                <div className="sensor-name">짝수후크확인</div>
+                            </div>
+                            <div className={`sensor-item ${getSensorValue('oddHookCheck') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('oddHookCheck')}</div>
+                                <div className="sensor-name">홀수후크확인</div>
+                            </div>
+                            <div className={`sensor-item ${getSensorValue('centerHookCheck') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('centerHookCheck')}</div>
+                                <div className="sensor-name">중앙후크확인</div>
+                            </div>
+                            <div className={`sensor-item ${getSensorValue('OddLockingOn') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('OddLockingOn')}</div>
+                                <div className="sensor-name">홀수측 록킹잠김확인</div>
+                            </div>
+                            <div className={`sensor-item ${getSensorValue('OddLockingOff') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('OddLockingOff')}</div>
+                                <div className="sensor-name">홀수측 록킹풀림확인</div>
+                            </div>
+                            <div className={`sensor-item ${getSensorValue('EvenLockingOn') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('EvenLockingOn')}</div>
+                                <div className="sensor-name">짝수측 록킹잠김확인</div>
+                            </div>
+                            <div className={`sensor-item ${getSensorValue('EvenLockingOff') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('EvenLockingOff')}</div>
+                                <div className="sensor-name">짝수측 록킹풀림확인</div>
+                            </div>
+                            <div className={`sensor-item ${getSensorValue('oddLockingOpenCheck') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('oddLockingOpenCheck')}</div>
+                                <div className="sensor-name">좌측락킹 열림확인</div>
+                            </div>
+                            <div className={`sensor-item ${getSensorValue('evenLockingOpenCheck') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('evenLockingOpenCheck')}</div>
+                                <div className="sensor-name">우측락킹 열림확인</div>
+                            </div>
+                            <div className={`sensor-item ${getSensorValue('LeftFit') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('LeftFit')}</div>
+                                <div className="sensor-name">좌측 피트확인</div>
+                            </div>
+                            <div className={`sensor-item ${getSensorValue('RightFit') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('RightFit')}</div>
+                                <div className="sensor-name">우측 피트확인</div>
+                            </div>
+                            <div className={`sensor-item ${getSensorValue('leftFeet') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('leftFeet')}</div>
+                                <div className="sensor-name">좌측피트</div>
+                            </div>
+                            <div className={`sensor-item ${getSensorValue('rightFeet') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('rightFeet')}</div>
+                                <div className="sensor-name">우측피트</div>
+                            </div>
+                            <div className={`sensor-item ${getSensorValue('leftChassisCheck') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('leftChassisCheck')}</div>
+                                <div className="sensor-name">좌측차판확인</div>
+                            </div>
+                            <div className={`sensor-item ${getSensorValue('rightChassisCheck') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('rightChassisCheck')}</div>
+                                <div className="sensor-name">우측차판확인</div>
                             </div>
                         </div>
                     )}
@@ -921,41 +1207,169 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sendCommand, sensorDat
             {showSensors && (
                 <div className="sensor-panel-right show">
                     
-                    {activeTab === 'page1' && (
-                        <div>
-                            <div className={`sensor-item ${sensorStates.C28 ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">C28</div>
-                                <div className="sensor-name">턴테이블 0도 확인</div>
+                        {activeTab === 'page1' && (
+                            <div>
+                            <div className={`sensor-item ${getSensorValue('redLight') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('redLight')}</div>
+                                <div className="sensor-name">적색신호등</div>
                             </div>
-                            <div className={`sensor-item ${sensorStates.C29 ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">C29</div>
-                                <div className="sensor-name">턴테이블 180도 확인</div>
+                            <div className={`sensor-item ${getSensorValue('greenLight') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('greenLight')}</div>
+                                <div className="sensor-name">녹색신호등</div>
+                            </div>
+                            <div className={`sensor-item ${getSensorValue('guideFwd') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('guideFwd')}</div>
+                                <div className="sensor-name">유도등 전진</div>
+                            </div>
+                            <div className={`sensor-item ${getSensorValue('guideStop') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('guideStop')}</div>
+                                <div className="sensor-name">유도등 정지</div>
+                            </div>
+                            <div className={`sensor-item ${getSensorValue('guideRev') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('guideRev')}</div>
+                                <div className="sensor-name">유도등 후진</div>
+                            </div>
+                            <div className={`sensor-item ${getSensorValue('doorRotFwdMc') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('doorRotFwdMc')}</div>
+                                <div className="sensor-name">도어모터 정회전 MC</div>
+                            </div>
+                            <div className={`sensor-item ${getSensorValue('doorRotRightMc') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('doorRotRightMc')}</div>
+                                <div className="sensor-name">도어모터 우회전 MC</div>
+                            </div>
+                            <div className={`sensor-item ${getSensorValue('turnLiftUp') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('turnLiftUp')}</div>
+                                <div className="sensor-name">턴리프팅 상승</div>
+                            </div>
+                            <div className={`sensor-item ${getSensorValue('turnLiftDown') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('turnLiftDown')}</div>
+                                <div className="sensor-name">턴리프팅 하강</div>
+                            </div>
+                            <div className={`sensor-item ${getSensorValue('turnMortor') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('turnMortor')}</div>
+                                <div className="sensor-name">턴 모터</div>
+                            </div>
+                            <div className={`sensor-item ${getSensorValue('turnMortorBK') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('turnMortorBK')}</div>
+                                <div className="sensor-name">턴 모터 BK</div>
+                            </div>
+                            <div className={`sensor-item ${getSensorValue('turnTableRotFwd') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('turnTableRotFwd')}</div>
+                                <div className="sensor-name">턴테이블 인버터 정회전</div>
+                            </div>
+                            <div className={`sensor-item ${getSensorValue('turnTableRotRev') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('turnTableRotRev')}</div>
+                                <div className="sensor-name">턴테이블 인버터 역회전</div>
+                            </div>
+                            <div className={`sensor-item ${getSensorValue('turnTableReset') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('turnTableReset')}</div>
+                                <div className="sensor-name">턴테이블 인버터 리셋</div>
+                            </div>
+                            <div className={`sensor-item ${getSensorValue('turnTableSp1') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('turnTableSp1')}</div>
+                                <div className="sensor-name">턴테이블 인버터 SP1</div>
+                            </div>
+                            <div className={`sensor-item ${getSensorValue('turnTableSp2') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('turnTableSp2')}</div>
+                                <div className="sensor-name">턴테이블 인버터 SP2</div>
+                            </div>
+                            <div className={`sensor-item ${getSensorValue('turnTableSp3') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('turnTableSp3')}</div>
+                                <div className="sensor-name">턴테이블 인버터 SP3</div>
+                            </div>
+                            <div className={`sensor-item ${getSensorValue('turnRotLeftStop') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('turnRotLeftStop')}</div>
+                                <div className="sensor-name">턴 좌회전정지</div>
+                            </div>
+                            <div className={`sensor-item ${getSensorValue('turnRotRightStop') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('turnRotRightStop')}</div>
+                                <div className="sensor-name">턴 우회전정지</div>
+                            </div>
+                            <div className={`sensor-item ${getSensorValue('turnTableUpStop') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('turnTableUpStop')}</div>
+                                <div className="sensor-name">턴테이블 상승정지</div>
+                            </div>
+                            <div className={`sensor-item ${getSensorValue('turnTableDownStop') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('turnTableDownStop')}</div>
+                                <div className="sensor-name">턴테이블 하강정지</div>
                             </div>
                         </div>
                     )}
                     
-                    {activeTab === 'page2' && (
-                        <div>
-                            <div className={`sensor-item ${sensorStates.C31 ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">C31</div>
-                                <div className="sensor-name">리프트 상승확인</div>
+                        {activeTab === 'page2' && (
+                            <div>
+                            <div className={`sensor-item ${getSensorValue('liftRotFwd') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('liftRotFwd')}</div>
+                                <div className="sensor-name">리프트 인버터 정회전</div>
                             </div>
-                            <div className={`sensor-item ${sensorStates.C32 ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">C32</div>
-                                <div className="sensor-name">리프트 하강확인</div>
+                            <div className={`sensor-item ${getSensorValue('liftRotRev') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('liftRotRev')}</div>
+                                <div className="sensor-name">리프트 인버터 역회전</div>
+                            </div>
+                            <div className={`sensor-item ${getSensorValue('liftReset') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('liftReset')}</div>
+                                <div className="sensor-name">리프트 인버터 리셋</div>
+                            </div>
+                            <div className={`sensor-item ${getSensorValue('liftSp1') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('liftSp1')}</div>
+                                <div className="sensor-name">리프트 인버터 SP1</div>
+                            </div>
+                            <div className={`sensor-item ${getSensorValue('liftSp2') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('liftSp2')}</div>
+                                <div className="sensor-name">리프트 인버터 SP2</div>
+                            </div>
+                            <div className={`sensor-item ${getSensorValue('liftSp3') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('liftSp3')}</div>
+                                <div className="sensor-name">리프트 인버터 SP3</div>
+                            </div>
+                            <div className={`sensor-item ${getSensorValue('liftEmgLine') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('liftEmgLine')}</div>
+                                <div className="sensor-name">리프트 인버터 비상라인</div>
+                            </div>
+                            <div className={`sensor-item ${getSensorValue('liftBk') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('liftBk')}</div>
+                                <div className="sensor-name">리프트 인버터 리프트BK</div>
                             </div>
                         </div>
                     )}
                     
-                    {activeTab === 'page3' && (
-                        <div>
-                            <div className={`sensor-item ${sensorStates.C42 ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">C42</div>
-                                <div className="sensor-name">좌측동작감지확인</div>
+                        {activeTab === 'page3' && (
+                            <div>
+                            <div className={`sensor-item ${getSensorValue('latRotFwd') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('latRotFwd')}</div>
+                                <div className="sensor-name">횡행 인버터 정회전</div>
                             </div>
-                            <div className={`sensor-item ${sensorStates.C43 ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">C43</div>
-                                <div className="sensor-name">우측동작감지확인</div>
+                            <div className={`sensor-item ${getSensorValue('latRotRev') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('latRotRev')}</div>
+                                <div className="sensor-name">횡행 인버터 역회전</div>
+                            </div>
+                            <div className={`sensor-item ${getSensorValue('latReset') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('latReset')}</div>
+                                <div className="sensor-name">횡행 인버터 리셋</div>
+                            </div>
+                            <div className={`sensor-item ${getSensorValue('latSp1') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('latSp1')}</div>
+                                <div className="sensor-name">횡행 인버터 SP1</div>
+                            </div>
+                            <div className={`sensor-item ${getSensorValue('latSp2') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('latSp2')}</div>
+                                <div className="sensor-name">횡행 인버터 SP2</div>
+                            </div>
+                            <div className={`sensor-item ${getSensorValue('latSp3') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('latSp3')}</div>
+                                <div className="sensor-name">횡행 인버터 SP3</div>
+                            </div>
+                            <div className={`sensor-item ${getSensorValue('latMortor') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('latMortor')}</div>
+                                <div className="sensor-name">횡행 모터BK</div>
+                            </div>
+                            <div className={`sensor-item ${getSensorValue('rotFwdMc') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('rotFwdMc')}</div>
+                                <div className="sensor-name">정회전 MC</div>
+                            </div>
+                            <div className={`sensor-item ${getSensorValue('rotRightMc') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('rotRightMc')}</div>
+                                <div className="sensor-name">우회전 MC</div>
                             </div>
                         </div>
                     )}
