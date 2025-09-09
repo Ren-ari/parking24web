@@ -512,6 +512,7 @@ const PLCControl = () => {
                         isPLCConnected={isPLCConnected}
                         isAuthenticated={isAuthenticated}
                         sendCommand={sendCommand}
+                        sensorData={sensorData}
                     />
                 )}
                 {/* 주차장 모니터 탭 */}
