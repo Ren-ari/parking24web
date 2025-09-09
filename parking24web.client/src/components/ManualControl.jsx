@@ -387,6 +387,23 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sendCommand, sensorDat
                     scrollbar-width: none; /* Firefox */
                     -ms-overflow-style: none; /* IE and Edge */
                 }
+                
+                /* 태블릿 디스플레이 - 센서 패널 크기 줄이기 */
+                @media (min-width: 768px) and (max-width: 1024px) {
+                    .sensor-panel-right {
+                        width: 200px;
+                        height: 60vh;
+                        padding: 12px;
+                        top: 63%;
+                    }
+                }
+                
+                /* 모바일 디스플레이 - 센서 패널 숨기기 */
+                @media (max-width: 767px) {
+                    .sensor-panel-right {
+                        display: none;
+                    }
+                }
                 .sensor-panel-right::-webkit-scrollbar {
                     display: none; /* Chrome, Safari, Opera */
                 }
@@ -412,6 +429,23 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sendCommand, sensorDat
                     /* Hide scrollbar */
                     scrollbar-width: none; /* Firefox */
                     -ms-overflow-style: none; /* IE and Edge */
+                }
+                
+                /* 태블릿 디스플레이 - 센서 패널 크기 줄이기 */
+                @media (min-width: 768px) and (max-width: 1024px) {
+                    .sensor-panel-left {
+                        width: 200px;
+                        height: 60vh;
+                        padding: 12px;
+                        top: 63%;
+                    }
+                }
+                
+                /* 모바일 디스플레이 - 센서 패널 숨기기 */
+                @media (max-width: 767px) {
+                    .sensor-panel-left {
+                        display: none;
+                    }
                 }
                 .sensor-panel-left::-webkit-scrollbar {
                     display: none; /* Chrome, Safari, Opera */
