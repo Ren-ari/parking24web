@@ -4,13 +4,11 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sendCommand }) => {
     const [activeCommand, setActiveCommand] = useState(null);
     const [isEmergencyMode, setIsEmergencyMode] = useState(false);
 
-    const handleCommand = async (commandName, displayName) => {
+    const handleCommand = async (commandName) => {  // displayName 파라미터 제거
         if (!isPLCConnected || !isAuthenticated) return;
-
         try {
             setActiveCommand(commandName);
             await sendCommand(commandName);
-
             // 명령 실행 후 1초 뒤 활성 상태 해제
             setTimeout(() => setActiveCommand(null), 1000);
         } catch (error) {
@@ -213,6 +211,135 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sendCommand }) => {
                 </div>
             </div>
 
+            {/* 락킹 제어 */}
+            <div className="border-t pt-6 mt-6">
+                <h3 className="text-center text-sm font-semibold text-gray-700 mb-4">락킹 제어</h3>
+                <div className="flex flex-wrap gap-4 justify-center">
+                    <button
+                        onMouseDown={() => sendCommand('leftLiftLock', 1)}
+                        onMouseUp={() => sendCommand('leftLiftLock', 0)}
+                        disabled={isDisabled}
+                        className={`learn-more ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    >
+                        좌측 락킹 잠금
+                    </button>
+                    <button
+                        onMouseDown={() => sendCommand('leftLiftUnlock', 1)}
+                        onMouseUp={() => sendCommand('leftLiftUnlock', 0)}
+                        disabled={isDisabled}
+                        className={`learn-more ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    >
+                        좌측 락킹 해제
+                    </button>
+                    <button
+                        onMouseDown={() => sendCommand('rightLiftLock', 1)}
+                        onMouseUp={() => sendCommand('rightLiftLock', 0)}
+                        disabled={isDisabled}
+                        className={`learn-more ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    >
+                        우측 락킹 잠금
+                    </button>
+                    <button
+                        onMouseDown={() => sendCommand('rightLiftUnlock', 1)}
+                        onMouseUp={() => sendCommand('rightLiftUnlock', 0)}
+                        disabled={isDisabled}
+                        className={`learn-more ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    >
+                        우측 락킹 해제
+                    </button>
+                </div>
+            </div>
+
+            {/* 턴테이블 제어 */}
+            <div className="border-t pt-6 mt-6">
+                <h3 className="text-center text-sm font-semibold text-gray-700 mb-4">턴테이블 제어</h3>
+                <div className="flex flex-wrap gap-4 justify-center">
+                    <button
+                        onMouseDown={() => sendCommand('turnTableUp', 1)}
+                        onMouseUp={() => sendCommand('turnTableUp', 0)}
+                        disabled={isDisabled}
+                        className={`learn-more ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    >
+                        턴테이블 상승
+                    </button>
+                    <button
+                        onMouseDown={() => sendCommand('turnTableDown', 1)}
+                        onMouseUp={() => sendCommand('turnTableDown', 0)}
+                        disabled={isDisabled}
+                        className={`learn-more ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    >
+                        턴테이블 하강
+                    </button>
+                    <button
+                        onMouseDown={() => sendCommand('turnTableLeft', 1)}
+                        onMouseUp={() => sendCommand('turnTableLeft', 0)}
+                        disabled={isDisabled}
+                        className={`learn-more ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    >
+                        턴테이블 좌회전
+                    </button>
+                    <button
+                        onMouseDown={() => sendCommand('turnTableRight', 1)}
+                        onMouseUp={() => sendCommand('turnTableRight', 0)}
+                        disabled={isDisabled}
+                        className={`learn-more ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    >
+                        턴테이블 우회전
+                    </button>
+                </div>
+            </div>
+
+            {/* 도어 제어 */}
+            <div className="border-t pt-6 mt-6">
+                <h3 className="text-center text-sm font-semibold text-gray-700 mb-4">도어 제어</h3>
+                <div className="flex flex-wrap gap-4 justify-center">
+                    <button
+                        onMouseDown={() => sendCommand('doorOpen', 1)}
+                        onMouseUp={() => sendCommand('doorOpen', 0)}
+                        disabled={isDisabled}
+                        className={`learn-more ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    >
+                        도어 열림
+                    </button>
+                    <button
+                        onMouseDown={() => sendCommand('doorClose', 1)}
+                        onMouseUp={() => sendCommand('doorClose', 0)}
+                        disabled={isDisabled}
+                        className={`learn-more ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    >
+                        도어 닫힘
+                    </button>
+                </div>
+            </div>
+
+            {/* 시스템 제어 */}
+            <div className="border-t pt-6 mt-6">
+                <h3 className="text-center text-sm font-semibold text-gray-700 mb-4">시스템 제어</h3>
+                <div className="flex flex-wrap gap-4 justify-center">
+                    <button
+                        onClick={() => sendCommand('errorReset')}
+                        disabled={isDisabled}
+                        className={`learn-more ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    >
+                        에러 리셋
+                    </button>
+                    <button
+                        onClick={() => sendCommand('operationMode')}
+                        disabled={isDisabled}
+                        className={`learn-more ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    >
+                        운전 모드 전환
+                    </button>
+                    <button
+                        onClick={() => sendCommand('recovery')}
+                        disabled={isDisabled}
+                        className={`learn-more ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    >
+                        복귀 운전
+                    </button>
+                </div>
+             </div>
+
             {/* 사용법 안내 */}
             <div className="mt-8 md:mt-12 p-3 md:p-4 bg-blue-50 rounded-2xl">
                 <h4 className="text-xs md:text-sm font-semibold text-blue-800 mb-2">사용법</h4>
@@ -225,6 +352,7 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sendCommand }) => {
             </div>
 
             {/* 디버그 정보 (개발용) */}
+            {/* eslint-disable-next-line no-undef */}
             {process.env.NODE_ENV === 'development' && (
                 <div className="mt-4 p-3 bg-gray-100 rounded-2xl text-xs">
                     <div>PLC 연결: {isPLCConnected ? 'O' : 'X'}</div>

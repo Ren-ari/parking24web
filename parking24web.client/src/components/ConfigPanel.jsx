@@ -1,4 +1,5 @@
 ﻿import React, { useState, useEffect } from 'react';
+import { torosSensorMapping } from '../config/sensorMappings';
 
 const ConfigPanel = ({ isPLCConnected, plcConfig, setPLCConfig, onConfigApply }) => {
     const [activeTab, setActiveTab] = useState('basic');
@@ -11,48 +12,26 @@ const ConfigPanel = ({ isPLCConnected, plcConfig, setPLCConfig, onConfigApply })
 
         // 제어 주소 매핑
         controlMapping: {
-            liftUp: 7,
-            liftDown: 8,
-            moveLeft: 9,
-            moveRight: 10,
-            emergency: 99
+            liftUp: 7, liftDown: 8, moveLeft: 9, moveRight: 10,
+            leftLiftLock: 11, leftLiftUnlock: 12, rightLiftLock: 13, rightLiftUnlock: 14,
+            emergency: 99, errorReset: 17, operationMode: 18, recovery: 19,
+            turnTableUp: 54, turnTableDown: 55, turnTableLeft: 56, turnTableRight: 57,
+            doorOpen: 96, doorClose: 97
         },
 
         // 센서 매핑
-        sensorMapping: [
-            { index: 0, name: '하트비트', bit: 0, description: '통신 상태', category: '시스템' },
-            { index: 1, name: '원격조작', bit: 0, description: 'PC 제어 모드', category: '시스템' },
-            { index: 4, name: '인증코드', bit: 0, description: '접속 인증', category: '시스템' },
-            { index: 23, name: 'PC_상승', bit: 0, description: 'm340 PC_상승', category: 'PC명령' },
-            { index: 23, name: 'PC_하강', bit: 1, description: 'm341 PC_하강', category: 'PC명령' },
-            { index: 23, name: 'PC_좌행', bit: 2, description: 'm342 PC_좌행', category: 'PC명령' },
-            { index: 23, name: 'PC_우행', bit: 3, description: 'm343 PC_우행', category: 'PC명령' },
-            { index: 23, name: 'PC_에러해제', bit: 5, description: 'm345 PC_에러해제', category: 'PC명령' },
-            { index: 60, name: '앞범퍼센서', bit: 4, description: 'P104 앞범퍼센서', category: '안전센서' },
-            { index: 60, name: '뒷범퍼센서', bit: 5, description: 'P105 뒷범퍼센서', category: '안전센서' },
-            { index: 60, name: '차량정위치', bit: 6, description: 'P106 차량정위치', category: '위치센서' },
-            { index: 63, name: '홈위치', bit: 3, description: 'P133 홈위치', category: '위치센서' },
-            { index: 63, name: '턴0도확인', bit: 4, description: 'P134 턴0도확인', category: '위치센서' },
-            { index: 63, name: '턴180확인', bit: 5, description: 'P135 턴180확인', category: '위치센서' },
-            { index: 64, name: '레벨상', bit: 8, description: 'P148 레벨상', category: '위치센서' },
-            { index: 64, name: '레벨하', bit: 9, description: 'P149 레벨하', category: '위치센서' },
-            { index: 64, name: '턴잠김', bit: 6, description: 'P146 턴잠김', category: '상태센서' },
-            { index: 64, name: '턴해제', bit: 7, description: 'P147 턴해제', category: '상태센서' },
-            { index: 74, name: '차량번호', bit: null, description: '현재 차량번호', category: '데이터' },
-            { index: 75, name: '적재차판', bit: null, description: '적재 차판 번호', category: '데이터' },
-            { index: 77, name: '전체주차', bit: null, description: '전체 주차 대수', category: '통계' },
-            { index: 78, name: '전체공차', bit: null, description: '전체 공차 대수', category: '통계' }
-        ],
+        sensorMapping: torosSensorMapping,
 
         // 현장 정보
-        siteName: '기본설정',
-        description: '기본 PLC 설정'
+        siteName: '토로스 현장',
+        description: '토로스 현장 - 기본 설정'
     });
 
     const presetList = [
         '사무실 Test',
         '속초 어반스테이 1호기',
-        '속초 어반스테이 2,3호기'
+        '속초 어반스테이 2,3호기',
+        '토로스 현장'
     ];
 
     // 컴포넌트 마운트 시 현재 설정 로드
@@ -169,6 +148,16 @@ const ConfigPanel = ({ isPLCConnected, plcConfig, setPLCConfig, onConfigApply })
                 deviceType: 'C',
                 startAddress: 0,
                 description: '속초 어반스테이 2,3호기'
+            },
+
+            '토로스 현장': {
+                ...tempConfig,
+                siteName: '토로스 현장',
+                ip: '192.168.1.2',
+                port: 2005,
+                deviceType: 'C',
+                startAddress: 0,
+                description: '토로스 현장 - PLC 2대 (Lift1, Lift2)',
             }
         };
 
