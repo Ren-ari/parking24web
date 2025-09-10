@@ -62,7 +62,7 @@ const ParkingMonitor = ({ sensorData, isPLCConnected, onVehicleEdit }) => {
       case 1: // 홀수차판상태
       case 3: // 짝수차판상태
       case 4: // 짝수차량
-        return level >= 1; // 1단부터 38단까지
+        return level >= 1 && level <= 24; // 1단부터 24단까지
       case 2: // 리프트카운터
         return level >= 0; // 진입층부터 38단까지
       default:
@@ -74,15 +74,15 @@ const ParkingMonitor = ({ sensorData, isPLCConnected, onVehicleEdit }) => {
   const getDefaultAddress = (level, box) => {
     switch (box) {
       case 0: // 홀수차량
-        return level >= 1 ? `C${101 + (level - 1) * 2}` : "C101";
+        return level >= 1 ? `C${96 + (level - 1) * 2}` : "C96";
       case 1: // 홀수차판상태
-        return level >= 1 ? `C${101 + (level - 1) * 2}` : "C101";
+        return level >= 1 ? `C${150 + (level - 1) * 2}` : "C150";
       case 2: // 리프트카운터
-        return `C${201 + level}`;
+        return `C${210 + level}`;
       case 3: // 짝수차판상태
-        return level >= 1 ? `C${102 + (level - 1) * 2}` : "C102";
+        return level >= 1 ? `C${151 + (level - 1) * 2}` : "C151";
       case 4: // 짝수차량
-        return level >= 1 ? `C${102 + (level - 1) * 2}` : "C102";
+        return level >= 1 ? `C${97 + (level - 1) * 2}` : "C97";
       default:
         return "C0";
     }
@@ -92,7 +92,7 @@ const ParkingMonitor = ({ sensorData, isPLCConnected, onVehicleEdit }) => {
   const getEditAddress = (level, box) => {
     if (level === 0) {
       return box === 0 ? "D4001" : "D4002";
-    } else if (level >= 1 && level <= 38) {
+    } else if (level >= 1 && level <= 24) {
       if (box === 0) {
         // 홀수차량
         const address = 4001 + (level - 1) * 2;
@@ -150,10 +150,13 @@ const ParkingMonitor = ({ sensorData, isPLCConnected, onVehicleEdit }) => {
     const isOnLift = isVehicleOnLift(level, box);
 
     if (box === 2) {
-      // 리프트카운터
-      if (value === 0) return "bg-gray-400";
-      if (value <= 5) return "bg-green-300";
-      if (value <= 10) return "bg-yellow-300";
+      // 리프트카운터 - C210~C234 값에 따라 색상 변경
+      const liftCounterAddress = `C${210 + level}`;
+      const liftCounterValue = getPLCValue(liftCounterAddress);
+      
+      if (liftCounterValue === 0) return "bg-gray-400";
+      if (liftCounterValue <= 5) return "bg-green-300";
+      if (liftCounterValue <= 10) return "bg-yellow-300";
       return "bg-orange-300";
     } else if (box === 1 || box === 3) {
       // 차판상태
@@ -178,10 +181,12 @@ const ParkingMonitor = ({ sensorData, isPLCConnected, onVehicleEdit }) => {
 
   // 차판상태 이미지 경로 가져오기
   const getPlateStateImage = (value) => {
-    if (value === 0) {
-      return "/images/carPlate_mini.png"; // 값이 없으면 차판만
+    if (value === 1) {
+      return "/images/carPlate_mini.png"; // 1이면 차판만
+    } else if (value === 2) {
+      return "/images/car_mini.png"; // 2이면 차량
     } else {
-      return "/images/car_mini.png"; // 값이 있으면 차량
+      return null; // 0이면 이미지 없음
     }
   };
 
@@ -283,12 +288,12 @@ const ParkingMonitor = ({ sensorData, isPLCConnected, onVehicleEdit }) => {
             <span>차량있음</span>
           </div>
           <div className="flex items-center space-x-1">
-            <div className="w-4 h-4 bg-orange-400 rounded"></div>
-            <span>리프트적재</span>
-          </div>
-          <div className="flex items-center space-x-1">
             <div className="w-4 h-4 bg-green-300 rounded"></div>
             <span>카운터정상</span>
+          </div>
+          <div className="flex items-center space-x-1">
+            <div className="w-4 h-4 bg-orange-400 rounded"></div>
+            <span>리프트적재</span>
           </div>
           <div className="text-gray-600">
             * 차판상태: 🔲빈공간(0) 🟨차판만(1) 🟦차판+차량(2)
@@ -305,8 +310,8 @@ const ParkingMonitor = ({ sensorData, isPLCConnected, onVehicleEdit }) => {
           ref={scrollContainerRef}
           className="h-[70vh] sm:h-96 overflow-y-auto p-2 sm:p-4 space-y-1 sm:space-y-2"
         >
-          {/* 38단부터 0단(진입층)까지 역순으로 표시 */}
-          {Array.from({ length: 39 }, (_, i) => 38 - i).map((level) => {
+          {/* 24단부터 1단까지 역순, 그 다음 진입층 표시 */}
+          {[...Array.from({ length: 24 }, (_, i) => 24 - i), 0].map((level) => {
             const levelText = level === 0 ? "진입층" : `${level}단`;
 
             return (
@@ -373,9 +378,10 @@ const ParkingMonitor = ({ sensorData, isPLCConnected, onVehicleEdit }) => {
                                   : {}
                               }
                             >
-                              {/* 박스 타입 라벨 - 홀수차량, 짝수차량만 제외 */}
+                              {/* 박스 타입 라벨 - 홀수차량, 짝수차량, 리프트카운터만 제외 */}
                               {box !== 0 &&
                                 box !== 1 &&
+                                box !== 2 &&
                                 box !== 3 &&
                                 box !== 4 && (
                                   <div className="text-[8px] sm:text-xs font-bold text-center text-blue-800 mb-1 leading-tight">
@@ -402,25 +408,34 @@ const ParkingMonitor = ({ sensorData, isPLCConnected, onVehicleEdit }) => {
 
                               {/* 데이터 표시 */}
                               {box === 1 || box === 3 ? (
-                                // 차판상태는 이미지만 표시 (빈 공간일 때는 이미지 없음)
+                                // 차판상태는 값에 따라 이미지 표시
                                 <div className="flex items-center justify-center bg-white border rounded-xl h-12 w-full">
-                                  <img
-                                    src={getPlateStateImage(value)}
-                                    alt={`차판상태 ${value}`}
-                                    className="object-contain max-w-full max-h-full"
-                                    onError={(e) => {
-                                      console.error(
-                                        "이미지 로딩 실패:",
-                                        e.target.src
-                                      );
-                                    }}
-                                    onLoad={(e) => {
-                                      console.log(
-                                        "이미지 로딩 성공:",
-                                        e.target.src
-                                      );
-                                    }}
-                                  />
+                                  {getPlateStateImage(value) ? (
+                                    <img
+                                      src={getPlateStateImage(value)}
+                                      alt={`차판상태 ${value}`}
+                                      className="object-contain max-w-full max-h-full"
+                                      onError={(e) => {
+                                        console.error(
+                                          "이미지 로딩 실패:",
+                                          e.target.src
+                                        );
+                                      }}
+                                      onLoad={(e) => {
+                                        console.log(
+                                          "이미지 로딩 성공:",
+                                          e.target.src
+                                        );
+                                      }}
+                                    />
+                                  ) : (
+                                    <div className="text-xs text-gray-400">빈 공간</div>
+                                  )}
+                                </div>
+                              ) : box === 2 ? (
+                                // 리프트카운터는 빈 공간으로 표시
+                                <div className="flex items-center justify-center h-12 w-full">
+                                  {/* 빈 공간 */}
                                 </div>
                               ) : (
                                 // 다른 박스는 기존 텍스트 표시
@@ -485,7 +500,7 @@ const ParkingMonitor = ({ sensorData, isPLCConnected, onVehicleEdit }) => {
       <div className="hidden sm:block mt-4 p-3 bg-gradient-to-br from-blue-50 to-indigo-100 rounded-lg text-sm text-gray-600">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div>
-            <span className="font-medium">총 층수:</span> 39층 (진입층 + 38단)
+            <span className="font-medium">총 층수:</span> 25층 (진입층 + 24단)
           </div>
           <div>
             <span className="font-medium">적재차판:</span> C75 ={" "}
