@@ -194,7 +194,7 @@ class SignalRService {
         }
     }
 
-    // 수동 제어 명령들
+    // 수동 제어 명령들 - 이 부분만 교체해
     async liftUp(value = 1) {
         await this.connection?.invoke("LiftUp", value);
     }
@@ -211,8 +211,61 @@ class SignalRService {
         await this.connection?.invoke("MoveRight", value);
     }
 
-    async emergencyStop() {
-        await this.connection?.invoke("EmergencyStop");
+    async emergencyStop(value = 1) {
+        await this.connection?.invoke("EmergencyStop", value);
+    }
+
+    // 추가 명령들
+    async errorReset(value = 1) {
+        await this.connection?.invoke("ErrorReset", value);
+    }
+
+    async operationMode(value = 1) {
+        await this.connection?.invoke("OperationMode", value);
+    }
+
+    async recovery(value = 1) {
+        await this.connection?.invoke("Recovery", value);
+    }
+
+    async turnTableUp(value = 1) {
+        await this.connection?.invoke("TurnTableUp", value);
+    }
+
+    async turnTableDown(value = 1) {
+        await this.connection?.invoke("TurnTableDown", value);
+    }
+
+    async turnTableLeft(value = 1) {
+        await this.connection?.invoke("TurnTableLeft", value);
+    }
+
+    async turnTableRight(value = 1) {
+        await this.connection?.invoke("TurnTableRight", value);
+    }
+
+    async doorOpen(value = 1) {
+        await this.connection?.invoke("DoorOpen", value);
+    }
+
+    async doorClose(value = 1) {
+        await this.connection?.invoke("DoorClose", value);
+    }
+
+    async leftLiftLock(value = 1) {
+        await this.connection?.invoke("LeftLiftLock", value);
+    }
+
+    async leftLiftUnlock(value = 1) {
+        await this.connection?.invoke("LeftLiftUnlock", value);
+    }
+
+    async rightLiftLock(value = 1) {
+        await this.connection?.invoke("RightLiftLock", value);
+    }
+
+    async rightLiftUnlock(value = 1) {
+        await this.connection?.invoke("RightLiftUnlock", value);
     }
 
     // 현장 설정 로드

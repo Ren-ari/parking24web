@@ -187,14 +187,157 @@ namespace Parking24web.Server.Hubs
             });
         }
 
-        public async Task EmergencyStop()
+        public async Task EmergencyStop(int value = 1)
         {
             await SendPLCCommand(new PLCCommandRequest
             {
                 CommandType = "writeword",
                 DeviceType = "C",
-                Address = 99, // 비상정지 주소 (예시)
-                Value = 1
+                Address = 99,
+                Value = value  
+            });
+        }
+
+        public async Task ErrorReset(int value = 1)
+        {
+            await SendPLCCommand(new PLCCommandRequest
+            {
+                CommandType = "writeword",
+                DeviceType = "C",
+                Address = 17, // 에러 리셋 주소
+                Value = value
+            });
+        }
+
+        public async Task OperationMode(int value = 1)
+        {
+            await SendPLCCommand(new PLCCommandRequest
+            {
+                CommandType = "writeword",
+                DeviceType = "C",
+                Address = 18, // 운전 모드 주소
+                Value = value
+            });
+        }
+
+        public async Task Recovery(int value = 1)
+        {
+            await SendPLCCommand(new PLCCommandRequest
+            {
+                CommandType = "writeword",
+                DeviceType = "C",
+                Address = 19, // 복귀 운전 주소
+                Value = value
+            });
+        }
+
+        public async Task TurnTableUp(int value = 1)
+        {
+            await SendPLCCommand(new PLCCommandRequest
+            {
+                CommandType = "writeword",
+                DeviceType = "C",
+                Address = 54, // 턴테이블 상승 주소
+                Value = value
+            });
+        }
+
+        public async Task TurnTableDown(int value = 1)
+        {
+            await SendPLCCommand(new PLCCommandRequest
+            {
+                CommandType = "writeword",
+                DeviceType = "C",
+                Address = 55, // 턴테이블 하강 주소
+                Value = value
+            });
+        }
+
+        public async Task TurnTableLeft(int value = 1)
+        {
+            await SendPLCCommand(new PLCCommandRequest
+            {
+                CommandType = "writeword",
+                DeviceType = "C",
+                Address = 56, // 턴테이블 좌회전 주소
+                Value = value
+            });
+        }
+
+        public async Task TurnTableRight(int value = 1)
+        {
+            await SendPLCCommand(new PLCCommandRequest
+            {
+                CommandType = "writeword",
+                DeviceType = "C",
+                Address = 57, // 턴테이블 우회전 주소
+                Value = value
+            });
+        }
+
+        public async Task DoorOpen(int value = 1)
+        {
+            await SendPLCCommand(new PLCCommandRequest
+            {
+                CommandType = "writeword",
+                DeviceType = "C",
+                Address = 96, // 도어 열림 주소
+                Value = value
+            });
+        }
+
+        public async Task DoorClose(int value = 1)
+        {
+            await SendPLCCommand(new PLCCommandRequest
+            {
+                CommandType = "writeword",
+                DeviceType = "C",
+                Address = 97, // 도어 닫힘 주소
+                Value = value
+            });
+        }
+
+        public async Task LeftLiftLock(int value = 1)
+        {
+            await SendPLCCommand(new PLCCommandRequest
+            {
+                CommandType = "writeword",
+                DeviceType = "C",
+                Address = 11, // 좌측 락킹 잠금 주소
+                Value = value
+            });
+        }
+
+        public async Task LeftLiftUnlock(int value = 1)
+        {
+            await SendPLCCommand(new PLCCommandRequest
+            {
+                CommandType = "writeword",
+                DeviceType = "C",
+                Address = 12, // 좌측 락킹 해제 주소
+                Value = value
+            });
+        }
+
+        public async Task RightLiftLock(int value = 1)
+        {
+            await SendPLCCommand(new PLCCommandRequest
+            {
+                CommandType = "writeword",
+                DeviceType = "C",
+                Address = 13, // 우측 락킹 잠금 주소
+                Value = value
+            });
+        }
+
+        public async Task RightLiftUnlock(int value = 1)
+        {
+            await SendPLCCommand(new PLCCommandRequest
+            {
+                CommandType = "writeword",
+                DeviceType = "C",
+                Address = 14, // 우측 락킹 해제 주소
+                Value = value
             });
         }
 

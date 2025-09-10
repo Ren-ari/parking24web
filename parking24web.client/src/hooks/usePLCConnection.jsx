@@ -211,7 +211,46 @@ export const usePLCConnection = () => {
                     await signalRService.moveRight(value);
                     break;
                 case 'emergencyStop':
-                    await signalRService.emergencyStop();
+                    await signalRService.emergencyStop(value);
+                    break;
+                case 'errorReset':
+                    await signalRService.errorReset(value);
+                    break;
+                case 'operationMode':
+                    await signalRService.operationMode(value);
+                    break;
+                case 'recovery':
+                    await signalRService.recovery(value);
+                    break;
+                case 'turnTableUp':
+                    await signalRService.turnTableUp(value);
+                    break;
+                case 'turnTableDown':
+                    await signalRService.turnTableDown(value);
+                    break;
+                case 'turnTableLeft':
+                    await signalRService.turnTableLeft(value);
+                    break;
+                case 'turnTableRight':
+                    await signalRService.turnTableRight(value);
+                    break;
+                case 'doorOpen':
+                    await signalRService.doorOpen(value);
+                    break;
+                case 'doorClose':
+                    await signalRService.doorClose(value);
+                    break;
+                case 'leftLiftLock':
+                    await signalRService.leftLiftLock(value);
+                    break;
+                case 'leftLiftUnlock':
+                    await signalRService.leftLiftUnlock(value);
+                    break;
+                case 'rightLiftLock':
+                    await signalRService.rightLiftLock(value);
+                    break;
+                case 'rightLiftUnlock':
+                    await signalRService.rightLiftUnlock(value);
                     break;
                 default:
                     throw new Error(`알 수 없는 명령: ${commandName}`);
