@@ -10,7 +10,7 @@ const ParkingMonitor = ({ sensorData, isPLCConnected, onVehicleEdit }) => {
   const boxTypes = [
     "홀수차량",
     "홀수차판상태",
-    "리프트카운터",
+    "승강로정보",
     "짝수차판상태",
     "짝수차량",
   ];
@@ -63,7 +63,7 @@ const ParkingMonitor = ({ sensorData, isPLCConnected, onVehicleEdit }) => {
       case 3: // 짝수차판상태
       case 4: // 짝수차량
         return level >= 1 && level <= 24; // 1단부터 24단까지
-      case 2: // 리프트카운터
+      case 2: // 승강로정보
         return level >= 0; // 진입층부터 38단까지
       default:
         return false;
@@ -77,8 +77,8 @@ const ParkingMonitor = ({ sensorData, isPLCConnected, onVehicleEdit }) => {
         return level >= 1 ? `C${96 + (level - 1) * 2}` : "C96";
       case 1: // 홀수차판상태
         return level >= 1 ? `C${150 + (level - 1) * 2}` : "C150";
-      case 2: // 리프트카운터
-        return `C${210 + level}`;
+      case 2: // 승강로정보
+        return level === 0 ? "C211" : `C${210 + level - 1}`;
       case 3: // 짝수차판상태
         return level >= 1 ? `C${151 + (level - 1) * 2}` : "C151";
       case 4: // 짝수차량
@@ -150,14 +150,11 @@ const ParkingMonitor = ({ sensorData, isPLCConnected, onVehicleEdit }) => {
     const isOnLift = isVehicleOnLift(level, box);
 
     if (box === 2) {
-      // 리프트카운터 - C210~C234 값에 따라 색상 변경
-      const liftCounterAddress = `C${210 + level}`;
+      // 승강로정보 - 0이면 회색, 1이면 주황색
+      const liftCounterAddress = level === 0 ? "C211" : `C${210 + level - 1}`;
       const liftCounterValue = getPLCValue(liftCounterAddress);
       
-      if (liftCounterValue === 0) return "bg-gray-400";
-      if (liftCounterValue <= 5) return "bg-green-300";
-      if (liftCounterValue <= 10) return "bg-yellow-300";
-      return "bg-orange-300";
+      return liftCounterValue === 0 ? "bg-gray-400" : "bg-orange-400";
     } else if (box === 1 || box === 3) {
       // 차판상태
       return value === 0 ? "bg-gray-300" : "";
@@ -214,7 +211,7 @@ const ParkingMonitor = ({ sensorData, isPLCConnected, onVehicleEdit }) => {
     const currentValue = getPLCValue(displayAddress);
 
     const vehicleType = box === 0 ? "홀수차량" : "짝수차량";
-    const levelText = level === 0 ? "진입층" : `${level}단`;
+    const levelText = level === 0 ? "1층(진입층)" : level === 1 ? "B1" : `${level}층`;
 
     let orderText = "";
     if (level >= 1) {
@@ -310,9 +307,9 @@ const ParkingMonitor = ({ sensorData, isPLCConnected, onVehicleEdit }) => {
           ref={scrollContainerRef}
           className="h-[70vh] sm:h-96 overflow-y-auto p-2 sm:p-4 space-y-1 sm:space-y-2"
         >
-          {/* 24단부터 1단까지 역순, 그 다음 진입층 표시 */}
-          {[...Array.from({ length: 24 }, (_, i) => 24 - i), 0].map((level) => {
-            const levelText = level === 0 ? "진입층" : `${level}단`;
+          {/* 24층부터 2층까지 역순, 그 다음 1층, 마지막에 B1 표시 */}
+          {[...Array.from({ length: 23 }, (_, i) => 24 - i), 0, 1].map((level) => {
+            const levelText = level === 0 ? "진입층" : level === 1 ? "B1" : `${level}층`;
 
             return (
               <div
@@ -337,7 +334,7 @@ const ParkingMonitor = ({ sensorData, isPLCConnected, onVehicleEdit }) => {
 
                   {/* 5개 박스 */}
                   <div className="flex flex-wrap sm:flex-nowrap gap-1 sm:gap-2 flex-1 justify-center items-center">
-                    {/* 모바일: 홀수차량, 리프트카운터, 짝수차량 / 데스크탑: 전체 */}
+                    {/* 모바일: 홀수차량, 승강로정보, 짝수차량 / 데스크탑: 전체 */}
                     {(isMobile ? [0, 2, 4] : [0, 1, 2, 3, 4]).map(
                       (box) => {
                         if (!shouldShowBox(level, box)) {
@@ -433,7 +430,7 @@ const ParkingMonitor = ({ sensorData, isPLCConnected, onVehicleEdit }) => {
                                   )}
                                 </div>
                               ) : box === 2 ? (
-                                // 리프트카운터는 빈 공간으로 표시
+                                // 승강로정보는 빈 공간으로 표시
                                 <div className="flex items-center justify-center h-12 w-full">
                                   {/* 빈 공간 */}
                                 </div>
@@ -500,7 +497,7 @@ const ParkingMonitor = ({ sensorData, isPLCConnected, onVehicleEdit }) => {
       <div className="hidden sm:block mt-4 p-3 bg-gradient-to-br from-blue-50 to-indigo-100 rounded-lg text-sm text-gray-600">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div>
-            <span className="font-medium">총 층수:</span> 25층 (진입층 + 24단)
+            <span className="font-medium">총 층수:</span> 25층 (1층 + 24층)
           </div>
           <div>
             <span className="font-medium">적재차판:</span> C75 ={" "}
