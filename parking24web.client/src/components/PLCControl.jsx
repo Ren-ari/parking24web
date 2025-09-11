@@ -125,6 +125,7 @@ const PLCControl = () => {
                         </button>
                     </nav>
                     
+
                     {/* 상태 표시 (데스크톱) */}
                     <div className="hidden md:flex items-center space-x-3 flex-shrink-0">
                         <div className="flex items-center space-x-2">
@@ -264,7 +265,7 @@ const PLCControl = () => {
                             위치정보
                         </div>
                         <div className="bg-green-100 text-green-800 text-sm px-2 py-3 text-center border-r h-16 flex items-center justify-center">
-                            속초써밋베이
+                            토로스 주차타워
                         </div>
                     </div>
         
