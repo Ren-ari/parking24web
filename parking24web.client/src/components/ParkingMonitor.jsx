@@ -308,7 +308,7 @@ const ParkingMonitor = ({ sensorData, isPLCConnected, onVehicleEdit }) => {
           className="h-[70vh] sm:h-96 overflow-y-auto p-2 sm:p-4 space-y-1 sm:space-y-2"
         >
           {/* 24층부터 2층까지 역순, 그 다음 1층, 마지막에 B1 표시 */}
-          {[...Array.from({ length: 23 }, (_, i) => 24 - i), 0, 1].map((level) => {
+          {[...Array.from({ length: 22 }, (_, i) => 23 - i), 0, 1].map((level) => {
             const levelText = level === 0 ? "진입층" : level === 1 ? "B1" : `${level}층`;
 
             return (
