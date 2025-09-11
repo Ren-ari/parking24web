@@ -205,7 +205,11 @@ const SensorMonitor = ({ sensorData, isPLCConnected }) => {
     };
 
     return (
-                 <div className="bg-white rounded-2xl shadow-lg p-3 md:p-4 overflow-hidden border-2 border-gray-300">
+                 <div className="rounded-2xl p-3 md:p-4 overflow-hidden border border-white/20 shadow-xl shadow-black/20" style={{
+                     background: 'rgba(255, 255, 255, 0.95)',
+                     backdropFilter: 'blur(25px)',
+                     WebkitBackdropFilter: 'blur(25px)',
+                 }}>
             <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-6 md:mb-4 space-y-2 md:space-y-0">
                 <h2 className="text-base md:text-lg font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2 md:mb-0">센서 데이터 모니터</h2>
             </div>
@@ -450,7 +454,7 @@ const SensorMonitor = ({ sensorData, isPLCConnected }) => {
                                         <span className="text-xs md:text-sm font-semibold text-blue-600 group-hover:text-purple-600 transition-colors duration-300">
                                             {item.address}
                                         </span>
-                                        <span className="text-sm md:text-lg font-mono text-gray-900 break-words bg-gray-50 rounded-lg px-2 py-1 group-hover:bg-blue-50 transition-colors duration-300">
+                                        <span className="text-base md:text-xl font-mono text-gray-900 break-words bg-gray-50 rounded-lg px-2 py-1 group-hover:bg-blue-50 transition-colors duration-300">
                                             {item.displayValue}
                                         </span>
                                     </div>
