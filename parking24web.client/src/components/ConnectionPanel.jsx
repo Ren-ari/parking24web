@@ -36,7 +36,11 @@ const ConnectionPanel = ({
     };
 
     return (
-        <div className="bg-white rounded-2xl shadow-lg p-3 md:p-4 mb-4 overflow-hidden border-2 border-gray-300">
+        <div className="rounded-2xl p-3 md:p-4 mb-4 overflow-hidden border border-white/20 shadow-xl shadow-black/20" style={{
+            background: 'rgba(255, 255, 255, 0.95)',
+            backdropFilter: 'blur(25px)',
+            WebkitBackdropFilter: 'blur(25px)',
+        }}>
             <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-6 md:mb-4 space-y-2 md:space-y-0">
                 <h2 className="text-base md:text-lg font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2 md:mb-0">PLC 연결 관리</h2>
                 <div className="flex items-center gap-3">
@@ -56,7 +60,11 @@ const ConnectionPanel = ({
                             value={plcConfig.ip}
                             onChange={handleIPChange}
                             disabled={isPLCConnected || isConnecting}
-                            className="w-full px-4 py-3 bg-gradient-to-br from-blue-50 to-indigo-100 border-2 border-blue-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50 disabled:text-gray-500 text-sm md:text-base transition-all duration-300 hover:border-blue-300 shadow-sm"
+                            className="w-3/4 px-4 py-6 bg-gradient-to-br from-blue-50 to-indigo-100 border-2 border-blue-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50 disabled:text-gray-500 text-sm md:text-base transition-all duration-300 hover:border-blue-300 shadow-sm font-mono font-semibold tracking-wide"
+                            style={{
+                                backdropFilter: 'blur(15px)',
+                                WebkitBackdropFilter: 'blur(15px)',
+                            }}
                             placeholder="192.168.1.2"
                         />
                     </div>
@@ -69,7 +77,11 @@ const ConnectionPanel = ({
                             value={plcConfig.port}
                             onChange={handlePortChange}
                             disabled={isPLCConnected || isConnecting}
-                            className="w-full px-4 py-3 bg-gradient-to-br from-blue-50 to-indigo-100 border-2 border-blue-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50 disabled:text-gray-500 text-sm md:text-base transition-all duration-300 hover:border-blue-300 shadow-sm"
+                            className="w-3/4 px-4 py-6 bg-gradient-to-br from-blue-50 to-indigo-100 border-2 border-blue-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50 disabled:text-gray-500 text-sm md:text-base transition-all duration-300 hover:border-blue-300 shadow-sm font-mono font-semibold tracking-wide"
+                            style={{
+                                backdropFilter: 'blur(15px)',
+                                WebkitBackdropFilter: 'blur(15px)',
+                            }}
                             placeholder="2005"
                             min="1"
                             max="65535"
