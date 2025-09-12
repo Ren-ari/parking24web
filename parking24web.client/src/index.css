@@ -372,3 +372,36 @@ div.app {
     transform: translateX(100px) scale(0.8);
   }
 }
+
+/* 터치 최적화 - 전역 설정 */
+* {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+    user-select: none;
+}
+
+button, [role="button"], .touchable {
+    min-height: 44px;
+    min-width: 44px;
+    transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+}
+
+    button:active, [role="button"]:active, .touchable:active {
+        transform: scale(0.96);
+    }
+
+/* 입력 요소는 선택 가능하게 */
+input, textarea, select {
+    user-select: text;
+    touch-action: auto;
+}
+
+/* 키오스크 최적화 */
+@media (pointer: coarse) {
+    button, [role="button"], .touchable {
+        min-height: 48px;
+        min-width: 48px;
+    }
+}

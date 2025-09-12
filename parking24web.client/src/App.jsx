@@ -3,6 +3,8 @@ import PLCControl from './components/PLCControl';
 import LoginPage from './components/LoginPage';
 import './App.css';
 import { useState } from 'react';
+// eslint-disable-next-line no-unused-vars
+import { motion } from 'framer-motion';
 
 document.body.style.fontFamily = "'Noto Sans KR', sans-serif";
 
@@ -16,13 +18,24 @@ function App() {
     };
 
     if (!isAuthenticated) {
-        return <LoginPage onLogin={handleLogin} />;
+        return (
+            <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+            >
+                <LoginPage onLogin={handleLogin} />
+            </motion.div>
+        );
     }
 
     return (
-        <div className="App">
+        <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="App"
+        >
             <PLCControl />
-        </div>
+        </motion.div>
     );
 }
 export default App;
