@@ -40,35 +40,19 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sendCommand, sensorDat
             'LiftDownLimit': { wordIndex: 38, bitIndex: 0, address: 'C38', name: '리프트 하강비상확인' },
             'LiftUpLimit': { wordIndex: 51, bitIndex: 0, address: 'C51', name: '리프트 상승비상확인' },
             'LiftUpDecel': { wordIndex: 52, bitIndex: 0, address: 'C52', name: '리프트 상승감속확인' },
-            'levelHigh': { wordIndex: 65, bitIndex: 13, address: 'C65', name: '레벨상' },
-            'levelLow': { wordIndex: 60, bitIndex: 12, address: 'C60', name: '레벨하' },
             'wireCut': { wordIndex: 61, bitIndex: 11, address: 'C61', name: '와이어 절단' },
-            'Wire': { wordIndex: 23, bitIndex: 0, address: 'C23', name: '와이어 절단확인' },
-            'emgUp': { wordIndex: 67, bitIndex: 4, address: 'C67', name: '상승비상' },
-            'emgDown': { wordIndex: 67, bitIndex: 2, address: 'C67', name: '하강비상' },
-            'upDecel': { wordIndex: 67, bitIndex: 3, address: 'C67', name: '상승감속' },
-            'downDecel': { wordIndex: 67, bitIndex: 1, address: 'C67', name: '하강감속' },
             
             // 횡행/락킹 탭 (page3) - 인풋 센서들
             'HookCenter': { wordIndex: 22, bitIndex: 0, address: 'C22', name: '후크중앙확인' },
             'OddHookSensor': { wordIndex: 24, bitIndex: 0, address: 'C24', name: '홀수 후크 감지' },
             'EvenHookSensor': { wordIndex: 25, bitIndex: 0, address: 'C25', name: '짝수 후크 감지' },
-            'evenHookCheck': { wordIndex: 62, bitIndex: 12, address: 'C62', name: '짝수후크확인' },
-            'oddHookCheck': { wordIndex: 62, bitIndex: 10, address: 'C62', name: '홀수후크확인' },
-            'centerHookCheck': { wordIndex: 62, bitIndex: 11, address: 'C62', name: '중앙후크확인' },
             'OddLockingOn': { wordIndex: 33, bitIndex: 0, address: 'C33', name: '홀수측 록킹잠김확인' },
             'OddLockingOff': { wordIndex: 34, bitIndex: 0, address: 'C34', name: '홀수측 록킹풀림확인' },
             'EvenLockingOn': { wordIndex: 35, bitIndex: 0, address: 'C35', name: '짝수측 록킹잠김확인' },
             'EvenLockingOff': { wordIndex: 36, bitIndex: 0, address: 'C36', name: '짝수측 록킹풀림확인' },
-            'oddLockingOpenCheck': { wordIndex: 67, bitIndex: 9, address: 'C67', name: '좌측락킹 열림확인' },
-            'evenLockingOpenCheck': { wordIndex: 67, bitIndex: 12, address: 'C67', name: '우측락킹 열림확인' },
             'LeftFit': { wordIndex: 26, bitIndex: 0 , address: 'C26', name: '좌측 피트확인' },
-            'RightFit': { wordIndex: 27, bitIndex: 3, address: 'C27', name: '우측 피트확인' },
-            'leftFeet': { wordIndex: 62, bitIndex: 13, address: 'C62', name: '좌측피트' },
-            'rightFeet': { wordIndex: 62, bitIndex: 14, address: 'C62', name: '우측피트' },
-            'leftChassisCheck': { wordIndex: 63, bitIndex: 14, address: 'C63', name: '좌측차판확인' },
-            'rightChassisCheck': { wordIndex: 63, bitIndex: 13, address: 'C63', name: '우측차판확인' },
-            
+            'RightFit': { wordIndex: 27, bitIndex: 0, address: 'C27', name: '우측 피트확인' },
+
             // 아웃풋 센서들 (출력 상태)
             // 도어/턴테이블 탭 아웃풋
             'redLight': { wordIndex: 69, bitIndex: 2, address: 'C69', name: '적색신호등' },
@@ -111,8 +95,6 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sendCommand, sensorDat
             'latSp2': { wordIndex: 71, bitIndex: 3, address: 'C71', name: '횡행 인버터 SP2' },
             'latSp3': { wordIndex: 71, bitIndex: 4, address: 'C71', name: '횡행 인버터 SP3' },
             'latMortor': { wordIndex: 68, bitIndex: 5, address: 'C68', name: '횡행 모터BK' },
-            'rotFwdMc': { wordIndex: 69, bitIndex: 13, address: 'C69', name: '정회전 MC' },
-            'rotRightMc': { wordIndex: 71, bitIndex: 1, address: 'C71', name: '우회전 MC' },
         };
         
         const newStates = {};
@@ -376,9 +358,10 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sendCommand, sensorDat
                     width: 300px;
                     height: 85vh; /* Increased height */
                     transform: translateY(-50%);
-                    background: white;
+                    background: #f8fafc;
+                    border: 1px solid #e2e8f0;
                     box-shadow: -5px 0 20px rgba(0, 0, 0, 0.1);
-                    transition: right 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55); /* More bouncy animation */
+                    transition: right 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
                     z-index: 1000;
                     overflow-y: auto;
                     padding: 20px;
@@ -410,6 +393,25 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sendCommand, sensorDat
                 
                 .sensor-panel-right.show {
                     right: 0;
+                    animation: slideInRight 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+                }
+                
+                @keyframes slideInRight {
+                    0% {
+                        right: -300px;
+                        opacity: 0;
+                        transform: translateY(-50%) scale(0.9) rotateY(15deg);
+                    }
+                    50% {
+                        right: -50px;
+                        opacity: 0.7;
+                        transform: translateY(-50%) scale(1.02) rotateY(5deg);
+                    }
+                    100% {
+                        right: 0;
+                        opacity: 1;
+                        transform: translateY(-50%) scale(1) rotateY(0deg);
+                    }
                 }
                 
                 .sensor-panel-left {
@@ -419,9 +421,10 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sendCommand, sensorDat
                     width: 300px;
                     height: 85vh; /* Increased height */
                     transform: translateY(-50%);
-                    background: white;
+                    background: #f8fafc;
+                    border: 1px solid #e2e8f0;
                     box-shadow: 5px 0 20px rgba(0, 0, 0, 0.1);
-                    transition: left 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55); /* More bouncy animation */
+                    transition: left 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
                     z-index: 1000;
                     overflow-y: auto;
                     padding: 20px;
@@ -453,6 +456,25 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sendCommand, sensorDat
                 
                 .sensor-panel-left.show {
                     left: 0;
+                    animation: slideInLeft 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+                }
+                
+                @keyframes slideInLeft {
+                    0% {
+                        left: -300px;
+                        opacity: 0;
+                        transform: translateY(-50%) scale(0.9) rotateY(-15deg);
+                    }
+                    50% {
+                        left: -50px;
+                        opacity: 0.7;
+                        transform: translateY(-50%) scale(1.02) rotateY(-5deg);
+                    }
+                    100% {
+                        left: 0;
+                        opacity: 1;
+                        transform: translateY(-50%) scale(1) rotateY(0deg);
+                    }
                 }
                 
                 .sensor-panel h3 {
@@ -461,21 +483,85 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sendCommand, sensorDat
                     font-weight: bold;
                     margin-bottom: 20px;
                     text-align: center;
-                    border-bottom: 2px solid #3b82f6;
                     padding-bottom: 10px;
+                    border-bottom: 2px solid #3b82f6;
                 }
                 
+                
                 .sensor-item {
-                    background: white;
-                    border: 1px solid #d1d5db;
-                    border-radius: 16px; /* More rounded */
-                    padding: 15px;
-                    margin-bottom: 15px;
-                    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-                    transition: all 0.2s ease;
+                    background: linear-gradient(145deg, 
+                        rgba(255, 255, 255, 0.15) 0%, 
+                        rgba(255, 255, 255, 0.05) 50%, 
+                        rgba(255, 255, 255, 0.1) 100%);
+                    backdrop-filter: blur(15px);
+                    -webkit-backdrop-filter: blur(15px);
+                    border: 1px solid rgba(255, 255, 255, 0.3);
+                    border-radius: 24px;
+                    padding: 20px;
+                    margin-bottom: 20px;
+                    box-shadow: 
+                        0 12px 40px rgba(0, 0, 0, 0.15),
+                        0 4px 12px rgba(0, 0, 0, 0.1),
+                        inset 0 2px 4px rgba(255, 255, 255, 0.3),
+                        inset 0 -1px 2px rgba(0, 0, 0, 0.1),
+                        0 0 0 1px rgba(255, 255, 255, 0.2);
+                    transition: background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease, opacity 0.3s ease;
                     opacity: 0;
-                    transform: translateX(-20px);
-                    animation: slideInFromLeft 0.4s ease-out forwards;
+                    transform: translateX(0) scale(0.95);
+                    animation: slideInFromCenter 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+                    position: relative;
+                    overflow: hidden;
+                }
+                
+                .sensor-item::before {
+                    content: '';
+                    position: absolute;
+                    top: 0;
+                    left: -100%;
+                    width: 100%;
+                    height: 100%;
+                    background: linear-gradient(90deg, 
+                        transparent, 
+                        rgba(255, 255, 255, 0.3), 
+                        transparent);
+                    transition: left 0.6s ease;
+                }
+                
+                .sensor-item:hover::before {
+                    left: 100%;
+                }
+                
+                .sensor-item::after {
+                    content: '';
+                    position: absolute;
+                    top: 50%;
+                    left: 50%;
+                    width: 0;
+                    height: 0;
+                    background: radial-gradient(circle, rgba(102, 126, 234, 0.1) 0%, transparent 70%);
+                    border-radius: 50%;
+                    transform: translate(-50%, -50%);
+                    transition: all 0.4s ease;
+                    pointer-events: none;
+                }
+                
+                .sensor-item:hover::after {
+                    width: 200px;
+                    height: 200px;
+                    animation: ripple 0.6s ease-out;
+                }
+                
+                @keyframes ripple {
+                    0% {
+                        width: 0;
+                        height: 0;
+                        opacity: 1;
+                    }
+                    100% {
+                        width: 200px;
+                        height: 200px;
+                        opacity: 0;
+                    }
                 }
                 
                 .sensor-item:nth-child(1) { animation-delay: 0.1s; }
@@ -494,28 +580,60 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sendCommand, sensorDat
                 .sensor-item:nth-child(14) { animation-delay: 0.75s; }
                 .sensor-item:nth-child(15) { animation-delay: 0.8s; }
                 
-                @keyframes slideInFromLeft {
-                    to {
+                @keyframes slideInFromCenter {
+                    0% {
+                        opacity: 0;
+                        transform: translateX(0) scale(0.95) rotateY(-10deg);
+                    }
+                    50% {
+                        opacity: 0.8;
+                        transform: translateX(0) scale(1.02) rotateY(-5deg);
+                    }
+                    100% {
                         opacity: 1;
-                        transform: translateX(0);
+                        transform: translateX(0) scale(1) rotateY(0deg);
                     }
                 }
                 
                 .sensor-item:hover {
-                    transform: translateY(-2px);
-                    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+                    transform: translateY(-4px) scale(1.01);
+                    box-shadow: 
+                        0 20px 45px rgba(0, 0, 0, 0.18),
+                        0 6px 15px rgba(0, 0, 0, 0.12),
+                        inset 0 3px 6px rgba(255, 255, 255, 0.4),
+                        inset 0 -2px 4px rgba(0, 0, 0, 0.1),
+                        0 0 0 1px rgba(255, 255, 255, 0.4);
+                    border-color: rgba(255, 255, 255, 0.5);
                 }
                 
                 .sensor-item.active {
-                    background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
-                    border-color: #10b981;
-                    box-shadow: 0 0 20px rgba(16, 185, 129, 0.3);
+                    background: linear-gradient(145deg, 
+                        rgba(16, 185, 129, 0.25) 0%, 
+                        rgba(34, 197, 94, 0.2) 50%, 
+                        rgba(16, 185, 129, 0.25) 100%);
+                    border: 1px solid rgba(16, 185, 129, 0.6);
+                    box-shadow: 
+                        0 8px 25px rgba(0, 0, 0, 0.1),
+                        0 3px 8px rgba(0, 0, 0, 0.08),
+                        inset 0 2px 4px rgba(255, 255, 255, 0.3),
+                        inset 0 -1px 2px rgba(16, 185, 129, 0.1);
+                    opacity: 1 !important;
                 }
                 
+                
                 .sensor-item.inactive {
-                    background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
-                    border-color: #9ca3af;
+                    background: linear-gradient(145deg, 
+                        rgba(107, 114, 128, 0.15) 0%, 
+                        rgba(156, 163, 175, 0.08) 50%, 
+                        rgba(107, 114, 128, 0.12) 100%);
+                    border: 1px solid rgba(156, 163, 175, 0.4);
                     color: #6b7280;
+                    opacity: 0.8;
+                    box-shadow: 
+                        0 8px 25px rgba(0, 0, 0, 0.1),
+                        0 3px 8px rgba(0, 0, 0, 0.08),
+                        inset 0 1px 2px rgba(255, 255, 255, 0.2),
+                        inset 0 -1px 2px rgba(0, 0, 0, 0.05);
                 }
                 
                 .sensor-item.inactive .sensor-code {
@@ -526,6 +644,17 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sendCommand, sensorDat
                     color: #6b7280;
                 }
                 
+                .sensor-item.active .sensor-code {
+                    color: #059669;
+                    font-weight: bold;
+                }
+                
+                .sensor-item.active .sensor-name {
+                    color: #047857;
+                    font-weight: 600;
+                }
+                
+                
                 .sensor-item {
                     display: flex;
                     align-items: center;
@@ -535,16 +664,28 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sendCommand, sensorDat
                 .sensor-code {
                     font-family: 'Courier New', monospace;
                     font-weight: bold;
-                    color: #1e40af;
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    -webkit-background-clip: text;
+                    -webkit-text-fill-color: transparent;
+                    background-clip: text;
                     font-size: 1.1rem;
                     min-width: 50px;
+                    text-shadow: 0 0 10px rgba(102, 126, 234, 0.3);
                 }
                 
+                
                 .sensor-name {
-                    font-weight: bold;
-                    color: #374151;
+                    font-weight: 600;
+                    color: #1f2937;
                     font-size: 0.9rem;
                     flex: 1;
+                    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+                    transition: all 0.3s ease;
+                }
+                
+                .sensor-item:hover .sensor-name {
+                    color: #111827;
+                    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
                 }
                 
                 
@@ -704,7 +845,10 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sendCommand, sensorDat
                 }
 
             `}</style>
-            <div className="bg-white rounded-2xl shadow-lg p-3 md:p-4 overflow-hidden border-2 border-gray-300">
+            <div className="bg-white rounded-2xl shadow-lg p-3 md:p-4 overflow-hidden border-2 border-gray-300" style={{
+                backdropFilter: 'blur(25px)',
+                WebkitBackdropFilter: 'blur(25px)',
+            }}>
             <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-6 md:mb-4 space-y-2 md:space-y-0">
                 <h2 className="text-base md:text-lg font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2 md:mb-0">수동 제어</h2>
                 <div className="flex items-center flex-wrap gap-3 justify-end sm:justify-start">
@@ -1020,6 +1164,7 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sendCommand, sensorDat
                     <div>비상모드: {isEmergencyMode ? 'O' : 'X'}</div>
                 </div>
             )}
+            </div>
 
             {/* 좌측 센서 패널 (PC만) */}
             {showSensors && (
@@ -1127,33 +1272,9 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sendCommand, sensorDat
                                 <div className="sensor-code">{getSensorCode('LiftUpDecel')}</div>
                                 <div className="sensor-name">리프트 상승감속확인</div>
                             </div>
-                            <div className={`sensor-item ${getSensorValue('levelHigh') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('levelHigh')}</div>
-                                <div className="sensor-name">레벨상</div>
-                            </div>
-                            <div className={`sensor-item ${getSensorValue('levelLow') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('levelLow')}</div>
-                                <div className="sensor-name">레벨하</div>
-                            </div>
                             <div className={`sensor-item ${getSensorValue('wireCut') ? 'active' : 'inactive'}`}>
                                 <div className="sensor-code">{getSensorCode('wireCut')}</div>
                                 <div className="sensor-name">와이어 절단</div>
-                            </div>
-                            <div className={`sensor-item ${getSensorValue('emgUp') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('emgUp')}</div>
-                                <div className="sensor-name">상승비상</div>
-                            </div>
-                            <div className={`sensor-item ${getSensorValue('emgDown') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('emgDown')}</div>
-                                <div className="sensor-name">하강비상</div>
-                            </div>
-                            <div className={`sensor-item ${getSensorValue('upDecel') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('upDecel')}</div>
-                                <div className="sensor-name">상승감속</div>
-                            </div>
-                            <div className={`sensor-item ${getSensorValue('downDecel') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('downDecel')}</div>
-                                <div className="sensor-name">하강감속</div>
                             </div>
                         </div>
                     )}
@@ -1171,19 +1292,7 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sendCommand, sensorDat
                             <div className={`sensor-item ${getSensorValue('EvenHookSensor') ? 'active' : 'inactive'}`}>
                                 <div className="sensor-code">{getSensorCode('EvenHookSensor')}</div>
                                 <div className="sensor-name">짝수 후크 감지</div>
-                            </div>
-                            <div className={`sensor-item ${getSensorValue('evenHookCheck') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('evenHookCheck')}</div>
-                                <div className="sensor-name">짝수후크확인</div>
-                            </div>
-                            <div className={`sensor-item ${getSensorValue('oddHookCheck') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('oddHookCheck')}</div>
-                                <div className="sensor-name">홀수후크확인</div>
-                            </div>
-                            <div className={`sensor-item ${getSensorValue('centerHookCheck') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('centerHookCheck')}</div>
-                                <div className="sensor-name">중앙후크확인</div>
-                            </div>
+                            </div>                   
                             <div className={`sensor-item ${getSensorValue('OddLockingOn') ? 'active' : 'inactive'}`}>
                                 <div className="sensor-code">{getSensorCode('OddLockingOn')}</div>
                                 <div className="sensor-name">홀수측 록킹잠김확인</div>
@@ -1200,14 +1309,6 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sendCommand, sensorDat
                                 <div className="sensor-code">{getSensorCode('EvenLockingOff')}</div>
                                 <div className="sensor-name">짝수측 록킹풀림확인</div>
                             </div>
-                            <div className={`sensor-item ${getSensorValue('oddLockingOpenCheck') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('oddLockingOpenCheck')}</div>
-                                <div className="sensor-name">좌측락킹 열림확인</div>
-                            </div>
-                            <div className={`sensor-item ${getSensorValue('evenLockingOpenCheck') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('evenLockingOpenCheck')}</div>
-                                <div className="sensor-name">우측락킹 열림확인</div>
-                            </div>
                             <div className={`sensor-item ${getSensorValue('LeftFit') ? 'active' : 'inactive'}`}>
                                 <div className="sensor-code">{getSensorCode('LeftFit')}</div>
                                 <div className="sensor-name">좌측 피트확인</div>
@@ -1215,23 +1316,7 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sendCommand, sensorDat
                             <div className={`sensor-item ${getSensorValue('RightFit') ? 'active' : 'inactive'}`}>
                                 <div className="sensor-code">{getSensorCode('RightFit')}</div>
                                 <div className="sensor-name">우측 피트확인</div>
-                            </div>
-                            <div className={`sensor-item ${getSensorValue('leftFeet') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('leftFeet')}</div>
-                                <div className="sensor-name">좌측피트</div>
-                            </div>
-                            <div className={`sensor-item ${getSensorValue('rightFeet') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('rightFeet')}</div>
-                                <div className="sensor-name">우측피트</div>
-                            </div>
-                            <div className={`sensor-item ${getSensorValue('leftChassisCheck') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('leftChassisCheck')}</div>
-                                <div className="sensor-name">좌측차판확인</div>
-                            </div>
-                            <div className={`sensor-item ${getSensorValue('rightChassisCheck') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('rightChassisCheck')}</div>
-                                <div className="sensor-name">우측차판확인</div>
-                            </div>
+                            </div>                 
                         </div>
                     )}
                 </div>
@@ -1396,20 +1481,11 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sendCommand, sensorDat
                             <div className={`sensor-item ${getSensorValue('latMortor') ? 'active' : 'inactive'}`}>
                                 <div className="sensor-code">{getSensorCode('latMortor')}</div>
                                 <div className="sensor-name">횡행 모터BK</div>
-                            </div>
-                            <div className={`sensor-item ${getSensorValue('rotFwdMc') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('rotFwdMc')}</div>
-                                <div className="sensor-name">정회전 MC</div>
-                            </div>
-                            <div className={`sensor-item ${getSensorValue('rotRightMc') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('rotRightMc')}</div>
-                                <div className="sensor-name">우회전 MC</div>
-                            </div>
+                            </div>               
                         </div>
                     )}
                 </div>
             )}
-            </div>
         </>
     );
 };

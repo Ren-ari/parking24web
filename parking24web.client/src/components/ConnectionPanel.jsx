@@ -36,7 +36,11 @@ const ConnectionPanel = ({
     };
 
     return (
-        <div className="bg-white rounded-2xl shadow-lg p-3 md:p-4 mb-4 overflow-hidden border-2 border-gray-300">
+        <div className="rounded-2xl p-3 md:p-4 mb-4 overflow-hidden border border-white/20 shadow-xl shadow-black/20" style={{
+            background: 'rgba(255, 255, 255, 0.95)',
+            backdropFilter: 'blur(25px)',
+            WebkitBackdropFilter: 'blur(25px)',
+        }}>
             <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-6 md:mb-4 space-y-2 md:space-y-0">
                 <h2 className="text-base md:text-lg font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2 md:mb-0">PLC 연결 관리</h2>
                 <div className="flex items-center gap-3">
@@ -44,37 +48,44 @@ const ConnectionPanel = ({
                 </div>
             </div>
 
-            {/* PLC 설정 */}
-            <div className="mb-8 space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">
-                            IP
-                        </label>
-                        <input
-                            type="text"
-                            value={plcConfig.ip}
-                            onChange={handleIPChange}
-                            disabled={isPLCConnected || isConnecting}
-                            className="w-full px-4 py-3 bg-gradient-to-br from-blue-50 to-indigo-100 border-2 border-blue-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50 disabled:text-gray-500 text-sm md:text-base transition-all duration-300 hover:border-blue-300 shadow-sm"
-                            placeholder="192.168.1.2"
-                        />
-                    </div>
-                    <div className="space-y-2 mb-4">
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">
-                            포트
-                        </label>
-                        <input
-                            type="number"
-                            value={plcConfig.port}
-                            onChange={handlePortChange}
-                            disabled={isPLCConnected || isConnecting}
-                            className="w-full px-4 py-3 bg-gradient-to-br from-blue-50 to-indigo-100 border-2 border-blue-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50 disabled:text-gray-500 text-sm md:text-base transition-all duration-300 hover:border-blue-300 shadow-sm"
-                            placeholder="2005"
-                            min="1"
-                            max="65535"
-                        />
-                    </div>
+            {/* PLC 선택 */}
+            <div className="mb-8">
+                <div className="flex justify-center gap-6">
+                    <button
+                        onClick={() => {
+                            setPLCConfig({
+                                ip: '192.168.100.102',
+                                port: 2005
+                            });
+                            connectToPLC();
+                        }}
+                        disabled={isPLCConnected || isConnecting}
+                        className={`px-12 py-6 rounded-lg font-semibold text-white transition-all duration-300 transform hover:scale-105 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                            isPLCConnected || isConnecting
+                                ? 'bg-gray-400 cursor-not-allowed'
+                                : 'bg-gradient-to-r from-blue-500 via-blue-600 to-indigo-600 hover:from-blue-600 hover:via-blue-700 hover:to-indigo-700 shadow-lg hover:shadow-xl'
+                        }`}
+                    >
+                        <div className="text-xl font-bold">1호기</div>
+                    </button>
+                    
+                    <button
+                        onClick={() => {
+                            setPLCConfig({
+                                ip: '192.168.100.101',
+                                port: 2005
+                            });
+                            connectToPLC();
+                        }}
+                        disabled={isPLCConnected || isConnecting}
+                        className={`px-12 py-6 rounded-lg font-semibold text-white transition-all duration-300 transform hover:scale-105 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                            isPLCConnected || isConnecting
+                                ? 'bg-gray-400 cursor-not-allowed'
+                                : 'bg-gradient-to-r from-blue-500 via-blue-600 to-indigo-600 hover:from-blue-600 hover:via-blue-700 hover:to-indigo-700 shadow-lg hover:shadow-xl'
+                        }`}
+                    >
+                        <div className="text-xl font-bold">2호기</div>
+                    </button>
                 </div>
             </div>
 
@@ -104,35 +115,17 @@ const ConnectionPanel = ({
                 </div>
             )}
 
-            {/* 연결/해제 버튼 */}
-            <div className="flex justify-center mb-6">
-                {!isPLCConnected ? (
-                    <button
-                        onClick={connectToPLC}
-                        disabled={!isSignalRConnected || isConnecting}
-                        className={`px-8 py-3 rounded-xl font-semibold text-white transition-all duration-300 transform hover:scale-105 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${!isSignalRConnected || isConnecting
-                                ? 'bg-gray-400 cursor-not-allowed'
-                                : 'bg-gradient-to-r from-blue-500 via-blue-600 to-indigo-600 hover:from-blue-600 hover:via-blue-700 hover:to-indigo-700 shadow-lg hover:shadow-xl'
-                            }`}
-                    >
-                        {isConnecting ? (
-                            <div className="flex items-center justify-center space-x-2">
-                                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                                <span>연결 중...</span>
-                            </div>
-                        ) : (
-                            'PLC 연결'
-                        )}
-                    </button>
-                ) : (
+            {/* 연결 해제 버튼 */}
+            {isPLCConnected && (
+                <div className="flex justify-center mb-6">
                     <button
                         onClick={disconnectFromPLC}
                         className="px-8 py-3 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-semibold rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-red-500 shadow-md"
                     >
                         PLC 연결 해제
                     </button>
-                )}
-            </div>
+                </div>
+            )}
 
             {/* 인증 상태 표시 */}
             {isPLCConnected && (
