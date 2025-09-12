@@ -5,7 +5,7 @@ const ConfigPanel = ({ isPLCConnected, plcConfig, setPLCConfig, onConfigApply })
     const [activeTab, setActiveTab] = useState('basic');
     const [tempConfig, setTempConfig] = useState({
         // 기본 PLC 설정
-        ip: '192.168.1.2',
+        ip: '',
         port: 2005,
         deviceType: 'C',
         startAddress: 0,
@@ -23,8 +23,8 @@ const ConfigPanel = ({ isPLCConnected, plcConfig, setPLCConfig, onConfigApply })
         sensorMapping: torosSensorMapping,
 
         // 현장 정보
-        siteName: '토로스 현장',
-        description: '토로스 현장 - 기본 설정'
+        siteName: '',
+        description: ''
     });
 
     const presetList = [
@@ -233,39 +233,74 @@ const ConfigPanel = ({ isPLCConnected, plcConfig, setPLCConfig, onConfigApply })
                                 <label className="block text-sm font-medium text-gray-700 mb-3">
                                     PLC 선택
                                 </label>
-                                <div className="grid grid-cols-2 gap-3">
+                                <div className="grid grid-cols-3 gap-4">
                                     <button
                                         onClick={() => {
                                             setTempConfig(prev => ({
                                                 ...prev,
-                                                ip: '192.168.100.102',
+                                                ip: '192.168.0.101',
                                                 port: 2005,
                                                 siteName: '1호기',
                                                 description: '1호기 PLC 연결'
                                             }));
                                             applyConfig();
                                         }}
-                                        className="px-4 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-medium"
+                                        className={`px-6 py-4 rounded-2xl font-bold transition-all duration-300 ease-in-out transform hover:scale-105 hover:-translate-y-1 shadow-lg hover:shadow-xl border-2 focus:outline-none focus:ring-2 focus:ring-blue-300 ${
+                                            tempConfig.ip === '192.168.0.101'
+                                                ? 'bg-gradient-to-r from-blue-500 via-purple-500 to-indigo-600 text-white border-blue-300 shadow-2xl'
+                                                : 'bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100 hover:border-blue-300'
+                                        }`}
                                     >
-                                        1호기 연결
-                                        <div className="text-xs text-blue-100 mt-1">192.168.100.102:2005</div>
+                                        <div className="text-lg font-bold">1호기</div>
+                                        <div className={`text-xs mt-1 ${
+                                            tempConfig.ip === '192.168.0.101' ? 'text-blue-100' : 'text-blue-600'
+                                        }`}>192.168.0.101:2005</div>
                                     </button>
                                     
                                     <button
                                         onClick={() => {
                                             setTempConfig(prev => ({
                                                 ...prev,
-                                                ip: '192.168.100.101',
+                                                ip: '192.168.0.102',
                                                 port: 2005,
                                                 siteName: '2호기',
                                                 description: '2호기 PLC 연결'
                                             }));
                                             applyConfig();
                                         }}
-                                        className="px-4 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors font-medium"
+                                        className={`px-6 py-4 rounded-2xl font-bold transition-all duration-300 ease-in-out transform hover:scale-105 hover:-translate-y-1 shadow-lg hover:shadow-xl border-2 focus:outline-none focus:ring-2 focus:ring-blue-300 ${
+                                            tempConfig.ip === '192.168.0.102'
+                                                ? 'bg-gradient-to-r from-blue-500 via-purple-500 to-indigo-600 text-white border-blue-300 shadow-2xl'
+                                                : 'bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100 hover:border-blue-300'
+                                        }`}
                                     >
-                                        2호기 연결
-                                        <div className="text-xs text-green-100 mt-1">192.168.100.101:2005</div>
+                                        <div className="text-lg font-bold">2호기</div>
+                                        <div className={`text-xs mt-1 ${
+                                            tempConfig.ip === '192.168.0.102' ? 'text-blue-100' : 'text-blue-600'
+                                        }`}>192.168.0.102:2005</div>
+                                    </button>
+                                    
+                                    <button
+                                        onClick={() => {
+                                            setTempConfig(prev => ({
+                                                ...prev,
+                                                ip: '192.168.0.103',
+                                                port: 2005,
+                                                siteName: '3호기',
+                                                description: '3호기 PLC 연결'
+                                            }));
+                                            applyConfig();
+                                        }}
+                                        className={`px-6 py-4 rounded-2xl font-bold transition-all duration-300 ease-in-out transform hover:scale-105 hover:-translate-y-1 shadow-lg hover:shadow-xl border-2 focus:outline-none focus:ring-2 focus:ring-blue-300 ${
+                                            tempConfig.ip === '192.168.0.103'
+                                                ? 'bg-gradient-to-r from-blue-500 via-purple-500 to-indigo-600 text-white border-blue-300 shadow-2xl'
+                                                : 'bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100 hover:border-blue-300'
+                                        }`}
+                                    >
+                                        <div className="text-lg font-bold">3호기</div>
+                                        <div className={`text-xs mt-1 ${
+                                            tempConfig.ip === '192.168.0.103' ? 'text-blue-100' : 'text-blue-600'
+                                        }`}>192.168.0.103:2005</div>
                                     </button>
                                 </div>
                             </div>

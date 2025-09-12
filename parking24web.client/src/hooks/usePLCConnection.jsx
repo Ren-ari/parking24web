@@ -9,7 +9,7 @@ export const usePLCConnection = () => {
 
     // PLC 연결 설정
     const [plcConfig, setPLCConfig] = useState({
-        ip: '192.168.1.2',
+        ip: '',
         port: 2005
     });
 

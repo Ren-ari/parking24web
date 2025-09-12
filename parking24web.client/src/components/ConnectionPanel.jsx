@@ -54,16 +54,18 @@ const ConnectionPanel = ({
                     <button
                         onClick={() => {
                             setPLCConfig({
-                                ip: '192.168.100.102',
+                                ip: '192.168.0.101',
                                 port: 2005
                             });
                             connectToPLC();
                         }}
                         disabled={isPLCConnected || isConnecting}
-                        className={`px-12 py-6 rounded-lg font-semibold text-white transition-all duration-300 transform hover:scale-105 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                        className={`px-12 py-6 rounded-2xl font-bold transition-all duration-300 ease-in-out transform hover:scale-105 hover:-translate-y-1 shadow-lg hover:shadow-xl border-2 focus:outline-none focus:ring-2 focus:ring-blue-300 ${
                             isPLCConnected || isConnecting
-                                ? 'bg-gray-400 cursor-not-allowed'
-                                : 'bg-gradient-to-r from-blue-500 via-blue-600 to-indigo-600 hover:from-blue-600 hover:via-blue-700 hover:to-indigo-700 shadow-lg hover:shadow-xl'
+                                ? 'bg-gray-400 text-gray-200 cursor-not-allowed border-gray-300'
+                                : plcConfig.ip === '192.168.0.101'
+                                ? 'bg-gradient-to-r from-blue-500 via-purple-500 to-indigo-600 text-white border-blue-300 shadow-2xl'
+                                : 'bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100 hover:border-blue-300'
                         }`}
                     >
                         <div className="text-xl font-bold">1호기</div>
@@ -72,19 +74,41 @@ const ConnectionPanel = ({
                     <button
                         onClick={() => {
                             setPLCConfig({
-                                ip: '192.168.100.101',
+                                ip: '192.168.0.102',
                                 port: 2005
                             });
                             connectToPLC();
                         }}
                         disabled={isPLCConnected || isConnecting}
-                        className={`px-12 py-6 rounded-lg font-semibold text-white transition-all duration-300 transform hover:scale-105 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                        className={`px-12 py-6 rounded-2xl font-bold transition-all duration-300 ease-in-out transform hover:scale-105 hover:-translate-y-1 shadow-lg hover:shadow-xl border-2 focus:outline-none focus:ring-2 focus:ring-blue-300 ${
                             isPLCConnected || isConnecting
-                                ? 'bg-gray-400 cursor-not-allowed'
-                                : 'bg-gradient-to-r from-blue-500 via-blue-600 to-indigo-600 hover:from-blue-600 hover:via-blue-700 hover:to-indigo-700 shadow-lg hover:shadow-xl'
+                                ? 'bg-gray-400 text-gray-200 cursor-not-allowed border-gray-300'
+                                : plcConfig.ip === '192.168.0.102'
+                                ? 'bg-gradient-to-r from-blue-500 via-purple-500 to-indigo-600 text-white border-blue-300 shadow-2xl'
+                                : 'bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100 hover:border-blue-300'
                         }`}
                     >
                         <div className="text-xl font-bold">2호기</div>
+                    </button>
+                    
+                    <button
+                        onClick={() => {
+                            setPLCConfig({
+                                ip: '192.168.0.103',
+                                port: 2005
+                            });
+                            connectToPLC();
+                        }}
+                        disabled={isPLCConnected || isConnecting}
+                        className={`px-12 py-6 rounded-2xl font-bold transition-all duration-300 ease-in-out transform hover:scale-105 hover:-translate-y-1 shadow-lg hover:shadow-xl border-2 focus:outline-none focus:ring-2 focus:ring-blue-300 ${
+                            isPLCConnected || isConnecting
+                                ? 'bg-gray-400 text-gray-200 cursor-not-allowed border-gray-300'
+                                : plcConfig.ip === '192.168.0.103'
+                                ? 'bg-gradient-to-r from-blue-500 via-purple-500 to-indigo-600 text-white border-blue-300 shadow-2xl'
+                                : 'bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100 hover:border-blue-300'
+                        }`}
+                    >
+                        <div className="text-xl font-bold">3호기</div>
                     </button>
                 </div>
             </div>
