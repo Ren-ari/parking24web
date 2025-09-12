@@ -283,7 +283,7 @@ const ParkingMonitor = ({ sensorData, isPLCConnected, onVehicleEdit }) => {
 
       
       {/* 주차장 레이아웃 */}
-      <div className="border border-gray-300 rounded-lg h-64 md:h-96 lg:h-[800px]">
+      <div className="border border-gray-300 rounded-lg h-80 sm:h-96 md:h-[500px] lg:h-[800px]">
         <div
           ref={scrollContainerRef}
           className="h-[90%] overflow-y-auto p-2 sm:p-3 md:p-4 space-y-1 sm:space-y-2 md:space-y-3 mt-4 sm:mt-6 md:mt-8"
