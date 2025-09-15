@@ -53,11 +53,7 @@ const ConnectionPanel = ({
                 <div className="flex justify-center gap-6">
                     <button
                         onClick={() => {
-                            setPLCConfig({
-                                ip: '192.168.100.102',
-                                port: 2005
-                            });
-                            connectToPLC();
+                            connectToPLC('192.168.100.102', 2005);
                         }}
                         disabled={isPLCConnected || isConnecting}
                         className={`px-12 py-6 rounded-lg font-semibold text-white transition-all duration-300 transform hover:scale-105 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
@@ -70,12 +66,9 @@ const ConnectionPanel = ({
                     </button>
                     
                     <button
+                        // 2호기 버튼
                         onClick={() => {
-                            setPLCConfig({
-                                ip: '192.168.100.101',
-                                port: 2005
-                            });
-                            connectToPLC();
+                            connectToPLC('192.168.100.101', 2005);
                         }}
                         disabled={isPLCConnected || isConnecting}
                         className={`px-12 py-6 rounded-lg font-semibold text-white transition-all duration-300 transform hover:scale-105 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${

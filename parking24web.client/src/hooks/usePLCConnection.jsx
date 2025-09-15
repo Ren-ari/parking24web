@@ -9,7 +9,7 @@ export const usePLCConnection = () => {
 
     // PLC 연결 설정
     const [plcConfig, setPLCConfig] = useState({
-        ip: '192.168.1.2',
+        ip: '',
         port: 2005
     });
 
@@ -158,17 +158,23 @@ export const usePLCConnection = () => {
     }, [addLog]);
 
     // PLC 연결
-    const connectToPLC = useCallback(async () => {
+    const connectToPLC = useCallback(async (ip, port) => {
         if (isConnecting) return;
+
+        // 파라미터로 받은 값이 있으면 state도 같이 업데이트
+        const targetIp = ip || plcConfig.ip;
+        const targetPort = port || plcConfig.port;
+
+        // 여기 추가 - state 동기화
+        if (ip && port) {
+            setPLCConfig({ ip, port });
+        }
 
         try {
             setIsConnecting(true);
             setError(null);
-
-            addLog(`PLC 연결 시도: ${plcConfig.ip}:${plcConfig.port}`, 'info');
-
-            const success = await signalRService.connectToPLC(plcConfig.ip, plcConfig.port);
-
+            addLog(`PLC 연결 시도: ${targetIp}:${targetPort}`, 'info');
+            const success = await signalRService.connectToPLC(targetIp, targetPort);
             if (!success) {
                 throw new Error('PLC 연결 실패');
             }
@@ -178,7 +184,7 @@ export const usePLCConnection = () => {
         } finally {
             setIsConnecting(false);
         }
-    }, [isConnecting, plcConfig, addLog]);
+    }, [isConnecting, addLog]);
 
     // PLC 연결 해제
     const disconnectFromPLC = useCallback(async () => {

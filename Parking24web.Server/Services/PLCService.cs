@@ -46,7 +46,7 @@ namespace Parking24web.Server.Services
                 // 새 연결 시도
                 await Task.Run(() =>
                 {
-                    _plc.Connect(2323, ip, port); // 표준 LSIS 포트
+                    _plc.Connect(0, ip, port); // 표준 LSIS 포트
                 });
 
                 await Task.Delay(500);
