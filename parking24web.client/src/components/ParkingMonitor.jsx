@@ -31,7 +31,7 @@ const ParkingMonitor = ({ sensorData, isPLCConnected, onVehicleEdit }) => {
   useEffect(() => {
     const defaultMapping = {};
 
-    for (let level = 0; level <= 38; level++) {
+    for (let level = 0; level <= 40; level++) {
       for (let box = 0; box < 5; box++) {
         if (shouldShowBox(level, box)) {
           const key = `${level}_${box}`;
@@ -62,9 +62,9 @@ const ParkingMonitor = ({ sensorData, isPLCConnected, onVehicleEdit }) => {
       case 1: // 홀수차판상태
       case 3: // 짝수차판상태
       case 4: // 짝수차량
-        return level >= 1 && level <= 24; // 1단부터 24단까지
+        return level >= 1 && level <= 40; // 1단부터 40단까지
       case 2: // 승강로정보
-        return level >= 0; // 진입층부터 38단까지
+        return level >= 0; // 진입층부터 40단까지
       default:
         return false;
     }
@@ -92,7 +92,7 @@ const ParkingMonitor = ({ sensorData, isPLCConnected, onVehicleEdit }) => {
   const getEditAddress = (level, box) => {
     if (level === 0) {
       return box === 0 ? "D4001" : "D4002";
-    } else if (level >= 1 && level <= 24) {
+    } else if (level >= 1 && level <= 40) {
       if (box === 0) {
         // 홀수차량
         const address = 4001 + (level - 1) * 2;
@@ -211,7 +211,7 @@ const ParkingMonitor = ({ sensorData, isPLCConnected, onVehicleEdit }) => {
     const currentValue = getPLCValue(displayAddress);
 
     const vehicleType = box === 0 ? "홀수차량" : "짝수차량";
-    const levelText = level === 0 ? "1층(진입층)" : level === 1 ? "B1" : `${level}층`;
+    const levelText = level === 1 ? "1층(진입층)" : `${level}층`;
 
     let orderText = "";
     if (level >= 1) {
@@ -288,15 +288,15 @@ const ParkingMonitor = ({ sensorData, isPLCConnected, onVehicleEdit }) => {
           ref={scrollContainerRef}
           className="h-[90%] overflow-y-auto p-2 sm:p-3 md:p-4 space-y-1 sm:space-y-2 md:space-y-3 mt-4 sm:mt-6 md:mt-8"
         >
-          {/* 24층부터 2층까지 역순, 그 다음 1층, 마지막에 B1 표시 */}
-          {[...Array.from({ length: 23 }, (_, i) => 24 - i), 0, 1].map((level) => {
-            const levelText = level === 0 ? "진입층" : level === 1 ? "B1" : `${level}층`;
+          {/* 40층부터 1층까지 역순 */}
+          {Array.from({ length: 40 }, (_, i) => 40 - i).map((level) => {
+            const levelText = level === 1 ? "진입층" : `${level}층`;
 
             return (
               <div
                 key={level}
                 className={`border border-white/20 rounded-lg p-2 sm:p-3 md:p-4 shadow-lg ${
-                  level === 0
+                  level === 1
                     ? "bg-gradient-to-br from-yellow-50 to-orange-50 border-yellow-300"
                     : "bg-gradient-to-br from-blue-50 to-indigo-100 border-gray-200"
                 }`}
@@ -310,7 +310,7 @@ const ParkingMonitor = ({ sensorData, isPLCConnected, onVehicleEdit }) => {
                   <div className="w-12 sm:w-16 md:w-20 text-center flex-shrink-0">
                     <div
                       className={`font-bold text-xs sm:text-sm md:text-base ${
-                        level === 0 ? "text-orange-600" : "text-gray-700"
+                        level === 1 ? "text-orange-600" : "text-gray-700"
                       }`}
                     >
                       {levelText}
@@ -416,7 +416,7 @@ const ParkingMonitor = ({ sensorData, isPLCConnected, onVehicleEdit }) => {
                                       }}
                                     />
                                   ) : (
-                                    <div className="text-xs sm:text-sm md:text-base text-gray-400">빈 공간</div>
+                                    <div className="text-xs sm:text-sm md:text-base text-gray-400"></div>
                                   )}
                                 </div>
                               ) : box === 2 ? (

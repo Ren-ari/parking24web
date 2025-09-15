@@ -70,7 +70,7 @@ const PLCControl = () => {
 
     // 탭 스타일 - 화려한 애니메이션 적용
     const getTabStyle = (tabName) => {
-        const baseStyle = "relative px-8 py-4 font-bold rounded-2xl transition-all duration-300 ease-in-out text-sm transform hover:scale-105 hover:-translate-y-1 shadow-lg hover:shadow-xl border-2";
+        const baseStyle = "relative px-8 py-4 font-bold rounded-2xl transition-all duration-300 ease-in-out text-sm transform hover:scale-105 hover:-translate-y-1 shadow-lg hover:shadow-xl border-2 tablet-tab-button";
         if (activeTab === tabName) {
             return `${baseStyle} bg-gradient-to-r from-blue-500 via-purple-500 to-indigo-600 text-white shadow-2xl border-blue-300 hover:from-blue-600 hover:via-purple-600 hover:to-indigo-700`;
         }
@@ -79,6 +79,16 @@ const PLCControl = () => {
 
     return (
         <>
+            <style jsx>{`
+                /* 태블릿에서 탭 버튼 크기 조정 */
+                @media (min-width: 768px) and (max-width: 1024px) {
+                    .tablet-tab-button {
+                        padding: 0.5rem 1rem !important;
+                        font-size: 0.75rem !important;
+                        border-radius: 1rem !important;
+                    }
+                }
+            `}</style>
             {/* 상단 네비게이션 헤더 - 완전 전체 화면 너비 */}
             <header className="bg-white shadow-lg border-b border-gray-200 fixed top-0 left-0 right-0 w-full z-50">
                 <div className="flex items-center justify-between px-4 py-3">
@@ -623,60 +633,6 @@ const PLCControl = () => {
                     </div>
                 </div>
 
-                {/* 세 번째 행 */}
-                <div className="grid grid-cols-2 gap-4">
-                    <div className={`p-3 rounded-lg transition-all duration-700 ease-out transform relative overflow-hidden ${
-                        isDataPanelExpanded 
-                            ? 'translate-y-0 opacity-100 scale-100' 
-                            : 'translate-y-4 opacity-0 scale-95'
-                    }`}
-                    style={{
-                        transitionDelay: isDataPanelExpanded ? '1000ms' : '0ms',
-                        background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0.08) 100%)',
-                        backdropFilter: 'blur(12px)',
-                        WebkitBackdropFilter: 'blur(12px)',
-                        border: '1px solid rgba(255, 255, 255, 0.18)',
-                        boxShadow: '0 3px 12px 0 rgba(31, 38, 135, 0.18)'
-                    }}>
-                        <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/6 to-blue-500/6 rounded-lg"></div>
-                        <label className="block text-xs font-medium text-gray-600 mb-1 relative z-10">엔코더값</label>
-                        <div className="text-gray-700 text-center rounded-2xl px-2 sm:px-3 py-3 sm:py-5 text-lg sm:text-2xl md:text-3xl font-bold relative z-10" style={{
-                            background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.75) 100%)',
-                            backdropFilter: 'blur(8px)',
-                            WebkitBackdropFilter: 'blur(8px)',
-                            border: '1px solid rgba(255, 255, 255, 0.25)',
-                            boxShadow: '0 1px 6px 0 rgba(31, 38, 135, 0.12)'
-                        }}>
-                            {sensorData.rawData?.[240] || 0}
-                        </div>
-                    </div>
-                    
-                    <div className={`p-3 rounded-lg transition-all duration-700 ease-out transform relative overflow-hidden ${
-                        isDataPanelExpanded 
-                            ? 'translate-y-0 opacity-100 scale-100' 
-                            : 'translate-y-4 opacity-0 scale-95'
-                    }`}
-                    style={{
-                        transitionDelay: isDataPanelExpanded ? '1100ms' : '0ms',
-                        background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0.08) 100%)',
-                        backdropFilter: 'blur(12px)',
-                        WebkitBackdropFilter: 'blur(12px)',
-                        border: '1px solid rgba(255, 255, 255, 0.18)',
-                        boxShadow: '0 3px 12px 0 rgba(31, 38, 135, 0.18)'
-                    }}>
-                        <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/6 to-blue-500/6 rounded-lg"></div>
-                        <label className="block text-xs font-medium text-gray-600 mb-1 relative z-10">카운터값</label>
-                        <div className="text-gray-700 text-center rounded-2xl px-2 sm:px-3 py-3 sm:py-5 text-lg sm:text-2xl md:text-3xl font-bold relative z-10" style={{
-                            background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.75) 100%)',
-                            backdropFilter: 'blur(8px)',
-                            WebkitBackdropFilter: 'blur(8px)',
-                            border: '1px solid rgba(255, 255, 255, 0.25)',
-                            boxShadow: '0 1px 6px 0 rgba(31, 38, 135, 0.12)'
-                        }}>
-                            {sensorData.rawData?.[200] || 0}
-                        </div>
-                    </div>
-                </div>
                     </div>
                 </div>
             </div>

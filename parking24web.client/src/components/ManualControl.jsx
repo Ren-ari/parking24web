@@ -422,10 +422,10 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sendCommand, sensorDat
                 /* 태블릿 디스플레이 - 센서 패널 크기 줄이기 */
                 @media (min-width: 768px) and (max-width: 1024px) {
                     .sensor-panel-right {
-                        width: 200px;
-                        height: 60vh;
-                        padding: 12px;
-                        top: 63%;
+                        width: 160px;
+                        height: 50vh;
+                        padding: 8px;
+                        top: 65%;
                     }
                 }
                 
@@ -485,10 +485,10 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sendCommand, sensorDat
                 /* 태블릿 디스플레이 - 센서 패널 크기 줄이기 */
                 @media (min-width: 768px) and (max-width: 1024px) {
                     .sensor-panel-left {
-                        width: 200px;
-                        height: 60vh;
-                        padding: 12px;
-                        top: 63%;
+                        width: 160px;
+                        height: 50vh;
+                        padding: 8px;
+                        top: 65%;
                     }
                 }
                 
@@ -535,6 +535,15 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sendCommand, sensorDat
                     border-bottom: 2px solid #3b82f6;
                 }
                 
+                /* 태블릿에서 센서 패널 제목 크기 줄이기 */
+                @media (min-width: 768px) and (max-width: 1024px) {
+                    .sensor-panel h3 {
+                        font-size: 1.1rem;
+                        margin-bottom: 12px;
+                        padding-bottom: 6px;
+                    }
+                }
+                
                 
                 .sensor-item {
                     background: linear-gradient(145deg, 
@@ -559,6 +568,15 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sendCommand, sensorDat
                     animation: slideInFromCenter 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
                     position: relative;
                     overflow: hidden;
+                }
+                
+                /* 태블릿에서 센서 아이템 크기 줄이기 */
+                @media (min-width: 768px) and (max-width: 1024px) {
+                    .sensor-item {
+                        padding: 12px;
+                        margin-bottom: 12px;
+                        border-radius: 16px;
+                    }
                 }
                 
                 .sensor-item::before {
@@ -721,6 +739,14 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sendCommand, sensorDat
                     text-shadow: 0 0 10px rgba(102, 126, 234, 0.3);
                 }
                 
+                /* 태블릿에서 센서 코드 크기 줄이기 */
+                @media (min-width: 768px) and (max-width: 1024px) {
+                    .sensor-code {
+                        font-size: 0.75rem;
+                        min-width: 35px;
+                    }
+                }
+                
                 
                 .sensor-name {
                     font-weight: 600;
@@ -729,6 +755,13 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sendCommand, sensorDat
                     flex: 1;
                     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
                     transition: all 0.3s ease;
+                }
+                
+                /* 태블릿에서 센서 이름 크기 줄이기 */
+                @media (min-width: 768px) and (max-width: 1024px) {
+                    .sensor-name {
+                        font-size: 0.7rem;
+                    }
                 }
                 
                 .sensor-item:hover .sensor-name {
@@ -908,6 +941,49 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sendCommand, sensorDat
                 </div>
             </div>
 
+            {/* 엔코더값과 카운터값 표시 */}
+            <div className="mb-12 flex justify-center gap-8 max-w-2xl mx-auto">
+                <div className="p-4 rounded-2xl relative overflow-hidden flex-1" style={{
+                    background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0.12) 100%)',
+                    backdropFilter: 'blur(15px)',
+                    WebkitBackdropFilter: 'blur(15px)',
+                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                    boxShadow: '0 4px 16px 0 rgba(31, 38, 135, 0.2)'
+                }}>
+                    <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/6 to-blue-500/6 rounded-2xl"></div>
+                    <label className="block text-sm font-medium text-gray-600 mb-2 relative z-10">엔코더값</label>
+                    <div className="text-gray-700 text-center rounded-xl px-4 py-4 text-xl md:text-2xl font-bold relative z-10" style={{
+                        background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.75) 100%)',
+                        backdropFilter: 'blur(8px)',
+                        WebkitBackdropFilter: 'blur(8px)',
+                        border: '1px solid rgba(255, 255, 255, 0.25)',
+                        boxShadow: '0 2px 8px 0 rgba(31, 38, 135, 0.15)'
+                    }}>
+                        {sensorData.rawData?.[240] || '-'}
+                    </div>
+                </div>
+                
+                <div className="p-4 rounded-2xl relative overflow-hidden flex-1" style={{
+                    background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0.12) 100%)',
+                    backdropFilter: 'blur(15px)',
+                    WebkitBackdropFilter: 'blur(15px)',
+                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                    boxShadow: '0 4px 16px 0 rgba(31, 38, 135, 0.2)'
+                }}>
+                    <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/6 to-blue-500/6 rounded-2xl"></div>
+                    <label className="block text-sm font-medium text-gray-600 mb-2 relative z-10">카운터값</label>
+                    <div className="text-gray-700 text-center rounded-xl px-4 py-4 text-xl md:text-2xl font-bold relative z-10" style={{
+                        background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.75) 100%)',
+                        backdropFilter: 'blur(8px)',
+                        WebkitBackdropFilter: 'blur(8px)',
+                        border: '1px solid rgba(255, 255, 255, 0.25)',
+                        boxShadow: '0 2px 8px 0 rgba(31, 38, 135, 0.15)'
+                    }}>
+                        {sensorData.rawData?.[200] || '-'}
+                    </div>
+                </div>
+            </div>
+
             {/* 공용 버튼들 */}
             <div className="mb-12 md:mb-20">
                 <div className="flex flex-wrap gap-4 justify-center common-buttons-grid">
@@ -1014,7 +1090,7 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sendCommand, sensorDat
                     <div className="space-y-6">
                         {/* 승강 제어 */}
                         <div>
-                            <div className="flex flex-col gap-6 md:gap-8 justify-center items-center">
+                            <div className="flex flex-row gap-6 md:gap-8 justify-center items-center">
                                 <button
                                     onMouseDown={() => sendCommand('liftUp', 1)}
                                     onMouseUp={() => sendCommand('liftUp', 0)}
