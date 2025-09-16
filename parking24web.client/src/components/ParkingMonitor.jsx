@@ -76,11 +76,11 @@ const ParkingMonitor = ({ sensorData, isPLCConnected, onVehicleEdit }) => {
       case 0: // 홀수차량
         return level >= 1 ? `C${96 + (level - 1) * 2}` : "C96";
       case 1: // 홀수차판상태
-        return level >= 1 ? `C${150 + (level - 1) * 2}` : "C150";
+        return level >= 1 ? `C${150 + (level - 1) * 2}` : "";
       case 2: // 승강로정보
-        return `C${210 + level}`;
+        return level === 0 ? "C211" : level === 1 ? "C210" : `C${210 + level}`;
       case 3: // 짝수차판상태
-        return level >= 1 ? `C${151 + (level - 1) * 2}` : "C151";
+        return level >= 1 ? `C${151 + (level - 1) * 2}` : "";
       case 4: // 짝수차량
         return level >= 1 ? `C${97 + (level - 1) * 2}` : "C97";
       default:
@@ -150,8 +150,8 @@ const ParkingMonitor = ({ sensorData, isPLCConnected, onVehicleEdit }) => {
     const isOnLift = isVehicleOnLift(level, box);
 
     if (box === 2) {
-      // 승강로정보 - 0이면 회색, 1이면 주황색
-      const liftCounterAddress = `C${210 + level}`;
+      // 승강로정보 - 0이면 회색, 값이 있으면 주황색
+      const liftCounterAddress = level === 0 ? "C211" : level === 1 ? "C210" : `C${210 + level}`;
       const liftCounterValue = getPLCValue(liftCounterAddress);
       
       return liftCounterValue === 0 ? "bg-gray-400" : "bg-orange-400";
@@ -172,6 +172,9 @@ const ParkingMonitor = ({ sensorData, isPLCConnected, onVehicleEdit }) => {
     if (box === 1 || box === 3) {
       // 차판상태
       return value === 0 ? "차량없음" : "차량있음";
+    } else if (box === 0 || box === 4) {
+      // 차량번호 - 4자리로 포맷팅
+      return value === 0 ? "0000" : value.toString().padStart(4, '0');
     }
     return value.toString();
   };
@@ -335,6 +338,11 @@ const ParkingMonitor = ({ sensorData, isPLCConnected, onVehicleEdit }) => {
                         const address = addressMapping[key] || "";
                         const value = getPLCValue(address);
                         const displayValue = getDisplayValue(level, box, value);
+                        
+                        // 디버깅용 로그
+                        if ((box === 0 || box === 4) && level >= 1) {
+                          console.log(`Level ${level}, Box ${box}: address=${address}, value=${value}, displayValue=${displayValue}`);
+                        }
                         const boxColor = getBoxColor(level, box, value);
 
                         // 순서 번호 계산
@@ -416,7 +424,7 @@ const ParkingMonitor = ({ sensorData, isPLCConnected, onVehicleEdit }) => {
                                       }}
                                     />
                                   ) : (
-                                    <div className="text-xs sm:text-sm md:text-base text-gray-400">빈 공간</div>
+                                    <div className="text-xs sm:text-sm md:text-base text-gray-400"></div>
                                   )}
                                 </div>
                               ) : box === 2 ? (
@@ -439,6 +447,7 @@ const ParkingMonitor = ({ sensorData, isPLCConnected, onVehicleEdit }) => {
                                   style={{
                                     backdropFilter: 'blur(10px)',
                                     WebkitBackdropFilter: 'blur(10px)',
+                                    backgroundColor: '#ffffff'
                                   }}
                                   onDoubleClick={() =>
                                     handleVehicleEdit(level, box)
@@ -451,7 +460,7 @@ const ParkingMonitor = ({ sensorData, isPLCConnected, onVehicleEdit }) => {
                                       : ""
                                   }
                                 >
-                                  {displayValue}
+                                  <span className="text-black font-bold text-lg" style={{color: '#000000', fontWeight: 'bold', fontSize: '16px'}}>{displayValue}</span>
                                 </div>
                               )}
 

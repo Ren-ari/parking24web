@@ -10,7 +10,9 @@ const ConnectionPanel = ({
     setPLCConfig,
     connectToPLC,
     disconnectFromPLC,
-    clearError
+    clearError,
+    selectedUnit,
+    setSelectedUnit
 }) => {
     const handleIPChange = (e) => {
         setPLCConfig(prev => ({ ...prev, ip: e.target.value }));
@@ -53,6 +55,7 @@ const ConnectionPanel = ({
                 <div className="flex justify-center gap-6">
                     <button
                         onClick={() => {
+                            setSelectedUnit(1);
                             connectToPLC('192.168.100.102', 2005);
                         }}
                         disabled={isPLCConnected || isConnecting}
@@ -68,6 +71,7 @@ const ConnectionPanel = ({
                     <button
                         // 2호기 버튼
                         onClick={() => {
+                            setSelectedUnit(2);
                             connectToPLC('192.168.100.101', 2005);
                         }}
                         disabled={isPLCConnected || isConnecting}

@@ -11,6 +11,7 @@ const PLCControl = () => {
     const [isDataPanelExpanded, setIsDataPanelExpanded] = useState(true);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [isClosing, setIsClosing] = useState(false);
+    const [selectedUnit, setSelectedUnit] = useState(1); // 1호기 또는 2호기
 
     // PLC 연결 훅 사용
     const {
@@ -270,14 +271,14 @@ const PLCControl = () => {
                     </div>
         
                     <div className="flex-1 min-w-0 flex flex-col">
-                        <div className="bg-green-500 text-white text-xs font-medium px-1 py-2 text-center h-10 flex items-center justify-center" style={{
+                        <div className={`text-white text-xs font-medium px-1 py-2 text-center h-10 flex items-center justify-center ${isPLCConnected ? 'bg-green-500' : 'bg-gray-400'}`} style={{
                             backdropFilter: 'blur(10px)',
                             WebkitBackdropFilter: 'blur(10px)',
                         }}>
                             호기번호
                         </div>
-                        <div className="bg-green-100 text-green-800 text-sm px-2 py-3 text-center border-r h-16 flex items-center justify-center">
-                            1호기
+                        <div className={`text-sm px-2 py-3 text-center border-r h-16 flex items-center justify-center ${isPLCConnected ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
+                            {isPLCConnected ? `${selectedUnit}호기` : '-'}
                         </div>
                     </div>
 
@@ -431,9 +432,10 @@ const PLCControl = () => {
                             backdropFilter: 'blur(10px)',
                             WebkitBackdropFilter: 'blur(10px)',
                             border: '1px solid rgba(255, 255, 255, 0.3)',
-                            boxShadow: '0 2px 8px 0 rgba(31, 38, 135, 0.15)'
+                            boxShadow: '0 2px 8px 0 rgba(31, 38, 135, 0.15)',
+                            color: '#000000'
                         }}>
-                            {sensorData.rawData?.[75] || 0}
+                            {sensorData.rawData?.[75] ?? 0}
                         </div>
                     </div>
                     
@@ -457,9 +459,10 @@ const PLCControl = () => {
                             backdropFilter: 'blur(10px)',
                             WebkitBackdropFilter: 'blur(10px)',
                             border: '1px solid rgba(255, 255, 255, 0.3)',
-                            boxShadow: '0 2px 8px 0 rgba(31, 38, 135, 0.15)'
+                            boxShadow: '0 2px 8px 0 rgba(31, 38, 135, 0.15)',
+                            color: '#000000'
                         }}>
-                            {sensorData.rawData?.[76] || 0}
+                            {sensorData.rawData?.[76] ?? 0}
                         </div>
                     </div>
                 </div>
@@ -696,6 +699,8 @@ const PLCControl = () => {
                         connectToPLC={connectToPLC}
                         disconnectFromPLC={disconnectFromPLC}
                         clearError={clearError}
+                        selectedUnit={selectedUnit}
+                        setSelectedUnit={setSelectedUnit}
                     />
                 )}
 

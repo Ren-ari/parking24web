@@ -20,5 +20,20 @@ yarn-error.log*
 *.log
 .env
 dist/
+publish/
 Parking24web.Server/publish/
 Parking24web.Server/wwwroot/
+
+# 빌드 결과물
+*.exe
+*.msi
+*.zip
+
+# Visual Studio 발행 프로필
+*.pubxml
+
+# Inno Setup
+*.iss
+
+# .NET 도구
+dotnet-tools.json
