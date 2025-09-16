@@ -10,7 +10,9 @@ const ConnectionPanel = ({
     setPLCConfig,
     connectToPLC,
     disconnectFromPLC,
-    clearError
+    clearError,
+    selectedUnit,
+    setSelectedUnit
 }) => {
     const handleIPChange = (e) => {
         setPLCConfig(prev => ({ ...prev, ip: e.target.value }));
@@ -53,6 +55,7 @@ const ConnectionPanel = ({
                 <div className="flex justify-center gap-6">
                     <button
                         onClick={() => {
+                            setSelectedUnit(1);
                             setPLCConfig({
                                 ip: '192.168.0.101',
                                 port: 2005
@@ -73,6 +76,7 @@ const ConnectionPanel = ({
                     
                     <button
                         onClick={() => {
+                            setSelectedUnit(2);
                             setPLCConfig({
                                 ip: '192.168.0.102',
                                 port: 2005
@@ -93,7 +97,8 @@ const ConnectionPanel = ({
                     
                     <button
                         onClick={() => {
-                            setPLCConfig({
+                            setSelectedUnit(3);
+                            setPLCConfig({      
                                 ip: '192.168.0.103',
                                 port: 2005
                             });
