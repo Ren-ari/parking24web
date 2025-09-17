@@ -920,8 +920,41 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sendCommand, sensorDat
 
                 @media (max-width: 768px) {
                     .page1-layout {
+                        display: flex;
                         flex-direction: column;
+                        gap: 40px;
+                        max-width: 500px;
+                        margin: 0 auto;
+                        align-items: center;
+                    }
+                    
+                    .turn-table-section {
+                        width: 100%;
+                        display: flex;
+                        justify-content: center;
+                    }
+                    
+                    .door-section {
+                        width: 100%;
+                        display: flex;
+                        justify-content: center;
+                    }
+                    
+                    .turn-table-grid {
+                        gap: 12px;
+                        justify-content: center;
+                    }
+                    
+                    .door-vertical {
+                        gap: 25px;
+                        align-items: center;
+                    }
+                }
+                
+                @media (max-width: 480px) {
+                    .page1-layout {
                         gap: 30px;
+                        max-width: 100%;
                     }
                 }
 
@@ -1087,7 +1120,7 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sendCommand, sensorDat
 
                 {/* 2페이지: 승강 제어 */}
                 {activeTab === 'page2' && (
-                    <div className="space-y-6">
+                    <div className="page1-layout">
                         {/* 승강 제어 */}
                         <div>
                             <div className="flex flex-row gap-6 md:gap-8 justify-center items-center">
