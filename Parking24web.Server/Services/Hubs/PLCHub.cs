@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.SignalR;
+using Microsoft.Extensions.Options;
 using Parking24web.Server.Services;
 
 namespace Parking24web.Server.Hubs
@@ -8,12 +9,18 @@ namespace Parking24web.Server.Hubs
         private readonly PLCService _plcService;
         private readonly ILogger<PLCHub> _logger;
         private readonly IHubContext<PLCHub> _hubContext;
+        private readonly SiteConfiguration _siteConfig;
 
-        public PLCHub(PLCService plcService, ILogger<PLCHub> logger, IHubContext<PLCHub> hubContext)
+        public PLCHub(
+            PLCService plcService,
+            ILogger<PLCHub> logger,
+            IHubContext<PLCHub> hubContext,
+            IOptions<SiteConfiguration> siteConfig)
         {
             _plcService = plcService;
             _logger = logger;
             _hubContext = hubContext;
+            _siteConfig = siteConfig.Value;
         }
 
         #region 연결 관리
@@ -47,6 +54,31 @@ namespace Parking24web.Server.Hubs
             {
                 _logger.LogError(ex, "PLC 연결 중 오류 발생");
                 await Clients.Caller.SendAsync("Error", $"PLC 연결 실패: {ex.Message}");
+                return false;
+            }
+        }
+
+        // Config에서 PLC IP/Port 가져와서 연결하는 메서드
+        public async Task<bool> ConnectToPLCFromConfig()
+        {
+            try
+            {
+                if (_siteConfig.PlcConfig == null)
+                {
+                    await Clients.Caller.SendAsync("Error", "PLC 설정이 없습니다");
+                    return false;
+                }
+
+                var ip = _siteConfig.PlcConfig.Ip;
+                var port = _siteConfig.PlcConfig.Port;
+
+                _logger.LogInformation($"Config 기반 PLC 연결: {ip}:{port}");
+                return await ConnectToPLC(ip, port);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Config 기반 PLC 연결 중 오류");
+                await Clients.Caller.SendAsync("Error", $"Config 연결 실패: {ex.Message}");
                 return false;
             }
         }
@@ -105,7 +137,75 @@ namespace Parking24web.Server.Hubs
 
         #endregion
 
-        #region PLC 제어
+        #region 현장 설정 관리
+
+        // 현재 로드된 설정 정보 반환
+        public async Task GetCurrentSiteConfiguration()
+        {
+            try
+            {
+                await Clients.Caller.SendAsync("CurrentSiteConfiguration", new
+                {
+                    siteName = _siteConfig.SiteInfo?.Name ?? "Unknown",
+                    unitNumber = _siteConfig.SiteInfo?.UnitNumber ?? "Unknown",
+                    location = _siteConfig.SiteInfo?.Location ?? "",
+                    plcIp = _siteConfig.PlcConfig?.Ip ?? "",
+                    plcPort = _siteConfig.PlcConfig?.Port ?? 0,
+                    commandCount = _siteConfig.ControlCommands?.Count ?? 0,
+                    dataAddressCount = _siteConfig.DataAddresses?.Count ?? 0
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "현장 설정 정보 전송 중 오류");
+                await Clients.Caller.SendAsync("Error", $"설정 정보 오류: {ex.Message}");
+            }
+        }
+
+        private int GetCommandAddress(string commandName)
+        {
+            if (_siteConfig.ControlCommands == null)
+            {
+                _logger.LogWarning($"제어 명령 설정이 로드되지 않았습니다: {commandName}");
+                return -1;
+            }
+
+            if (_siteConfig.ControlCommands.TryGetValue(commandName, out int address))
+            {
+                _logger.LogDebug($"명령 주소 조회: {commandName} = C{address}");
+                return address;
+            }
+
+            _logger.LogWarning($"명령 주소를 찾을 수 없습니다: {commandName}");
+            return -1;
+        }
+
+        private int GetSystemAddress(string addressName)
+        {
+            if (_siteConfig.SystemAddresses == null)
+            {
+                _logger.LogWarning($"시스템 주소 설정이 로드되지 않았습니다: {addressName}");
+                return -1;
+            }
+
+            var property = _siteConfig.SystemAddresses.GetType().GetProperty(
+                addressName,
+                System.Reflection.BindingFlags.IgnoreCase | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance
+            );
+
+            if (property != null && property.GetValue(_siteConfig.SystemAddresses) is int address)
+            {
+                _logger.LogDebug($"시스템 주소 조회: {addressName} = C{address}");
+                return address;
+            }
+
+            _logger.LogWarning($"시스템 주소를 찾을 수 없습니다: {addressName}");
+            return -1;
+        }
+
+        #endregion
+
+        #region 범용 PLC 제어
 
         public async Task SendPLCCommand(PLCCommandRequest request)
         {
@@ -142,222 +242,207 @@ namespace Parking24web.Server.Hubs
             }
         }
 
-        // 수동 제어 명령들
-        public async Task LiftUp(int value = 1)
+        // Config 기반 명령 전송
+        public async Task SendConfigCommand(string commandName, int value = 1)
         {
-            await SendPLCCommand(new PLCCommandRequest
+            try
             {
-                CommandType = "writeword",
-                DeviceType = "C",
-                Address = 7, // 상승 명령 주소
-                Value = value
-            });
-        }
+                int address = GetCommandAddress(commandName);
+                if (address == -1)
+                {
+                    await Clients.Caller.SendAsync("Error", $"명령을 찾을 수 없습니다: {commandName}");
+                    return;
+                }
 
-        public async Task LiftDown(int value = 1)
-        {
-            await SendPLCCommand(new PLCCommandRequest
-            {
-                CommandType = "writeword",
-                DeviceType = "C",
-                Address = 8, // 하강 명령 주소
-                Value = value
-            });
-        }
+                await SendPLCCommand(new PLCCommandRequest
+                {
+                    CommandType = "writeword",
+                    DeviceType = "C",
+                    Address = address,
+                    Value = value
+                });
 
-        public async Task MoveLeft(int value = 1)
-        {
-            await SendPLCCommand(new PLCCommandRequest
+                _logger.LogInformation($"Config 명령 전송: {commandName} (C{address}) = {value}");
+            }
+            catch (Exception ex)
             {
-                CommandType = "writeword",
-                DeviceType = "C",
-                Address = 9, // 좌행 명령 주소
-                Value = value
-            });
-        }
-
-        public async Task MoveRight(int value = 1)
-        {
-            await SendPLCCommand(new PLCCommandRequest
-            {
-                CommandType = "writeword",
-                DeviceType = "C",
-                Address = 10, // 우행 명령 주소
-                Value = value
-            });
-        }
-
-        public async Task EmergencyStop(int value = 1)
-        {
-            await SendPLCCommand(new PLCCommandRequest
-            {
-                CommandType = "writeword",
-                DeviceType = "C",
-                Address = 99,
-                Value = value  
-            });
-        }
-
-        public async Task ErrorReset(int value = 1)
-        {
-            await SendPLCCommand(new PLCCommandRequest
-            {
-                CommandType = "writeword",
-                DeviceType = "C",
-                Address = 17, // 에러 리셋 주소
-                Value = value
-            });
-        }
-
-        public async Task OperationMode(int value = 1)
-        {
-            await SendPLCCommand(new PLCCommandRequest
-            {
-                CommandType = "writeword",
-                DeviceType = "C",
-                Address = 18, // 운전 모드 주소
-                Value = value
-            });
-        }
-
-        public async Task Recovery(int value = 1)
-        {
-            await SendPLCCommand(new PLCCommandRequest
-            {
-                CommandType = "writeword",
-                DeviceType = "C",
-                Address = 19, // 복귀 운전 주소
-                Value = value
-            });
-        }
-
-        public async Task TurnTableUp(int value = 1)
-        {
-            await SendPLCCommand(new PLCCommandRequest
-            {
-                CommandType = "writeword",
-                DeviceType = "C",
-                Address = 54, // 턴테이블 상승 주소
-                Value = value
-            });
-        }
-
-        public async Task TurnTableDown(int value = 1)
-        {
-            await SendPLCCommand(new PLCCommandRequest
-            {
-                CommandType = "writeword",
-                DeviceType = "C",
-                Address = 55, // 턴테이블 하강 주소
-                Value = value
-            });
-        }
-
-        public async Task TurnTableLeft(int value = 1)
-        {
-            await SendPLCCommand(new PLCCommandRequest
-            {
-                CommandType = "writeword",
-                DeviceType = "C",
-                Address = 56, // 턴테이블 좌회전 주소
-                Value = value
-            });
-        }
-
-        public async Task TurnTableRight(int value = 1)
-        {
-            await SendPLCCommand(new PLCCommandRequest
-            {
-                CommandType = "writeword",
-                DeviceType = "C",
-                Address = 57, // 턴테이블 우회전 주소
-                Value = value
-            });
-        }
-
-        public async Task DoorOpen(int value = 1)
-        {
-            await SendPLCCommand(new PLCCommandRequest
-            {
-                CommandType = "writeword",
-                DeviceType = "C",
-                Address = 96, // 도어 열림 주소
-                Value = value
-            });
-        }
-
-        public async Task DoorClose(int value = 1)
-        {
-            await SendPLCCommand(new PLCCommandRequest
-            {
-                CommandType = "writeword",
-                DeviceType = "C",
-                Address = 97, // 도어 닫힘 주소
-                Value = value
-            });
-        }
-
-        public async Task LeftLiftLock(int value = 1)
-        {
-            await SendPLCCommand(new PLCCommandRequest
-            {
-                CommandType = "writeword",
-                DeviceType = "C",
-                Address = 11, // 좌측 락킹 잠금 주소
-                Value = value
-            });
-        }
-
-        public async Task LeftLiftUnlock(int value = 1)
-        {
-            await SendPLCCommand(new PLCCommandRequest
-            {
-                CommandType = "writeword",
-                DeviceType = "C",
-                Address = 12, // 좌측 락킹 해제 주소
-                Value = value
-            });
-        }
-
-        public async Task RightLiftLock(int value = 1)
-        {
-            await SendPLCCommand(new PLCCommandRequest
-            {
-                CommandType = "writeword",
-                DeviceType = "C",
-                Address = 13, // 우측 락킹 잠금 주소
-                Value = value
-            });
-        }
-
-        public async Task RightLiftUnlock(int value = 1)
-        {
-            await SendPLCCommand(new PLCCommandRequest
-            {
-                CommandType = "writeword",
-                DeviceType = "C",
-                Address = 14, // 우측 락킹 해제 주소
-                Value = value
-            });
+                _logger.LogError(ex, $"Config 명령 전송 중 오류: {commandName}");
+                await Clients.Caller.SendAsync("Error", $"명령 전송 실패: {ex.Message}");
+            }
         }
 
         #endregion
 
-        #region 현장 설정
+        #region Config 기반 수동 제어 명령들
 
-        public async Task LoadSiteConfig(SiteConfig config)
+        // 승강 제어
+        public async Task LiftUp(int value = 1)
+        {
+            await SendConfigCommand("liftUp", value);
+        }
+
+        public async Task LiftDown(int value = 1)
+        {
+            await SendConfigCommand("liftDown", value);
+        }
+
+        // 횡행 제어
+        public async Task MoveLeft(int value = 1)
+        {
+            await SendConfigCommand("moveLeft", value);
+        }
+
+        public async Task MoveRight(int value = 1)
+        {
+            await SendConfigCommand("moveRight", value);
+        }
+
+        // 턴테이블 제어
+        public async Task TurnLeft(int value = 1)
+        {
+            await SendConfigCommand("turnLeft", value);
+        }
+
+        public async Task TurnRight(int value = 1)
+        {
+            await SendConfigCommand("turnRight", value);
+        }
+
+        // 락킹 제어
+        public async Task LockingOn(int value = 1)
+        {
+            await SendConfigCommand("lockingOn", value);
+        }
+
+        public async Task LockingOff(int value = 1)
+        {
+            await SendConfigCommand("lockingOff", value);
+        }
+
+        // 도어 제어
+        public async Task DoorOpen(int value = 1)
+        {
+            await SendConfigCommand("doorOpen", value);
+        }
+
+        public async Task DoorClose(int value = 1)
+        {
+            await SendConfigCommand("doorClose", value);
+        }
+
+        // 시스템 제어
+        public async Task ErrorReset(int value = 1)
+        {
+            await SendConfigCommand("errorReset", value);
+        }
+
+        public async Task RemoteControl(int value = 1)
+        {
+            await SendConfigCommand("remoteControl", value);
+        }
+
+        public async Task HomeReturn(int value = 1)
+        {
+            await SendConfigCommand("homeReturn", value);
+        }
+
+        public async Task PaletteChange(int value = 1)
+        {
+            await SendConfigCommand("paletteChange", value);
+        }
+
+        // 비상 정지 (시스템 주소 사용)
+        public async Task EmergencyStop(int value = 1)
         {
             try
             {
-                _plcService.LoadSiteConfig(config);
-                await Clients.All.SendAsync("SiteConfigLoaded", config);
-                _logger.LogInformation($"현장 설정 로드: {config.SiteName}");
+                int address = GetSystemAddress("EmergencyStop");
+                if (address == -1)
+                {
+                    await Clients.Caller.SendAsync("Error", "비상정지 주소가 설정되지 않았습니다");
+                    return;
+                }
+
+                await SendPLCCommand(new PLCCommandRequest
+                {
+                    CommandType = "writeword",
+                    DeviceType = "C",
+                    Address = address,
+                    Value = value
+                });
+
+                _logger.LogInformation($"비상정지 명령 전송: C{address} = {value}");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "현장 설정 로드 중 오류");
-                await Clients.Caller.SendAsync("Error", $"설정 로드 실패: {ex.Message}");
+                _logger.LogError(ex, "비상정지 명령 중 오류");
+                await Clients.Caller.SendAsync("Error", $"비상정지 실패: {ex.Message}");
             }
+        }
+
+        #endregion
+
+        #region 백워드 호환성 (기존 명령들)
+
+        // 기존 코드와의 호환성을 위해 유지
+        [Obsolete("RemoteControl 사용을 권장합니다")]
+        public async Task OperationMode(int value = 1)
+        {
+            await RemoteControl(value);
+        }
+
+        [Obsolete("HomeReturn 사용을 권장합니다")]
+        public async Task Recovery(int value = 1)
+        {
+            await HomeReturn(value);
+        }
+
+        [Obsolete("TurnLeft 사용을 권장합니다")]
+        public async Task TurnTableLeft(int value = 1)
+        {
+            await TurnLeft(value);
+        }
+
+        [Obsolete("TurnRight 사용을 권장합니다")]
+        public async Task TurnTableRight(int value = 1)
+        {
+            await TurnRight(value);
+        }
+
+        [Obsolete("Config에서 정의되지 않은 명령입니다")]
+        public async Task TurnTableUp(int value = 1)
+        {
+            await Clients.Caller.SendAsync("Error", "TurnTableUp 명령은 더 이상 지원되지 않습니다");
+        }
+
+        [Obsolete("Config에서 정의되지 않은 명령입니다")]
+        public async Task TurnTableDown(int value = 1)
+        {
+            await Clients.Caller.SendAsync("Error", "TurnTableDown 명령은 더 이상 지원되지 않습니다");
+        }
+
+        [Obsolete("LockingOn/LockingOff 사용을 권장합니다")]
+        public async Task LeftLiftLock(int value = 1)
+        {
+            await LockingOn(value);
+        }
+
+        [Obsolete("LockingOn/LockingOff 사용을 권장합니다")]
+        public async Task LeftLiftUnlock(int value = 1)
+        {
+            await LockingOff(value);
+        }
+
+        [Obsolete("LockingOn/LockingOff 사용을 권장합니다")]
+        public async Task RightLiftLock(int value = 1)
+        {
+            await LockingOn(value);
+        }
+
+        [Obsolete("LockingOn/LockingOff 사용을 권장합니다")]
+        public async Task RightLiftUnlock(int value = 1)
+        {
+            await LockingOff(value);
         }
 
         #endregion
@@ -371,6 +456,9 @@ namespace Parking24web.Server.Hubs
         {
             await Clients.Caller.SendAsync("PLCConnectionChanged", _plcService.IsConnected);
             _logger.LogInformation($"클라이언트 연결: {Context.ConnectionId}");
+
+            // 현재 로드된 설정 정보 전송
+            await GetCurrentSiteConfiguration();
 
             // 첫 클라이언트 연결시에만 타이머 시작
             if (!_isMonitoring)
@@ -402,10 +490,6 @@ namespace Parking24web.Server.Hubs
         public override async Task OnDisconnectedAsync(Exception? exception)
         {
             _logger.LogInformation($"클라이언트 연결 해제: {Context.ConnectionId}");
-
-            // 모든 클라이언트가 나갔는지 체크 (선택사항)
-            // 필요하면 타이머 정지 로직 추가 가능
-
             await base.OnDisconnectedAsync(exception);
         }
 

@@ -39,11 +39,9 @@ const LoginPage = ({ onLogin }) => {
         switch (name) {
             case 'username':
                 if (!value.trim()) return '사용자명을 입력해주세요';
-                if (value.length < 3) return '사용자명은 3자 이상이어야 합니다';
                 return '';
             case 'password':
                 if (!value.trim()) return '비밀번호를 입력해주세요';
-                if (value.length < 6) return '비밀번호는 6자 이상이어야 합니다';
                 return '';
             default:
                 return '';

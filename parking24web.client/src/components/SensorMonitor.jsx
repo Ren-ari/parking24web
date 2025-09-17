@@ -1,4 +1,6 @@
 ﻿import React, { useState, useMemo, useEffect } from 'react';
+// 속초 1호기 config import
+import sokcho1Config from '../../config/sokcho1Config.js';
 
 const SensorMonitor = ({ sensorData, isPLCConnected }) => {
     const [viewMode, setViewMode] = useState('parsed'); // 'parsed' or 'raw' or 'hex' or 'bits'
@@ -6,6 +8,7 @@ const SensorMonitor = ({ sensorData, isPLCConnected }) => {
     const [searchFilter, setSearchFilter] = useState('');
     const [rawLog, setRawLog] = useState([]);
     const [showRawStream, setShowRawStream] = useState(false);
+    const [showPLCChecklist, setShowPLCChecklist] = useState(false);
 
     // 센서 데이터 필터링 및 정렬
     const filteredData = useMemo(() => {
@@ -36,127 +39,33 @@ const SensorMonitor = ({ sensorData, isPLCConnected }) => {
                 type: 'hex'
             }));
         } else if (viewMode === 'bits' && sensorData.rawData) {
-            // 비트 모니터 모드 - 실제 PLC 비트 주소별 ON/OFF 상태
+            // 비트 모니터 모드 - 속초 센서 매핑 사용
             data = [];
-            
-                        // 실제 PLC 주소의 비트들을 개별적으로 표시
-            const bitMappings = [
-                // 도어/턴테이블 탭 - 인풋 센서들
-                { wordIndex: 28, bitIndex: 0, address: 'C28', name: '턴 0도 확인정지', category: '턴테이블' },
-                { wordIndex: 29, bitIndex: 0, address: 'C29', name: '턴 180도 확인정지', category: '턴테이블' },
-                { wordIndex: 31, bitIndex: 0, address: 'C31', name: '턴 상승확인', category: '턴테이블' },
-                { wordIndex: 32, bitIndex: 0, address: 'C32', name: '턴 하강확인', category: '턴테이블' },
-                { wordIndex: 39, bitIndex: 0, address: 'C39', name: '도어열림확인', category: '도어' },
-                { wordIndex: 40, bitIndex: 0, address: 'C40', name: '도어닫힘확인', category: '도어' },
-                { wordIndex: 41, bitIndex: 0, address: 'C41', name: '도어잠김확인', category: '도어' },
-                { wordIndex: 44, bitIndex: 0, address: 'C44', name: '좌도어확인', category: '도어' },
-                { wordIndex: 45, bitIndex: 0, address: 'C45', name: '우도어확인', category: '도어' },
-                { wordIndex: 53, bitIndex: 0, address: 'C53', name: '도어내확인', category: '도어' },
-                { wordIndex: 42, bitIndex: 0, address: 'C42', name: '좌측동작감지확인1', category: '안전센서' },
-                { wordIndex: 43, bitIndex: 0, address: 'C43', name: '우측동작감지확인1', category: '안전센서' },
-                { wordIndex: 47, bitIndex: 0, address: 'C47', name: '차량정위치', category: '위치센서' },
-                { wordIndex: 46, bitIndex: 0, address: 'C46', name: '앞범퍼확인', category: '안전센서' },
-                { wordIndex: 50, bitIndex: 0, address: 'C50', name: '뒷범퍼확인', category: '안전센서' },
-                { wordIndex: 48, bitIndex: 0, address: 'C48', name: 'RV높이확인', category: '위치센서' },
-                { wordIndex: 49, bitIndex: 0, address: 'C49', name: '승용높이확인', category: '위치센서' },
-                
-                // 승강 제어 탭 - 인풋 센서들
-                { wordIndex: 20, bitIndex: 0, address: 'C20', name: '리프트 레벨1', category: '리프트' },
-                { wordIndex: 21, bitIndex: 0, address: 'C21', name: '리프트 레벨2', category: '리프트' },
-                { wordIndex: 30, bitIndex: 0, address: 'C30', name: '리프트 홈 확인', category: '리프트' },
-                { wordIndex: 37, bitIndex: 0, address: 'C37', name: '리프트 하강감속확인', category: '리프트' },
-                { wordIndex: 38, bitIndex: 0, address: 'C38', name: '리프트 하강비상확인', category: '리프트' },
-                { wordIndex: 51, bitIndex: 0, address: 'C51', name: '리프트 상승비상확인', category: '리프트' },
-                { wordIndex: 52, bitIndex: 0, address: 'C52', name: '리프트 상승감속확인', category: '리프트' },
-                { wordIndex: 65, bitIndex: 13, address: 'C65', name: '레벨상', category: '위치센서' },
-                { wordIndex: 60, bitIndex: 12, address: 'C60', name: '레벨하', category: '위치센서' },
-                { wordIndex: 61, bitIndex: 11, address: 'C61', name: '와이어 절단', category: '안전센서' },
-                { wordIndex: 23, bitIndex: 0, address: 'C23', name: '와이어 절단확인', category: '안전센서' },
-                { wordIndex: 67, bitIndex: 4, address: 'C67', name: '상승비상', category: '안전센서' },
-                { wordIndex: 67, bitIndex: 2, address: 'C67', name: '하강비상', category: '안전센서' },
-                { wordIndex: 67, bitIndex: 3, address: 'C67', name: '상승감속', category: '리프트' },
-                { wordIndex: 67, bitIndex: 1, address: 'C67', name: '하강감속', category: '리프트' },
-                
-                // 횡행/락킹 탭 - 인풋 센서들
-                { wordIndex: 22, bitIndex: 0, address: 'C22', name: '후크중앙확인', category: '횡행' },
-                { wordIndex: 24, bitIndex: 0, address: 'C24', name: '홀수 후크 감지', category: '횡행' },
-                { wordIndex: 25, bitIndex: 0, address: 'C25', name: '짝수 후크 감지', category: '횡행' },
-                { wordIndex: 62, bitIndex: 12, address: 'C62', name: '짝수후크확인', category: '횡행' },
-                { wordIndex: 62, bitIndex: 10, address: 'C62', name: '홀수후크확인', category: '횡행' },
-                { wordIndex: 62, bitIndex: 11, address: 'C62', name: '중앙후크확인', category: '횡행' },
-                { wordIndex: 33, bitIndex: 0, address: 'C33', name: '홀수측 록킹잠김확인', category: '락킹' },
-                { wordIndex: 34, bitIndex: 0, address: 'C34', name: '홀수측 록킹풀림확인', category: '락킹' },
-                { wordIndex: 35, bitIndex: 0, address: 'C35', name: '짝수측 록킹잠김확인', category: '락킹' },
-                { wordIndex: 36, bitIndex: 0, address: 'C36', name: '짝수측 록킹풀림확인', category: '락킹' },
-                { wordIndex: 67, bitIndex: 9, address: 'C67', name: '좌측락킹 열림확인', category: '락킹' },
-                { wordIndex: 67, bitIndex: 12, address: 'C67', name: '우측락킹 열림확인', category: '락킹' },
-                { wordIndex: 26, bitIndex: 0, address: 'C26', name: '좌측 피트확인', category: '위치센서' },
-                { wordIndex: 27, bitIndex: 3, address: 'C27', name: '우측 피트확인', category: '위치센서' },
-                { wordIndex: 62, bitIndex: 13, address: 'C62', name: '좌측피트', category: '위치센서' },
-                { wordIndex: 62, bitIndex: 14, address: 'C62', name: '우측피트', category: '위치센서' },
-                { wordIndex: 63, bitIndex: 14, address: 'C63', name: '좌측차판확인', category: '위치센서' },
-                { wordIndex: 63, bitIndex: 13, address: 'C63', name: '우측차판확인', category: '위치센서' },
-                
-                // 아웃풋 센서들 (출력 상태)
-                // 도어/턴테이블 탭 아웃풋
-                { wordIndex: 69, bitIndex: 2, address: 'C69', name: '적색신호등', category: '출력' },
-                { wordIndex: 69, bitIndex: 3, address: 'C69', name: '녹색신호등', category: '출력' },
-                { wordIndex: 69, bitIndex: 4, address: 'C69', name: '유도등 전진', category: '출력' },
-                { wordIndex: 69, bitIndex: 5, address: 'C69', name: '유도등 정지', category: '출력' },
-                { wordIndex: 69, bitIndex: 6, address: 'C69', name: '유도등 후진', category: '출력' },
-                { wordIndex: 69, bitIndex: 8, address: 'C69', name: '도어모터 정회전 MC', category: '출력' },
-                { wordIndex: 69, bitIndex: 9, address: 'C69', name: '도어모터 우회전 MC', category: '출력' },
-                { wordIndex: 68, bitIndex: 6, address: 'C68', name: '턴리프팅 상승', category: '출력' },
-                { wordIndex: 68, bitIndex: 7, address: 'C68', name: '턴리프팅 하강', category: '출력' },
-                { wordIndex: 68, bitIndex: 11, address: 'C68', name: '턴 모터', category: '출력' },
-                { wordIndex: 68, bitIndex: 12, address: 'C68', name: '턴 모터 BK', category: '출력' },
-                { wordIndex: 71, bitIndex: 0, address: 'C71', name: '턴테이블 인버터 정회전', category: '출력' },
-                { wordIndex: 71, bitIndex: 1, address: 'C71', name: '턴테이블 인버터 역회전', category: '출력' },
-                { wordIndex: 71, bitIndex: 7, address: 'C71', name: '턴테이블 인버터 리셋', category: '출력' },
-                { wordIndex: 71, bitIndex: 2, address: 'C71', name: '턴테이블 인버터 SP1', category: '출력' },
-                { wordIndex: 71, bitIndex: 3, address: 'C71', name: '턴테이블 인버터 SP2', category: '출력' },
-                { wordIndex: 71, bitIndex: 4, address: 'C71', name: '턴테이블 인버터 SP3', category: '출력' },
-                { wordIndex: 64, bitIndex: 3, address: 'C64', name: '턴 좌회전정지', category: '출력' },
-                { wordIndex: 64, bitIndex: 1, address: 'C64', name: '턴 우회전정지', category: '출력' },
-                { wordIndex: 66, bitIndex: 14, address: 'C66', name: '턴테이블 상승정지', category: '출력' },
-                { wordIndex: 66, bitIndex: 15, address: 'C66', name: '턴테이블 하강정지', category: '출력' },
-                
-                // 승강 제어 탭 아웃풋
-                { wordIndex: 70, bitIndex: 0, address: 'C70', name: '리프트 인버터 정회전', category: '출력' },
-                { wordIndex: 70, bitIndex: 1, address: 'C70', name: '리프트 인버터 역회전', category: '출력' },
-                { wordIndex: 70, bitIndex: 7, address: 'C70', name: '리프트 인버터 리셋', category: '출력' },
-                { wordIndex: 70, bitIndex: 2, address: 'C70', name: '리프트 인버터 SP1', category: '출력' },
-                { wordIndex: 70, bitIndex: 3, address: 'C70', name: '리프트 인버터 SP2', category: '출력' },
-                { wordIndex: 70, bitIndex: 4, address: 'C70', name: '리프트 인버터 SP3', category: '출력' },
-                { wordIndex: 70, bitIndex: 6, address: 'C70', name: '리프트 인버터 비상라인', category: '출력' },
-                { wordIndex: 69, bitIndex: 10, address: 'C69', name: '리프트 인버터 리프트BK', category: '출력' },
-                
-                // 횡행/락킹 탭 아웃풋
-                { wordIndex: 71, bitIndex: 0, address: 'C71', name: '횡행 인버터 정회전', category: '출력' },
-                { wordIndex: 71, bitIndex: 1, address: 'C71', name: '횡행 인버터 역회전', category: '출력' },
-                { wordIndex: 71, bitIndex: 7, address: 'C71', name: '횡행 인버터 리셋', category: '출력' },
-                { wordIndex: 71, bitIndex: 2, address: 'C71', name: '횡행 인버터 SP1', category: '출력' },
-                { wordIndex: 71, bitIndex: 3, address: 'C71', name: '횡행 인버터 SP2', category: '출력' },
-                { wordIndex: 71, bitIndex: 4, address: 'C71', name: '횡행 인버터 SP3', category: '출력' },
-                { wordIndex: 68, bitIndex: 5, address: 'C68', name: '횡행 모터BK', category: '출력' },
-                { wordIndex: 69, bitIndex: 13, address: 'C69', name: '정회전 MC', category: '출력' },
-                { wordIndex: 71, bitIndex: 1, address: 'C71', name: '우회전 MC', category: '출력' }
-            ];
-            
-            bitMappings.forEach(mapping => {
-                if (mapping.wordIndex < sensorData.rawData.length) {
-                    const wordValue = sensorData.rawData[mapping.wordIndex];
-                    const bitValue = (wordValue >> mapping.bitIndex) & 1;
-                    
-                    data.push({
-                        address: mapping.address,
-                        name: mapping.name,
-                        category: mapping.category,
-                        value: bitValue,
-                        wordValue: wordValue,
-                        displayValue: bitValue ? 'ON' : 'OFF',
-                        type: 'bits',
-                        status: bitValue ? 'active' : 'inactive'
+
+            // 속초 config의 센서 매핑을 기반으로 비트 데이터 생성
+            Object.entries(sokcho1Config.sensorMapping).forEach(([configKey, configData]) => {
+                const { address, sensors } = configData;
+
+                if (address < sensorData.rawData.length) {
+                    const wordValue = sensorData.rawData[address];
+
+                    // 각 비트별 센서 상태 확인
+                    Object.entries(sensors).forEach(([bitIndex, sensorInfo]) => {
+                        const bitValue = (wordValue >> parseInt(bitIndex)) & 1;
+
+                        data.push({
+                            address: `C${address}.${bitIndex}`,
+                            name: sensorInfo.name,
+                            description: sensorInfo.description,
+                            category: sensorInfo.category,
+                            value: bitValue,
+                            wordValue: wordValue,
+                            displayValue: bitValue ? 'ON' : 'OFF',
+                            type: 'bits',
+                            status: bitValue ? 'active' : 'inactive',
+                            wordIndex: address,
+                            bitIndex: parseInt(bitIndex)
+                        });
                     });
                 }
             });
@@ -171,12 +80,61 @@ const SensorMonitor = ({ sensorData, isPLCConnected }) => {
         if (searchFilter) {
             data = data.filter(item =>
                 item.address.toLowerCase().includes(searchFilter.toLowerCase()) ||
-                item.displayValue.toLowerCase().includes(searchFilter.toLowerCase())
+                item.displayValue.toLowerCase().includes(searchFilter.toLowerCase()) ||
+                (item.name && item.name.toLowerCase().includes(searchFilter.toLowerCase())) ||
+                (item.category && item.category.toLowerCase().includes(searchFilter.toLowerCase()))
             );
         }
 
         return data;
     }, [sensorData, viewMode, showZeroValues, searchFilter]);
+
+    // PLC 체크리스트용 데이터 (비트 모니터 기반)
+    const plcChecklistData = useMemo(() => {
+        let data = [];
+
+        if (sensorData.rawData) {
+            // 속초 config의 센서 매핑을 기반으로 비트 데이터 생성
+            Object.entries(sokcho1Config.sensorMapping).forEach(([configKey, configData]) => {
+                const { address, sensors } = configData;
+
+                if (address < sensorData.rawData.length) {
+                    const wordValue = sensorData.rawData[address];
+
+                    // 각 비트별 센서 상태 확인
+                    Object.entries(sensors).forEach(([bitIndex, sensorInfo]) => {
+                        const bitValue = (wordValue >> parseInt(bitIndex)) & 1;
+
+                        data.push({
+                            address: `C${address}.${bitIndex}`,
+                            name: sensorInfo.name,
+                            description: sensorInfo.description,
+                            category: sensorInfo.category,
+                            value: bitValue,
+                            displayValue: bitValue ? 'ON' : 'OFF',
+                            status: bitValue ? 'active' : 'inactive',
+                            rawValue: bitValue
+                        });
+                    });
+                }
+            });
+        }
+
+        // 주소순으로 정렬
+        data.sort((a, b) => {
+            const aAddr = a.address.split('.');
+            const bAddr = b.address.split('.');
+            const aWord = parseInt(aAddr[0].substring(1));
+            const bWord = parseInt(bAddr[0].substring(1));
+            const aBit = parseInt(aAddr[1]);
+            const bBit = parseInt(bAddr[1]);
+
+            if (aWord !== bWord) return aWord - bWord;
+            return aBit - bBit;
+        });
+
+        return data;
+    }, [sensorData]);
 
     // 실시간 raw 데이터 로그 업데이트
     useEffect(() => {
@@ -204,14 +162,32 @@ const SensorMonitor = ({ sensorData, isPLCConnected }) => {
         return new Date(timestamp).toLocaleTimeString();
     };
 
+    // 카테고리별 색상 정의 (속초용)
+    const getCategoryColor = (category) => {
+        switch (category) {
+            case '시스템': return 'from-purple-500 to-indigo-600';
+            case '도어': return 'from-blue-500 to-cyan-600';
+            case '안전센서': return 'from-red-500 to-pink-600';
+            case '위치센서': return 'from-green-500 to-emerald-600';
+            case '리프트': return 'from-yellow-500 to-orange-600';
+            case '턴테이블': return 'from-indigo-500 to-purple-600';
+            case '후크': return 'from-gray-500 to-slate-600';
+            case '횡행': return 'from-teal-500 to-cyan-600';
+            case '출력': return 'from-orange-500 to-red-600';
+            default: return 'from-gray-400 to-gray-600';
+        }
+    };
+
     return (
-                 <div className="rounded-2xl p-3 md:p-4 overflow-hidden border border-white/20 shadow-xl shadow-black/20" style={{
-                     background: 'rgba(255, 255, 255, 0.95)',
-                     backdropFilter: 'blur(25px)',
-                     WebkitBackdropFilter: 'blur(25px)',
-                 }}>
+        <div className="rounded-2xl p-3 md:p-4 overflow-hidden border border-white/20 shadow-xl shadow-black/20" style={{
+            background: 'rgba(255, 255, 255, 0.95)',
+            backdropFilter: 'blur(25px)',
+            WebkitBackdropFilter: 'blur(25px)',
+        }}>
             <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-6 md:mb-4 space-y-2 md:space-y-0">
-                <h2 className="text-base md:text-lg font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2 md:mb-0">센서 데이터 모니터</h2>
+                <h2 className="text-base md:text-lg font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2 md:mb-0">
+                    센서 데이터 모니터 - {sokcho1Config.siteInfo.name} {sokcho1Config.siteInfo.unitNumber}
+                </h2>
             </div>
 
             {/* 컨트롤 패널 */}
@@ -222,8 +198,8 @@ const SensorMonitor = ({ sensorData, isPLCConnected }) => {
                         <button
                             onClick={() => setViewMode('parsed')}
                             className={`flex-shrink-0 px-4 md:px-6 py-2 md:py-3 rounded-xl text-xs md:text-sm font-semibold transition-all duration-500 ease-in-out transform ${viewMode === 'parsed'
-                                    ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg scale-105 shadow-blue-500/25'
-                                    : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50 hover:scale-102'
+                                ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg scale-105 shadow-blue-500/25'
+                                : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50 hover:scale-102'
                                 }`}
                         >
                             파싱된 데이터
@@ -231,8 +207,8 @@ const SensorMonitor = ({ sensorData, isPLCConnected }) => {
                         <button
                             onClick={() => setViewMode('raw')}
                             className={`flex-shrink-0 px-4 md:px-6 py-2 md:py-3 rounded-xl text-xs md:text-sm font-semibold transition-all duration-500 ease-in-out transform ${viewMode === 'raw'
-                                    ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg scale-105 shadow-blue-500/25'
-                                    : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50 hover:scale-102'
+                                ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg scale-105 shadow-blue-500/25'
+                                : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50 hover:scale-102'
                                 }`}
                         >
                             원시 데이터
@@ -240,8 +216,8 @@ const SensorMonitor = ({ sensorData, isPLCConnected }) => {
                         <button
                             onClick={() => setViewMode('hex')}
                             className={`flex-shrink-0 px-4 md:px-6 py-2 md:py-3 rounded-xl text-xs md:text-sm font-semibold transition-all duration-500 ease-in-out transform ${viewMode === 'hex'
-                                    ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg scale-105 shadow-blue-500/25'
-                                    : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50 hover:scale-102'
+                                ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg scale-105 shadow-blue-500/25'
+                                : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50 hover:scale-102'
                                 }`}
                         >
                             16진수
@@ -249,36 +225,32 @@ const SensorMonitor = ({ sensorData, isPLCConnected }) => {
                         <button
                             onClick={() => setViewMode('bits')}
                             className={`flex-shrink-0 px-4 md:px-6 py-2 md:py-3 rounded-xl text-xs md:text-sm font-semibold transition-all duration-500 ease-in-out transform ${viewMode === 'bits'
-                                    ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg scale-105 shadow-blue-500/25'
-                                    : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50 hover:scale-102'
+                                ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg scale-105 shadow-blue-500/25'
+                                : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50 hover:scale-102'
                                 }`}
                         >
-                            비트 모니터
+                            속초 비트 모니터
                         </button>
                     </div>
                 </div>
 
-
-
                 {/* 필터 및 검색 영역 */}
                 <div className="bg-gradient-to-br from-blue-50 to-indigo-100 p-4 rounded-2xl shadow-lg border border-gray-200">
                     <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-                        {/* 0값 표시 토글과 실시간 스트림 토글 */}
-                        <div className="flex items-center gap-6">
+                        {/* 0값 표시 토글, 실시간 스트림 토글, PLC 체크리스트 토글 */}
+                        <div className="flex items-center gap-6 flex-wrap">
                             <div className="flex items-center space-x-3">
                                 <span className="text-sm font-medium text-gray-700">0값 표시</span>
                                 <button
                                     onClick={() => setShowZeroValues(!showZeroValues)}
-                                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
-                                        showZeroValues 
-                                            ? 'bg-gradient-to-r from-blue-500 to-indigo-600' 
-                                            : 'bg-gray-300'
-                                    }`}
+                                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${showZeroValues
+                                        ? 'bg-gradient-to-r from-blue-500 to-indigo-600'
+                                        : 'bg-gray-300'
+                                        }`}
                                 >
                                     <span
-                                        className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-lg transition-transform duration-300 ease-in-out ${
-                                            showZeroValues ? 'translate-x-6' : 'translate-x-1'
-                                        }`}
+                                        className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-lg transition-transform duration-300 ease-in-out ${showZeroValues ? 'translate-x-6' : 'translate-x-1'
+                                            }`}
                                     />
                                 </button>
                             </div>
@@ -287,16 +259,30 @@ const SensorMonitor = ({ sensorData, isPLCConnected }) => {
                                 <span className="text-sm font-medium text-gray-700">실시간 스트림</span>
                                 <button
                                     onClick={() => setShowRawStream(!showRawStream)}
-                                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
-                                        showRawStream 
-                                            ? 'bg-gradient-to-r from-blue-500 to-indigo-600' 
-                                            : 'bg-gray-300'
-                                    }`}
+                                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${showRawStream
+                                        ? 'bg-gradient-to-r from-blue-500 to-indigo-600'
+                                        : 'bg-gray-300'
+                                        }`}
                                 >
                                     <span
-                                        className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-lg transition-transform duration-300 ease-in-out ${
-                                            showRawStream ? 'translate-x-6' : 'translate-x-1'
+                                        className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-lg transition-transform duration-300 ease-in-out ${showRawStream ? 'translate-x-6' : 'translate-x-1'
+                                            }`}
+                                    />
+                                </button>
+                            </div>
+
+                            <div className="flex items-center space-x-3">
+                                <span className="text-sm font-medium text-gray-700">PLC 체크리스트</span>
+                                <button
+                                    onClick={() => setShowPLCChecklist(!showPLCChecklist)}
+                                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${showPLCChecklist
+                                        ? 'bg-gradient-to-r from-green-500 to-emerald-600'
+                                        : 'bg-gray-300'
                                         }`}
+                                >
+                                    <span
+                                        className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-lg transition-transform duration-300 ease-in-out ${showPLCChecklist ? 'translate-x-6' : 'translate-x-1'
+                                            }`}
                                     />
                                 </button>
                             </div>
@@ -311,7 +297,7 @@ const SensorMonitor = ({ sensorData, isPLCConnected }) => {
                             </div>
                             <input
                                 type="text"
-                                placeholder="주소 또는 값으로 검색..."
+                                placeholder="주소, 센서명, 카테고리로 검색..."
                                 value={searchFilter}
                                 onChange={(e) => setSearchFilter(e.target.value)}
                                 className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 hover:border-blue-400 bg-gray-50 focus:bg-white"
@@ -336,20 +322,19 @@ const SensorMonitor = ({ sensorData, isPLCConnected }) => {
                 <div className="mb-6 bg-gradient-to-br from-gray-900 via-black to-gray-900 text-green-400 p-6 rounded-2xl shadow-2xl border border-gray-700 transform transition-all duration-700 ease-in-out">
                     <div className="mb-4 flex items-center space-x-2">
                         <div className="animate-pulse w-3 h-3 bg-green-500 rounded-full"></div>
-                        <div className="text-yellow-400 font-semibold">실시간 PLC 데이터 스트림</div>
+                        <div className="text-yellow-400 font-semibold">실시간 속초 PLC 데이터 스트림</div>
                         <div className="flex space-x-1">
-                            <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{animationDelay: '0ms'}}></div>
-                            <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{animationDelay: '150ms'}}></div>
-                            <div className="w-2 h-2 bg-pink-400 rounded-full animate-bounce" style={{animationDelay: '300ms'}}></div>
+                            <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                            <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                            <div className="w-2 h-2 bg-pink-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
                         </div>
                     </div>
                     <div className="h-64 overflow-y-auto font-mono text-xs space-y-1 custom-scrollbar">
                         {rawLog.map((entry, index) => (
-                            <div 
-                                key={index} 
-                                className={`transition-all duration-500 ease-in-out transform ${
-                                    index === 0 ? 'scale-105 bg-green-900/30 rounded px-2 py-1' : ''
-                                }`}
+                            <div
+                                key={index}
+                                className={`transition-all duration-500 ease-in-out transform ${index === 0 ? 'scale-105 bg-green-900/30 rounded px-2 py-1' : ''
+                                    }`}
                                 style={{
                                     animationDelay: `${index * 50}ms`
                                 }}
@@ -357,7 +342,7 @@ const SensorMonitor = ({ sensorData, isPLCConnected }) => {
                                 <span className="text-blue-400 font-semibold">[{entry.timestamp}]</span>
                                 <span className="ml-2 text-green-300">
                                     {entry.data.map((byte, byteIndex) => (
-                                        <span 
+                                        <span
                                             key={byteIndex}
                                             className="hover:bg-yellow-400 hover:text-black rounded px-1 transition-colors duration-200"
                                         >
@@ -368,6 +353,83 @@ const SensorMonitor = ({ sensorData, isPLCConnected }) => {
                                 </span>
                             </div>
                         ))}
+                    </div>
+                </div>
+            )}
+
+            {/* PLC 체크리스트 */}
+            {showPLCChecklist && (
+                <div className="mb-6 bg-gradient-to-br from-white to-gray-50 p-6 rounded-2xl shadow-2xl border border-gray-200 transform transition-all duration-700 ease-in-out">
+                    <div className="mb-4 flex items-center space-x-2">
+                        <div className="animate-pulse w-3 h-3 bg-green-500 rounded-full"></div>
+                        <div className="text-gray-800 font-bold text-lg">속초 1호기 PLC 체크리스트 (C060~C072)</div>
+                        <div className="flex space-x-1">
+                            <div className="w-2 h-2 bg-green-400 rounded-full animate-ping"></div>
+                            <div className="w-2 h-2 bg-blue-400 rounded-full animate-ping" style={{ animationDelay: '200ms' }}></div>
+                        </div>
+                    </div>
+
+                    <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-lg">
+                        <div className="overflow-x-auto">
+                            <table className="w-full">
+                                <thead className="bg-gradient-to-r from-gray-800 to-gray-900 text-white">
+                                    <tr>
+                                        <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">주소</th>
+                                        <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">설명</th>
+                                        <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">상태</th>
+                                        <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider">값</th>
+                                        <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">카테고리</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-gray-200">
+                                    {plcChecklistData.map((item, index) => (
+                                        <tr
+                                            key={index}
+                                            className={`transition-all duration-300 hover:bg-gray-50 ${item.status === 'active' ? 'bg-green-50' : ''}`}
+                                        >
+                                            <td className="px-4 py-3 whitespace-nowrap">
+                                                <span className="text-sm font-mono font-semibold text-blue-600">
+                                                    {item.address}
+                                                </span>
+                                            </td>
+                                            <td className="px-4 py-3">
+                                                <div className="text-sm text-gray-900 font-medium">{item.name}</div>
+                                                <div className="text-xs text-gray-500">{item.description}</div>
+                                            </td>
+                                            <td className="px-4 py-3 whitespace-nowrap">
+                                                <span className={`inline-flex px-3 py-1 rounded-full text-xs font-semibold ${item.status === 'active'
+                                                        ? 'bg-green-100 text-green-800 border border-green-300'
+                                                        : 'bg-gray-100 text-gray-600 border border-gray-300'
+                                                    }`}>
+                                                    {item.displayValue}
+                                                </span>
+                                            </td>
+                                            <td className="px-4 py-3 text-center whitespace-nowrap">
+                                                <div className={`w-6 h-6 rounded-full mx-auto flex items-center justify-center text-xs font-bold ${item.status === 'active'
+                                                        ? 'bg-green-500 text-white animate-pulse'
+                                                        : 'bg-gray-300 text-gray-600'
+                                                    }`}>
+                                                    {item.rawValue}
+                                                </div>
+                                            </td>
+                                            <td className="px-4 py-3 whitespace-nowrap">
+                                                <span className={`inline-flex px-2 py-1 rounded-lg text-xs font-medium bg-gradient-to-r ${getCategoryColor(item.category)} text-white`}>
+                                                    {item.category}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div className="mt-4 text-center">
+                        <p className="text-sm text-gray-600">
+                            총 {plcChecklistData.length}개 센서 |
+                            <span className="text-green-600 font-semibold"> {plcChecklistData.filter(item => item.status === 'active').length}개 활성화</span> |
+                            <span className="text-gray-500"> {plcChecklistData.filter(item => item.status === 'inactive').length}개 비활성화</span>
+                        </p>
                     </div>
                 </div>
             )}
@@ -383,57 +445,73 @@ const SensorMonitor = ({ sensorData, isPLCConnected }) => {
                 </div>
             ) : (
                 <div className="space-y-4">
-                    {/* 비트 모니터 모드 */}
+                    {/* 속초 비트 모니터 모드 */}
                     {viewMode === 'bits' ? (
                         <div className="bg-gradient-to-br from-gray-900 via-black to-gray-900 p-6 rounded-2xl shadow-2xl border border-gray-700">
                             <div className="mb-6 flex items-center space-x-3">
                                 <div className="animate-pulse w-4 h-4 bg-green-500 rounded-full"></div>
                                 <div className="text-green-400 font-mono text-lg font-semibold">
-                                    PLC 비트 상태 모니터링
+                                    속초 1호기 센서 상태 모니터링 (C060~C072)
                                 </div>
                                 <div className="flex space-x-1">
                                     <div className="w-2 h-2 bg-cyan-400 rounded-full animate-ping"></div>
-                                    <div className="w-2 h-2 bg-yellow-400 rounded-full animate-ping" style={{animationDelay: '200ms'}}></div>
+                                    <div className="w-2 h-2 bg-yellow-400 rounded-full animate-ping" style={{ animationDelay: '200ms' }}></div>
                                 </div>
                             </div>
-                            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3">
-                                {filteredData.map((item, index) => (
-                                    <div 
-                                        key={index} 
-                                        className={`p-4 rounded-xl border-2 transition-all duration-700 ease-in-out transform hover:scale-110 ${
-                                            item.status === 'active' 
-                                                ? 'bg-gradient-to-br from-green-500 to-emerald-600 border-green-400 text-white shadow-2xl shadow-green-500/25 animate-pulse-slow' 
-                                                : 'bg-gradient-to-br from-gray-700 to-gray-800 border-gray-600 text-gray-300 hover:border-gray-500 hover:shadow-lg'
-                                        }`}
-                                        style={{
-                                            animationDelay: `${index * 30}ms`,
-                                            opacity: 0,
-                                            animation: `slideInScale 0.8s ease-out ${index * 30}ms forwards`
-                                        }}
-                                    >
-                                        <div className="text-center space-y-1">
-                                            <div className="text-xs font-mono font-bold">
-                                                {item.address}
-                                            </div>
-                                            <div className="text-xs font-medium">
-                                                {item.name}
-                                            </div>
-                                            {item.category && (
-                                                <div className={`text-xs px-2 py-1 rounded-full ${
-                                                    item.status === 'active'
+
+                            {/* 카테고리별 그룹화 */}
+                            {Object.entries(
+                                filteredData.reduce((groups, item) => {
+                                    const category = item.category || '기타';
+                                    if (!groups[category]) groups[category] = [];
+                                    groups[category].push(item);
+                                    return groups;
+                                }, {})
+                            ).map(([category, items]) => (
+                                <div key={category} className="mb-8">
+                                    <div className={`mb-4 p-3 rounded-xl bg-gradient-to-r ${getCategoryColor(category)} text-white shadow-lg`}>
+                                        <h3 className="text-lg font-bold">{category} ({items.length}개)</h3>
+                                    </div>
+                                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
+                                        {items.map((item, index) => (
+                                            <div
+                                                key={index}
+                                                className={`p-4 rounded-xl border-2 transition-all duration-700 ease-in-out transform hover:scale-110 ${item.status === 'active'
+                                                    ? 'bg-gradient-to-br from-green-500 to-emerald-600 border-green-400 text-white shadow-2xl shadow-green-500/25 animate-pulse-slow'
+                                                    : 'bg-gradient-to-br from-gray-700 to-gray-800 border-gray-600 text-gray-300 hover:border-gray-500 hover:shadow-lg'
+                                                    }`}
+                                                style={{
+                                                    animationDelay: `${index * 30}ms`,
+                                                    opacity: 0,
+                                                    animation: `slideInScale 0.8s ease-out ${index * 30}ms forwards`
+                                                }}
+                                            >
+                                                <div className="text-center space-y-1">
+                                                    <div className="text-xs font-mono font-bold">
+                                                        {item.address}
+                                                    </div>
+                                                    <div className="text-xs font-medium">
+                                                        {item.name}
+                                                    </div>
+                                                    <div className="text-xs opacity-75">
+                                                        {item.description}
+                                                    </div>
+                                                    <div className={`text-xs px-2 py-1 rounded-full ${item.status === 'active'
                                                         ? 'bg-white/20 text-white'
                                                         : 'bg-gray-600 text-gray-300'
-                                                }`}>
-                                                    {item.category}
+                                                        }`}>
+                                                        {item.displayValue}
+                                                    </div>
                                                 </div>
-                                            )}
-                                        </div>
+                                            </div>
+                                        ))}
                                     </div>
-                                ))}
-                            </div>
-                            <div className="text-center mt-4">
+                                </div>
+                            ))}
+
+                            <div className="text-center mt-6">
                                 <p className="text-sm text-gray-400">
-                                    총 {filteredData.length}개 비트 표시 중
+                                    총 {filteredData.length}개 센서 표시 중 | 속초 1호기 전용 센서 매핑
                                 </p>
                             </div>
                         </div>
@@ -441,8 +519,8 @@ const SensorMonitor = ({ sensorData, isPLCConnected }) => {
                         /* 기존 그리드 표시 - 애니메이션 카드 */
                         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 md:gap-4">
                             {filteredData.slice(0, 50).map((item, index) => (
-                                <div 
-                                    key={index} 
+                                <div
+                                    key={index}
                                     className="bg-white border border-gray-200 rounded-xl p-3 md:p-4 transition-all duration-500 ease-in-out transform hover:scale-105 hover:shadow-xl hover:border-blue-300 hover:-translate-y-1 group"
                                     style={{
                                         animationDelay: `${index * 50}ms`,
@@ -493,7 +571,20 @@ const SensorMonitor = ({ sensorData, isPLCConnected }) => {
                 </div>
             )}
 
-
+            {/* 사용법 안내 */}
+            <div className="mt-8 p-3 md:p-4 bg-blue-50 rounded-2xl">
+                <h4 className="text-xs md:text-sm font-semibold text-blue-800 mb-2">
+                    속초 1호기 센서 모니터 사용법
+                </h4>
+                <ul className="text-xs text-blue-700 space-y-1">
+                    <li>• 속초 1호기 전용 센서 매핑 (C060~C072 비트 구조)</li>
+                    <li>• 비트 모니터에서 카테고리별 센서 상태 실시간 확인</li>
+                    <li>• PLC 체크리스트로 전체 센서 테이블 형태 확인 가능</li>
+                    <li>• 검색으로 특정 센서나 카테고리 필터링 가능</li>
+                    <li>• 실시간 스트림으로 PLC 데이터 흐름 모니터링</li>
+                    <li>• 활성화된 센서는 녹색으로 표시됩니다</li>
+                </ul>
+            </div>
         </div>
     );
 };

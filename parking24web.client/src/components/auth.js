@@ -7,6 +7,10 @@ export const USER_ROLES = {
 
 // 간단한 해시 함수 (실제로는 bcrypt 사용 권장)
 const hashPassword = (password) => {
+
+    // null/undefined 체크 추가
+    if (!password || typeof password !== 'string') return '0';
+
     // 간단한 해시 (실제로는 더 강력한 해시 사용)
     let hash = 0;
     for (let i = 0; i < password.length; i++) {
@@ -54,7 +58,7 @@ const verifyToken = (token) => {
 // 사용자 계정 정보 (해시된 비밀번호)
 export const USERS = {
     'admin': {
-        password: hashPassword('admin!'), 
+        password: hashPassword('admin!'),
         role: USER_ROLES.ADMIN,
         name: '관리자',
         description: '모든 기능 접근 가능'
@@ -63,16 +67,16 @@ export const USERS = {
         password: hashPassword('service!'),
         role: USER_ROLES.SERVICE,
         name: '서비스팀',
-        description: '수동제어 및 센서 모니터링'
+        description: '모든 기능 접근 가능'
     },
     'client01': {
-        password: hashPassword('client!'), 
+        password: hashPassword('client!'),
         role: USER_ROLES.CLIENT,
         name: '고객사',
         description: '주차현황 조회만 가능'
     },
     'client02': {
-        password: hashPassword('client!'), 
+        password: hashPassword('client!'),
         role: USER_ROLES.CLIENT,
         name: '고객사2',
         description: '주차현황 조회만 가능'
@@ -86,15 +90,20 @@ export const ROLE_PERMISSIONS = {
         'manualControl',     // 수동제어
         'sensorMonitor',     // 센서모니터
         'configPanel',       // 설정
-        'connectionPanel'    // 연결설정
+        'connectionPanel',   // 연결설정
+        'eventMonitor'
     ],
     [USER_ROLES.SERVICE]: [
-        'parkingMonitor',
-        'manualControl',
-        'sensorMonitor'
+        'parkingMonitor',    // 주차현황
+        'manualControl',     // 수동제어
+        'sensorMonitor',     // 센서모니터
+        'configPanel',       // 설정
+        'connectionPanel',    // 연결설정
+        'eventMonitor'
     ],
     [USER_ROLES.CLIENT]: [
-        'parkingMonitor'
+        'parkingMonitor',    // 주차현황만
+        'eventMonitor'
     ]
 };
 
@@ -102,28 +111,33 @@ export const ROLE_PERMISSIONS = {
 export const ROLE_TABS = {
     [USER_ROLES.ADMIN]: [
         { id: 'parking', name: '주차 현황', icon: '🚗' },
+        { id: 'events', name: '입출차 이벤트', icon: '📋' },
         { id: 'manual', name: '수동 제어', icon: '🎮' },
         { id: 'sensor', name: '센서 모니터', icon: '📊' },
         { id: 'config', name: '설정', icon: '⚙️' }
     ],
     [USER_ROLES.SERVICE]: [
         { id: 'parking', name: '주차 현황', icon: '🚗' },
+        { id: 'events', name: '입출차 이벤트', icon: '📋' },
         { id: 'manual', name: '수동 제어', icon: '🎮' },
-        { id: 'sensor', name: '센서 모니터', icon: '📊' }
+        { id: 'sensor', name: '센서 모니터', icon: '📊' },
+        { id: 'config', name: '설정', icon: '⚙️' }
     ],
     [USER_ROLES.CLIENT]: [
+        { id: 'events', name: '입출차 이벤트', icon: '📋' },
         { id: 'parking', name: '주차 현황', icon: '🚗' }
     ]
 };
 
 // 로그인 검증 함수
 export const validateLogin = (username, password) => {
-    const user = USERS[username];
+    if (username == null || password == null) return { success: false, error: '아이디와 비밀번호를 입력해주세요.' };
+    const user = USERS[username.trim()];
     if (!user) {
         return { success: false, error: '존재하지 않는 사용자입니다.' };
     }
     // 입력받은 비밀번호를 해시화해서 비교
-    if (user.password !== hashPassword(password)) {
+    if (user.password !== hashPassword(password.trim())) {
         return { success: false, error: '비밀번호가 올바르지 않습니다.' };
     }
 
@@ -254,7 +268,7 @@ export const getWelcomeMessage = (userRole, userName) => {
         case USER_ROLES.ADMIN:
             return `관리자 ${userName}님, 환영합니다! 모든 시스템을 제어할 수 있습니다.`;
         case USER_ROLES.SERVICE:
-            return `서비스팀 ${userName}님, 환영합니다! 수동 제어가 가능합니다.`;
+            return `서비스팀 ${userName}님, 환영합니다! 모든 시스템을 제어할 수 있습니다.`;
         case USER_ROLES.CLIENT:
             return `${userName}님, 환영합니다! 주차 현황을 확인하실 수 있습니다.`;
         default:

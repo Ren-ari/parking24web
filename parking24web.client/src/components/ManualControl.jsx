@@ -1,140 +1,65 @@
 ﻿import React, { useState, useEffect } from 'react';
+// 속초 1호기 config import (센서 표시용)
+import sokcho1Config from '../../config/sokcho1Config.js';
+// SignalR 서비스 import
+import signalRService from '../Services/signalrService.js';
 
-const ManualControl = ({ isPLCConnected, isAuthenticated, sendCommand, sensorData }) => {
+const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData }) => {
     const [activeCommand, setActiveCommand] = useState(null);
     const [isEmergencyMode, setIsEmergencyMode] = useState(false);
     const [activeTab, setActiveTab] = useState('page1');
     const [showSensors, setShowSensors] = useState(true);
     const [sensorStates, setSensorStates] = useState({});
 
-    // AI parking 프로젝트의 센서 정의를 기반으로 한 센서 상태 업데이트
+    // 속초 1호기 센서 상태 업데이트 (C060~C072 비트 구조)
     const updateSensorStates = () => {
         if (!sensorData || !sensorData.rawData) return;
-        
-        // AI parking 프로젝트의 센서 정의를 기반으로 한 매핑
-        const sensorMappings = {
-            // 도어/턴테이블 탭 (page1) - 인풋 센서들
-            'Turn0': { wordIndex: 28, bitIndex: 0, address: 'C28', name: '턴 0도 확인정지' },
-            'Turn180': { wordIndex: 29, bitIndex: 0, address: 'C29', name: '턴 180도 확인정지' },
-            'Turnup': { wordIndex: 31, bitIndex: 0, address: 'C31', name: '턴 상승확인' },
-            'Turndown': { wordIndex: 32, bitIndex: 0, address: 'C32', name: '턴 하강확인' },
-            'DoorOpen': { wordIndex: 39, bitIndex: 0, address: 'C39', name: '도어열림확인' },
-            'DoorClose': { wordIndex: 40, bitIndex: 0, address: 'C40', name: '도어닫힘확인' },
-            'DoorCloseCheck': { wordIndex: 41, bitIndex: 0, address: 'C41', name: '도어잠김확인' },
-            'LeftDoorCheck': { wordIndex: 44, bitIndex: 0, address: 'C44', name: '좌도어확인' },
-            'RightDoorCheck': { wordIndex: 45, bitIndex: 0, address: 'C45', name: '우도어확인' },
-            'IndoorCheck': { wordIndex: 53, bitIndex: 0, address: 'C53', name: '도어내확인' },
-            'LeftMoveCheck1': { wordIndex: 42, bitIndex: 0, address: 'C42', name: '좌측동작감지확인1' },
-            'RightMoveCheck1': { wordIndex: 43, bitIndex: 0, address: 'C43', name: '우측동작감지확인1' },
-            'CarLocation': { wordIndex: 47, bitIndex: 0, address: 'C47', name: '차량정위치' },
-            'FrontBumpCheck': { wordIndex: 46, bitIndex: 0, address: 'C46', name: '앞범퍼확인' },
-            'BackBumpCheck': { wordIndex: 50, bitIndex: 0, address: 'C50', name: '뒷범퍼확인' },
-            'RVheight': { wordIndex: 48, bitIndex: 0, address: 'C48', name: 'RV높이확인' },
-            'Carheight': { wordIndex: 49, bitIndex: 0, address: 'C49', name: '승용높이확인' },
-            
-            // 승강 제어 탭 (page2) - 인풋 센서들
-            'LiftLevel1': { wordIndex: 20, bitIndex: 0, address: 'C20', name: '리프트 레벨1' },
-            'LiftLevel2': { wordIndex: 21, bitIndex: 0, address: 'C21', name: '리프트 레벨2' },
-            'LiftHome': { wordIndex: 30, bitIndex: 0, address: 'C30', name: '리프트 홈 확인' },
-            'LiftDownDecel': { wordIndex: 37, bitIndex: 0, address: 'C37', name: '리프트 하강감속확인' },
-            'LiftDownLimit': { wordIndex: 38, bitIndex: 0, address: 'C38', name: '리프트 하강비상확인' },
-            'LiftUpLimit': { wordIndex: 51, bitIndex: 0, address: 'C51', name: '리프트 상승비상확인' },
-            'LiftUpDecel': { wordIndex: 52, bitIndex: 0, address: 'C52', name: '리프트 상승감속확인' },
-            'wireCut': { wordIndex: 61, bitIndex: 11, address: 'C61', name: '와이어 절단' },
-            
-            // 횡행/락킹 탭 (page3) - 인풋 센서들
-            'HookCenter': { wordIndex: 22, bitIndex: 0, address: 'C22', name: '후크중앙확인' },
-            'OddHookSensor': { wordIndex: 24, bitIndex: 0, address: 'C24', name: '홀수 후크 감지' },
-            'EvenHookSensor': { wordIndex: 25, bitIndex: 0, address: 'C25', name: '짝수 후크 감지' },
-            'OddLockingOn': { wordIndex: 33, bitIndex: 0, address: 'C33', name: '홀수측 록킹잠김확인' },
-            'OddLockingOff': { wordIndex: 34, bitIndex: 0, address: 'C34', name: '홀수측 록킹풀림확인' },
-            'EvenLockingOn': { wordIndex: 35, bitIndex: 0, address: 'C35', name: '짝수측 록킹잠김확인' },
-            'EvenLockingOff': { wordIndex: 36, bitIndex: 0, address: 'C36', name: '짝수측 록킹풀림확인' },
-            'LeftFit': { wordIndex: 26, bitIndex: 0 , address: 'C26', name: '좌측 피트확인' },
-            'RightFit': { wordIndex: 27, bitIndex: 0, address: 'C27', name: '우측 피트확인' },
 
-            // 아웃풋 센서들 (출력 상태)
-            // 도어/턴테이블 탭 아웃풋
-            'redLight': { wordIndex: 69, bitIndex: 2, address: 'C69', name: '적색신호등' },
-            'greenLight': { wordIndex: 69, bitIndex: 3, address: 'C69', name: '녹색신호등' },
-            'guideFwd': { wordIndex: 69, bitIndex: 4, address: 'C69', name: '유도등 전진' },
-            'guideStop': { wordIndex: 69, bitIndex: 5, address: 'C69', name: '유도등 정지' },
-            'guideRev': { wordIndex: 69, bitIndex: 6, address: 'C69', name: '유도등 후진' },
-            'doorRotFwdMc': { wordIndex: 69, bitIndex: 8, address: 'C69', name: '도어모터 정회전 MC' },
-            'doorRotRightMc': { wordIndex: 69, bitIndex: 9, address: 'C69', name: '도어모터 우회전 MC' },
-            'turnLiftUp': { wordIndex: 68, bitIndex: 6, address: 'C68', name: '턴리프팅 상승' },
-            'turnLiftDown': { wordIndex: 68, bitIndex: 7, address: 'C68', name: '턴리프팅 하강' },
-            'turnMortor': { wordIndex: 68, bitIndex: 11, address: 'C68', name: '턴 모터' },
-            'turnMortorBK': { wordIndex: 68, bitIndex: 12, address: 'C68', name: '턴 모터 BK' },
-            'turnTableRotFwd': { wordIndex: 71, bitIndex: 0, address: 'C71', name: '턴테이블 인버터 정회전' },
-            'turnTableRotRev': { wordIndex: 71, bitIndex: 1, address: 'C71', name: '턴테이블 인버터 역회전' },
-            'turnTableReset': { wordIndex: 71, bitIndex: 7, address: 'C71', name: '턴테이블 인버터 리셋' },
-            'turnTableSp1': { wordIndex: 71, bitIndex: 2, address: 'C71', name: '턴테이블 인버터 SP1' },
-            'turnTableSp2': { wordIndex: 71, bitIndex: 3, address: 'C71', name: '턴테이블 인버터 SP2' },
-            'turnTableSp3': { wordIndex: 71, bitIndex: 4, address: 'C71', name: '턴테이블 인버터 SP3' },
-            'turnRotLeftStop': { wordIndex: 64, bitIndex: 3, address: 'C64', name: '턴 좌회전정지' },
-            'turnRotRightStop': { wordIndex: 64, bitIndex: 1, address: 'C64', name: '턴 우회전정지' },
-            'turnTableUpStop': { wordIndex: 66, bitIndex: 14, address: 'C66', name: '턴테이블 상승정지' },
-            'turnTableDownStop': { wordIndex: 66, bitIndex: 15, address: 'C66', name: '턴테이블 하강정지' },
-            
-            // 승강 제어 탭 아웃풋
-            'liftRotFwd': { wordIndex: 70, bitIndex: 0, address: 'C70', name: '리프트 인버터 정회전' },
-            'liftRotRev': { wordIndex: 70, bitIndex: 1, address: 'C70', name: '리프트 인버터 역회전' },
-            'liftReset': { wordIndex: 70, bitIndex: 7, address: 'C70', name: '리프트 인버터 리셋' },
-            'liftSp1': { wordIndex: 70, bitIndex: 2, address: 'C70', name: '리프트 인버터 SP1' },
-            'liftSp2': { wordIndex: 70, bitIndex: 3, address: 'C70', name: '리프트 인버터 SP2' },
-            'liftSp3': { wordIndex: 70, bitIndex: 4, address: 'C70', name: '리프트 인버터 SP3' },
-            'liftEmgLine': { wordIndex: 70, bitIndex: 6, address: 'C70', name: '리프트 인버터 비상라인' },
-            'liftBk': { wordIndex: 69, bitIndex: 10, address: 'C69', name: '리프트 인버터 리프트BK' },
-            
-            // 횡행/락킹 탭 아웃풋
-            'latRotFwd': { wordIndex: 71, bitIndex: 0, address: 'C71', name: '횡행 인버터 정회전' },
-            'latRotRev': { wordIndex: 71, bitIndex: 1, address: 'C71', name: '횡행 인버터 역회전' },
-            'latReset': { wordIndex: 71, bitIndex: 7, address: 'C71', name: '횡행 인버터 리셋' },
-            'latSp1': { wordIndex: 71, bitIndex: 2, address: 'C71', name: '횡행 인버터 SP1' },
-            'latSp2': { wordIndex: 71, bitIndex: 3, address: 'C71', name: '횡행 인버터 SP2' },
-            'latSp3': { wordIndex: 71, bitIndex: 4, address: 'C71', name: '횡행 인버터 SP3' },
-            'latMortor': { wordIndex: 68, bitIndex: 5, address: 'C68', name: '횡행 모터BK' },
-        };
-        
         const newStates = {};
-        
-        Object.entries(sensorMappings).forEach(([key, mapping]) => {
-            if (mapping.wordIndex < sensorData.rawData.length) {
-                const wordValue = sensorData.rawData[mapping.wordIndex];
-                const bitValue = (wordValue >> mapping.bitIndex) & 1;
-                newStates[key] = {
-                    value: bitValue === 1,
-                    address: mapping.address,
-                    bitIndex: mapping.bitIndex,
-                    wordIndex: mapping.wordIndex
-                };
-            } else {
-                newStates[key] = {
-                    value: false,
-                    address: mapping.address,
-                    bitIndex: mapping.bitIndex,
-                    wordIndex: mapping.wordIndex
-                };
+
+        // 속초 config의 센서 매핑을 기반으로 센서 상태 업데이트
+        Object.entries(sokcho1Config.sensorMapping).forEach(([configKey, configData]) => {
+            const { address, sensors } = configData;
+
+            if (address < sensorData.rawData.length) {
+                const wordValue = sensorData.rawData[address];
+
+                // 각 비트별 센서 상태 확인
+                Object.entries(sensors).forEach(([bitIndex, sensorInfo]) => {
+                    const bitValue = (wordValue >> parseInt(bitIndex)) & 1;
+                    const sensorKey = sensorInfo.name.replace(/[^a-zA-Z0-9]/g, '_'); // 안전한 키로 변환
+
+                    newStates[sensorKey] = {
+                        value: bitValue === 1,
+                        address: `C${address}`,
+                        bitIndex: parseInt(bitIndex),
+                        wordIndex: address,
+                        name: sensorInfo.name,
+                        description: sensorInfo.description,
+                        category: sensorInfo.category
+                    };
+                });
             }
         });
-        
-        setSensorStates(newStates);
-    };  
 
-    // 센서 코드와 비트 정보를 표시하는 헬퍼 함수
-    const getSensorCode = (sensorKey) => {
-        const sensor = sensorStates[sensorKey];
-        if (sensor) {
-            return `C${sensor.wordIndex}.${sensor.bitIndex}`;
-        }
-        return 'C--.--';
+        setSensorStates(newStates);
     };
 
     // 센서 상태를 확인하는 헬퍼 함수
     const getSensorValue = (sensorKey) => {
-        const sensor = sensorStates[sensorKey];
+        const transformedKey = sensorKey.replace(/[^a-zA-Z0-9]/g, '_');
+        const sensor = sensorStates[transformedKey];
         return sensor ? sensor.value : false;
+    };
+
+    // 센서 코드와 비트 정보를 표시하는 헬퍼 함수
+    const getSensorCode = (sensorKey) => {
+        const transformedKey = sensorKey.replace(/[^a-zA-Z0-9]/g, '_');
+        const sensor = sensorStates[transformedKey];
+        if (sensor) {
+            return `C${sensor.wordIndex}.${sensor.bitIndex}`;
+        }
+        return 'C--.--';
     };
 
     // sensorData가 변경될 때마다 센서 상태 업데이트
@@ -142,23 +67,29 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sendCommand, sensorDat
         updateSensorStates();
     }, [sensorData]);
 
-    const handleCommand = async (commandName) => {  // displayName 파라미터 제거
+    // 간단한 명령 실행 헬퍼 (UI 피드백용)
+    const executeCommand = async (commandName, signalRMethod) => {
         if (!isPLCConnected || !isAuthenticated) return;
+
         try {
             setActiveCommand(commandName);
-            await sendCommand(commandName);
+            await signalRMethod();
+            console.log(`명령 실행: ${commandName}`);
+
             // 명령 실행 후 1초 뒤 활성 상태 해제
             setTimeout(() => setActiveCommand(null), 1000);
         } catch (error) {
-            console.error('명령 실행 실패:', error);
+            console.error(`명령 실행 실패 (${commandName}):`, error);
             setActiveCommand(null);
         }
     };
 
+    // 비상정지 처리
     const handleEmergencyStop = async () => {
         try {
             setIsEmergencyMode(true);
-            await sendCommand('emergencyStop');
+            await signalRService.emergencyStop();
+            console.log('비상정지 실행');
 
             // 비상정지는 5초간 활성 표시
             setTimeout(() => setIsEmergencyMode(false), 5000);
@@ -167,6 +98,32 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sendCommand, sensorDat
             setIsEmergencyMode(false);
         }
     };
+
+    // 승강 제어
+    const handleLiftUp = () => executeCommand('liftUp', () => signalRService.liftUp());
+    const handleLiftDown = () => executeCommand('liftDown', () => signalRService.liftDown());
+
+    // 횡행 제어  
+    const handleMoveLeft = () => executeCommand('moveLeft', () => signalRService.moveLeft());
+    const handleMoveRight = () => executeCommand('moveRight', () => signalRService.moveRight());
+
+    // 턴테이블 제어
+    const handleTurnLeft = () => executeCommand('turnLeft', () => signalRService.turnLeft());
+    const handleTurnRight = () => executeCommand('turnRight', () => signalRService.turnRight());
+
+    // 도어 제어
+    const handleDoorOpen = () => executeCommand('doorOpen', () => signalRService.doorOpen());
+    const handleDoorClose = () => executeCommand('doorClose', () => signalRService.doorClose());
+
+    // 락킹 제어
+    const handleLockingOn = () => executeCommand('lockingOn', () => signalRService.lockingOn());
+    const handleLockingOff = () => executeCommand('lockingOff', () => signalRService.lockingOff());
+
+    // 시스템 제어
+    const handleErrorReset = () => executeCommand('errorReset', () => signalRService.errorReset());
+    const handleRemoteControl = () => executeCommand('remoteControl', () => signalRService.remoteControl());
+    const handleHomeReturn = () => executeCommand('homeReturn', () => signalRService.homeReturn());
+    const handlePaletteChange = () => executeCommand('paletteChange', () => signalRService.paletteChange());
 
     const isDisabled = !isPLCConnected || !isAuthenticated;
 
@@ -238,7 +195,6 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sendCommand, sensorDat
                     box-shadow: 0 0 0 1px #3b82f6, 0 0 #bfdbfe;
                     transform: translate3d(0, 0, -1em);
                 }
-
 
                 .emergency-button {
                     color: #7f1d1d;
@@ -356,7 +312,7 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sendCommand, sensorDat
                     top: 55%;
                     right: -300px;
                     width: 300px;
-                    height: 85vh; /* Increased height */
+                    height: 85vh;
                     transform: translateY(-50%);
                     background: #f8fafc;
                     border: 1px solid #e2e8f0;
@@ -366,12 +322,10 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sendCommand, sensorDat
                     overflow-y: auto;
                     padding: 20px;
                     border-radius: 20px 0 0 20px;
-                    /* Hide scrollbar */
-                    scrollbar-width: none; /* Firefox */
-                    -ms-overflow-style: none; /* IE and Edge */
+                    scrollbar-width: none;
+                    -ms-overflow-style: none;
                 }
                 
-                /* 태블릿 디스플레이 - 센서 패널 크기 줄이기 */
                 @media (min-width: 768px) and (max-width: 1024px) {
                     .sensor-panel-right {
                         width: 200px;
@@ -381,14 +335,13 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sendCommand, sensorDat
                     }
                 }
                 
-                /* 모바일 디스플레이 - 센서 패널 숨기기 */
                 @media (max-width: 767px) {
                     .sensor-panel-right {
                         display: none;
                     }
                 }
                 .sensor-panel-right::-webkit-scrollbar {
-                    display: none; /* Chrome, Safari, Opera */
+                    display: none;
                 }
                 
                 .sensor-panel-right.show {
@@ -419,7 +372,7 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sendCommand, sensorDat
                     top: 55%; 
                     left: -300px;
                     width: 300px;
-                    height: 85vh; /* Increased height */
+                    height: 85vh;
                     transform: translateY(-50%);
                     background: #f8fafc;
                     border: 1px solid #e2e8f0;
@@ -429,12 +382,10 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sendCommand, sensorDat
                     overflow-y: auto;
                     padding: 20px;
                     border-radius: 0 20px 20px 0;
-                    /* Hide scrollbar */
-                    scrollbar-width: none; /* Firefox */
-                    -ms-overflow-style: none; /* IE and Edge */
+                    scrollbar-width: none;
+                    -ms-overflow-style: none;
                 }
                 
-                /* 태블릿 디스플레이 - 센서 패널 크기 줄이기 */
                 @media (min-width: 768px) and (max-width: 1024px) {
                     .sensor-panel-left {
                         width: 200px;
@@ -444,14 +395,13 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sendCommand, sensorDat
                     }
                 }
                 
-                /* 모바일 디스플레이 - 센서 패널 숨기기 */
                 @media (max-width: 767px) {
                     .sensor-panel-left {
                         display: none;
                     }
                 }
                 .sensor-panel-left::-webkit-scrollbar {
-                    display: none; /* Chrome, Safari, Opera */
+                    display: none;
                 }
                 
                 .sensor-panel-left.show {
@@ -476,17 +426,6 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sendCommand, sensorDat
                         transform: translateY(-50%) scale(1) rotateY(0deg);
                     }
                 }
-                
-                .sensor-panel h3 {
-                    color: #1e40af;
-                    font-size: 1.5rem;
-                    font-weight: bold;
-                    margin-bottom: 20px;
-                    text-align: center;
-                    padding-bottom: 10px;
-                    border-bottom: 2px solid #3b82f6;
-                }
-                
                 
                 .sensor-item {
                     background: linear-gradient(145deg, 
@@ -620,7 +559,6 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sendCommand, sensorDat
                     opacity: 1 !important;
                 }
                 
-                
                 .sensor-item.inactive {
                     background: linear-gradient(145deg, 
                         rgba(107, 114, 128, 0.15) 0%, 
@@ -654,7 +592,6 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sendCommand, sensorDat
                     font-weight: 600;
                 }
                 
-                
                 .sensor-item {
                     display: flex;
                     align-items: center;
@@ -673,7 +610,6 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sendCommand, sensorDat
                     text-shadow: 0 0 10px rgba(102, 126, 234, 0.3);
                 }
                 
-                
                 .sensor-name {
                     font-weight: 600;
                     color: #1f2937;
@@ -687,8 +623,6 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sendCommand, sensorDat
                     color: #111827;
                     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
                 }
-                
-                
 
                 @media (max-width: 768px) {
                     .tab-navigation {
@@ -843,645 +777,525 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sendCommand, sensorDat
                         gap: 30px;
                     }
                 }
-
             `}</style>
+
             <div className="bg-white rounded-2xl shadow-lg p-3 md:p-4 overflow-hidden border-2 border-gray-300" style={{
                 backdropFilter: 'blur(25px)',
                 WebkitBackdropFilter: 'blur(25px)',
             }}>
-            <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-6 md:mb-4 space-y-2 md:space-y-0">
-                <h2 className="text-base md:text-lg font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2 md:mb-0">수동 제어</h2>
-                <div className="flex items-center flex-wrap gap-3 justify-end sm:justify-start">
-                    {isDisabled && (
-                        <div className="bg-red-100 border border-red-300 px-3 py-2 rounded-2xl shadow-md">
-                            <span className="text-red-700 font-semibold text-sm">🚫 제어 불가</span>
+                <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-6 md:mb-4 space-y-2 md:space-y-0">
+                    <h2 className="text-base md:text-lg font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2 md:mb-0">수동 제어 - {sokcho1Config.siteInfo.name} {sokcho1Config.siteInfo.unitNumber}</h2>
+                    <div className="flex items-center flex-wrap gap-3 justify-end sm:justify-start">
+                        {isDisabled && (
+                            <div className="bg-red-100 border border-red-300 px-3 py-2 rounded-2xl shadow-md">
+                                <span className="text-red-700 font-semibold text-sm">🚫 제어 불가</span>
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                {/* 공용 버튼들 - 간단한 SignalR 호출 */}
+                <div className="mb-12 md:mb-20">
+                    <div className="flex flex-wrap gap-4 justify-center common-buttons-grid">
+                        <button
+                            onClick={handleErrorReset}
+                            disabled={isDisabled}
+                            className={`learn-more common-button ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        >
+                            에러 리셋
+                        </button>
+                        <button
+                            onClick={handleRemoteControl}
+                            disabled={isDisabled}
+                            className={`learn-more common-button ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        >
+                            원격 제어
+                        </button>
+                        <button
+                            onClick={handleHomeReturn}
+                            disabled={isDisabled}
+                            className={`learn-more common-button ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        >
+                            홈 복귀
+                        </button>
+                        <button
+                            onClick={handlePaletteChange}
+                            disabled={isDisabled}
+                            className={`learn-more common-button ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        >
+                            파레트 교체
+                        </button>
+                        <button
+                            onClick={handleEmergencyStop}
+                            disabled={!isPLCConnected}
+                            className={`learn-more emergency-button ${!isPLCConnected ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        >
+                            비상정지
+                        </button>
+                    </div>
+                </div>
+
+                {/* 탭 컨텐츠 - 간단한 핸들러들로 수정 */}
+                <div className="tab-content">
+                    {/* 1페이지: 도어/턴테이블 */}
+                    {activeTab === 'page1' && (
+                        <div className="page1-layout">
+                            {/* 턴테이블 제어 */}
+                            <div className="turn-table-section">
+                                <div className="turn-table-grid">
+                                    <div className="turn-table-btn up opacity-50">
+                                        (사용안함)
+                                    </div>
+                                    <button
+                                        onMouseDown={handleTurnLeft}
+                                        disabled={isDisabled}
+                                        className={`learn-more turn-table-btn left ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    >
+                                        좌회전
+                                    </button>
+                                    <button
+                                        onMouseDown={handleTurnRight}
+                                        disabled={isDisabled}
+                                        className={`learn-more turn-table-btn right ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    >
+                                        우회전
+                                    </button>
+                                    <div className="turn-table-btn down opacity-50">
+                                        (사용안함)
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* 도어 제어 */}
+                            <div className="door-section">
+                                <div className="door-vertical">
+                                    <button
+                                        onMouseDown={handleDoorOpen}
+                                        disabled={isDisabled}
+                                        className={`learn-more door-btn ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    >
+                                        도어 열림
+                                    </button>
+                                    <button
+                                        onMouseDown={handleDoorClose}
+                                        disabled={isDisabled}
+                                        className={`learn-more door-btn ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    >
+                                        도어 닫힘
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* 2페이지: 승강 제어 */}
+                    {activeTab === 'page2' && (
+                        <div className="space-y-6">
+                            <div>
+                                <div className="flex flex-col gap-6 md:gap-8 justify-center items-center">
+                                    <button
+                                        onMouseDown={handleLiftUp}
+                                        onMouseUp={() => signalRService.liftUp(0)}
+                                        onMouseLeave={() => signalRService.liftUp(0)}
+                                        onTouchStart={handleLiftUp}
+                                        onTouchEnd={() => signalRService.liftUp(0)}
+                                        disabled={isDisabled}
+                                        className={`learn-more ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    >
+                                        상승
+                                    </button>
+
+                                    <button
+                                        onMouseDown={handleLiftDown}
+                                        onMouseUp={() => signalRService.liftDown(0)}
+                                        onMouseLeave={() => signalRService.liftDown(0)}
+                                        onTouchStart={handleLiftDown}
+                                        onTouchEnd={() => signalRService.liftDown(0)}
+                                        disabled={isDisabled}
+                                        className={`learn-more ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    >
+                                        하강
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* 3페이지: 횡행/락킹 */}
+                    {activeTab === 'page3' && (
+                        <div className="space-y-7 md:space-y-12">
+                            {/* 횡행 제어 */}
+                            <div>
+                                <div className="flex flex-wrap gap-6 md:gap-8 justify-center">
+                                    <button
+                                        onMouseDown={handleMoveLeft}
+                                        onMouseUp={() => signalRService.moveLeft(0)}
+                                        onMouseLeave={() => signalRService.moveLeft(0)}
+                                        onTouchStart={handleMoveLeft}
+                                        onTouchEnd={() => signalRService.moveLeft(0)}
+                                        disabled={isDisabled}
+                                        className={`learn-more mobile-move-btn ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    >
+                                        좌행
+                                    </button>
+
+                                    <button
+                                        onMouseDown={handleMoveRight}
+                                        onMouseUp={() => signalRService.moveRight(0)}
+                                        onMouseLeave={() => signalRService.moveRight(0)}
+                                        onTouchStart={handleMoveRight}
+                                        onTouchEnd={() => signalRService.moveRight(0)}
+                                        disabled={isDisabled}
+                                        className={`learn-more mobile-move-btn ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    >
+                                        우행
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* 락킹 제어 */}
+                            <div>
+                                <div className="flex justify-center">
+                                    {/* 모바일용 그리드 레이아웃 */}
+                                    <div className="md:hidden grid grid-cols-2 gap-4 max-w-xs">
+                                        <div className="flex flex-col gap-6">
+                                            <button
+                                                onMouseDown={handleLockingOn}
+                                                disabled={isDisabled}
+                                                className={`learn-more mobile-locking-btn ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                            >
+                                                락킹 잠김
+                                            </button>
+                                            <button
+                                                onMouseDown={handleLockingOff}
+                                                disabled={isDisabled}
+                                                className={`learn-more mobile-locking-btn ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                            >
+                                                락킹 해제
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    {/* PC용 좌우 배치 */}
+                                    <div className="hidden md:flex gap-12 justify-center">
+                                        <div className="flex flex-col gap-8 items-center">
+                                            <button
+                                                onMouseDown={handleLockingOn}
+                                                disabled={isDisabled}
+                                                className={`learn-more ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                            >
+                                                락킹 잠김
+                                            </button>
+                                            <button
+                                                onMouseDown={handleLockingOff}
+                                                disabled={isDisabled}
+                                                className={`learn-more ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                            >
+                                                락킹 해제
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     )}
                 </div>
-            </div>
 
-            {/* 공용 버튼들 */}
-            <div className="mb-12 md:mb-20">
-                <div className="flex flex-wrap gap-4 justify-center common-buttons-grid">
+                {/* 탭 네비게이션 */}
+                <div className="tab-navigation" style={{ marginTop: window.innerWidth <= 768 ? '40px' : '120px' }}>
                     <button
-                        onClick={() => sendCommand('errorReset')}
-                        disabled={isDisabled}
-                        className={`learn-more common-button ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        onClick={() => { setActiveTab('page1'); setShowSensors(true); }}
+                        className={`tab-button ${activeTab === 'page1' ? 'active' : ''}`}
                     >
-                        에러 리셋
+                        도어/턴테이블
                     </button>
                     <button
-                        onClick={() => sendCommand('operationMode')}
-                        disabled={isDisabled}
-                        className={`learn-more common-button ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        onClick={() => { setActiveTab('page2'); setShowSensors(true); }}
+                        className={`tab-button ${activeTab === 'page2' ? 'active' : ''}`}
                     >
-                        운전 모드 전환
+                        승강 제어
                     </button>
                     <button
-                        onClick={() => sendCommand('recovery')}
-                        disabled={isDisabled}
-                        className={`learn-more common-button ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        onClick={() => { setActiveTab('page3'); setShowSensors(true); }}
+                        className={`tab-button ${activeTab === 'page3' ? 'active' : ''}`}
                     >
-                        복귀 운전
-                    </button>
-                    <button
-                        onClick={handleEmergencyStop}
-                        disabled={!isPLCConnected}
-                        className={`learn-more emergency-button ${!isPLCConnected ? 'opacity-50 cursor-not-allowed' : ''}`}
-                    >
-                        비상정지
+                        횡행/락킹
                     </button>
                 </div>
-            </div>
 
-            {/* 탭 컨텐츠 */}
-            <div className="tab-content">
-                {/* 1페이지: 도어/턴테이블 */}
-                {activeTab === 'page1' && (
-                    <div className="page1-layout">
-                        {/* 턴테이블 제어 - 상하좌우 배치 */}
-                        <div className="turn-table-section">
-                            <div className="turn-table-grid">
-                                <button
-                                    onMouseDown={() => sendCommand('turnTableUp', 1)}
-                                    onMouseUp={() => sendCommand('turnTableUp', 0)}
-                                    disabled={isDisabled}
-                                    className={`learn-more turn-table-btn up ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                >
-                                    상승
-                                </button>
-                                <button
-                                    onMouseDown={() => sendCommand('turnTableLeft', 1)}
-                                    onMouseUp={() => sendCommand('turnTableLeft', 0)}
-                                    disabled={isDisabled}
-                                    className={`learn-more turn-table-btn left ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                >
-                                    좌회전
-                                </button>
-                                <button
-                                    onMouseDown={() => sendCommand('turnTableRight', 1)}
-                                    onMouseUp={() => sendCommand('turnTableRight', 0)}
-                                    disabled={isDisabled}
-                                    className={`learn-more turn-table-btn right ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                >
-                                    우회전
-                                </button>
-                                <button
-                                    onMouseDown={() => sendCommand('turnTableDown', 1)}
-                                    onMouseUp={() => sendCommand('turnTableDown', 0)}
-                                    disabled={isDisabled}
-                                    className={`learn-more turn-table-btn down ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                >
-                                    하강
-                                </button>
-                            </div>
-                        </div>
-
-                        {/* 도어 제어 - 상하 배치 */}
-                        <div className="door-section">
-                            <div className="door-vertical">
-                                <button
-                                    onMouseDown={() => sendCommand('doorOpen', 1)}
-                                    onMouseUp={() => sendCommand('doorOpen', 0)}
-                                    disabled={isDisabled}
-                                    className={`learn-more door-btn ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                >
-                                    도어 열림
-                                </button>
-                                <button
-                                    onMouseDown={() => sendCommand('doorClose', 1)}
-                                    onMouseUp={() => sendCommand('doorClose', 0)}
-                                    disabled={isDisabled}
-                                    className={`learn-more door-btn ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                >
-                                    도어 닫힘
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                )}
-
-                {/* 2페이지: 승강 제어 */}
-                {activeTab === 'page2' && (
-                    <div className="space-y-6">
-                        {/* 승강 제어 */}
-                        <div>
-                            <div className="flex flex-col gap-6 md:gap-8 justify-center items-center">
-                                <button
-                                    onMouseDown={() => sendCommand('liftUp', 1)}
-                                    onMouseUp={() => sendCommand('liftUp', 0)}
-                                    onMouseLeave={() => sendCommand('liftUp', 0)}
-                                    onTouchStart={() => sendCommand('liftUp', 1)}
-                                    onTouchEnd={() => sendCommand('liftUp', 0)}
-                                    disabled={isDisabled}
-                                    className={`learn-more ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                >
-                                    상승
-                                </button>
-
-                                <button
-                                    onMouseDown={() => sendCommand('liftDown', 1)}
-                                    onMouseUp={() => sendCommand('liftDown', 0)}
-                                    onMouseLeave={() => sendCommand('liftDown', 0)}
-                                    onTouchStart={() => sendCommand('liftDown', 1)}
-                                    onTouchEnd={() => sendCommand('liftDown', 0)}
-                                    disabled={isDisabled}
-                                    className={`learn-more ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                >
-                                    하강
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                )}
-
-                {/* 3페이지: 횡행/락킹 */}
-                {activeTab === 'page3' && (
-                    <div className="space-y-7 md:space-y-12">
-                        {/* 횡행 제어 */}
-                        <div>
-                            <div className="flex flex-wrap gap-6 md:gap-8 justify-center">
-                                <button
-                                    onMouseDown={() => sendCommand('moveLeft', 1)}
-                                    onMouseUp={() => sendCommand('moveLeft', 0)}
-                                    onMouseLeave={() => sendCommand('moveLeft', 0)}
-                                    onTouchStart={() => sendCommand('moveLeft', 1)}
-                                    onTouchEnd={() => sendCommand('moveLeft', 0)}
-                                    disabled={isDisabled}
-                                    className={`learn-more mobile-move-btn ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                >
-                                    좌행
-                                </button>
-
-                                <button
-                                    onMouseDown={() => sendCommand('moveRight', 1)}
-                                    onMouseUp={() => sendCommand('moveRight', 0)}
-                                    onMouseLeave={() => sendCommand('moveRight', 0)}
-                                    onTouchStart={() => sendCommand('moveRight', 1)}
-                                    onTouchEnd={() => sendCommand('moveRight', 0)}
-                                    disabled={isDisabled}
-                                    className={`learn-more mobile-move-btn ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                >
-                                    우행
-                                </button>
-                            </div>
-                        </div>
-
-                        {/* 락킹 제어 */}
-                        <div>
-                            <div className="flex justify-center">
-                                {/* 모바일용 그리드 레이아웃 */}
-                                <div className="md:hidden grid grid-cols-2 gap-4 max-w-xs">
-                                    {/* 좌측 열 */}
-                                    <div className="flex flex-col gap-6">
-                                        <button
-                                            onMouseDown={() => sendCommand('leftLiftLock', 1)}
-                                            onMouseUp={() => sendCommand('leftLiftLock', 0)}
-                                            disabled={isDisabled}
-                                            className={`learn-more mobile-locking-btn ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                        >
-                                            좌측락킹 잠금
-                                        </button>
-                                        <button
-                                            onMouseDown={() => sendCommand('leftLiftUnlock', 1)}
-                                            onMouseUp={() => sendCommand('leftLiftUnlock', 0)}
-                                            disabled={isDisabled}
-                                            className={`learn-more mobile-locking-btn ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                        >
-                                            좌측락킹 해제
-                                        </button>
-                                    </div>
-                                    
-                                    {/* 우측 열 */}
-                                    <div className="flex flex-col gap-6">
-                                        <button
-                                            onMouseDown={() => sendCommand('rightLiftLock', 1)}
-                                            onMouseUp={() => sendCommand('rightLiftLock', 0)}
-                                            disabled={isDisabled}
-                                            className={`learn-more mobile-locking-btn ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                        >
-                                            우측락킹 잠금
-                                        </button>
-                                        <button
-                                            onMouseDown={() => sendCommand('rightLiftUnlock', 1)}
-                                            onMouseUp={() => sendCommand('rightLiftUnlock', 0)}
-                                            disabled={isDisabled}
-                                            className={`learn-more mobile-locking-btn ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                        >
-                                            우측락킹 해제
-                                        </button>
-                                    </div>
-                                </div>
-
-                                {/* PC용 좌우 배치 */}
-                                <div className="hidden md:flex gap-12 justify-center">
-                                    {/* 좌측 락킹 */}
-                                    <div className="flex flex-col gap-8 items-center">
-                                        <button
-                                            onMouseDown={() => sendCommand('leftLiftLock', 1)}
-                                            onMouseUp={() => sendCommand('leftLiftLock', 0)}
-                                            disabled={isDisabled}
-                                            className={`learn-more ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                        >
-                                            좌측락킹 잠금
-                                        </button>
-                                        <button
-                                            onMouseDown={() => sendCommand('leftLiftUnlock', 1)}
-                                            onMouseUp={() => sendCommand('leftLiftUnlock', 0)}
-                                            disabled={isDisabled}
-                                            className={`learn-more ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                        >
-                                            좌측락킹 해제
-                                        </button>
-                                    </div>
-
-                                    {/* 우측 락킹 */}
-                                    <div className="flex flex-col gap-8 items-center">
-                                        <button
-                                            onMouseDown={() => sendCommand('rightLiftLock', 1)}
-                                            onMouseUp={() => sendCommand('rightLiftLock', 0)}
-                                            disabled={isDisabled}
-                                            className={`learn-more ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                        >
-                                            우측락킹 잠금
-                                        </button>
-                                        <button
-                                            onMouseDown={() => sendCommand('rightLiftUnlock', 1)}
-                                            onMouseUp={() => sendCommand('rightLiftUnlock', 0)}
-                                            disabled={isDisabled}
-                                            className={`learn-more ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                        >
-                                            우측락킹 해제
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                )}
-            </div>
-
-            {/* 탭 네비게이션 */}
-            <div className="tab-navigation" style={{ marginTop: window.innerWidth <= 768 ? '40px' : '120px' }}>
-                <button
-                    onClick={() => { setActiveTab('page1'); setShowSensors(true); }}
-                    className={`tab-button ${activeTab === 'page1' ? 'active' : ''}`}
-                >
-                    도어/턴테이블
-                </button>
-                <button
-                    onClick={() => { setActiveTab('page2'); setShowSensors(true); }}
-                    className={`tab-button ${activeTab === 'page2' ? 'active' : ''}`}
-                >
-                    승강 제어
-                </button>
-                <button
-                    onClick={() => { setActiveTab('page3'); setShowSensors(true); }}
-                    className={`tab-button ${activeTab === 'page3' ? 'active' : ''}`}
-                >
-                    횡행/락킹
-                </button>
-            </div>
-
-            {/* 사용법 안내 */}
-            <div className="mt-8 md:mt-12 p-3 md:p-4 bg-blue-50 rounded-2xl">
-                <h4 className="text-xs md:text-sm font-semibold text-blue-800 mb-2">사용법</h4>
-                <ul className="text-xs text-blue-700 space-y-1">
-                    <li>• PLC 연결과 인증이 완료되어야 제어 가능합니다</li>
-                    <li>• 버튼을 누르면 해당 명령이 PLC로 전송됩니다</li>
-                    <li>• 명령 실행 중에는 버튼이 강조 표시됩니다</li>
-                    <li>• 비상정지는 PLC 연결만 되어도 실행 가능합니다</li>
-                </ul>
-            </div>
-
-            {/* 디버그 정보 (개발용) */}
-            {/* eslint-disable-next-line no-undef */}
-            {process.env.NODE_ENV === 'development' && (
-                <div className="mt-4 p-3 bg-gray-100 rounded-2xl text-xs">
-                    <div>PLC 연결: {isPLCConnected ? 'O' : 'X'}</div>
-                    <div>인증 상태: {isAuthenticated ? 'O' : 'X'}</div>
-                    <div>활성 명령: {activeCommand || 'None'}</div>
-                    <div>비상모드: {isEmergencyMode ? 'O' : 'X'}</div>
+                {/* 사용법 안내 */}
+                <div className="mt-8 md:mt-12 p-3 md:p-4 bg-blue-50 rounded-2xl">
+                    <h4 className="text-xs md:text-sm font-semibold text-blue-800 mb-2">사용법 - {sokcho1Config.siteInfo.name}</h4>
+                    <ul className="text-xs text-blue-700 space-y-1">
+                        <li>• PLC 연결과 인증이 완료되어야 제어 가능합니다</li>
+                        <li>• 버튼을 누르면 SignalR을 통해 config 기반 명령이 PLC로 전송됩니다</li>
+                        <li>• 명령 실행 중에는 버튼이 강조 표시됩니다</li>
+                        <li>• 비상정지는 PLC 연결만 되어도 실행 가능합니다</li>
+                        <li>• 속초 1호기 전용 config 기반 제어 인터페이스입니다</li>
+                    </ul>
                 </div>
-            )}
+
+                {/* 디버그 정보 (개발용) */}
+                {/* eslint-disable-next-line no-undef */}
+                {process.env.NODE_ENV === 'development' && (
+                    <div className="mt-4 p-3 bg-gray-100 rounded-2xl text-xs">
+                        <div>사이트: {sokcho1Config.siteInfo.name} {sokcho1Config.siteInfo.unitNumber}</div>
+                        <div>PLC 연결: {isPLCConnected ? 'O' : 'X'}</div>
+                        <div>인증 상태: {isAuthenticated ? 'O' : 'X'}</div>
+                        <div>활성 명령: {activeCommand || 'None'}</div>
+                        <div>비상모드: {isEmergencyMode ? 'O' : 'X'}</div>
+                        <div>센서 수: {Object.keys(sensorStates).length}</div>
+                    </div>
+                )}
             </div>
 
-            {/* 좌측 센서 패널 (PC만) */}
+            {/* 좌측 센서 패널 - 속초 센서 표시 (기존과 동일) */}
             {showSensors && (
                 <div className="sensor-panel-left show">
-                        {activeTab === 'page1' && (
-                            <div>
-                            <div className={`sensor-item ${getSensorValue('Turn0') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('Turn0')}</div>
-                                <div className="sensor-name">턴 0도 확인정지</div>
+                    {activeTab === 'page1' && (
+                        <div>
+                            <div className={`sensor-item ${getSensorValue('P102_OP도어열림SW') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('P102_OP도어열림SW')}</div>
+                                <div className="sensor-name">도어열림SW</div>
                             </div>
-                            <div className={`sensor-item ${getSensorValue('Turn180') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('Turn180')}</div>
-                                <div className="sensor-name">턴 180도 확인정지</div>
+                            <div className={`sensor-item ${getSensorValue('P103_OP도어닫힘SW') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('P103_OP도어닫힘SW')}</div>
+                                <div className="sensor-name">도어닫힘SW</div>
                             </div>
-                            <div className={`sensor-item ${getSensorValue('Turnup') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('Turnup')}</div>
-                                <div className="sensor-name">턴 상승확인</div>
+                            <div className={`sensor-item ${getSensorValue('P109_도어잠센서') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('P109_도어잠센서')}</div>
+                                <div className="sensor-name">도어잠센서</div>
                             </div>
-                            <div className={`sensor-item ${getSensorValue('Turndown') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('Turndown')}</div>
-                                <div className="sensor-name">턴 하강확인</div>
-                            </div>
-                            <div className={`sensor-item ${getSensorValue('DoorOpen') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('DoorOpen')}</div>
+                            <div className={`sensor-item ${getSensorValue('P10A_도어열림확인') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('P10A_도어열림확인')}</div>
                                 <div className="sensor-name">도어열림확인</div>
                             </div>
-                            <div className={`sensor-item ${getSensorValue('DoorClose') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('DoorClose')}</div>
+                            <div className={`sensor-item ${getSensorValue('P10B_도어닫힘확인') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('P10B_도어닫힘확인')}</div>
                                 <div className="sensor-name">도어닫힘확인</div>
                             </div>
-                            <div className={`sensor-item ${getSensorValue('DoorCloseCheck') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('DoorCloseCheck')}</div>
-                                <div className="sensor-name">도어잠확인</div>
+                            <div className={`sensor-item ${getSensorValue('P134_턴0도확인') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('P134_턴0도확인')}</div>
+                                <div className="sensor-name">턴 0도 확인</div>
                             </div>
-                            <div className={`sensor-item ${getSensorValue('LeftDoorCheck') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('LeftDoorCheck')}</div>
-                                <div className="sensor-name">좌도어확인</div>
+                            <div className={`sensor-item ${getSensorValue('P135_턴180확인') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('P135_턴180확인')}</div>
+                                <div className="sensor-name">턴 180도 확인</div>
                             </div>
-                            <div className={`sensor-item ${getSensorValue('RightDoorCheck') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('RightDoorCheck')}</div>
-                                <div className="sensor-name">우도어확인</div>
+                            <div className={`sensor-item ${getSensorValue('P137_턴좌정지') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('P137_턴좌정지')}</div>
+                                <div className="sensor-name">턴 좌정지</div>
                             </div>
-                            <div className={`sensor-item ${getSensorValue('IndoorCheck') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('IndoorCheck')}</div>
-                                <div className="sensor-name">도어내확인</div>
+                            <div className={`sensor-item ${getSensorValue('P138_턴우정지') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('P138_턴우정지')}</div>
+                                <div className="sensor-name">턴 우정지</div>
                             </div>
-                            <div className={`sensor-item ${getSensorValue('LeftMoveCheck1') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('LeftMoveCheck1')}</div>
-                                <div className="sensor-name">좌측동작감지확인1</div>
+                            <div className={`sensor-item ${getSensorValue('P146_턴잠김') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('P146_턴잠김')}</div>
+                                <div className="sensor-name">턴 잠김</div>
                             </div>
-                            <div className={`sensor-item ${getSensorValue('RightMoveCheck1') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('RightMoveCheck1')}</div>
-                                <div className="sensor-name">우측동작감지확인1</div>
-                            </div>
-                            <div className={`sensor-item ${getSensorValue('CarLocation') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('CarLocation')}</div>
-                                <div className="sensor-name">차량정위치</div>
-                            </div>
-                            <div className={`sensor-item ${getSensorValue('FrontBumpCheck') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('FrontBumpCheck')}</div>
-                                <div className="sensor-name">앞범퍼확인</div>
-                            </div>
-                            <div className={`sensor-item ${getSensorValue('BackBumpCheck') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('BackBumpCheck')}</div>
-                                <div className="sensor-name">뒷범퍼확인</div>
-                            </div>
-                            <div className={`sensor-item ${getSensorValue('RVheight') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('RVheight')}</div>
-                                <div className="sensor-name">RV높이확인</div>
-                            </div>
-                            <div className={`sensor-item ${getSensorValue('Carheight') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('Carheight')}</div>
-                                <div className="sensor-name">승용높이확인</div>
+                            <div className={`sensor-item ${getSensorValue('P147_턴해제') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('P147_턴해제')}</div>
+                                <div className="sensor-name">턴 해제</div>
                             </div>
                         </div>
                     )}
-                    
-                        {activeTab === 'page2' && (
-                            <div>
-                            <div className={`sensor-item ${getSensorValue('LiftLevel1') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('LiftLevel1')}</div>
-                                <div className="sensor-name">리프트 레벨1</div>
+
+                    {activeTab === 'page2' && (
+                        <div>
+                            <div className={`sensor-item ${getSensorValue('P133_홈위치') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('P133_홈위치')}</div>
+                                <div className="sensor-name">홈 위치</div>
                             </div>
-                            <div className={`sensor-item ${getSensorValue('LiftLevel2') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('LiftLevel2')}</div>
-                                <div className="sensor-name">리프트 레벨2</div>
+                            <div className={`sensor-item ${getSensorValue('P148_레벨상') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('P148_레벨상')}</div>
+                                <div className="sensor-name">레벨 상</div>
                             </div>
-                            <div className={`sensor-item ${getSensorValue('LiftHome') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('LiftHome')}</div>
-                                <div className="sensor-name">리프트 홈 확인</div>
+                            <div className={`sensor-item ${getSensorValue('P149_레벨하') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('P149_레벨하')}</div>
+                                <div className="sensor-name">레벨 하</div>
                             </div>
-                            <div className={`sensor-item ${getSensorValue('LiftDownDecel') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('LiftDownDecel')}</div>
-                                <div className="sensor-name">리프트 하강감속확인</div>
+                            <div className={`sensor-item ${getSensorValue('P118_상승비상') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('P118_상승비상')}</div>
+                                <div className="sensor-name">상승 비상</div>
                             </div>
-                            <div className={`sensor-item ${getSensorValue('LiftDownLimit') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('LiftDownLimit')}</div>
-                                <div className="sensor-name">리프트 하강비상확인</div>
+                            <div className={`sensor-item ${getSensorValue('P11A_상승감속') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('P11A_상승감속')}</div>
+                                <div className="sensor-name">상승 감속</div>
                             </div>
-                            <div className={`sensor-item ${getSensorValue('LiftUpLimit') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('LiftUpLimit')}</div>
-                                <div className="sensor-name">리프트 상승비상확인</div>
+                            <div className={`sensor-item ${getSensorValue('P11B_하강감속') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('P11B_하강감속')}</div>
+                                <div className="sensor-name">하강 감속</div>
                             </div>
-                            <div className={`sensor-item ${getSensorValue('LiftUpDecel') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('LiftUpDecel')}</div>
-                                <div className="sensor-name">리프트 상승감속확인</div>
+                            <div className={`sensor-item ${getSensorValue('P11D_하강비상') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('P11D_하강비상')}</div>
+                                <div className="sensor-name">하강 비상</div>
                             </div>
-                            <div className={`sensor-item ${getSensorValue('wireCut') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('wireCut')}</div>
+                            <div className={`sensor-item ${getSensorValue('P115_와이어절단') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('P115_와이어절단')}</div>
                                 <div className="sensor-name">와이어 절단</div>
                             </div>
                         </div>
                     )}
-                    
-                        {activeTab === 'page3' && (
-                            <div>
-                            <div className={`sensor-item ${getSensorValue('HookCenter') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('HookCenter')}</div>
-                                <div className="sensor-name">후크중앙확인</div>
+
+                    {activeTab === 'page3' && (
+                        <div>
+                            <div className={`sensor-item ${getSensorValue('P140_후크중앙_전_') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('P140_후크중앙_전_')}</div>
+                                <div className="sensor-name">후크 중앙(전)</div>
                             </div>
-                            <div className={`sensor-item ${getSensorValue('OddHookSensor') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('OddHookSensor')}</div>
-                                <div className="sensor-name">홀수 후크 감지</div>
+                            <div className={`sensor-item ${getSensorValue('P141_후크중앙_후_') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('P141_후크중앙_후_')}</div>
+                                <div className="sensor-name">후크 중앙(후)</div>
                             </div>
-                            <div className={`sensor-item ${getSensorValue('EvenHookSensor') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('EvenHookSensor')}</div>
-                                <div className="sensor-name">짝수 후크 감지</div>
-                            </div>                   
-                            <div className={`sensor-item ${getSensorValue('OddLockingOn') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('OddLockingOn')}</div>
-                                <div className="sensor-name">홀수측 록킹잠김확인</div>
+                            <div className={`sensor-item ${getSensorValue('P142_홀수파렛정지') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('P142_홀수파렛정지')}</div>
+                                <div className="sensor-name">홀수 파렛 정지</div>
                             </div>
-                            <div className={`sensor-item ${getSensorValue('OddLockingOff') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('OddLockingOff')}</div>
-                                <div className="sensor-name">홀수측 록킹풀림확인</div>
+                            <div className={`sensor-item ${getSensorValue('P143_짝수파렛정지') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('P143_짝수파렛정지')}</div>
+                                <div className="sensor-name">짝수 파렛 정지</div>
                             </div>
-                            <div className={`sensor-item ${getSensorValue('EvenLockingOn') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('EvenLockingOn')}</div>
-                                <div className="sensor-name">짝수측 록킹잠김확인</div>
+                            <div className={`sensor-item ${getSensorValue('P144_파렛감지_홀_') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('P144_파렛감지_홀_')}</div>
+                                <div className="sensor-name">파렛 감지(홀)</div>
                             </div>
-                            <div className={`sensor-item ${getSensorValue('EvenLockingOff') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('EvenLockingOff')}</div>
-                                <div className="sensor-name">짝수측 록킹풀림확인</div>
+                            <div className={`sensor-item ${getSensorValue('P145_파렛감지_짝_') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('P145_파렛감지_짝_')}</div>
+                                <div className="sensor-name">파렛 감지(짝)</div>
                             </div>
-                            <div className={`sensor-item ${getSensorValue('LeftFit') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('LeftFit')}</div>
-                                <div className="sensor-name">좌측 피트확인</div>
+                            <div className={`sensor-item ${getSensorValue('P116_피트센서_홀_') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('P116_피트센서_홀_')}</div>
+                                <div className="sensor-name">피트센서(홀)</div>
                             </div>
-                            <div className={`sensor-item ${getSensorValue('RightFit') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('RightFit')}</div>
-                                <div className="sensor-name">우측 피트확인</div>
-                            </div>                 
+                            <div className={`sensor-item ${getSensorValue('P117_피트센서_짝_') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('P117_피트센서_짝_')}</div>
+                                <div className="sensor-name">피트센서(짝)</div>
+                            </div>
                         </div>
                     )}
                 </div>
             )}
 
-            {/* 우측 센서 패널 (PC만) */}
+            {/* 우측 센서 패널 - 속초 출력 센서 표시 (기존과 동일) */}
             {showSensors && (
                 <div className="sensor-panel-right show">
-                    
-                        {activeTab === 'page1' && (
-                            <div>
-                            <div className={`sensor-item ${getSensorValue('redLight') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('redLight')}</div>
-                                <div className="sensor-name">적색신호등</div>
+                    {activeTab === 'page1' && (
+                        <div>
+                            <div className={`sensor-item ${getSensorValue('P212_도어열림MC') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('P212_도어열림MC')}</div>
+                                <div className="sensor-name">도어열림MC</div>
                             </div>
-                            <div className={`sensor-item ${getSensorValue('greenLight') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('greenLight')}</div>
-                                <div className="sensor-name">녹색신호등</div>
+                            <div className={`sensor-item ${getSensorValue('P213_도어닫힘MC') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('P213_도어닫힘MC')}</div>
+                                <div className="sensor-name">도어닫힘MC</div>
                             </div>
-                            <div className={`sensor-item ${getSensorValue('guideFwd') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('guideFwd')}</div>
-                                <div className="sensor-name">유도등 전진</div>
+                            <div className={`sensor-item ${getSensorValue('P22A_턴MC') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('P22A_턴MC')}</div>
+                                <div className="sensor-name">턴 MC</div>
                             </div>
-                            <div className={`sensor-item ${getSensorValue('guideStop') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('guideStop')}</div>
-                                <div className="sensor-name">유도등 정지</div>
+                            <div className={`sensor-item ${getSensorValue('P22B_턴BK') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('P22B_턴BK')}</div>
+                                <div className="sensor-name">턴 BK</div>
                             </div>
-                            <div className={`sensor-item ${getSensorValue('guideRev') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('guideRev')}</div>
-                                <div className="sensor-name">유도등 후진</div>
+                            <div className={`sensor-item ${getSensorValue('P22C_턴락MC') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('P22C_턴락MC')}</div>
+                                <div className="sensor-name">턴락 MC</div>
                             </div>
-                            <div className={`sensor-item ${getSensorValue('doorRotFwdMc') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('doorRotFwdMc')}</div>
-                                <div className="sensor-name">도어모터 정회전 MC</div>
+                            <div className={`sensor-item ${getSensorValue('P22D_턴언락MC') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('P22D_턴언락MC')}</div>
+                                <div className="sensor-name">턴언락 MC</div>
                             </div>
-                            <div className={`sensor-item ${getSensorValue('doorRotRightMc') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('doorRotRightMc')}</div>
-                                <div className="sensor-name">도어모터 우회전 MC</div>
+                            <div className={`sensor-item ${getSensorValue('P208_유도등1') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('P208_유도등1')}</div>
+                                <div className="sensor-name">유도등1</div>
                             </div>
-                            <div className={`sensor-item ${getSensorValue('turnLiftUp') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('turnLiftUp')}</div>
-                                <div className="sensor-name">턴리프팅 상승</div>
+                            <div className={`sensor-item ${getSensorValue('P209_유도등2') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('P209_유도등2')}</div>
+                                <div className="sensor-name">유도등2</div>
                             </div>
-                            <div className={`sensor-item ${getSensorValue('turnLiftDown') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('turnLiftDown')}</div>
-                                <div className="sensor-name">턴리프팅 하강</div>
+                            <div className={`sensor-item ${getSensorValue('P20A_유도등4') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('P20A_유도등4')}</div>
+                                <div className="sensor-name">유도등4</div>
                             </div>
-                            <div className={`sensor-item ${getSensorValue('turnMortor') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('turnMortor')}</div>
-                                <div className="sensor-name">턴 모터</div>
-                            </div>
-                            <div className={`sensor-item ${getSensorValue('turnMortorBK') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('turnMortorBK')}</div>
-                                <div className="sensor-name">턴 모터 BK</div>
-                            </div>
-                            <div className={`sensor-item ${getSensorValue('turnTableRotFwd') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('turnTableRotFwd')}</div>
-                                <div className="sensor-name">턴테이블 인버터 정회전</div>
-                            </div>
-                            <div className={`sensor-item ${getSensorValue('turnTableRotRev') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('turnTableRotRev')}</div>
-                                <div className="sensor-name">턴테이블 인버터 역회전</div>
-                            </div>
-                            <div className={`sensor-item ${getSensorValue('turnTableReset') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('turnTableReset')}</div>
-                                <div className="sensor-name">턴테이블 인버터 리셋</div>
-                            </div>
-                            <div className={`sensor-item ${getSensorValue('turnTableSp1') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('turnTableSp1')}</div>
-                                <div className="sensor-name">턴테이블 인버터 SP1</div>
-                            </div>
-                            <div className={`sensor-item ${getSensorValue('turnTableSp2') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('turnTableSp2')}</div>
-                                <div className="sensor-name">턴테이블 인버터 SP2</div>
-                            </div>
-                            <div className={`sensor-item ${getSensorValue('turnTableSp3') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('turnTableSp3')}</div>
-                                <div className="sensor-name">턴테이블 인버터 SP3</div>
-                            </div>
-                            <div className={`sensor-item ${getSensorValue('turnRotLeftStop') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('turnRotLeftStop')}</div>
-                                <div className="sensor-name">턴 좌회전정지</div>
-                            </div>
-                            <div className={`sensor-item ${getSensorValue('turnRotRightStop') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('turnRotRightStop')}</div>
-                                <div className="sensor-name">턴 우회전정지</div>
-                            </div>
-                            <div className={`sensor-item ${getSensorValue('turnTableUpStop') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('turnTableUpStop')}</div>
-                                <div className="sensor-name">턴테이블 상승정지</div>
-                            </div>
-                            <div className={`sensor-item ${getSensorValue('turnTableDownStop') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('turnTableDownStop')}</div>
-                                <div className="sensor-name">턴테이블 하강정지</div>
+                            <div className={`sensor-item ${getSensorValue('P20B_유도등8') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('P20B_유도등8')}</div>
+                                <div className="sensor-name">유도등8</div>
                             </div>
                         </div>
                     )}
-                    
-                        {activeTab === 'page2' && (
-                            <div>
-                            <div className={`sensor-item ${getSensorValue('liftRotFwd') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('liftRotFwd')}</div>
-                                <div className="sensor-name">리프트 인버터 정회전</div>
+
+                    {activeTab === 'page2' && (
+                        <div>
+                            <div className={`sensor-item ${getSensorValue('P200_L_INV정') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('P200_L_INV정')}</div>
+                                <div className="sensor-name">리프트 인버터 정</div>
                             </div>
-                            <div className={`sensor-item ${getSensorValue('liftRotRev') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('liftRotRev')}</div>
-                                <div className="sensor-name">리프트 인버터 역회전</div>
+                            <div className={`sensor-item ${getSensorValue('P201_L_INV역') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('P201_L_INV역')}</div>
+                                <div className="sensor-name">리프트 인버터 역</div>
                             </div>
-                            <div className={`sensor-item ${getSensorValue('liftReset') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('liftReset')}</div>
-                                <div className="sensor-name">리프트 인버터 리셋</div>
+                            <div className={`sensor-item ${getSensorValue('P210_리프트MC') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('P210_리프트MC')}</div>
+                                <div className="sensor-name">리프트 MC</div>
                             </div>
-                            <div className={`sensor-item ${getSensorValue('liftSp1') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('liftSp1')}</div>
-                                <div className="sensor-name">리프트 인버터 SP1</div>
+                            <div className={`sensor-item ${getSensorValue('P211_리프트BK') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('P211_리프트BK')}</div>
+                                <div className="sensor-name">리프트 BK</div>
                             </div>
-                            <div className={`sensor-item ${getSensorValue('liftSp2') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('liftSp2')}</div>
-                                <div className="sensor-name">리프트 인버터 SP2</div>
+                            <div className={`sensor-item ${getSensorValue('P202_L_INV_S3') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('P202_L_INV_S3')}</div>
+                                <div className="sensor-name">리프트 INV S3</div>
                             </div>
-                            <div className={`sensor-item ${getSensorValue('liftSp3') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('liftSp3')}</div>
-                                <div className="sensor-name">리프트 인버터 SP3</div>
+                            <div className={`sensor-item ${getSensorValue('P203_L_INV_S4') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('P203_L_INV_S4')}</div>
+                                <div className="sensor-name">리프트 INV S4</div>
                             </div>
-                            <div className={`sensor-item ${getSensorValue('liftEmgLine') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('liftEmgLine')}</div>
-                                <div className="sensor-name">리프트 인버터 비상라인</div>
+                            <div className={`sensor-item ${getSensorValue('P204_L_INV_S5') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('P204_L_INV_S5')}</div>
+                                <div className="sensor-name">리프트 INV S5</div>
                             </div>
-                            <div className={`sensor-item ${getSensorValue('liftBk') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('liftBk')}</div>
-                                <div className="sensor-name">리프트 인버터 리프트BK</div>
+                            <div className={`sensor-item ${getSensorValue('P205_L_INV_S6') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('P205_L_INV_S6')}</div>
+                                <div className="sensor-name">리프트 INV S6</div>
                             </div>
                         </div>
                     )}
-                    
-                        {activeTab === 'page3' && (
-                            <div>
-                            <div className={`sensor-item ${getSensorValue('latRotFwd') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('latRotFwd')}</div>
-                                <div className="sensor-name">횡행 인버터 정회전</div>
+
+                    {activeTab === 'page3' && (
+                        <div>
+                            <div className={`sensor-item ${getSensorValue('P220_P_INV정') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('P220_P_INV정')}</div>
+                                <div className="sensor-name">횡행 인버터 정</div>
                             </div>
-                            <div className={`sensor-item ${getSensorValue('latRotRev') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('latRotRev')}</div>
-                                <div className="sensor-name">횡행 인버터 역회전</div>
+                            <div className={`sensor-item ${getSensorValue('P221_P_INV역') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('P221_P_INV역')}</div>
+                                <div className="sensor-name">횡행 인버터 역</div>
                             </div>
-                            <div className={`sensor-item ${getSensorValue('latReset') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('latReset')}</div>
-                                <div className="sensor-name">횡행 인버터 리셋</div>
+                            <div className={`sensor-item ${getSensorValue('P228_횡행MC') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('P228_횡행MC')}</div>
+                                <div className="sensor-name">횡행 MC</div>
                             </div>
-                            <div className={`sensor-item ${getSensorValue('latSp1') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('latSp1')}</div>
-                                <div className="sensor-name">횡행 인버터 SP1</div>
+                            <div className={`sensor-item ${getSensorValue('P229_횡행BK') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('P229_횡행BK')}</div>
+                                <div className="sensor-name">횡행 BK</div>
                             </div>
-                            <div className={`sensor-item ${getSensorValue('latSp2') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('latSp2')}</div>
-                                <div className="sensor-name">횡행 인버터 SP2</div>
+                            <div className={`sensor-item ${getSensorValue('P222_P_INV_S3') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('P222_P_INV_S3')}</div>
+                                <div className="sensor-name">횡행 INV S3</div>
                             </div>
-                            <div className={`sensor-item ${getSensorValue('latSp3') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('latSp3')}</div>
-                                <div className="sensor-name">횡행 인버터 SP3</div>
+                            <div className={`sensor-item ${getSensorValue('P223_P_INV_S4') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('P223_P_INV_S4')}</div>
+                                <div className="sensor-name">횡행 INV S4</div>
                             </div>
-                            <div className={`sensor-item ${getSensorValue('latMortor') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('latMortor')}</div>
-                                <div className="sensor-name">횡행 모터BK</div>
-                            </div>               
+                            <div className={`sensor-item ${getSensorValue('P224_P_INV_S5') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('P224_P_INV_S5')}</div>
+                                <div className="sensor-name">횡행 INV S5</div>
+                            </div>
+                            <div className={`sensor-item ${getSensorValue('P225_P_INV_S6') ? 'active' : 'inactive'}`}>
+                                <div className="sensor-code">{getSensorCode('P225_P_INV_S6')}</div>
+                                <div className="sensor-name">횡행 INV S6</div>
+                            </div>
                         </div>
                     )}
                 </div>

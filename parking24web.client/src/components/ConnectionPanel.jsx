@@ -56,7 +56,7 @@ const ConnectionPanel = ({
                     <button
                         onClick={() => {
                             setSelectedUnit(1);
-                            connectToPLC('192.168.100.102', 2005);
+                            connectToPLC('192.168.1.2', 2005);
                         }}
                         disabled={isPLCConnected || isConnecting}
                         className={`px-12 py-6 rounded-lg font-semibold text-white transition-all duration-300 transform hover:scale-105 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${

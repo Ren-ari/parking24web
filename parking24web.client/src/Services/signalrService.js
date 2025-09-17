@@ -5,13 +5,14 @@ class SignalRService {
         this.connection = null;
         this.isConnected = false;
         this.callbacks = new Map();
-        
+
         // 이벤트 콜백 저장소
         this.onConnectionChanged = null;
         this.onSensorDataUpdate = null;
         this.onError = null;
         this.onPLCAuthenticated = null;
         this.onCommandExecuted = null;
+        this.onCurrentSiteConfiguration = null; // 새로 추가
     }
 
     // SignalR 연결 초기화
@@ -24,7 +25,7 @@ class SignalRService {
 
                 // 개발환경 감지 (포트 5173은 Vite 개발서버)
                 if (currentHost.includes(':5173')) {
-                    return `${currentProtocol}//localhost:5124/plcHub`;
+                    return `${currentProtocol}//localhost:5123/plcHub`;
                 }
 
                 // 프로덕션 환경 (상대경로 사용)
@@ -41,7 +42,6 @@ class SignalRService {
                 .configureLogging(signalR.LogLevel.Information)
                 .build();
 
-            // 나머지 코드는 그대로...
             this.setupEventHandlers();
             await this.connection.start();
             this.isConnected = true;
@@ -99,7 +99,15 @@ class SignalRService {
             }
         });
 
-        // 현장 설정 로드 완료
+        // 현장 설정 정보 수신 (새로 추가)
+        this.connection.on("CurrentSiteConfiguration", (config) => {
+            console.log("현장 설정 정보:", config);
+            if (this.onCurrentSiteConfiguration) {
+                this.onCurrentSiteConfiguration(config);
+            }
+        });
+
+        // 현장 설정 로드 완료 (기존)
         this.connection.on("SiteConfigLoaded", (config) => {
             console.log("현장 설정 로드:", config);
         });
@@ -136,11 +144,26 @@ class SignalRService {
         }
     }
 
+    // Config 기반 PLC 연결 (새로 추가)
+    async connectToPLCFromConfig() {
+        try {
+            if (!this.connection || !this.isConnected) {
+                throw new Error("SignalR 연결이 필요합니다");
+            }
+
+            const result = await this.connection.invoke("ConnectToPLCFromConfig");
+            return result;
+        } catch (error) {
+            console.error("Config 기반 PLC 연결 실패:", error);
+            throw error;
+        }
+    }
+
     // PLC 연결 해제
     async disconnectFromPLC() {
         try {
             if (!this.connection || !this.isConnected) return;
-            
+
             await this.connection.invoke("DisconnectFromPLC");
         } catch (error) {
             console.error("PLC 연결 해제 실패:", error);
@@ -152,7 +175,7 @@ class SignalRService {
     async getPLCStatus() {
         try {
             if (!this.connection || !this.isConnected) return false;
-            
+
             return await this.connection.invoke("GetPLCStatus");
         } catch (error) {
             console.error("PLC 상태 확인 실패:", error);
@@ -160,11 +183,23 @@ class SignalRService {
         }
     }
 
+    // 현재 사이트 설정 요청 (새로 추가)
+    async getCurrentSiteConfiguration() {
+        try {
+            if (!this.connection || !this.isConnected) return;
+
+            await this.connection.invoke("GetCurrentSiteConfiguration");
+        } catch (error) {
+            console.error("사이트 설정 요청 실패:", error);
+            throw error;
+        }
+    }
+
     // 센서 데이터 요청
     async requestSensorData() {
         try {
             if (!this.connection || !this.isConnected) return;
-            
+
             await this.connection.invoke("RequestSensorData");
         } catch (error) {
             console.error("센서 데이터 요청 실패:", error);
@@ -194,7 +229,21 @@ class SignalRService {
         }
     }
 
-    // 수동 제어 명령들 - 이 부분만 교체해
+    // Config 기반 명령 전송 (새로 추가)
+    async sendConfigCommand(commandName, value = 1) {
+        try {
+            if (!this.connection || !this.isConnected) {
+                throw new Error("SignalR 연결이 필요합니다");
+            }
+
+            await this.connection.invoke("SendConfigCommand", commandName, value);
+        } catch (error) {
+            console.error("Config 명령 전송 실패:", error);
+            throw error;
+        }
+    }
+
+    // 수동 제어 명령들 - Config 기반으로 업데이트
     async liftUp(value = 1) {
         await this.connection?.invoke("LiftUp", value);
     }
@@ -215,35 +264,32 @@ class SignalRService {
         await this.connection?.invoke("EmergencyStop", value);
     }
 
-    // 추가 명령들
     async errorReset(value = 1) {
         await this.connection?.invoke("ErrorReset", value);
     }
 
-    async operationMode(value = 1) {
-        await this.connection?.invoke("OperationMode", value);
+    async remoteControl(value = 1) {
+        await this.connection?.invoke("RemoteControl", value);
     }
 
-    async recovery(value = 1) {
-        await this.connection?.invoke("Recovery", value);
+    async homeReturn(value = 1) {
+        await this.connection?.invoke("HomeReturn", value);
     }
 
-    async turnTableUp(value = 1) {
-        await this.connection?.invoke("TurnTableUp", value);
+    async paletteChange(value = 1) {
+        await this.connection?.invoke("PaletteChange", value);
     }
 
-    async turnTableDown(value = 1) {
-        await this.connection?.invoke("TurnTableDown", value);
+    // 턴테이블 제어 - 새 메서드명으로 업데이트
+    async turnLeft(value = 1) {
+        await this.connection?.invoke("TurnLeft", value);
     }
 
-    async turnTableLeft(value = 1) {
-        await this.connection?.invoke("TurnTableLeft", value);
+    async turnRight(value = 1) {
+        await this.connection?.invoke("TurnRight", value);
     }
 
-    async turnTableRight(value = 1) {
-        await this.connection?.invoke("TurnTableRight", value);
-    }
-
+    // 도어 제어 - 새 메서드명으로 업데이트
     async doorOpen(value = 1) {
         await this.connection?.invoke("DoorOpen", value);
     }
@@ -252,27 +298,73 @@ class SignalRService {
         await this.connection?.invoke("DoorClose", value);
     }
 
+    // 락킹 제어 - 새 메서드명으로 업데이트
+    async lockingOn(value = 1) {
+        await this.connection?.invoke("LockingOn", value);
+    }
+
+    async lockingOff(value = 1) {
+        await this.connection?.invoke("LockingOff", value);
+    }
+
+    // ===== 백워드 호환성 (구 메서드명들) =====
+    // 기존 코드가 있을 수 있으니 Deprecated로 유지
+
+    async operationMode(value = 1) {
+        console.warn("[Deprecated] operationMode 사용, remoteControl로 변경 권장");
+        await this.connection?.invoke("OperationMode", value);
+    }
+
+    async recovery(value = 1) {
+        console.warn("[Deprecated] recovery 사용, homeReturn으로 변경 권장");
+        await this.connection?.invoke("Recovery", value);
+    }
+
+    async turnTableLeft(value = 1) {
+        console.warn("[Deprecated] turnTableLeft 사용, turnLeft로 변경 권장");
+        await this.connection?.invoke("TurnTableLeft", value);
+    }
+
+    async turnTableRight(value = 1) {
+        console.warn("[Deprecated] turnTableRight 사용, turnRight로 변경 권장");
+        await this.connection?.invoke("TurnTableRight", value);
+    }
+
+    async turnTableUp(value = 1) {
+        console.warn("[Deprecated] turnTableUp는 더 이상 지원되지 않습니다");
+        await this.connection?.invoke("TurnTableUp", value);
+    }
+
+    async turnTableDown(value = 1) {
+        console.warn("[Deprecated] turnTableDown는 더 이상 지원되지 않습니다");
+        await this.connection?.invoke("TurnTableDown", value);
+    }
+
     async leftLiftLock(value = 1) {
+        console.warn("[Deprecated] leftLiftLock 사용, lockingOn으로 변경 권장");
         await this.connection?.invoke("LeftLiftLock", value);
     }
 
     async leftLiftUnlock(value = 1) {
+        console.warn("[Deprecated] leftLiftUnlock 사용, lockingOff로 변경 권장");
         await this.connection?.invoke("LeftLiftUnlock", value);
     }
 
     async rightLiftLock(value = 1) {
+        console.warn("[Deprecated] rightLiftLock 사용, lockingOn으로 변경 권장");
         await this.connection?.invoke("RightLiftLock", value);
     }
 
     async rightLiftUnlock(value = 1) {
+        console.warn("[Deprecated] rightLiftUnlock 사용, lockingOff로 변경 권장");
         await this.connection?.invoke("RightLiftUnlock", value);
     }
 
-    // 현장 설정 로드
+    // 현장 설정 로드 (기존)
     async loadSiteConfig(config) {
         try {
             if (!this.connection || !this.isConnected) return;
-            
+
             await this.connection.invoke("LoadSiteConfig", config);
         } catch (error) {
             console.error("현장 설정 로드 실패:", error);
