@@ -1,5 +1,6 @@
 ﻿import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { usePLCConnection } from '../hooks/usePLCConnection';
+import { useAuth } from '../hooks/useAuth';
 import ConnectionPanel from './ConnectionPanel';
 import SensorMonitor from './SensorMonitor';
 import ManualControl from './ManualControl';
@@ -11,6 +12,8 @@ import sokcho1Config from '../../config/sokcho1Config.js';
 import { ROLE_TABS } from './auth';
 
 const PLCControl = ({ currentUser, onLogout }) => {
+    const { isClient } = useAuth();
+    
     // 탭 ID 매핑 테이블 (ROLE_TABS -> PLCControl 탭)
     const TAB_MAPPING = {
         'parking': 'parking',      // 주차 현황
@@ -152,24 +155,24 @@ const PLCControl = ({ currentUser, onLogout }) => {
         <>
             {/* 상단 네비게이션 헤더 - 완전 전체 화면 너비 */}
             <header className="bg-white shadow-lg border-b border-gray-200 fixed top-0 left-0 right-0 w-full z-50">
-                <div className="flex items-center justify-between px-4 py-3">
+                <div className="flex items-center justify-between px-2 sm:px-4 py-2 sm:py-3">
                     {/* 로고/제목 (왼쪽) */}
-                    <div className="flex items-center space-x-3 flex-shrink-0">
-                        <div className="w-10 h-10 bg-gradient-to-br from-purple-600 via-blue-600 to-indigo-700 rounded-xl flex items-center justify-center shadow-lg transform hover:scale-105 transition-all duration-300">
-                            <span className="text-white font-black text-sm tracking-wider">E</span>
+                    <div className="flex items-center space-x-2 sm:space-x-3 flex-shrink-0">
+                        <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-purple-600 via-blue-600 to-indigo-700 rounded-xl flex items-center justify-center shadow-lg transform hover:scale-105 transition-all duration-300">
+                            <span className="text-white font-black text-xs sm:text-sm tracking-wider">E</span>
                         </div>
                         <div className="flex flex-col">
-                            <h1 className="text-2xl font-black bg-gradient-to-r from-purple-600 via-blue-600 to-indigo-700 bg-clip-text text-transparent tracking-wider">
+                            <h1 className="text-lg sm:text-2xl font-black bg-gradient-to-r from-purple-600 via-blue-600 to-indigo-700 bg-clip-text text-transparent tracking-wider">
                                 EPSAI
                             </h1>
-                            <div className="text-xs text-gray-500 font-medium tracking-widest">
+                            <div className="text-xs text-gray-500 font-medium tracking-widest hidden sm:block">
                                 PARKING SYSTEM
                             </div>
                         </div>
                     </div>
 
-                    {/* 탭 네비게이션 (중앙) - 권한별 필터링 적용 */}
-                    <nav className="hidden md:flex space-x-4 flex-1 justify-center">
+                    {/* 탭 네비게이션 (중앙) - 데스크톱용만 */}
+                    <nav className="hidden xl:flex space-x-4 flex-1 justify-center max-w-6xl">
                         {/* 연결 관리 - config 권한 */}
                         {hasTabAccess('connection') && (
                             <button
@@ -221,8 +224,8 @@ const PLCControl = ({ currentUser, onLogout }) => {
                         )}
                     </nav>
 
-                    {/* 사용자 정보 & 로그아웃 (오른쪽) */}
-                    <div className="hidden md:flex items-center space-x-4 flex-shrink-0">
+                    {/* 사용자 정보 & 로그아웃 (오른쪽) - 데스크톱용만 */}
+                    <div className="hidden xl:flex items-center space-x-4 flex-shrink-0">
                         {/* 상태 표시 */}
                         <div className="flex items-center space-x-3">
                             <div className="flex items-center space-x-2">
@@ -256,8 +259,8 @@ const PLCControl = ({ currentUser, onLogout }) => {
                         )}
                     </div>
 
-                    {/* 모바일 햄버거 메뉴 (오른쪽) */}
-                    <div className="md:hidden flex items-center space-x-2 flex-shrink-0">
+                    {/* 모바일/태블릿 햄버거 메뉴 (오른쪽) */}
+                    <div className="xl:hidden flex items-center space-x-2 flex-shrink-0">
                         {/* 모바일 사용자 정보 */}
                         {currentUser && (
                             <div className="text-right mr-2">
@@ -285,20 +288,20 @@ const PLCControl = ({ currentUser, onLogout }) => {
                     </div>
                 </div>
 
-                {/* 모바일 탭 메뉴 - 권한별 필터링 적용 */}
+                {/* 모바일/태블릿 탭 메뉴 - 권한별 필터링 적용 */}
                 {isMobileMenuOpen && (
-                    <div className={`md:hidden fixed inset-0 top-16 z-40 overflow-hidden mobile-menu-bg transition-all duration-300 ${isClosing ? 'opacity-0 scale-95' : 'opacity-100 scale-100'}`}>
+                    <div className={`xl:hidden fixed inset-0 top-16 z-40 overflow-hidden mobile-menu-bg transition-all duration-300 ${isClosing ? 'opacity-0 scale-95' : 'opacity-100 scale-100'}`}>
                         <div className="h-full flex items-start justify-center p-4 pt-16 relative z-10">
-                            <div className={`w-full max-w-sm transform transition-all duration-500 ease-out ${isClosing ? 'animate-out slide-out-to-top-8 fade-out-0' : 'animate-in slide-in-from-top-8 fade-in-0'}`}>
-                                {/* 권한에 따른 동적 그리드 */}
-                                <nav className={`grid gap-6 w-full ${allowedTabs.length <= 2 ? 'grid-cols-1' : 'grid-cols-2'}`}>
+                            <div className={`w-full max-w-md md:max-w-lg transform transition-all duration-500 ease-out ${isClosing ? 'animate-out slide-out-to-top-8 fade-out-0' : 'animate-in slide-in-from-top-8 fade-in-0'}`}>
+                                {/* 권한에 따른 동적 그리드 - 모바일/태블릿 모두 2열 */}
+                                <nav className={`grid gap-4 md:gap-6 w-full grid-cols-2`}>
                                     {allowedTabs.map((tab, index) => (
                                         <button
                                             key={tab.id}
                                             onClick={() => handleMobileTabClick(tab.id)}
-                                            className={`${getTabStyle(tab.id)} w-full h-20 flex items-center justify-center text-center transform transition-all duration-300 hover:scale-105 hover:rotate-1`}
+                                            className={`${getTabStyle(tab.id)} w-full h-24 md:h-20 flex items-center justify-center text-center transform transition-all duration-300 hover:scale-105 hover:rotate-1`}
                                             style={{
-                                                animationName: isClosing ? 'slideOutToLeft' : 'slideInFromLeft',
+                                                animationName: isClosing ? 'slideOutToLeft' : (index % 2 === 0 ? 'slideInFromLeft' : 'slideInFromRight'),
                                                 animationDuration: isClosing ? '0.3s' : '0.6s',
                                                 animationTimingFunction: isClosing ? 'ease-in' : 'ease-out',
                                                 animationDelay: isClosing ? '0s' : `${(index + 1) * 0.1}s`,
@@ -306,8 +309,7 @@ const PLCControl = ({ currentUser, onLogout }) => {
                                             }}
                                         >
                                             <div className="flex flex-col items-center">
-                                                <span className="text-2xl mb-1">{tab.icon}</span>
-                                                <span className="text-base font-semibold">{tab.name}</span>
+                                                <span className="text-lg md:text-base font-semibold">{tab.name}</span>
                                             </div>
                                         </button>
                                     ))}
@@ -320,9 +322,9 @@ const PLCControl = ({ currentUser, onLogout }) => {
                                                 action: () => onLogout()
                                             });
                                         }}
-                                        className="w-full h-20 flex items-center justify-center text-center bg-red-500 hover:bg-red-600 text-white rounded-2xl transform transition-all duration-300 hover:scale-105"
+                                        className="relative px-8 py-4 font-bold rounded-2xl transition-all duration-300 ease-in-out text-sm transform hover:scale-105 hover:-translate-y-1 shadow-lg hover:shadow-xl border-2 bg-gradient-to-r from-white to-gray-50 text-gray-600 hover:from-blue-50 hover:to-indigo-50 hover:text-blue-700 border-gray-200 hover:border-blue-300 hover:shadow-lg w-full h-24 md:h-20 flex items-center justify-center text-center"
                                         style={{
-                                            animationName: isClosing ? 'slideOutToRight' : 'slideInFromRight',
+                                            animationName: isClosing ? 'slideOutToRight' : (allowedTabs.length % 2 === 0 ? 'slideInFromLeft' : 'slideInFromRight'),
                                             animationDuration: isClosing ? '0.3s' : '0.6s',
                                             animationTimingFunction: isClosing ? 'ease-in' : 'ease-out',
                                             animationDelay: isClosing ? '0s' : `${(allowedTabs.length + 1) * 0.1}s`,
@@ -330,8 +332,7 @@ const PLCControl = ({ currentUser, onLogout }) => {
                                         }}
                                     >
                                         <div className="flex flex-col items-center">
-                                            <span className="text-2xl mb-1">🚪</span>
-                                            <span className="text-base font-semibold">로그아웃</span>
+                                            <span className="text-lg md:text-base font-semibold relative z-10">로그아웃</span>
                                         </div>
                                     </button>
                                 </nav>
@@ -345,7 +346,8 @@ const PLCControl = ({ currentUser, onLogout }) => {
             <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 pt-20" style={{ width: '100vw' }}>
                 <main className="p-2 md:p-4 max-w-6xl mx-auto">
                     <div className="w-full">
-                        {/* 상단 상태 표시 탭들 - 속초 config 적용 */}
+                        {/* 상단 상태 표시 탭들 - 속초 config 적용 (클라이언트일 때 숨김) */}
+                        {!isClient() && (
                         <div className="mb-4 rounded-2xl shadow-lg overflow-hidden border border-white/20" style={{
                             background: 'rgba(255, 255, 255, 0.1)',
                             backdropFilter: 'blur(20px)',
@@ -359,72 +361,73 @@ const PLCControl = ({ currentUser, onLogout }) => {
                                     }}>
                                         원격조작
                                     </div>
-                                    <div className={`text-sm px-2 py-3 text-center border-r h-16 flex items-center justify-center ${sensorData.rawData[sokcho1Config.systemAddresses.remoteOp] === 1 ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'}`}>
+                                    <div className={`text-sm px-2 py-3 text-center border-r h-16 flex items-center justify-center ${sensorData.rawData[sokcho1Config.systemAddresses.remoteOp] === 1 ? 'bg-blue-50 text-blue-700' : 'bg-gray-100 text-gray-800'}`}>
                                         {sensorData.rawData[sokcho1Config.systemAddresses.remoteOp] === 1 ? '활성' : '비활성'}
                                     </div>
                                 </div>
 
                                 <div className="flex-1 min-w-0 flex flex-col">
-                                    <div className="bg-green-500 text-white text-xs font-medium px-1 py-2 text-center h-10 flex items-center justify-center" style={{
+                                    <div className={`text-white text-xs font-medium px-1 py-2 text-center h-10 flex items-center justify-center ${isPLCConnected ? 'bg-blue-500' : 'bg-gray-400'}`} style={{
                                         backdropFilter: 'blur(10px)',
                                         WebkitBackdropFilter: 'blur(10px)',
                                     }}>
                                         위치정보
                                     </div>
-                                    <div className="bg-green-100 text-green-800 text-sm px-2 py-3 text-center border-r h-16 flex items-center justify-center">
-                                        {sokcho1Config.siteInfo.location}
+                                    <div className={`text-sm px-2 py-3 text-center border-r h-16 flex items-center justify-center ${isPLCConnected ? 'bg-blue-50 text-blue-700' : 'bg-gray-100 text-gray-800'}`}>
+                                        {isPLCConnected ? sokcho1Config.siteInfo.location : '-'}
                                     </div>
                                 </div>
 
                                 <div className="flex-1 min-w-0 flex flex-col">
-                                    <div className={`text-white text-xs font-medium px-1 py-2 text-center h-10 flex items-center justify-center ${isPLCConnected ? 'bg-green-500' : 'bg-gray-400'}`} style={{
+                                    <div className={`text-white text-xs font-medium px-1 py-2 text-center h-10 flex items-center justify-center ${isPLCConnected ? 'bg-blue-500' : 'bg-gray-400'}`} style={{
                                         backdropFilter: 'blur(10px)',
                                         WebkitBackdropFilter: 'blur(10px)',
                                     }}>
                                         호기번호
                                     </div>
-                                    <div className={`text-sm px-2 py-3 text-center border-r h-16 flex items-center justify-center ${isPLCConnected ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
+                                    <div className={`text-sm px-2 py-3 text-center border-r h-16 flex items-center justify-center ${isPLCConnected ? 'bg-blue-50 text-blue-700' : 'bg-gray-100 text-gray-800'}`}>
                                         {isPLCConnected ? `${selectedUnit}호기` : '-'}
                                     </div>
                                 </div>
 
                                 <div className="flex-1 min-w-0 flex flex-col">
-                                    <div className="bg-green-500 text-white text-xs font-medium px-1 py-2 text-center h-10 flex items-center justify-center" style={{
+                                    <div className={`text-white text-xs font-medium px-1 py-2 text-center h-10 flex items-center justify-center ${isPLCConnected ? 'bg-blue-500' : 'bg-gray-400'}`} style={{
                                         backdropFilter: 'blur(10px)',
                                         WebkitBackdropFilter: 'blur(10px)',
                                     }}>
                                         운전모드
                                     </div>
-                                    <div className="bg-green-100 text-green-800 text-sm px-2 py-3 text-center border-r h-16 flex items-center justify-center">
-                                        {sensorData.rawData[sokcho1Config.systemAddresses.manualMode] === 1 ? '수동' : '자동'}
+                                    <div className={`text-sm px-2 py-3 text-center border-r h-16 flex items-center justify-center ${isPLCConnected ? 'bg-blue-50 text-blue-700' : 'bg-gray-100 text-gray-800'}`}>
+                                        {isPLCConnected ? (sensorData.rawData[sokcho1Config.systemAddresses.manualMode] === 1 ? '수동' : '자동') : '-'}
                                     </div>
                                 </div>
 
                                 <div className="flex-1 min-w-0 flex flex-col">
-                                    <div className={`text-white text-xs font-medium px-1 py-2 text-center h-10 flex items-center justify-center ${sensorData.rawData[sokcho1Config.systemAddresses.errorStatus] === 1 ? 'bg-red-500' : 'bg-green-500'}`} style={{
+                                    <div className={`text-white text-xs font-medium px-1 py-2 text-center h-10 flex items-center justify-center ${isPLCConnected ? (sensorData.rawData[sokcho1Config.systemAddresses.errorStatus] === 1 ? 'bg-red-500' : 'bg-green-500') : 'bg-gray-400'}`} style={{
                                         backdropFilter: 'blur(10px)',
                                         WebkitBackdropFilter: 'blur(10px)',
                                     }}>
                                         에러상태
                                     </div>
-                                    <div className={`text-sm px-2 py-3 text-center border-r h-16 flex items-center justify-center ${sensorData.rawData[sokcho1Config.systemAddresses.errorStatus] === 1 ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'}`}>
-                                        {sensorData.rawData[sokcho1Config.systemAddresses.errorStatus] === 1 ? '고장발생' : '정상'}
+                                    <div className={`text-sm px-2 py-3 text-center border-r h-16 flex items-center justify-center ${isPLCConnected ? (sensorData.rawData[sokcho1Config.systemAddresses.errorStatus] === 1 ? 'bg-red-50 text-red-700' : 'bg-green-50 text-green-700') : 'bg-gray-100 text-gray-800'}`}>
+                                        {isPLCConnected ? (sensorData.rawData[sokcho1Config.systemAddresses.errorStatus] === 1 ? '고장발생' : '정상') : '-'}
                                     </div>
                                 </div>
 
                                 <div className="flex-1 min-w-0 flex flex-col">
-                                    <div className={`text-white text-xs font-medium px-1 py-2 text-center h-10 flex items-center justify-center ${sensorData.rawData[sokcho1Config.systemAddresses.plcComm] === 1 ? 'bg-green-500' : 'bg-red-500'}`} style={{
+                                    <div className={`text-white text-xs font-medium px-1 py-2 text-center h-10 flex items-center justify-center ${sensorData.rawData[sokcho1Config.systemAddresses.plcComm] === 1 ? 'bg-blue-500' : 'bg-red-500'}`} style={{
                                         backdropFilter: 'blur(10px)',
                                         WebkitBackdropFilter: 'blur(10px)',
                                     }}>
                                         PLC통신
                                     </div>
-                                    <div className={`text-sm px-2 py-3 text-center h-16 flex items-center justify-center ${sensorData.rawData[sokcho1Config.systemAddresses.plcComm] === 1 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                                    <div className={`text-sm px-2 py-3 text-center h-16 flex items-center justify-center ${sensorData.rawData[sokcho1Config.systemAddresses.plcComm] === 1 ? 'bg-blue-50 text-blue-700' : 'bg-red-50 text-red-700'}`}>
                                         {sensorData.rawData[sokcho1Config.systemAddresses.plcComm] === 1 ? '활성' : '비활성'}
                                     </div>
                                 </div>
                             </div>
                         </div>
+                        )}
 
                         {/* 차량 및 주차 현황 데이터 - 속초 config 적용 */}
                         <div
@@ -710,58 +713,6 @@ const PLCControl = ({ currentUser, onLogout }) => {
                                         </div>
                                     </div>
 
-                                    {/* 세 번째 행 */}
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div className={`p-3 rounded-lg transition-all duration-700 ease-out transform relative overflow-hidden ${isDataPanelExpanded
-                                                ? 'translate-y-0 opacity-100 scale-100'
-                                                : 'translate-y-4 opacity-0 scale-95'
-                                            }`}
-                                            style={{
-                                                transitionDelay: isDataPanelExpanded ? '1000ms' : '0ms',
-                                                background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0.08) 100%)',
-                                                backdropFilter: 'blur(12px)',
-                                                WebkitBackdropFilter: 'blur(12px)',
-                                                border: '1px solid rgba(255, 255, 255, 0.18)',
-                                                boxShadow: '0 3px 12px 0 rgba(31, 38, 135, 0.18)'
-                                            }}>
-                                            <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/6 to-blue-500/6 rounded-lg"></div>
-                                            <label className="block text-xs font-medium text-gray-600 mb-1 relative z-10">엔코더값</label>
-                                            <div className="text-gray-700 text-center rounded-2xl px-2 sm:px-3 py-3 sm:py-5 text-lg sm:text-2xl md:text-3xl font-bold relative z-10" style={{
-                                                background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.75) 100%)',
-                                                backdropFilter: 'blur(8px)',
-                                                WebkitBackdropFilter: 'blur(8px)',
-                                                border: '1px solid rgba(255, 255, 255, 0.25)',
-                                                boxShadow: '0 1px 6px 0 rgba(31, 38, 135, 0.12)'
-                                            }}>
-                                                {sensorData.rawData?.[240] || 0}
-                                            </div>
-                                        </div>
-
-                                        <div className={`p-3 rounded-lg transition-all duration-700 ease-out transform relative overflow-hidden ${isDataPanelExpanded
-                                                ? 'translate-y-0 opacity-100 scale-100'
-                                                : 'translate-y-4 opacity-0 scale-95'
-                                            }`}
-                                            style={{
-                                                transitionDelay: isDataPanelExpanded ? '1100ms' : '0ms',
-                                                background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0.08) 100%)',
-                                                backdropFilter: 'blur(12px)',
-                                                WebkitBackdropFilter: 'blur(12px)',
-                                                border: '1px solid rgba(255, 255, 255, 0.18)',
-                                                boxShadow: '0 3px 12px 0 rgba(31, 38, 135, 0.18)'
-                                            }}>
-                                            <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/6 to-blue-500/6 rounded-lg"></div>
-                                            <label className="block text-xs font-medium text-gray-600 mb-1 relative z-10">카운터값</label>
-                                            <div className="text-gray-700 text-center rounded-2xl px-2 sm:px-3 py-3 sm:py-5 text-lg sm:text-2xl md:text-3xl font-bold relative z-10" style={{
-                                                background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.75) 100%)',
-                                                backdropFilter: 'blur(8px)',
-                                                WebkitBackdropFilter: 'blur(8px)',
-                                                border: '1px solid rgba(255, 255, 255, 0.25)',
-                                                boxShadow: '0 1px 6px 0 rgba(31, 38, 135, 0.12)'
-                                            }}>
-                                                {sensorData.rawData?.[200] || 0}
-                                            </div>
-                                        </div>
-                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -801,6 +752,7 @@ const PLCControl = ({ currentUser, onLogout }) => {
                                     isAuthenticated={isAuthenticated}
                                     sendCommand={sendCommand}
                                     sensorData={sensorData}
+                                    isMobileMenuOpen={isMobileMenuOpen}
                                 />
                             )}
 
@@ -835,22 +787,6 @@ const PLCControl = ({ currentUser, onLogout }) => {
                             )}
                         </div>
 
-                        {/* 개발자 정보 (개발 모드에서만) */}
-                        {/* eslint-disable-next-line no-undef */}
-                        {process.env.NODE_ENV === 'development' && (
-                            <div className="hidden sm:block mt-8 p-4 bg-yellow-50 border border-yellow-200 rounded-lg lg:w-4/5 mx-auto">
-                                <h4 className="font-semibold text-yellow-800 mb-2">개발자 정보</h4>
-                                <div className="text-xs text-yellow-700 space-y-1">
-                                    <div>사용자: {currentUser?.name} ({currentUser?.role})</div>
-                                    <div>허용된 탭: {allowedTabs.map(t => t.name).join(', ')}</div>
-                                    <div>SignalR Hub: https://localhost:7229/plcHub</div>
-                                    <div>PLC IP: {plcConfig.ip}:{plcConfig.port}</div>
-                                    <div>센서 데이터 수: {sensorData.rawData?.length || 0}</div>
-                                    <div>활성 센서: {sensorData.rawData?.filter(v => v > 0).length || 0}</div>
-                                    <div>로그 수: {logs.length}</div>
-                                </div>
-                            </div>
-                        )}
 
                         {/* Footer */}
                         <footer className="mt-8 text-center text-sm text-gray-500">

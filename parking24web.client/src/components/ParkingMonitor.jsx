@@ -62,12 +62,12 @@ const ParkingMonitor = ({ sensorData, isPLCConnected, onVehicleEdit }) => {
         switch (box) {
             case 0: // 홀수차량
             case 4: // 짝수차량
-                return level >= 1 && level <= 38; // 1층부터 38층까지 (총 80개를 38층에 분배)
-            case 1: // 일반입고수
-            case 3: // RV입고수
+                return level >= 1 && level <= 38; // 1층(진입층)부터 38층까지
+            case 1: // 홀수차판상태
+            case 3: // 짝수차판상태
                 return level >= 1 && level <= 38;
             case 2: // 승강로정보
-                return level >= 0; // 진입층부터 38층까지
+                return level >= 1; // 1층(진입층)부터 38층까지
             default:
                 return false;
         }
@@ -91,7 +91,7 @@ const ParkingMonitor = ({ sensorData, isPLCConnected, onVehicleEdit }) => {
                 return "C101";
 
             case 2: // 승강로정보 (C200~C245)
-                if (level === 0) return `C${sokcho1Config.liftPositions.entrancePos}`; // 진입층
+                if (level === 1) return `C${sokcho1Config.liftPositions.entrancePos}`; // 1층(진입층)
                 if (level >= 1 && level <= 43) {
                     // 1층=C203, 2층=C204, ... 43층=C245
                     return `C${sokcho1Config.liftPositions.floor1 + (level - 1)}`;
@@ -168,11 +168,11 @@ const ParkingMonitor = ({ sensorData, isPLCConnected, onVehicleEdit }) => {
             }
         }
 
-        // 진입층(C201) 또는 턴회전층(C202) 확인
+        // 1층(진입층)(C201) 또는 턴회전층(C202) 확인
         const entranceValue = sensorData.rawData[sokcho1Config.liftPositions.entrancePos] || 0;
         const turnValue = sensorData.rawData[sokcho1Config.liftPositions.turnPos] || 0;
 
-        if (entranceValue === 1) return 0; // 진입층
+        if (entranceValue === 1) return 1; // 1층(진입층)
         if (turnValue === 1) return -1;    // 턴회전층 (별도 표시)
 
         return null; // 위치 불명
@@ -197,7 +197,7 @@ const ParkingMonitor = ({ sensorData, isPLCConnected, onVehicleEdit }) => {
 
         if (box === 2) {
             // 승강로정보 - 리프트 위치에 따라 색상
-            const liftAddress = level === 0 ?
+            const liftAddress = level === 1 ?
                 `C${sokcho1Config.liftPositions.entrancePos}` :
                 level >= 1 && level <= 43 ?
                     `C${sokcho1Config.liftPositions.floor1 + (level - 1)}` :
@@ -257,7 +257,7 @@ const ParkingMonitor = ({ sensorData, isPLCConnected, onVehicleEdit }) => {
         const currentValue = getPLCValue(displayAddress);
 
         const vehicleType = box === 0 ? "홀수차량" : "짝수차량";
-        const levelText = level === 0 ? "진입층" : `${level}층`;
+        const levelText = level === 1 ? "진입층" : `${level}층`;
         const slotNumber = box === 0 ? (level - 1) * 2 + 1 : (level - 1) * 2 + 2;
 
         const newValue = prompt(
@@ -297,66 +297,23 @@ const ParkingMonitor = ({ sensorData, isPLCConnected, onVehicleEdit }) => {
             backdropFilter: 'blur(25px)',
             WebkitBackdropFilter: 'blur(25px)',
         }}>
-            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 sm:mb-4 gap-2">
-                <div className="flex items-center gap-3">
-                    <div>
-                        <h2 className="text-lg sm:text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent m-2 sm:mb-0">
-                            주차 현황 모니터링 - {sokcho1Config.siteInfo.name} {sokcho1Config.siteInfo.unitNumber}
-                        </h2>
-                    </div>
-                </div>
-
-                <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
-                    <button
-                        onClick={() => setIsEditMode(!isEditMode)}
-                        className={`px-6 py-3 rounded-xl font-semibold text-white transition-all duration-300 transform hover:scale-105 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${isEditMode
-                                ? "bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 shadow-lg hover:shadow-xl"
-                                : "bg-gradient-to-r from-blue-500 via-blue-600 to-indigo-600 hover:from-blue-600 hover:via-blue-700 hover:to-indigo-700 shadow-lg hover:shadow-xl"
-                            }`}
-                    >
-                        {isEditMode ? "✓ 수정 완료" : "주소 수정"}
-                    </button>
-                </div>
-            </div>
+           
 
             {/* 속초 주차장 레이아웃 (5개 박스 구조 유지) */}
-            <div className="border border-gray-300 rounded-lg h-80 sm:h-96 md:h-[500px] lg:h-[800px]">
-                {/* 컬럼 헤더 */}
-                <div className="bg-gradient-to-r from-blue-100 to-indigo-100 p-2 border-b border-gray-300 flex items-center space-x-4">
-                    <div className="w-12 sm:w-16 md:w-20 text-center flex-shrink-0">
-                        <div className="text-xs font-bold text-gray-600">층</div>
-                    </div>
-                    <div className="flex gap-1 sm:gap-2 md:gap-3 flex-1 justify-center">
-                        <div className="w-16 sm:w-20 md:w-24 lg:w-32 text-center">
-                            <div className="text-xs font-bold text-blue-700">홀수차량</div>
-                        </div>
-                        <div className="w-16 sm:w-20 md:w-24 lg:w-32 text-center">
-                            <div className="text-xs font-bold text-green-700">홀수</div>
-                        </div>
-                        <div className="w-16 sm:w-20 md:w-24 lg:w-32 text-center">
-                            <div className="text-xs font-bold text-orange-700">리프트카운터</div>
-                        </div>
-                        <div className="w-16 sm:w-20 md:w-24 lg:w-32 text-center">
-                            <div className="text-xs font-bold text-blue-700">짝수</div>
-                        </div>
-                        <div className="w-16 sm:w-20 md:w-24 lg:w-32 text-center">
-                            <div className="text-xs font-bold text-red-700">짝수차량</div>
-                        </div>
-                    </div>
-                </div>
-
+            <div className="border border-gray-300 rounded-lg h-[60vh] sm:h-[55vh] md:h-[60vh] lg:h-[60vh]">
+               
                 <div
                     ref={scrollContainerRef}
-                    className="h-[85%] overflow-y-auto p-2 sm:p-3 md:p-4 space-y-1 sm:space-y-2 md:space-y-3"
+                    className="h-[95%] overflow-y-auto p-1 sm:p-2 md:p-3 space-y-1 sm:space-y-2 md:space-y-3"
                 >
-                    {/* 38층부터 1층까지 역순, 그 다음 진입층 */}
-                    {[...Array.from({ length: 38 }, (_, i) => 38 - i), 0].map((level) => {
-                        const levelText = level === 0 ? "진입층" : `${level}층`;
+                    {/* 38층부터 2층까지 역순, 그 다음 진입층(1층) */}
+                    {[...Array.from({ length: 37 }, (_, i) => 38 - i), 1].map((level) => {
+                        const levelText = level === 1 ? "진입층" : `${level}층`;
 
                         return (
                             <div
                                 key={level}
-                                className={`border border-white/20 rounded-lg p-2 sm:p-3 md:p-4 shadow-lg ${level === 0
+                                className={`border border-white/20 rounded-lg p-1 sm:p-2 md:p-3 shadow-lg ${level === 1
                                         ? "bg-gradient-to-br from-yellow-50 to-orange-50 border-yellow-300"
                                         : "bg-gradient-to-br from-blue-50 to-indigo-100 border-gray-200"
                                     }`}
@@ -369,7 +326,7 @@ const ParkingMonitor = ({ sensorData, isPLCConnected, onVehicleEdit }) => {
                                     {/* 층 라벨 */}
                                     <div className="w-12 sm:w-16 md:w-20 text-center flex-shrink-0">
                                         <div
-                                            className={`font-bold text-xs sm:text-sm md:text-base ${level === 0 ? "text-orange-600" : "text-gray-700"
+                                            className={`font-bold text-xs sm:text-sm md:text-base ${level === 1 ? "text-orange-600" : "text-gray-700"
                                                 }`}
                                         >
                                             {levelText}
@@ -377,7 +334,7 @@ const ParkingMonitor = ({ sensorData, isPLCConnected, onVehicleEdit }) => {
                                     </div>
 
                                     {/* 5개 박스 */}
-                                    <div className="flex flex-wrap sm:flex-nowrap gap-1 sm:gap-2 md:gap-3 flex-1 justify-center items-center">
+                                    <div className="flex flex-wrap sm:flex-nowrap gap-0.5 sm:gap-1 md:gap-2 flex-1 justify-center items-center">
                                         {/* 모바일: 홀수차량, 승강로정보, 짝수차량 / 데스크탑: 전체 */}
                                         {(isMobile ? [0, 2, 4] : [0, 1, 2, 3, 4]).map(
                                             (box) => {
@@ -408,7 +365,7 @@ const ParkingMonitor = ({ sensorData, isPLCConnected, onVehicleEdit }) => {
                                                         className="w-16 sm:w-20 md:w-24 lg:w-32 min-w-0"
                                                     >
                                                         <div
-                                                            className={`border border-white/20 rounded p-1 sm:p-2 md:p-3 h-20 sm:h-18 md:h-20 lg:h-24 shadow-md ${boxColor} ${box === 1 || box === 3
+                                                            className={`border border-white/20 rounded p-1 sm:p-2 md:p-3 h-16 sm:h-18 md:h-20 lg:h-24 shadow-md ${boxColor} ${box === 1 || box === 3
                                                                     ? "flex items-center justify-center"
                                                                     : ""
                                                                 }`}
@@ -441,7 +398,7 @@ const ParkingMonitor = ({ sensorData, isPLCConnected, onVehicleEdit }) => {
                                                             {/* 데이터 표시 */}
                                                             {box === 1 || box === 3 ? (
                                                                 // 차판상태는 값에 따라 이미지 표시
-                                                                <div className="flex items-center justify-center bg-white border border-white/20 rounded-xl h-[50px] sm:h-[60px] md:h-[65px] lg:h-[70px] w-full shadow-sm" style={{
+                                                                <div className="flex items-center justify-center bg-white border border-white/20 rounded-xl h-[32px] sm:h-[60px] md:h-[65px] lg:h-[70px] w-full shadow-sm" style={{
                                                                     backdropFilter: 'blur(10px)',
                                                                     WebkitBackdropFilter: 'blur(10px)',
                                                                 }}>
@@ -469,7 +426,7 @@ const ParkingMonitor = ({ sensorData, isPLCConnected, onVehicleEdit }) => {
                                                                 </div>
                                                             ) : box === 2 ? (
                                                                 // 승강로정보 - 리프트 위치에 따라 carPlate_mini.png 표시
-                                                                <div className="flex items-center justify-center h-12 sm:h-14 md:h-16 w-full">
+                                                                <div className="flex items-center justify-center h-10 sm:h-14 md:h-16 w-full">
                                                                     {getCurrentLiftPosition() === level ? (
                                                                         // 현재 층에 리프트가 있으면 carPlate_mini.png 표시
                                                                         <div className="bg-white border border-white/20 rounded-xl p-2 w-full h-full flex items-center justify-center" style={{
@@ -497,7 +454,7 @@ const ParkingMonitor = ({ sensorData, isPLCConnected, onVehicleEdit }) => {
                                                                             ? "pointer"
                                                                             : "default"
                                                                         } ${box === 0 || box === 4
-                                                                            ? "py-3 text-sm sm:text-base md:text-lg"
+                                                                            ? "py-1 sm:py-3 text-sm sm:text-base md:text-lg"
                                                                             : "py-0.5 text-xs sm:text-sm md:text-base"
                                                                         } flex items-center justify-center`}
                                                                     style={{
@@ -555,20 +512,6 @@ const ParkingMonitor = ({ sensorData, isPLCConnected, onVehicleEdit }) => {
                 </div>
             </div>
 
-            {/* 사용법 안내 */}
-            <div className="mt-6 p-3 md:p-4 bg-blue-50 rounded-2xl">
-                <h4 className="text-xs md:text-sm font-semibold text-blue-800 mb-2">
-                    속초 1호기 주차장 모니터 사용법
-                </h4>
-                <ul className="text-xs text-blue-700 space-y-1">
-                    <li>• 속초 1호기 전용 (C101~C180, 총 80대 순차구조)</li>
-                    <li>• 홀수차량(좌측), 승강로정보(중앙), 짝수차량(우측) 5개 박스 구조</li>
-                    <li>• 차량번호를 더블클릭하면 편집 가능합니다</li>
-                    <li>• 리프트에 적재된 차량은 주황색으로 표시됩니다</li>
-                    <li>• 편집 주소는 D4000번대를 사용합니다</li>
-                    <li>• 승강로정보에서 리프트 카운터와 엔코더 값 확인 가능</li>
-                </ul>
-            </div>
         </div>
     );
 };

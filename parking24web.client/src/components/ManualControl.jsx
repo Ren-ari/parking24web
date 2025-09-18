@@ -4,11 +4,18 @@ import sokcho1Config from '../../config/sokcho1Config.js';
 // SignalR 서비스 import
 import signalRService from '../Services/signalrService.js';
 
-const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData }) => {
+const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMenuOpen }) => {
     const [activeCommand, setActiveCommand] = useState(null);
     const [isEmergencyMode, setIsEmergencyMode] = useState(false);
     const [activeTab, setActiveTab] = useState('page1');
     const [showSensors, setShowSensors] = useState(true);
+    
+    // 태블릿 모드에서 햄버거 메뉴가 열리면 센서 패널 숨기기
+    useEffect(() => {
+        if (isMobileMenuOpen !== undefined) {
+            setShowSensors(!isMobileMenuOpen);
+        }
+    }, [isMobileMenuOpen]);
     const [sensorStates, setSensorStates] = useState({});
 
     // 속초 1호기 센서 상태 업데이트 (C060~C072 비트 구조)
@@ -257,48 +264,41 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData }) => {
                 }
 
                 .common-buttons-grid {
-                    display: grid;
-                    grid-template-columns: 1fr 1fr;
+                    display: flex;
+                    flex-wrap: wrap;
                     gap: 16px;
-                    max-width: 300px;
-                    margin: 0 auto;
+                    justify-content: center;
+                    max-width: none;
                 }
 
-                @media (min-width: 768px) {
+                @media (min-width: 768px) and (max-width: 1023px) {
                     .common-buttons-grid {
-                        display: flex;
-                        flex-wrap: wrap;
-                        gap: 16px;
-                        justify-content: center;
-                        max-width: none;
+                        display: grid;
+                        grid-template-columns: 1fr 1fr;
+                        gap: 20px;
+                        max-width: 320px;
+                        margin: 0 auto;
+                        margin-top: 20px;
+                        margin-bottom: 20px;
                     }
-                }
-                
-                .mobile-locking-btn {
-                    padding: 16px 20px;
-                    font-size: 0.75rem;
-                    min-width: 100px;
-                }
-                @media (min-width: 768px) {
-                    .mobile-locking-btn {
-                        padding: 12px 20px;
-                        font-size: 0.75rem;
-                        min-width: 80px;
-                    }
-                }
-                
-                .mobile-move-btn {
-                    padding: 16px 24px;
-                    font-size: 0.8rem;
-                    min-width: 100px;
-                }
-                @media (min-width: 768px) {
-                    .mobile-move-btn {
+                    
+                    .common-buttons-grid .common-button {
+                        min-width: 120px;
                         padding: 20px 32px;
                         font-size: 0.875rem;
+                    }
+                    
+                    .common-buttons-grid .emergency-button {
+                        grid-column: 1 / -1;
+                        justify-self: center;
+                        margin-top: 16px;
                         min-width: 120px;
+                        padding: 20px 32px;
+                        font-size: 0.875rem;
                     }
                 }
+                
+                
 
                 .tab-navigation {
                     display: flex;
@@ -714,39 +714,47 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData }) => {
                 }
 
                 .page1-layout {
-                    display: flex;
-                    gap: 10px;
+                    display: grid;
+                    grid-template-rows: 1fr 1fr;
+                    gap: 40px;
                     justify-content: center;
                     align-items: center;
-                    flex-wrap: wrap;
+                    max-width: 600px;
+                    margin: 0 auto;
                 }
 
                 @media (min-width: 768px) {
                     .page1-layout {
-                        gap: 80px;
+                        gap: 50px;
                     }
                 }
 
                 @media (max-width: 768px) {
                     .page1-layout {
+                        display: flex;
                         flex-direction: column;
-                        gap: 120px;
+                        gap: 15px;
+                        max-width: none;
                     }
                 }
 
                 .turn-table-section {
                     flex: 0 0 auto;
-                    min-width: 300px;
+                    min-width: 200px;
+                    display: flex;
+                    justify-content: center;
                 }
 
                 .door-section {
                     flex: 0 0 auto;
                     min-width: 200px;
+                    display: flex;
+                    justify-content: center;
                 }
 
                 .door-vertical {
                     display: flex;
-                    flex-direction: column;
+                    flex-direction: row;
                     gap: 40px;
                     align-items: center;
                 }
@@ -784,13 +792,60 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData }) => {
                 WebkitBackdropFilter: 'blur(25px)',
             }}>
                 <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-6 md:mb-4 space-y-2 md:space-y-0">
-                    <h2 className="text-base md:text-lg font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2 md:mb-0">수동 제어 - {sokcho1Config.siteInfo.name} {sokcho1Config.siteInfo.unitNumber}</h2>
-                    <div className="flex items-center flex-wrap gap-3 justify-end sm:justify-start">
+                    <div className="hidden md:block"></div>
+                    <div className="flex items-center flex-wrap gap-3 justify-end">
                         {isDisabled && (
                             <div className="bg-red-100 border border-red-300 px-3 py-2 rounded-2xl shadow-md">
                                 <span className="text-red-700 font-semibold text-sm">🚫 제어 불가</span>
                             </div>
                         )}
+                    </div>
+                </div>
+
+                {/* 엔코더값/카운터값 표시 - PC에서는 더 넓게, 모바일/태블릿에서는 작게 */}
+                <div className="mb-6 md:mb-8">
+                    <div className="grid grid-cols-2 gap-4 max-w-md lg:max-w-2xl mx-auto">
+                        <div className="p-3 rounded-lg transition-all duration-300 ease-out transform relative overflow-hidden"
+                            style={{
+                                background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0.08) 100%)',
+                                backdropFilter: 'blur(12px)',
+                                WebkitBackdropFilter: 'blur(12px)',
+                                border: '1px solid rgba(255, 255, 255, 0.18)',
+                                boxShadow: '0 3px 12px 0 rgba(31, 38, 135, 0.18)'
+                            }}>
+                            <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/6 to-blue-500/6 rounded-lg"></div>
+                            <label className="block text-xs font-medium text-gray-600 mb-1 relative z-10">엔코더값</label>
+                            <div className="text-gray-700 text-center rounded-2xl px-2 sm:px-3 py-2 sm:py-3 text-sm sm:text-lg md:text-xl font-bold relative z-10" style={{
+                                background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.75) 100%)',
+                                backdropFilter: 'blur(8px)',
+                                WebkitBackdropFilter: 'blur(8px)',
+                                border: '1px solid rgba(255, 255, 255, 0.25)',
+                                boxShadow: '0 1px 6px 0 rgba(31, 38, 135, 0.12)'
+                            }}>
+                                {sensorData?.rawData?.[240] || 0}
+                            </div>
+                        </div>
+
+                        <div className="p-3 rounded-lg transition-all duration-300 ease-out transform relative overflow-hidden"
+                            style={{
+                                background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0.08) 100%)',
+                                backdropFilter: 'blur(12px)',
+                                WebkitBackdropFilter: 'blur(12px)',
+                                border: '1px solid rgba(255, 255, 255, 0.18)',
+                                boxShadow: '0 3px 12px 0 rgba(31, 38, 135, 0.18)'
+                            }}>
+                            <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/6 to-blue-500/6 rounded-lg"></div>
+                            <label className="block text-xs font-medium text-gray-600 mb-1 relative z-10">카운터값</label>
+                            <div className="text-gray-700 text-center rounded-2xl px-2 sm:px-3 py-2 sm:py-3 text-sm sm:text-lg md:text-xl font-bold relative z-10" style={{
+                                background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.75) 100%)',
+                                backdropFilter: 'blur(8px)',
+                                WebkitBackdropFilter: 'blur(8px)',
+                                border: '1px solid rgba(255, 255, 255, 0.25)',
+                                boxShadow: '0 1px 6px 0 rgba(31, 38, 135, 0.12)'
+                            }}>
+                                {sensorData?.rawData?.[200] || 0}
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -827,8 +882,8 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData }) => {
                         </button>
                         <button
                             onClick={handleEmergencyStop}
-                            disabled={!isPLCConnected}
-                            className={`learn-more emergency-button ${!isPLCConnected ? 'opacity-50 cursor-not-allowed' : ''}`}
+                            disabled={isDisabled}
+                            className={`learn-more emergency-button ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
                         >
                             비상정지
                         </button>
@@ -842,27 +897,21 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData }) => {
                         <div className="page1-layout">
                             {/* 턴테이블 제어 */}
                             <div className="turn-table-section">
-                                <div className="turn-table-grid">
-                                    <div className="turn-table-btn up opacity-50">
-                                        (사용안함)
-                                    </div>
+                                <div className="door-vertical">
                                     <button
                                         onMouseDown={handleTurnLeft}
                                         disabled={isDisabled}
-                                        className={`learn-more turn-table-btn left ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                        className={`learn-more ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
                                     >
                                         좌회전
                                     </button>
                                     <button
                                         onMouseDown={handleTurnRight}
                                         disabled={isDisabled}
-                                        className={`learn-more turn-table-btn right ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                        className={`learn-more ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
                                     >
                                         우회전
                                     </button>
-                                    <div className="turn-table-btn down opacity-50">
-                                        (사용안함)
-                                    </div>
                                 </div>
                             </div>
 
@@ -872,14 +921,14 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData }) => {
                                     <button
                                         onMouseDown={handleDoorOpen}
                                         disabled={isDisabled}
-                                        className={`learn-more door-btn ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                        className={`learn-more ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
                                     >
                                         도어 열림
                                     </button>
                                     <button
                                         onMouseDown={handleDoorClose}
                                         disabled={isDisabled}
-                                        className={`learn-more door-btn ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                        className={`learn-more ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
                                     >
                                         도어 닫힘
                                     </button>
@@ -923,10 +972,10 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData }) => {
 
                     {/* 3페이지: 횡행/락킹 */}
                     {activeTab === 'page3' && (
-                        <div className="space-y-7 md:space-y-12">
+                        <div className="page1-layout">
                             {/* 횡행 제어 */}
-                            <div>
-                                <div className="flex flex-wrap gap-6 md:gap-8 justify-center">
+                            <div className="turn-table-section">
+                                <div className="door-vertical">
                                     <button
                                         onMouseDown={handleMoveLeft}
                                         onMouseUp={() => signalRService.moveLeft(0)}
@@ -934,11 +983,10 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData }) => {
                                         onTouchStart={handleMoveLeft}
                                         onTouchEnd={() => signalRService.moveLeft(0)}
                                         disabled={isDisabled}
-                                        className={`learn-more mobile-move-btn ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                        className={`learn-more ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
                                     >
                                         좌행
                                     </button>
-
                                     <button
                                         onMouseDown={handleMoveRight}
                                         onMouseUp={() => signalRService.moveRight(0)}
@@ -946,7 +994,7 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData }) => {
                                         onTouchStart={handleMoveRight}
                                         onTouchEnd={() => signalRService.moveRight(0)}
                                         disabled={isDisabled}
-                                        className={`learn-more mobile-move-btn ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                        className={`learn-more ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
                                     >
                                         우행
                                     </button>
@@ -954,47 +1002,22 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData }) => {
                             </div>
 
                             {/* 락킹 제어 */}
-                            <div>
-                                <div className="flex justify-center">
-                                    {/* 모바일용 그리드 레이아웃 */}
-                                    <div className="md:hidden grid grid-cols-2 gap-4 max-w-xs">
-                                        <div className="flex flex-col gap-6">
-                                            <button
-                                                onMouseDown={handleLockingOn}
-                                                disabled={isDisabled}
-                                                className={`learn-more mobile-locking-btn ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                            >
-                                                락킹 잠김
-                                            </button>
-                                            <button
-                                                onMouseDown={handleLockingOff}
-                                                disabled={isDisabled}
-                                                className={`learn-more mobile-locking-btn ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                            >
-                                                락킹 해제
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                    {/* PC용 좌우 배치 */}
-                                    <div className="hidden md:flex gap-12 justify-center">
-                                        <div className="flex flex-col gap-8 items-center">
-                                            <button
-                                                onMouseDown={handleLockingOn}
-                                                disabled={isDisabled}
-                                                className={`learn-more ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                            >
-                                                락킹 잠김
-                                            </button>
-                                            <button
-                                                onMouseDown={handleLockingOff}
-                                                disabled={isDisabled}
-                                                className={`learn-more ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                            >
-                                                락킹 해제
-                                            </button>
-                                        </div>
-                                    </div>
+                            <div className="door-section">
+                                <div className="door-vertical">
+                                    <button
+                                        onMouseDown={handleLockingOn}
+                                        disabled={isDisabled}
+                                        className={`learn-more ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    >
+                                        락킹 잠김
+                                    </button>
+                                    <button
+                                        onMouseDown={handleLockingOff}
+                                        disabled={isDisabled}
+                                        className={`learn-more ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    >
+                                        락킹 해제
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -1022,31 +1045,6 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData }) => {
                         횡행/락킹
                     </button>
                 </div>
-
-                {/* 사용법 안내 */}
-                <div className="mt-8 md:mt-12 p-3 md:p-4 bg-blue-50 rounded-2xl">
-                    <h4 className="text-xs md:text-sm font-semibold text-blue-800 mb-2">사용법 - {sokcho1Config.siteInfo.name}</h4>
-                    <ul className="text-xs text-blue-700 space-y-1">
-                        <li>• PLC 연결과 인증이 완료되어야 제어 가능합니다</li>
-                        <li>• 버튼을 누르면 SignalR을 통해 config 기반 명령이 PLC로 전송됩니다</li>
-                        <li>• 명령 실행 중에는 버튼이 강조 표시됩니다</li>
-                        <li>• 비상정지는 PLC 연결만 되어도 실행 가능합니다</li>
-                        <li>• 속초 1호기 전용 config 기반 제어 인터페이스입니다</li>
-                    </ul>
-                </div>
-
-                {/* 디버그 정보 (개발용) */}
-                {/* eslint-disable-next-line no-undef */}
-                {process.env.NODE_ENV === 'development' && (
-                    <div className="mt-4 p-3 bg-gray-100 rounded-2xl text-xs">
-                        <div>사이트: {sokcho1Config.siteInfo.name} {sokcho1Config.siteInfo.unitNumber}</div>
-                        <div>PLC 연결: {isPLCConnected ? 'O' : 'X'}</div>
-                        <div>인증 상태: {isAuthenticated ? 'O' : 'X'}</div>
-                        <div>활성 명령: {activeCommand || 'None'}</div>
-                        <div>비상모드: {isEmergencyMode ? 'O' : 'X'}</div>
-                        <div>센서 수: {Object.keys(sensorStates).length}</div>
-                    </div>
-                )}
             </div>
 
             {/* 좌측 센서 패널 - 속초 센서 표시 (기존과 동일) */}

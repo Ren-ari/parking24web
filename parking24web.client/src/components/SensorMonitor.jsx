@@ -236,71 +236,127 @@ const SensorMonitor = ({ sensorData, isPLCConnected }) => {
 
                 {/* 필터 및 검색 영역 */}
                 <div className="bg-gradient-to-br from-blue-50 to-indigo-100 p-4 rounded-2xl shadow-lg border border-gray-200">
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                    <div className="flex flex-col gap-4">
                         {/* 0값 표시 토글, 실시간 스트림 토글, PLC 체크리스트 토글 */}
-                        <div className="flex items-center gap-6 flex-wrap">
-                            <div className="flex items-center space-x-3">
-                                <span className="text-sm font-medium text-gray-700">0값 표시</span>
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-8 justify-start sm:justify-center">
+                                <div className="flex items-center justify-between w-full sm:w-auto space-x-2 sm:space-x-4">
+                                <span className="text-xs sm:text-sm font-semibold text-gray-700">0값 표시</span>
                                 <button
                                     onClick={() => setShowZeroValues(!showZeroValues)}
-                                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${showZeroValues
-                                        ? 'bg-gradient-to-r from-blue-500 to-indigo-600'
-                                        : 'bg-gray-300'
+                                    className={`relative inline-flex h-6 w-16 items-center rounded-full transition-all duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:ring-offset-2 ${showZeroValues
+                                        ? 'shadow-lg shadow-blue-500/25'
+                                        : 'shadow-md shadow-gray-400/20'
                                         }`}
+                                    style={showZeroValues ? {
+                                        background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.9) 0%, rgba(99, 102, 241, 0.9) 100%)',
+                                        backdropFilter: 'blur(10px)',
+                                        WebkitBackdropFilter: 'blur(10px)',
+                                        border: '1px solid rgba(255, 255, 255, 0.2)',
+                                        minHeight: '4px'
+                                    } : {
+                                        background: 'rgba(156, 163, 175, 0.3)',
+                                        backdropFilter: 'blur(10px)',
+                                        WebkitBackdropFilter: 'blur(10px)',
+                                        border: '1px solid rgba(255, 255, 255, 0.2)',
+                                        minHeight: '4px'
+                                    }}
                                 >
                                     <span
-                                        className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-lg transition-transform duration-300 ease-in-out ${showZeroValues ? 'translate-x-6' : 'translate-x-1'
+                                        className={`inline-block h-4 w-4 transform rounded-full transition-all duration-300 ease-in-out ${showZeroValues ? 'translate-x-10' : 'translate-x-1'
                                             }`}
+                                        style={{
+                                            background: 'rgba(255, 255, 255, 0.95)',
+                                            backdropFilter: 'blur(5px)',
+                                            WebkitBackdropFilter: 'blur(5px)',
+                                            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)'
+                                        }}
                                     />
                                 </button>
                             </div>
 
-                            <div className="flex items-center space-x-3">
-                                <span className="text-sm font-medium text-gray-700">실시간 스트림</span>
+                            <div className="flex items-center justify-between w-full sm:w-auto space-x-2 sm:space-x-4">
+                                <span className="text-xs sm:text-sm font-semibold text-gray-700">실시간 스트림</span>
                                 <button
                                     onClick={() => setShowRawStream(!showRawStream)}
-                                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${showRawStream
-                                        ? 'bg-gradient-to-r from-blue-500 to-indigo-600'
-                                        : 'bg-gray-300'
+                                    className={`relative inline-flex h-6 w-16 items-center rounded-full transition-all duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:ring-offset-2 ${showRawStream
+                                        ? 'shadow-lg shadow-blue-500/25'
+                                        : 'shadow-md shadow-gray-400/20'
                                         }`}
+                                    style={showRawStream ? {
+                                        background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.9) 0%, rgba(99, 102, 241, 0.9) 100%)',
+                                        backdropFilter: 'blur(10px)',
+                                        WebkitBackdropFilter: 'blur(10px)',
+                                        border: '1px solid rgba(255, 255, 255, 0.2)',
+                                        minHeight: '4px'
+                                    } : {
+                                        background: 'rgba(156, 163, 175, 0.3)',
+                                        backdropFilter: 'blur(10px)',
+                                        WebkitBackdropFilter: 'blur(10px)',
+                                        border: '1px solid rgba(255, 255, 255, 0.2)',
+                                        minHeight: '4px'
+                                    }}
                                 >
                                     <span
-                                        className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-lg transition-transform duration-300 ease-in-out ${showRawStream ? 'translate-x-6' : 'translate-x-1'
+                                        className={`inline-block h-4 w-4 transform rounded-full transition-all duration-300 ease-in-out ${showRawStream ? 'translate-x-10' : 'translate-x-1'
                                             }`}
+                                        style={{
+                                            background: 'rgba(255, 255, 255, 0.95)',
+                                            backdropFilter: 'blur(5px)',
+                                            WebkitBackdropFilter: 'blur(5px)',
+                                            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)'
+                                        }}
                                     />
                                 </button>
                             </div>
 
-                            <div className="flex items-center space-x-3">
-                                <span className="text-sm font-medium text-gray-700">PLC 체크리스트</span>
+                            <div className="flex items-center justify-between w-full sm:w-auto space-x-2 sm:space-x-4">
+                                <span className="text-xs sm:text-sm font-semibold text-gray-700">PLC 체크리스트</span>
                                 <button
                                     onClick={() => setShowPLCChecklist(!showPLCChecklist)}
-                                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${showPLCChecklist
-                                        ? 'bg-gradient-to-r from-green-500 to-emerald-600'
-                                        : 'bg-gray-300'
+                                    className={`relative inline-flex h-6 w-16 items-center rounded-full transition-all duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-green-500/50 focus:ring-offset-2 ${showPLCChecklist
+                                        ? 'shadow-lg shadow-green-500/25'
+                                        : 'shadow-md shadow-gray-400/20'
                                         }`}
+                                    style={showPLCChecklist ? {
+                                        background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.9) 0%, rgba(99, 102, 241, 0.9) 100%)',
+                                        backdropFilter: 'blur(10px)',
+                                        WebkitBackdropFilter: 'blur(10px)',
+                                        border: '1px solid rgba(255, 255, 255, 0.2)',
+                                        minHeight: '4px'
+                                    } : {
+                                        background: 'rgba(156, 163, 175, 0.3)',
+                                        backdropFilter: 'blur(10px)',
+                                        WebkitBackdropFilter: 'blur(10px)',
+                                        border: '1px solid rgba(255, 255, 255, 0.2)',
+                                        minHeight: '4px'
+                                    }}
                                 >
                                     <span
-                                        className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-lg transition-transform duration-300 ease-in-out ${showPLCChecklist ? 'translate-x-6' : 'translate-x-1'
+                                        className={`inline-block h-4 w-4 transform rounded-full transition-all duration-300 ease-in-out ${showPLCChecklist ? 'translate-x-10' : 'translate-x-1'
                                             }`}
+                                        style={{
+                                            background: 'rgba(255, 255, 255, 0.95)',
+                                            backdropFilter: 'blur(5px)',
+                                            WebkitBackdropFilter: 'blur(5px)',
+                                            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)'
+                                        }}
                                     />
                                 </button>
                             </div>
                         </div>
 
                         {/* 검색창 - 세련된 디자인 */}
-                        <div className="flex-1 relative">
+                        <div className="relative">
                             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                 <svg className="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                                 </svg>
                             </div>
                             <input
-                                type="text"
-                                placeholder="주소, 센서명, 카테고리로 검색..."
+                                type="text"                      
                                 value={searchFilter}
                                 onChange={(e) => setSearchFilter(e.target.value)}
-                                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 hover:border-blue-400 bg-gray-50 focus:bg-white"
+                                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 hover:border-blue-400 bg-gray-50 focus:bg-white text-gray-900"
                             />
                             {searchFilter && (
                                 <button
@@ -570,21 +626,6 @@ const SensorMonitor = ({ sensorData, isPLCConnected }) => {
                     )}
                 </div>
             )}
-
-            {/* 사용법 안내 */}
-            <div className="mt-8 p-3 md:p-4 bg-blue-50 rounded-2xl">
-                <h4 className="text-xs md:text-sm font-semibold text-blue-800 mb-2">
-                    속초 1호기 센서 모니터 사용법
-                </h4>
-                <ul className="text-xs text-blue-700 space-y-1">
-                    <li>• 속초 1호기 전용 센서 매핑 (C060~C072 비트 구조)</li>
-                    <li>• 비트 모니터에서 카테고리별 센서 상태 실시간 확인</li>
-                    <li>• PLC 체크리스트로 전체 센서 테이블 형태 확인 가능</li>
-                    <li>• 검색으로 특정 센서나 카테고리 필터링 가능</li>
-                    <li>• 실시간 스트림으로 PLC 데이터 흐름 모니터링</li>
-                    <li>• 활성화된 센서는 녹색으로 표시됩니다</li>
-                </ul>
-            </div>
         </div>
     );
 };
