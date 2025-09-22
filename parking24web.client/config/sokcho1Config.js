@@ -8,9 +8,99 @@ export const sokcho1Config = {
         description: "속초 현장 1호기 주차타워"
     },
 
+    // 연결 버튼 구성
+    connectionConfig: {
+        buttons: [
+            {
+                unit: 1,
+                name: "1호기",
+                ip: "192.168.0.101",
+                port: 2005
+            }
+        ]
+    },
+
+    // 수동 제어용 센서 키 매핑
+    manualControlSensors: {
+        page1: {
+            // 입력 센서 (도어/턴테이블)
+            doorOpenSW: "P102_OP도어열림SW",
+            doorCloseSW: "P103_OP도어닫힘SW",
+            doorLockSensor: "P109_도어잠센서",        // 1호기는 "도어잠센서"
+            doorOpenConfirm: "P10A_도어열림확인",
+            doorCloseConfirm: "P10B_도어닫힘확인",
+            turn0Confirm: "P134_턴0도확인",           // 1호기는 C063
+            turn180Confirm: "P135_턴180확인",         // 1호기는 C063
+            turnLeftStop: "P137_턴좌정지",            // 1호기는 C063
+            turnRightStop: "P138_턴우정지",           // 1호기는 C063
+            turnLock: "P146_턴잠김",                  // 1호기만 있음
+            turnUnlock: "P147_턴해제",                // 1호기만 있음
+
+            // 출력 센서 (도어/턴테이블)
+            doorOpenMC: "P212_도어열림MC",
+            doorCloseMC: "P213_도어닫힘MC",
+            turnMC: "P22A_턴MC",                      // 1호기는 C072
+            turnBK: "P22B_턴BK",                      // 1호기는 C072
+            turnLockMC: "P22C_턴락MC",                // 1호기만 있음
+            turnUnlockMC: "P22D_턴언락MC",            // 1호기만 있음
+            guideLight1: "P208_유도등1",
+            guideLight2: "P209_유도등2",
+            guideLight4: "P20A_유도등4",
+            guideLight8: "P20B_유도등8"
+        },
+
+        page2: {
+            // 입력 센서 (승강)
+            homePosition: "P133_홈위치",
+            levelUp: "P148_레벨상",
+            levelDown: "P149_레벨하",
+            upEmergency: "P118_상승비상",
+            upDeceleration: "P11A_상승감속",
+            downDeceleration: "P11B_하강감속",
+            downEmergency: "P11D_하강비상",
+            wireBreak: "P115_와이어절단",
+
+            // 출력 센서 (승강)
+            liftInvForward: "P200_L_INV정",
+            liftInvReverse: "P201_L_INV역",
+            liftMC: "P210_리프트MC",
+            liftBK: "P211_리프트BK",
+            liftInvRUN: "P112_L_INV_RUN",
+            liftInvFLT: "P113_L_INV_FLT",
+            liftInvS3: "P202_L_INV_S3",
+            liftInvS4: "P203_L_INV_S4",
+            liftInvS5: "P204_L_INV_S5",
+            liftInvS6: "P205_L_INV_S6"
+        },
+
+        page3: {
+            // 입력 센서 (횡행/락킹)
+            hookCenterFront: "P140_후크중앙(전)",
+            hookCenterRear: "P141_후크중앙(후)",
+            oddPalletStop: "P142_홀수파렛정지",
+            evenPalletStop: "P143_짝수파렛정지",
+            oddPalletDetect: "P144_파렛감지(홀)",
+            evenPalletDetect: "P145_파렛감지(짝)",
+            oddPitSensor: "P116_피트센서(홀)",
+            evenPitSensor: "P117_피트센서(짝)",
+
+            // 출력 센서 (횡행/락킹)
+            traverseInvForward: "P220_P_INV정",
+            traverseInvReverse: "P221_P_INV역",
+            traverseMC: "P228_횡행MC",
+            traverseBK: "P229_횡행BK",
+            traverseInvRUN: "P130_P_INV_RUN",
+            traverseInvFLT: "P131_P_INV_FLT",
+            traverseInvS3: "P222_P_INV_S3",
+            traverseInvS4: "P223_P_INV_S4",
+            traverseInvS5: "P224_P_INV_S5",
+            traverseInvS6: "P225_P_INV_S6"
+        }
+    },
+
     // PLC 기본 설정
     plcConfig: {
-        ip: "192.168.1.2", // 실제 IP로 변경 필요
+        ip: "192.168.0.101", // 실제 IP로 변경 필요
         port: 2005,
         deviceType: "C",
         startAddress: 0
@@ -81,19 +171,50 @@ export const sokcho1Config = {
     liftPositions: {
         counter: 200,           // C200: 카운터
         entrancePos: 201,       // C201: 리프트승입장위치
-        turnPos: 202,           // C202: 리프트턴회전위치
-        floor1: 203,            // C203: 리프트1단위치
-        floor2: 204,            // C204: 리프트2단위치
-        floor3: 205,            // C205: 리프트3단위치
-        floor4: 206,            // C206: 리프트4단위치
-        floor5: 207,            // C207: 리프트5단위치
-        floor6: 208,            // C208: 리프트6단위치
-        // ... C209~C240 (7단~38단)
-        floor39: 241,           // C241: 리프트39단위치
-        floor40: 242,           // C242: 리프트40단위치
-        floor41: 243,           // C243: 리프트41단위치
-        floor42: 244,           // C244: 리프트42단위치
-        floor43: 245            // C245: 리프트43단위치
+        floor1: 202,            // C202: 리프트1단위치
+        floor2: 203,            // C203: 리프트2단위치  
+        floor3: 204,            // C204: 리프트3단위치
+        floor4: 205,            // C205: 리프트4단위치
+        floor5: 206,            // C206: 리프트5단위치
+        floor6: 207,            // C207: 리프트6단위치
+        floor7: 208,            // C208: 리프트7단위치
+        floor8: 209,            // C209: 리프트8단위치
+        floor9: 210,            // C210: 리프트9단위치
+        floor10: 211,           // C211: 리프트10단위치
+        floor11: 212,           // C212: 리프트11단위치
+        floor12: 213,           // C213: 리프트12단위치
+        floor13: 214,           // C214: 리프트13단위치
+        floor14: 215,           // C215: 리프트14단위치
+        floor15: 216,           // C216: 리프트15단위치
+        floor16: 217,           // C217: 리프트16단위치
+        floor17: 218,           // C218: 리프트17단위치
+        floor18: 219,           // C219: 리프트18단위치
+        floor19: 220,           // C220: 리프트19단위치
+        floor20: 221,           // C221: 리프트20단위치
+        floor21: 222,           // C222: 리프트21단위치
+        floor22: 223,           // C223: 리프트22단위치
+        floor23: 224,           // C224: 리프트23단위치
+        floor24: 225,           // C225: 리프트24단위치
+        floor25: 226,           // C226: 리프트25단위치
+        floor26: 227,           // C227: 리프트26단위치
+        floor27: 228,           // C228: 리프트27단위치
+        floor28: 229,           // C229: 리프트28단위치
+        floor29: 230,           // C230: 리프트29단위치
+        floor30: 231,           // C231: 리프트30단위치
+        floor31: 232,           // C232: 리프트31단위치
+        floor32: 233,           // C233: 리프트32단위치
+        floor33: 234,           // C234: 리프트33단위치
+        floor34: 235,           // C235: 리프트34단위치
+        floor35: 236,           // C236: 리프트35단위치
+        floor36: 237,           // C237: 리프트36단위치
+        floor37: 238,           // C238: 리프트37단위치
+        floor38: 239,           // C239: 리프트38단위치
+        floor39: 240,           // C240: 리프트39단위치
+        floor40: 241,           // C241: 리프트40단위치
+        floor41: 242,           // C242: 리프트41단위치
+        floor42: 243,           // C243: 리프트42단위치
+        floor43: 244,           // C244: 리프트43단위치
+        floor44: 245            // C245: 리프트44단위치
     },
 
     // 센서 비트 매핑 (C060~C072)
@@ -291,7 +412,17 @@ export const sokcho1Config = {
         emergencyStop: "emergencyStop"          // 특수 처리
     },
 
-    // 주차장 모니터링 설정 (속초 전용)
+    api: {
+        baseUrl: 'http://localhost:5123',
+        endpoints: {
+            recent: '/api/parkingevents/recent',
+            parked: '/api/parkingevents/parked',
+            statistics: '/api/parkingevents/statistics',
+            search: '/api/parkingevents/search'
+        }
+    },
+
+    // 주차장 모니터링 설정
     parkingMonitor: {
         // 속초는 순차적 구조 (1~80번)
         vehicleAddressStart: 101,               // C101

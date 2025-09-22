@@ -78,7 +78,7 @@ export const USERS = {
     'client02': {
         password: hashPassword('client!'),
         role: USER_ROLES.CLIENT,
-        name: '고객사2',
+        name: '고객사',
         description: '주차현황 조회만 가능'
     }
 };
@@ -218,7 +218,7 @@ export const startSessionTimeout = (onTimeout) => {
     sessionTimeoutId = setTimeout(() => {
         logout();
         onTimeout(); // 타임아웃 콜백 실행
-    }, 30 * 60 * 1000); // 30분
+    }, 24 * 60 * 60 * 1000); // 24시간
 };
 
 // 세션 타임아웃 초기화 (사용자 활동 시 호출)

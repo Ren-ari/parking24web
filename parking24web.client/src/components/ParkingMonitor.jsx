@@ -1,15 +1,15 @@
 ﻿import React, { useState, useEffect, useRef } from "react";
 // 속초 1호기 config import
-import sokcho1Config from '../../config/sokcho1Config.js';
+import siteConfig from '../../config/sokcho1Config.js';
 
 const ParkingMonitor = ({ sensorData, isPLCConnected, onVehicleEdit }) => {
-    const [isEditMode, setIsEditMode] = useState(false);
+    const [isEditMode, _setIsEditMode] = useState(false);
     const [addressMapping, setAddressMapping] = useState({});
     const [isMobile, setIsMobile] = useState(false);
     const scrollContainerRef = useRef(null);
 
     // 박스 타입 정의 (속초용)
-    const boxTypes = [
+    const _boxTypes = [
         "홀수차량",
         "홀수",  // 홀수 차판상태
         "승강로정보",
@@ -62,10 +62,10 @@ const ParkingMonitor = ({ sensorData, isPLCConnected, onVehicleEdit }) => {
         switch (box) {
             case 0: // 홀수차량
             case 4: // 짝수차량
-                return level >= 1 && level <= 38; // 1층(진입층)부터 38층까지
+                return level >= 2 && level <= 38; // 2층부터 38층까지만 주차 가능
             case 1: // 홀수차판상태
             case 3: // 짝수차판상태
-                return level >= 1 && level <= 38;
+                return level >= 2 && level <= 38; // 2층부터만 차판상태 표시
             case 2: // 승강로정보
                 return level >= 1; // 1층(진입층)부터 38층까지
             default:
@@ -77,38 +77,38 @@ const ParkingMonitor = ({ sensorData, isPLCConnected, onVehicleEdit }) => {
     const getDefaultAddress = (level, box) => {
         switch (box) {
             case 0: // 홀수차량 (C101, C103, C105...)
-                if (level >= 1) {
-                    const slotIndex = (level - 1) * 2; // 각 층당 2개씩
-                    return `C${sokcho1Config.parkingMonitor.vehicleAddressStart + slotIndex}`;
+                if (level >= 2) {
+                    const slotIndex = (level - 2) * 2; // 2층부터 시작
+                    return `C${siteConfig.parkingMonitor.vehicleAddressStart + slotIndex}`;
                 }
                 return "C101";
 
             case 1: // 홀수차판상태 - 홀수차량 주소와 동일 (차량 있으면 차판 있음)
-                if (level >= 1) {
-                    const slotIndex = (level - 1) * 2; // 각 층당 2개씩
-                    return `C${sokcho1Config.parkingMonitor.vehicleAddressStart + slotIndex}`;
+                if (level >= 2) {
+                    const slotIndex = (level - 2) * 2; // 2층부터 시작
+                    return `C${siteConfig.parkingMonitor.vehicleAddressStart + slotIndex}`;
                 }
                 return "C101";
 
             case 2: // 승강로정보 (C200~C245)
-                if (level === 1) return `C${sokcho1Config.liftPositions.entrancePos}`; // 1층(진입층)
-                if (level >= 1 && level <= 43) {
-                    // 1층=C203, 2층=C204, ... 43층=C245
-                    return `C${sokcho1Config.liftPositions.floor1 + (level - 1)}`;
+                if (level === 1) return `C${siteConfig.liftPositions.entrancePos}`; // 1층(진입층)
+                if (level >= 2 && level <= 43) {
+                    // 2층=C203, 3층=C204, ... 43층=C245
+                    return `C${siteConfig.liftPositions.floor1 + (level - 2)}`;
                 }
-                return `C${sokcho1Config.liftPositions.counter}`;                     // 카운터
+                return `C${siteConfig.liftPositions.counter}`;                     // 카운터
 
             case 3: // 짝수차판상태 - 짝수차량 주소와 동일 (차량 있으면 차판 있음)
-                if (level >= 1) {
-                    const slotIndex = (level - 1) * 2 + 1; // 각 층당 2개씩, 짝수는 +1
-                    return `C${sokcho1Config.parkingMonitor.vehicleAddressStart + slotIndex}`;
+                if (level >= 2) {
+                    const slotIndex = (level - 2) * 2 + 1; // 2층부터 시작, 짝수는 +1
+                    return `C${siteConfig.parkingMonitor.vehicleAddressStart + slotIndex}`;
                 }
                 return "C102";
 
             case 4: // 짝수차량 (C102, C104, C106...)
-                if (level >= 1) {
-                    const slotIndex = (level - 1) * 2 + 1; // 각 층당 2개씩, 짝수는 +1
-                    return `C${sokcho1Config.parkingMonitor.vehicleAddressStart + slotIndex}`;
+                if (level >= 2) {
+                    const slotIndex = (level - 2) * 2 + 1; // 2층부터 시작, 짝수는 +1
+                    return `C${siteConfig.parkingMonitor.vehicleAddressStart + slotIndex}`;
                 }
                 return "C102";
 
@@ -159,7 +159,7 @@ const ParkingMonitor = ({ sensorData, isPLCConnected, onVehicleEdit }) => {
 
         // 속초 리프트 위치 확인 (C203~C245가 1이면 해당 층에 리프트 있음)
         for (let floor = 1; floor <= 43; floor++) {
-            const liftAddress = sokcho1Config.liftPositions.floor1 + (floor - 1); // C203~C245
+            const liftAddress = siteConfig.liftPositions.floor1 + (floor - 1); // C203~C245
             if (liftAddress < sensorData.rawData.length) {
                 const liftValue = sensorData.rawData[liftAddress];
                 if (liftValue === 1) {
@@ -169,8 +169,8 @@ const ParkingMonitor = ({ sensorData, isPLCConnected, onVehicleEdit }) => {
         }
 
         // 1층(진입층)(C201) 또는 턴회전층(C202) 확인
-        const entranceValue = sensorData.rawData[sokcho1Config.liftPositions.entrancePos] || 0;
-        const turnValue = sensorData.rawData[sokcho1Config.liftPositions.turnPos] || 0;
+        const entranceValue = sensorData.rawData[siteConfig.liftPositions.entrancePos] || 0;
+        const turnValue = sensorData.rawData[siteConfig.liftPositions.turnPos] || 0;
 
         if (entranceValue === 1) return 1; // 1층(진입층)
         if (turnValue === 1) return -1;    // 턴회전층 (별도 표시)
@@ -178,9 +178,9 @@ const ParkingMonitor = ({ sensorData, isPLCConnected, onVehicleEdit }) => {
         return null; // 위치 불명
     };
     const isVehicleOnLift = (level, box) => {
-        if (!sensorData.rawData || sensorData.rawData.length <= sokcho1Config.dataAddresses.loadedPallet) return false;
+        if (!sensorData.rawData || sensorData.rawData.length <= siteConfig.dataAddresses.loadedPallet) return false;
 
-        const loadingPlateValue = sensorData.rawData[sokcho1Config.dataAddresses.loadedPallet]; // C75
+        const loadingPlateValue = sensorData.rawData[siteConfig.dataAddresses.loadedPallet]; // C75
         if (loadingPlateValue === 0) return false;
 
         if (level >= 1 && (box === 0 || box === 4)) {
@@ -198,10 +198,10 @@ const ParkingMonitor = ({ sensorData, isPLCConnected, onVehicleEdit }) => {
         if (box === 2) {
             // 승강로정보 - 리프트 위치에 따라 색상
             const liftAddress = level === 1 ?
-                `C${sokcho1Config.liftPositions.entrancePos}` :
+                `C${siteConfig.liftPositions.entrancePos}` :
                 level >= 1 && level <= 43 ?
-                    `C${sokcho1Config.liftPositions.floor1 + (level - 1)}` :
-                    `C${sokcho1Config.liftPositions.counter}`;
+                    `C${siteConfig.liftPositions.floor1 + (level - 1)}` :
+                    `C${siteConfig.liftPositions.counter}`;
             const liftValue = getPLCValue(liftAddress);
             return liftValue === 0 ? "bg-gray-400" : "bg-orange-400";
         } else if (box === 1 || box === 3) {
