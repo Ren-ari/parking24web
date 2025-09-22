@@ -251,7 +251,7 @@ const PLCControl = ({ currentUser, onLogout }) => {
                                 </div>
                                 <button
                                     onClick={onLogout}
-                                    className="px-3 py-1 bg-red-500 hover:bg-red-600 text-white text-xs rounded-lg transition-colors duration-200"
+                                    className="px-3 py-1 bg-red-500 hover:bg-red-600 text-white text-xs rounded-2xl transition-colors duration-200"
                                 >
                                     로그아웃
                                 </button>
@@ -486,7 +486,7 @@ const PLCControl = ({ currentUser, onLogout }) => {
 
                                     {/* 첫 번째 행 */}
                                     <div className="grid grid-cols-3 gap-3 sm:gap-4 mb-4">
-                                        <div className={`p-2 sm:p-3 rounded-lg transition-all duration-700 ease-out transform relative overflow-hidden ${isDataPanelExpanded
+                                        <div className={`p-2 sm:p-3 rounded-2xl transition-all duration-700 ease-out transform relative overflow-hidden ${isDataPanelExpanded
                                                 ? 'translate-y-0 opacity-100'
                                                 : 'translate-y-4 opacity-0'
                                             }`}
@@ -498,7 +498,7 @@ const PLCControl = ({ currentUser, onLogout }) => {
                                                 border: '1px solid rgba(255, 255, 255, 0.12)',
                                                 boxShadow: '0 4px 16px 0 rgba(31, 38, 135, 0.15)'
                                             }}>
-                                            <div className="absolute inset-0 bg-gradient-to-br from-blue-500/8 to-indigo-500/8 rounded-lg"></div>
+                                            <div className="absolute inset-0 bg-gradient-to-br from-blue-500/8 to-indigo-500/8 rounded-2xl"></div>
                                             <label className="block text-xs font-medium text-blue-700 mb-1 relative z-10">차량번호</label>
                                             <div className="rounded-2xl px-2 sm:px-3 py-3 sm:py-5 text-lg sm:text-2xl md:text-3xl font-bold text-gray-700 relative z-10" style={{
                                                 background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.8) 100%)',
@@ -509,7 +509,7 @@ const PLCControl = ({ currentUser, onLogout }) => {
                                             }}>----</div>
                                         </div>
 
-                                        <div className={`p-2 sm:p-3 rounded-lg transition-all duration-700 ease-out transform relative overflow-hidden ${isDataPanelExpanded
+                                        <div className={`p-2 sm:p-3 rounded-2xl transition-all duration-700 ease-out transform relative overflow-hidden ${isDataPanelExpanded
                                                 ? 'translate-y-0 opacity-100'
                                                 : 'translate-y-4 opacity-0'
                                             }`}
@@ -521,7 +521,7 @@ const PLCControl = ({ currentUser, onLogout }) => {
                                                 border: '1px solid rgba(255, 255, 255, 0.2)',
                                                 boxShadow: '0 4px 16px 0 rgba(31, 38, 135, 0.2)'
                                             }}>
-                                            <div className="absolute inset-0 bg-gradient-to-br from-blue-500/8 to-indigo-500/8 rounded-lg"></div>
+                                            <div className="absolute inset-0 bg-gradient-to-br from-blue-500/8 to-indigo-500/8 rounded-2xl"></div>
                                             <label className="block text-xs font-medium text-blue-700 mb-1 relative z-10">적재차판</label>
                                             <div className="rounded-2xl px-2 sm:px-3 py-3 sm:py-5 text-lg sm:text-2xl md:text-3xl font-bold text-gray-700 relative z-10" style={{
                                                 background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.8) 100%)',
@@ -534,7 +534,7 @@ const PLCControl = ({ currentUser, onLogout }) => {
                                             </div>
                                         </div>
 
-                                        <div className={`p-2 sm:p-3 rounded-lg transition-all duration-700 ease-out transform relative overflow-hidden ${isDataPanelExpanded
+                                        <div className={`p-2 sm:p-3 rounded-2xl transition-all duration-700 ease-out transform relative overflow-hidden ${isDataPanelExpanded
                                                 ? 'translate-y-0 opacity-100'
                                                 : 'translate-y-4 opacity-0'
                                             }`}
@@ -546,7 +546,7 @@ const PLCControl = ({ currentUser, onLogout }) => {
                                                 border: '1px solid rgba(255, 255, 255, 0.2)',
                                                 boxShadow: '0 4px 16px 0 rgba(31, 38, 135, 0.2)'
                                             }}>
-                                            <div className="absolute inset-0 bg-gradient-to-br from-blue-500/8 to-indigo-500/8 rounded-lg"></div>
+                                            <div className="absolute inset-0 bg-gradient-to-br from-blue-500/8 to-indigo-500/8 rounded-2xl"></div>
                                             <label className="block text-xs font-medium text-blue-700 mb-1 relative z-10">출고차판</label>
                                             <div className="rounded-2xl px-2 sm:px-3 py-3 sm:py-5 text-lg sm:text-2xl md:text-3xl font-bold text-gray-700 relative z-10" style={{
                                                 background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.8) 100%)',
@@ -562,7 +562,7 @@ const PLCControl = ({ currentUser, onLogout }) => {
 
                                     {/* 두 번째 행 */}
                                     <div className="grid grid-cols-2 md:grid-cols-6 gap-3 mb-4">
-                                        <div className={`p-3 rounded-lg transition-all duration-700 ease-out transform relative overflow-hidden ${isDataPanelExpanded
+                                        <div className={`p-3 rounded-2xl transition-all duration-700 ease-out transform relative overflow-hidden ${isDataPanelExpanded
                                                 ? 'translate-y-0 opacity-100 scale-100'
                                                 : 'translate-y-4 opacity-0 scale-95'
                                             }`}
@@ -574,7 +574,7 @@ const PLCControl = ({ currentUser, onLogout }) => {
                                                 border: '1px solid rgba(255, 255, 255, 0.18)',
                                                 boxShadow: '0 3px 12px 0 rgba(31, 38, 135, 0.18)'
                                             }}>
-                                            <div className="absolute inset-0 bg-gradient-to-br from-purple-500/6 to-pink-500/6 rounded-lg"></div>
+                                            <div className="absolute inset-0 bg-gradient-to-br from-purple-500/6 to-pink-500/6 rounded-2xl"></div>
                                             <label className="block text-xs font-medium text-gray-600 mb-1 relative z-10">전체주차</label>
                                             <div className="text-gray-700 text-center rounded-2xl px-1 sm:px-2 py-3 sm:py-5 text-lg sm:text-2xl md:text-3xl font-bold relative z-10" style={{
                                                 background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.75) 100%)',
@@ -587,7 +587,7 @@ const PLCControl = ({ currentUser, onLogout }) => {
                                             </div>
                                         </div>
 
-                                        <div className={`p-3 rounded-lg transition-all duration-700 ease-out transform relative overflow-hidden ${isDataPanelExpanded
+                                        <div className={`p-3 rounded-2xl transition-all duration-700 ease-out transform relative overflow-hidden ${isDataPanelExpanded
                                                 ? 'translate-y-0 opacity-100 scale-100'
                                                 : 'translate-y-4 opacity-0 scale-95'
                                             }`}
@@ -599,7 +599,7 @@ const PLCControl = ({ currentUser, onLogout }) => {
                                                 border: '1px solid rgba(255, 255, 255, 0.18)',
                                                 boxShadow: '0 3px 12px 0 rgba(31, 38, 135, 0.18)'
                                             }}>
-                                            <div className="absolute inset-0 bg-gradient-to-br from-purple-500/6 to-pink-500/6 rounded-lg"></div>
+                                            <div className="absolute inset-0 bg-gradient-to-br from-purple-500/6 to-pink-500/6 rounded-2xl"></div>
                                             <label className="block text-xs font-medium text-gray-600 mb-1 relative z-10">전체공차</label>
                                             <div className="text-gray-700 text-center rounded-2xl px-1 sm:px-2 py-3 sm:py-5 text-lg sm:text-2xl md:text-3xl font-bold relative z-10" style={{
                                                 background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.75) 100%)',
@@ -612,7 +612,7 @@ const PLCControl = ({ currentUser, onLogout }) => {
                                             </div>
                                         </div>
 
-                                        <div className={`p-3 rounded-lg transition-all duration-700 ease-out transform relative overflow-hidden ${isDataPanelExpanded
+                                        <div className={`p-3 rounded-2xl transition-all duration-700 ease-out transform relative overflow-hidden ${isDataPanelExpanded
                                                 ? 'translate-y-0 opacity-100 scale-100'
                                                 : 'translate-y-4 opacity-0 scale-95'
                                             }`}
@@ -624,7 +624,7 @@ const PLCControl = ({ currentUser, onLogout }) => {
                                                 border: '1px solid rgba(255, 255, 255, 0.18)',
                                                 boxShadow: '0 3px 12px 0 rgba(31, 38, 135, 0.18)'
                                             }}>
-                                            <div className="absolute inset-0 bg-gradient-to-br from-purple-500/6 to-pink-500/6 rounded-lg"></div>
+                                            <div className="absolute inset-0 bg-gradient-to-br from-purple-500/6 to-pink-500/6 rounded-2xl"></div>
                                             <label className="block text-xs font-medium text-gray-600 mb-1 relative z-10">일반입고</label>
                                             <div className="text-gray-700 text-center rounded-2xl px-1 sm:px-2 py-3 sm:py-5 text-lg sm:text-2xl md:text-3xl font-bold relative z-10" style={{
                                                 background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.75) 100%)',
@@ -637,7 +637,7 @@ const PLCControl = ({ currentUser, onLogout }) => {
                                             </div>
                                         </div>
 
-                                        <div className={`p-3 rounded-lg transition-all duration-700 ease-out transform relative overflow-hidden ${isDataPanelExpanded
+                                        <div className={`p-3 rounded-2xl transition-all duration-700 ease-out transform relative overflow-hidden ${isDataPanelExpanded
                                                 ? 'translate-y-0 opacity-100 scale-100'
                                                 : 'translate-y-4 opacity-0 scale-95'
                                             }`}
@@ -649,7 +649,7 @@ const PLCControl = ({ currentUser, onLogout }) => {
                                                 border: '1px solid rgba(255, 255, 255, 0.18)',
                                                 boxShadow: '0 3px 12px 0 rgba(31, 38, 135, 0.18)'
                                             }}>
-                                            <div className="absolute inset-0 bg-gradient-to-br from-purple-500/6 to-pink-500/6 rounded-lg"></div>
+                                            <div className="absolute inset-0 bg-gradient-to-br from-purple-500/6 to-pink-500/6 rounded-2xl"></div>
                                             <label className="block text-xs font-medium text-gray-600 mb-1 relative z-10">일반출차</label>
                                             <div className="text-gray-700 text-center rounded-2xl px-1 sm:px-2 py-3 sm:py-5 text-lg sm:text-2xl md:text-3xl font-bold relative z-10" style={{
                                                 background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.75) 100%)',
@@ -662,7 +662,7 @@ const PLCControl = ({ currentUser, onLogout }) => {
                                             </div>
                                         </div>
 
-                                        <div className={`p-3 rounded-lg transition-all duration-700 ease-out transform relative overflow-hidden ${isDataPanelExpanded
+                                        <div className={`p-3 rounded-2xl transition-all duration-700 ease-out transform relative overflow-hidden ${isDataPanelExpanded
                                                 ? 'translate-y-0 opacity-100 scale-100'
                                                 : 'translate-y-4 opacity-0 scale-95'
                                             }`}
@@ -674,7 +674,7 @@ const PLCControl = ({ currentUser, onLogout }) => {
                                                 border: '1px solid rgba(255, 255, 255, 0.18)',
                                                 boxShadow: '0 3px 12px 0 rgba(31, 38, 135, 0.18)'
                                             }}>
-                                            <div className="absolute inset-0 bg-gradient-to-br from-purple-500/6 to-pink-500/6 rounded-lg"></div>
+                                            <div className="absolute inset-0 bg-gradient-to-br from-purple-500/6 to-pink-500/6 rounded-2xl"></div>
                                             <label className="block text-xs font-medium text-gray-600 mb-1 relative z-10">RV입고</label>
                                             <div className="text-gray-700 text-center rounded-2xl px-1 sm:px-2 py-3 sm:py-5 text-lg sm:text-2xl md:text-3xl font-bold relative z-10" style={{
                                                 background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.75) 100%)',
@@ -687,7 +687,7 @@ const PLCControl = ({ currentUser, onLogout }) => {
                                             </div>
                                         </div>
 
-                                        <div className={`p-3 rounded-lg transition-all duration-700 ease-out transform relative overflow-hidden ${isDataPanelExpanded
+                                        <div className={`p-3 rounded-2xl transition-all duration-700 ease-out transform relative overflow-hidden ${isDataPanelExpanded
                                                 ? 'translate-y-0 opacity-100 scale-100'
                                                 : 'translate-y-4 opacity-0 scale-95'
                                             }`}
@@ -699,7 +699,7 @@ const PLCControl = ({ currentUser, onLogout }) => {
                                                 border: '1px solid rgba(255, 255, 255, 0.18)',
                                                 boxShadow: '0 3px 12px 0 rgba(31, 38, 135, 0.18)'
                                             }}>
-                                            <div className="absolute inset-0 bg-gradient-to-br from-purple-500/6 to-pink-500/6 rounded-lg"></div>
+                                            <div className="absolute inset-0 bg-gradient-to-br from-purple-500/6 to-pink-500/6 rounded-2xl"></div>
                                             <label className="block text-xs font-medium text-gray-600 mb-1 relative z-10">RV출차</label>
                                             <div className="text-gray-700 text-center rounded-2xl px-1 sm:px-2 py-3 sm:py-5 text-lg sm:text-2xl md:text-3xl font-bold relative z-10" style={{
                                                 background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.75) 100%)',

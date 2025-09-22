@@ -16,6 +16,7 @@ const EventMonitor = ({ sensorData }) => {
         monthlyIn: 0,
         monthlyOut: 0
     });
+    const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
 
     const prevDataRef = useRef(null);
     const STORAGE_KEY = 'parkingEvents';
@@ -226,18 +227,66 @@ const EventMonitor = ({ sensorData }) => {
         }
     };
 
+    // 정렬 함수
+    const handleSort = (key) => {
+        let direction = 'asc';
+        if (sortConfig.key === key && sortConfig.direction === 'asc') {
+            direction = 'desc';
+        }
+        setSortConfig({ key, direction });
+    };
+
+    // 데이터 정렬 함수
+    const sortData = (data) => {
+        if (!sortConfig.key) return data;
+
+        return [...data].sort((a, b) => {
+            let aValue = a[sortConfig.key];
+            let bValue = b[sortConfig.key];
+
+            // 시간 정렬을 위한 특별 처리
+            if (sortConfig.key === '시간') {
+                aValue = new Date(`2000-01-01 ${aValue}`);
+                bValue = new Date(`2000-01-01 ${bValue}`);
+            }
+            // 층 정렬을 위한 숫자 변환
+            else if (sortConfig.key === '층') {
+                aValue = parseInt(aValue) || 0;
+                bValue = parseInt(bValue) || 0;
+            }
+            // 차량번호 정렬을 위한 숫자 변환
+            else if (sortConfig.key === '차번') {
+                aValue = parseInt(aValue) || 0;
+                bValue = parseInt(bValue) || 0;
+            }
+
+            if (aValue < bValue) {
+                return sortConfig.direction === 'asc' ? -1 : 1;
+            }
+            if (aValue > bValue) {
+                return sortConfig.direction === 'asc' ? 1 : -1;
+            }
+            return 0;
+        });
+    };
+
     // 탭별 데이터
     const getTabData = () => {
+        let data = [];
         switch (activeTab) {
             case 'recent':
-                return recentEvents;
+                data = recentEvents;
+                break;
             case 'parked':
-                return currentParked;
+                data = currentParked;
+                break;
             case 'exited':
-                return exitedCars;
+                data = exitedCars;
+                break;
             default:
-                return [];
+                data = [];
         }
+        return sortData(data);
     };
 
     // 통계 섹션 토글 (펼침: 기존 애니메이션, 숨김: 접힘 애니메이션 후 언마운트)
@@ -366,9 +415,8 @@ const EventMonitor = ({ sensorData }) => {
                 border: '1px solid rgba(255, 255, 255, 0.2)',
                 boxShadow: '0 4px 16px 0 rgba(31, 38, 135, 0.2)'
             }}>
-                <div className="flex justify-between items-center mb-4">
-                    <h2 className="text-2xl font-bold text-white mb-8">입출차 현황 모니터링</h2>
-            
+                <div className="flex justify-center mb-4">
+                    <h2 className="text-2xl font-bold text-white mb-8 text-center">입출차 현황 모니터링</h2>
                 </div>
 
 
@@ -404,22 +452,20 @@ const EventMonitor = ({ sensorData }) => {
                     </button>
                 </div>
 
-                {/* 모바일용 액션 버튼들 - 아래쪽에 별도 행 */}
-                <div className="flex gap-1 sm:hidden mt-4">
+                {/* 모바일용 액션 버튼들 - 입력칸 바로 아래 */}
+                <div className="flex gap-3 sm:hidden mt-3 justify-start">
                     <button 
                         onClick={downloadExcel} 
-                        className="flex-1 px-2 py-1 rounded-lg text-white font-bold transition-all duration-200 hover:scale-105 text-xs"
+                        className="h-6 w-16 min-h-0 min-w-0 p-0 m-0 rounded-full text-gray-700 font-bold transition-all duration-200 hover:scale-105 text-xs leading-none flex items-center justify-center"
                         style={{
-                            background: 'linear-gradient(135deg, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.6) 100%)',
+                            background: 'rgba(255, 255, 255, 0.9)',
                             backdropFilter: 'blur(10px)',
                             WebkitBackdropFilter: 'blur(10px)',
-                            border: '1px solid rgba(255, 255, 255, 0.2)',
-                            boxShadow: '0 2px 8px 0 rgba(0, 0, 0, 0.3)',
-                            fontSize: '0.75rem',
-                            fontWeight: '700'
+                            border: '1px solid rgba(255, 255, 255, 0.3)',
+                            boxShadow: '0 2px 8px 0 rgba(0, 0, 0, 0.1)'
                         }}
                     >
-                        엑셀 다운로드
+                        엑셀
                     </button>
                     <button 
                         onClick={() => {
@@ -434,33 +480,29 @@ const EventMonitor = ({ sensorData }) => {
                             }
                             showToast(' 데이터 새로고침 완료');
                         }} 
-                        className="flex-1 px-2 py-1 rounded-lg text-white font-medium transition-all duration-200 hover:scale-105 text-xs"
+                        className="h-6 w-16 min-h-0 min-w-0 p-0 m-0 rounded-full text-gray-700 font-medium transition-all duration-200 hover:scale-105 text-xs leading-none flex items-center justify-center"
                         style={{
-                            background: 'linear-gradient(135deg, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.6) 100%)',
+                            background: 'rgba(255, 255, 255, 0.9)',
                             backdropFilter: 'blur(10px)',
                             WebkitBackdropFilter: 'blur(10px)',
-                            border: '1px solid rgba(255, 255, 255, 0.2)',
-                            boxShadow: '0 2px 8px 0 rgba(0, 0, 0, 0.3)',
-                            fontSize: '0.75rem',
-                            fontWeight: '500'
+                            border: '1px solid rgba(255, 255, 255, 0.3)',
+                            boxShadow: '0 2px 8px 0 rgba(0, 0, 0, 0.1)'
                         }}
                     >
                         새로고침
                     </button>
                     <button 
                         onClick={clearAllData} 
-                        className="flex-1 px-2 py-1 rounded-lg text-white font-bold transition-all duration-200 hover:scale-105 text-xs"
+                        className="h-6 w-16 min-h-0 min-w-0 p-0 m-0 rounded-full text-gray-700 font-bold transition-all duration-200 hover:scale-105 text-xs leading-none flex items-center justify-center"
                         style={{
-                            background: 'linear-gradient(135deg, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.6) 100%)',
+                            background: 'rgba(255, 255, 255, 0.9)',
                             backdropFilter: 'blur(10px)',
                             WebkitBackdropFilter: 'blur(10px)',
-                            border: '1px solid rgba(255, 255, 255, 0.2)',
-                            boxShadow: '0 2px 8px 0 rgba(0, 0, 0, 0.3)',
-                            fontSize: '0.75rem',
-                            fontWeight: '700'
+                            border: '1px solid rgba(255, 255, 255, 0.3)',
+                            boxShadow: '0 2px 8px 0 rgba(0, 0, 0, 0.1)'
                         }}
                     >
-                        데이터 초기화
+                        초기화
                     </button>
                 </div>
 
@@ -468,13 +510,13 @@ const EventMonitor = ({ sensorData }) => {
                 <div className="hidden sm:flex gap-3 mt-4">
                     <button 
                         onClick={downloadExcel} 
-                        className="px-4 py-2 rounded-lg text-white font-bold transition-all duration-200 hover:scale-105 text-base"
+                        className="px-4 py-2 rounded-full text-gray-700 font-bold transition-all duration-200 hover:scale-105 text-base"
                         style={{
-                            background: 'linear-gradient(135deg, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.6) 100%)',
+                            background: 'rgba(255, 255, 255, 0.9)',
                             backdropFilter: 'blur(10px)',
                             WebkitBackdropFilter: 'blur(10px)',
-                            border: '1px solid rgba(255, 255, 255, 0.2)',
-                            boxShadow: '0 2px 8px 0 rgba(0, 0, 0, 0.3)',
+                            border: '1px solid rgba(255, 255, 255, 0.3)',
+                            boxShadow: '0 2px 8px 0 rgba(0, 0, 0, 0.1)',
                             fontSize: '0.75rem',
                             fontWeight: '700'
                         }}
@@ -494,13 +536,13 @@ const EventMonitor = ({ sensorData }) => {
                             }
                             showToast(' 데이터 새로고침 완료');
                         }} 
-                        className="px-4 py-2 rounded-lg text-white font-medium transition-all duration-200 hover:scale-105 text-base"
+                        className="px-4 py-2 rounded-full text-gray-700 font-medium transition-all duration-200 hover:scale-105 text-base"
                         style={{
-                            background: 'linear-gradient(135deg, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.6) 100%)',
+                            background: 'rgba(255, 255, 255, 0.9)',
                             backdropFilter: 'blur(10px)',
                             WebkitBackdropFilter: 'blur(10px)',
-                            border: '1px solid rgba(255, 255, 255, 0.2)',
-                            boxShadow: '0 2px 8px 0 rgba(0, 0, 0, 0.3)',
+                            border: '1px solid rgba(255, 255, 255, 0.3)',
+                            boxShadow: '0 2px 8px 0 rgba(0, 0, 0, 0.1)',
                             fontSize: '0.75rem',
                             fontWeight: '500'
                         }}
@@ -509,13 +551,13 @@ const EventMonitor = ({ sensorData }) => {
                     </button>
                     <button 
                         onClick={clearAllData} 
-                        className="px-4 py-2 rounded-lg text-white font-bold transition-all duration-200 hover:scale-105 text-base"
+                        className="px-4 py-2 rounded-full text-gray-700 font-bold transition-all duration-200 hover:scale-105 text-base"
                         style={{
-                            background: 'linear-gradient(135deg, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.6) 100%)',
+                            background: 'rgba(255, 255, 255, 0.9)',
                             backdropFilter: 'blur(10px)',
                             WebkitBackdropFilter: 'blur(10px)',
-                            border: '1px solid rgba(255, 255, 255, 0.2)',
-                            boxShadow: '0 2px 8px 0 rgba(0, 0, 0, 0.3)',
+                            border: '1px solid rgba(255, 255, 255, 0.3)',
+                            boxShadow: '0 2px 8px 0 rgba(0, 0, 0, 0.1)',
                             fontSize: '0.75rem',
                             fontWeight: '700'
                         }}
@@ -730,12 +772,60 @@ const EventMonitor = ({ sensorData }) => {
                     boxShadow: '0 4px 16px 0 rgba(31, 38, 135, 0.1)'
                 }}>
                     <table className="w-[100%] table-fixed">
-                        <thead className="sticky top-0 bg-gray-300 z-10">
+                        <thead className="sticky top-0 bg-gray-500 text-white z-10">
                             <tr>
-                                <th className="px-2 sm:px-4 py-3 sm:py-4 text-center text-gray-700 font-semibold w-1/4 text-xs sm:text-base">시간</th>
-                                <th className="px-2 sm:px-4 py-3 sm:py-4 text-center text-gray-700 font-semibold w-1/4 text-xs sm:text-base">구분</th>
-                                <th className="px-2 sm:px-4 py-3 sm:py-4 text-center text-gray-700 font-semibold w-1/4 text-xs sm:text-base">층</th>
-                                <th className="px-2 sm:px-4 py-3 sm:py-4 text-center text-gray-700 font-semibold w-1/4 text-xs sm:text-base">차량번호</th>
+                                <th 
+                                    className="px-2 sm:px-4 py-3 sm:py-4 text-center text-white font-semibold w-1/4 text-xs sm:text-base cursor-pointer hover:bg-gray-600 transition-colors duration-200 select-none"
+                                    onClick={() => handleSort('시간')}
+                                >
+                                    <div className="flex items-center justify-center gap-1">
+                                        시간
+                                        {sortConfig.key === '시간' && (
+                                            <span className="text-xs">
+                                                {sortConfig.direction === 'asc' ? '↑' : '↓'}
+                                            </span>
+                                        )}
+                                    </div>
+                                </th>
+                                <th 
+                                    className="px-2 sm:px-4 py-3 sm:py-4 text-center text-white font-semibold w-1/4 text-xs sm:text-base cursor-pointer hover:bg-gray-600 transition-colors duration-200 select-none"
+                                    onClick={() => handleSort('구분')}
+                                >
+                                    <div className="flex items-center justify-center gap-1">
+                                        구분
+                                        {sortConfig.key === '구분' && (
+                                            <span className="text-xs">
+                                                {sortConfig.direction === 'asc' ? '↑' : '↓'}
+                                            </span>
+                                        )}
+                                    </div>
+                                </th>
+                                <th 
+                                    className="px-2 sm:px-4 py-3 sm:py-4 text-center text-white font-semibold w-1/4 text-xs sm:text-base cursor-pointer hover:bg-gray-600 transition-colors duration-200 select-none"
+                                    onClick={() => handleSort('층')}
+                                >
+                                    <div className="flex items-center justify-center gap-1">
+                                        층
+                                        {sortConfig.key === '층' && (
+                                            <span className="text-xs">
+                                                {sortConfig.direction === 'asc' ? '↑' : '↓'}
+                                            </span>
+                                        )}
+                                    </div>
+                                </th>
+                                <th 
+                                    className="px-2 sm:px-4 py-3 sm:py-4 text-center text-white font-semibold w-1/4 text-xs sm:text-base cursor-pointer hover:bg-gray-600 transition-colors duration-200 select-none"
+                                    onClick={() => handleSort('차번')}
+                                >
+                                    <div className="flex items-center justify-center gap-1">
+                                        차량번호
+                                        {sortConfig.key === '차번' && (
+                                            <span className="text-xs">
+                                                {sortConfig.direction === 'asc' ? '↑' : '↓'}
+                                            </span>
+                                        )}
+                                    </div>
+                                </th>
                             </tr>
                         </thead>
                         <tbody>
@@ -747,7 +837,7 @@ const EventMonitor = ({ sensorData }) => {
                                 </tr>
                             ) : (
                                 getTabData().map((item, idx) => (
-                                    <tr key={idx} className={`border-b transition-all duration-200 hover:scale-[1.01] hover:bg-blue-50/50`}
+                                    <tr key={idx} className={`border-b transition-all duration-200 hover:scale-[1.01] hover:bg-purple-50/50`}
                                         style={{
                                             background: 'rgba(59, 130, 246, 0.05)'
                                         }}>

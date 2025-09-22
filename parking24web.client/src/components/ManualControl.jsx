@@ -266,7 +266,7 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
                 .common-buttons-grid {
                     display: flex;
                     flex-wrap: wrap;
-                    gap: 16px;
+                    gap: 20px;
                     justify-content: center;
                     max-width: none;
                 }
@@ -805,7 +805,7 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
                 {/* 엔코더값/카운터값 표시 - PC에서는 더 넓게, 모바일/태블릿에서는 작게 */}
                 <div className="mb-6 md:mb-8">
                     <div className="grid grid-cols-2 gap-4 max-w-md lg:max-w-2xl mx-auto">
-                        <div className="p-3 rounded-lg transition-all duration-300 ease-out transform relative overflow-hidden"
+                        <div className="p-3 rounded-2xl transition-all duration-300 ease-out transform relative overflow-hidden"
                             style={{
                                 background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0.08) 100%)',
                                 backdropFilter: 'blur(12px)',
@@ -813,7 +813,7 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
                                 border: '1px solid rgba(255, 255, 255, 0.18)',
                                 boxShadow: '0 3px 12px 0 rgba(31, 38, 135, 0.18)'
                             }}>
-                            <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/6 to-blue-500/6 rounded-lg"></div>
+                            <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/6 to-blue-500/6 rounded-2xl"></div>
                             <label className="block text-xs font-medium text-gray-600 mb-1 relative z-10">엔코더값</label>
                             <div className="text-gray-700 text-center rounded-2xl px-2 sm:px-3 py-2 sm:py-3 text-sm sm:text-lg md:text-xl font-bold relative z-10" style={{
                                 background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.75) 100%)',
@@ -826,7 +826,7 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
                             </div>
                         </div>
 
-                        <div className="p-3 rounded-lg transition-all duration-300 ease-out transform relative overflow-hidden"
+                        <div className="p-3 rounded-2xl transition-all duration-300 ease-out transform relative overflow-hidden"
                             style={{
                                 background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0.08) 100%)',
                                 backdropFilter: 'blur(12px)',
@@ -834,7 +834,7 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
                                 border: '1px solid rgba(255, 255, 255, 0.18)',
                                 boxShadow: '0 3px 12px 0 rgba(31, 38, 135, 0.18)'
                             }}>
-                            <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/6 to-blue-500/6 rounded-lg"></div>
+                            <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/6 to-blue-500/6 rounded-2xl"></div>
                             <label className="block text-xs font-medium text-gray-600 mb-1 relative z-10">카운터값</label>
                             <div className="text-gray-700 text-center rounded-2xl px-2 sm:px-3 py-2 sm:py-3 text-sm sm:text-lg md:text-xl font-bold relative z-10" style={{
                                 background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.75) 100%)',

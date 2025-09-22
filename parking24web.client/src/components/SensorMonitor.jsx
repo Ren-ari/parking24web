@@ -9,6 +9,8 @@ const SensorMonitor = ({ sensorData, isPLCConnected }) => {
     const [rawLog, setRawLog] = useState([]);
     const [showRawStream, setShowRawStream] = useState(false);
     const [showPLCChecklist, setShowPLCChecklist] = useState(false);
+    const [sortField, setSortField] = useState('address'); // 정렬 필드
+    const [sortDirection, setSortDirection] = useState('asc'); // 정렬 방향
 
     // 센서 데이터 필터링 및 정렬
     const filteredData = useMemo(() => {
@@ -120,21 +122,51 @@ const SensorMonitor = ({ sensorData, isPLCConnected }) => {
             });
         }
 
-        // 주소순으로 정렬
+        // 정렬 로직
         data.sort((a, b) => {
-            const aAddr = a.address.split('.');
-            const bAddr = b.address.split('.');
-            const aWord = parseInt(aAddr[0].substring(1));
-            const bWord = parseInt(bAddr[0].substring(1));
-            const aBit = parseInt(aAddr[1]);
-            const bBit = parseInt(bAddr[1]);
+            let aValue, bValue;
+            
+            switch (sortField) {
+                case 'address':
+                    const aAddr = a.address.split('.');
+                    const bAddr = b.address.split('.');
+                    const aWord = parseInt(aAddr[0].substring(1));
+                    const bWord = parseInt(bAddr[0].substring(1));
+                    const aBit = parseInt(aAddr[1]);
+                    const bBit = parseInt(bAddr[1]);
+                    
+                    if (aWord !== bWord) {
+                        aValue = aWord;
+                        bValue = bWord;
+                    } else {
+                        aValue = aBit;
+                        bValue = bBit;
+                    }
+                    break;
+                case 'name':
+                    aValue = a.name.toLowerCase();
+                    bValue = b.name.toLowerCase();
+                    break;
+                case 'status':
+                    aValue = a.status === 'active' ? 1 : 0;
+                    bValue = b.status === 'active' ? 1 : 0;
+                    break;
+                case 'category':
+                    aValue = a.category.toLowerCase();
+                    bValue = b.category.toLowerCase();
+                    break;
+                default:
+                    aValue = a[sortField];
+                    bValue = b[sortField];
+            }
 
-            if (aWord !== bWord) return aWord - bWord;
-            return aBit - bBit;
+            if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
+            if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
+            return 0;
         });
 
         return data;
-    }, [sensorData]);
+    }, [sensorData, sortField, sortDirection]);
 
     // 실시간 raw 데이터 로그 업데이트
     useEffect(() => {
@@ -162,6 +194,16 @@ const SensorMonitor = ({ sensorData, isPLCConnected }) => {
         return new Date(timestamp).toLocaleTimeString();
     };
 
+    // 정렬 핸들러
+    const handleSort = (field) => {
+        if (sortField === field) {
+            setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+        } else {
+            setSortField(field);
+            setSortDirection('asc');
+        }
+    };
+
     // 카테고리별 색상 정의 (속초용)
     const getCategoryColor = (category) => {
         switch (category) {
@@ -184,8 +226,8 @@ const SensorMonitor = ({ sensorData, isPLCConnected }) => {
             backdropFilter: 'blur(25px)',
             WebkitBackdropFilter: 'blur(25px)',
         }}>
-            <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-6 md:mb-4 space-y-2 md:space-y-0">
-                <h2 className="text-base md:text-lg font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2 md:mb-0">
+            <div className="flex justify-center mb-6 md:mb-4">
+                <h2 className="text-base md:text-lg font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent text-center">
                     센서 데이터 모니터 - {sokcho1Config.siteInfo.name} {sokcho1Config.siteInfo.unitNumber}
                 </h2>
             </div>
@@ -199,7 +241,7 @@ const SensorMonitor = ({ sensorData, isPLCConnected }) => {
                             onClick={() => setViewMode('parsed')}
                             className={`flex-shrink-0 px-4 md:px-6 py-2 md:py-3 rounded-xl text-xs md:text-sm font-semibold transition-all duration-500 ease-in-out transform ${viewMode === 'parsed'
                                 ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg scale-105 shadow-blue-500/25'
-                                : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50 hover:scale-102'
+                                : 'text-gray-600 hover:text-purple-600 hover:bg-purple-50 hover:scale-102'
                                 }`}
                         >
                             파싱된 데이터
@@ -208,7 +250,7 @@ const SensorMonitor = ({ sensorData, isPLCConnected }) => {
                             onClick={() => setViewMode('raw')}
                             className={`flex-shrink-0 px-4 md:px-6 py-2 md:py-3 rounded-xl text-xs md:text-sm font-semibold transition-all duration-500 ease-in-out transform ${viewMode === 'raw'
                                 ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg scale-105 shadow-blue-500/25'
-                                : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50 hover:scale-102'
+                                : 'text-gray-600 hover:text-purple-600 hover:bg-purple-50 hover:scale-102'
                                 }`}
                         >
                             원시 데이터
@@ -217,7 +259,7 @@ const SensorMonitor = ({ sensorData, isPLCConnected }) => {
                             onClick={() => setViewMode('hex')}
                             className={`flex-shrink-0 px-4 md:px-6 py-2 md:py-3 rounded-xl text-xs md:text-sm font-semibold transition-all duration-500 ease-in-out transform ${viewMode === 'hex'
                                 ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg scale-105 shadow-blue-500/25'
-                                : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50 hover:scale-102'
+                                : 'text-gray-600 hover:text-purple-600 hover:bg-purple-50 hover:scale-102'
                                 }`}
                         >
                             16진수
@@ -226,7 +268,7 @@ const SensorMonitor = ({ sensorData, isPLCConnected }) => {
                             onClick={() => setViewMode('bits')}
                             className={`flex-shrink-0 px-4 md:px-6 py-2 md:py-3 rounded-xl text-xs md:text-sm font-semibold transition-all duration-500 ease-in-out transform ${viewMode === 'bits'
                                 ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg scale-105 shadow-blue-500/25'
-                                : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50 hover:scale-102'
+                                : 'text-gray-600 hover:text-purple-600 hover:bg-purple-50 hover:scale-102'
                                 }`}
                         >
                             속초 비트 모니터
@@ -380,8 +422,8 @@ const SensorMonitor = ({ sensorData, isPLCConnected }) => {
                         <div className="animate-pulse w-3 h-3 bg-green-500 rounded-full"></div>
                         <div className="text-yellow-400 font-semibold">실시간 속초 PLC 데이터 스트림</div>
                         <div className="flex space-x-1">
-                            <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-                            <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                            <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                            <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
                             <div className="w-2 h-2 bg-pink-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
                         </div>
                     </div>
@@ -421,23 +463,71 @@ const SensorMonitor = ({ sensorData, isPLCConnected }) => {
                         <div className="text-gray-800 font-bold text-lg">속초 1호기 PLC 체크리스트 (C060~C072)</div>
                         <div className="flex space-x-1">
                             <div className="w-2 h-2 bg-green-400 rounded-full animate-ping"></div>
-                            <div className="w-2 h-2 bg-blue-400 rounded-full animate-ping" style={{ animationDelay: '200ms' }}></div>
+                            <div className="w-2 h-2 bg-indigo-500 rounded-full animate-ping" style={{ animationDelay: '200ms' }}></div>
                         </div>
                     </div>
 
                     <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-lg">
                         <div className="overflow-x-auto">
                             <table className="w-full">
-                                <thead className="bg-gradient-to-r from-gray-800 to-gray-900 text-white">
+                                <thead className="bg-gray-500 text-white">
                                     <tr>
-                                        <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">주소</th>
-                                        <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">설명</th>
-                                        <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">상태</th>
+                                        <th 
+                                            className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider cursor-pointer hover:bg-gray-600 transition-colors duration-200 select-none"
+                                            onClick={() => handleSort('address')}
+                                        >
+                                            <div className="flex items-center justify-center space-x-1">
+                                                <span>주소</span>
+                                                {sortField === 'address' && (
+                                                    <span className="text-yellow-300">
+                                                        {sortDirection === 'asc' ? '↑' : '↓'}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </th>
+                                        <th 
+                                            className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider cursor-pointer hover:bg-gray-600 transition-colors duration-200 select-none"
+                                            onClick={() => handleSort('name')}
+                                        >
+                                            <div className="flex items-center justify-center space-x-1">
+                                                <span>설명</span>
+                                                {sortField === 'name' && (
+                                                    <span className="text-yellow-300">
+                                                        {sortDirection === 'asc' ? '↑' : '↓'}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </th>
+                                        <th 
+                                            className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider cursor-pointer hover:bg-gray-600 transition-colors duration-200 select-none"
+                                            onClick={() => handleSort('status')}
+                                        >
+                                            <div className="flex items-center justify-center space-x-1">
+                                                <span>상태</span>
+                                                {sortField === 'status' && (
+                                                    <span className="text-yellow-300">
+                                                        {sortDirection === 'asc' ? '↑' : '↓'}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </th>
                                         <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider">값</th>
-                                        <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">카테고리</th>
+                                        <th 
+                                            className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider cursor-pointer hover:bg-gray-600 transition-colors duration-200 select-none"
+                                            onClick={() => handleSort('category')}
+                                        >
+                                            <div className="flex items-center justify-center space-x-1">
+                                                <span>카테고리</span>
+                                                {sortField === 'category' && (
+                                                    <span className="text-yellow-300">
+                                                        {sortDirection === 'asc' ? '↑' : '↓'}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-gray-200">
+                                <tbody className="divide-y divide-gray-200 bg-purple-50">
                                     {plcChecklistData.map((item, index) => (
                                         <tr
                                             key={index}
@@ -478,7 +568,7 @@ const SensorMonitor = ({ sensorData, isPLCConnected }) => {
                                 </tbody>
                             </table>
                         </div>
-                    </div>
+                    </div>  
 
                     <div className="mt-4 text-center">
                         <p className="text-sm text-gray-600">
@@ -588,7 +678,7 @@ const SensorMonitor = ({ sensorData, isPLCConnected }) => {
                                         <span className="text-xs md:text-sm font-semibold text-blue-600 group-hover:text-purple-600 transition-colors duration-300">
                                             {item.address}
                                         </span>
-                                        <span className="text-base md:text-xl font-mono text-gray-900 break-words bg-gray-50 rounded-lg px-2 py-1 group-hover:bg-blue-50 transition-colors duration-300">
+                                        <span className="text-base md:text-xl font-mono text-gray-900 break-words bg-gray-50 rounded-lg px-2 py-1 group-hover:bg-purple-50 transition-colors duration-300">
                                             {item.displayValue}
                                         </span>
                                     </div>
