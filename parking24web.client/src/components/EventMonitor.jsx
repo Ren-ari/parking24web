@@ -1,8 +1,11 @@
+
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useTheme } from '../contexts/ThemeContext';
+import sokcho1Config from '../../config/sokcho1Config.js';
 
 const EventMonitor = ({ sensorData }) => {
     const { theme } = useTheme();
+
     const [activeTab, setActiveTab] = useState('recent');
     const [recentEvents, setRecentEvents] = useState([]);
     const [currentParked, setCurrentParked] = useState([]);
@@ -20,9 +23,6 @@ const EventMonitor = ({ sensorData }) => {
     });
     const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
 
-    const prevDataRef = useRef(null);
-    const STORAGE_KEY = 'parkingEvents';
-
     // 토스트 알림 표시
     const showToast = useCallback((message) => {
         setToastMessage(message);
@@ -39,30 +39,78 @@ const EventMonitor = ({ sensorData }) => {
         return () => clearTimeout(timer);
     }, [toastMessage]);
 
-    // 차량 검색
-    const searchCar = () => {
+    // API 호출 함수들
+    const fetchRecentEvents = async () => {
+        try {
+            const response = await fetch(`${sokcho1Config.api.baseUrl}${sokcho1Config.api.endpoints.recent}`);
+            const data = await response.json();
+
+            const formattedEvents = data.map(event => ({
+                시간: new Date(event.timestamp).toLocaleTimeString('ko-KR'),
+                날짜: new Date(event.timestamp).toLocaleDateString('ko-KR'),
+                구분: event.eventType,
+                층: event.floor,
+                차번: event.carNumber,
+                슬롯: event.slotNumber
+            }));
+
+            setRecentEvents(formattedEvents);
+
+            const exited = formattedEvents.filter(e => e.구분 === '출차');
+            setExitedCars(exited);
+        } catch (error) {
+            console.error('최근 이벤트 로드 실패:', error);
+        }
+    };
+
+    const fetchParkedVehicles = async () => {
+        try {
+            const response = await fetch(`${sokcho1Config.api.baseUrl}${sokcho1Config.api.endpoints.parked}`);
+            const data = await response.json();
+
+            const formattedParked = data.map(vehicle => ({
+                시간: new Date().toLocaleTimeString('ko-KR'),
+                구분: '주차중',
+                층: vehicle.floor,
+                차번: vehicle.carNumber,
+                슬롯: `${vehicle.slotNumber}번`
+            }));
+
+            setCurrentParked(formattedParked);
+        } catch (error) {
+            console.error('주차중 차량 로드 실패:', error);
+        }
+    };
+
+    const fetchStatistics = async () => {
+        try {
+            const response = await fetch(`${sokcho1Config.api.baseUrl}${sokcho1Config.api.endpoints.statistics}`);
+            const data = await response.json();
+            setStatistics(data);
+        } catch (error) {
+            console.error('통계 로드 실패:', error);
+        }
+    };
+
+    // 차량 검색 (API 연동)
+    const searchCar = async () => {
         if (!searchCarNumber) {
             alert('차량번호를 입력하세요');
             return;
         }
 
-        const found = currentParked.find(car =>
-            car.차번.includes(searchCarNumber)
-        );
+        try {
+            const response = await fetch(`${sokcho1Config.api.baseUrl}${sokcho1Config.api.endpoints.search}/${searchCarNumber}`);
+            const result = await response.json();
 
-        if (found) {
-            alert(`🚗 ${found.차번}번 차량\n📍 위치: ${found.층}층\n🎯 슬롯: ${found.슬롯}`);
-        } else {
-            // 최근 출차 기록에서 찾기
-            const recentExit = exitedCars.find(car =>
-                car.차번.includes(searchCarNumber)
-            );
-
-            if (recentExit) {
-                alert(`🚗 ${recentExit.차번}번 차량\n❌ 출차 완료\n⏰ 출차시간: ${recentExit.시간}`);
+            if (result.found) {
+                alert(result.message);
             } else {
                 alert('해당 차량을 찾을 수 없습니다');
             }
+        } catch (error) {
+            console.error('차량 검색 실패:', error);
+            alert('검색 중 오류가 발생했습니다');
         }
     };
 
@@ -84,149 +132,36 @@ const EventMonitor = ({ sensorData }) => {
         showToast('📊 엑셀 다운로드 완료!');
     };
 
-    // 초기 데이터 로드
+    // 초기 데이터 로드 및 주기적 업데이트
     useEffect(() => {
-        const stored = localStorage.getItem(STORAGE_KEY);
-        if (stored) {
-            const events = JSON.parse(stored);
-            setRecentEvents(events);
-            updateStatistics(events);
+        const loadAllData = async () => {
+            await Promise.all([
+                fetchRecentEvents(),
+                fetchParkedVehicles(),
+                fetchStatistics()
+            ]);
+        };
 
-            // 출차 차량만 필터
-            const exited = events.filter(e => e.구분 === '출차');
-            setExitedCars(exited);
-        }
+        loadAllData();
+
+        // 30초마다 데이터 새로고침
+        const interval = setInterval(loadAllData, 30000);
+        return () => clearInterval(interval);
     }, []);
 
-    // PLC 데이터 변화 감지
-    useEffect(() => {
-        if (!sensorData?.rawData) return;
-
-        // 현재 주차중 차량 추출
-        const parked = [];
-        for (let i = 101; i <= 180; i++) {
-            const value = sensorData.rawData[i];
-            if (value !== 0) {
-                const slotNumber = i - 100;
-                const floor = Math.ceil(slotNumber / 2);
-                const isOdd = slotNumber % 2 === 1;
-
-                parked.push({
-                    시간: new Date().toLocaleTimeString('ko-KR'),
-                    구분: '주차중',
-                    층: floor,
-                    차번: value.toString().padStart(4, '0'),
-                    슬롯: `${slotNumber}번 (${isOdd ? '홀수' : '짝수'})`
-                });
-            }
-        }
-        setCurrentParked(parked);
-
-        // 이전 데이터와 비교
-        if (prevDataRef.current) {
-            detectParkingEvents(prevDataRef.current, sensorData.rawData);
-        }
-
-        prevDataRef.current = [...sensorData.rawData];
-
-        setStatistics(prev => ({
-            ...prev,
-            currentTotal: parked.length
-        }));
-
-    }, [sensorData]);
-
-    // 입출차 이벤트 감지
-    const detectParkingEvents = (prevData, currentData) => {
-        const newEvents = [];
-        const now = new Date();
-
-        for (let i = 101; i <= 180; i++) {
-            const prev = prevData[i] || 0;
-            const curr = currentData[i] || 0;
-
-            if (prev === 0 && curr !== 0) {
-                // 입차
-                const slotNumber = i - 100;
-                const floor = Math.ceil(slotNumber / 2);
-
-                const event = {
-                    id: Date.now() + Math.random(),
-                    timestamp: now.toISOString(),
-                    시간: now.toLocaleTimeString('ko-KR'),
-                    날짜: now.toLocaleDateString('ko-KR'),
-                    구분: '입차',
-                    층: floor,
-                    차번: curr.toString().padStart(4, '0'),
-                    슬롯: slotNumber
-                };
-
-                newEvents.push(event);
-                showToast(`🚗 입차: ${event.차번} (${event.층}층)`);
-
-            } else if (prev !== 0 && curr === 0) {
-                // 출차
-                const slotNumber = i - 100;
-                const floor = Math.ceil(slotNumber / 2);
-
-                const event = {
-                    id: Date.now() + Math.random(),
-                    timestamp: now.toISOString(),
-                    시간: now.toLocaleTimeString('ko-KR'),
-                    날짜: now.toLocaleDateString('ko-KR'),
-                    구분: '출차',
-                    층: floor,
-                    차번: prev.toString().padStart(4, '0'),
-                    슬롯: slotNumber
-                };
-
-                newEvents.push(event);
-                showToast(`🚙 출차: ${event.차번} (${event.층}층)`);
-            }
-        }
-
-        if (newEvents.length > 0) {
-            const updatedEvents = [...newEvents, ...recentEvents].slice(0, 100);
-            setRecentEvents(updatedEvents);
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedEvents));
-            updateStatistics(updatedEvents);
-
-            const exited = newEvents.filter(e => e.구분 === '출차');
-            setExitedCars(prev => [...exited, ...prev].slice(0, 50));
-        }
+    // 데이터 새로고침
+    const refreshData = async () => {
+        await Promise.all([
+            fetchRecentEvents(),
+            fetchParkedVehicles(),
+            fetchStatistics()
+        ]);
+        showToast('🔄 데이터 새로고침 완료');
     };
 
-    // 통계 업데이트
-    const updateStatistics = (events) => {
-        const today = new Date().toDateString();
-        const thisMonth = new Date().getMonth();
-
-        const todayEvents = events.filter(e =>
-            new Date(e.timestamp).toDateString() === today
-        );
-
-        const monthEvents = events.filter(e =>
-            new Date(e.timestamp).getMonth() === thisMonth
-        );
-
-        setStatistics(prev => ({
-            ...prev,
-            todayIn: todayEvents.filter(e => e.구분 === '입차').length,
-            todayOut: todayEvents.filter(e => e.구분 === '출차').length,
-            monthlyIn: monthEvents.filter(e => e.구분 === '입차').length,
-            monthlyOut: monthEvents.filter(e => e.구분 === '출차').length
-        }));
-    };
-
-    // 데이터 초기화
+    // 데이터 초기화 (DB 초기화는 서버에서 처리해야 함)
     const clearAllData = () => {
-        if (window.confirm('⚠️ 모든 입출차 데이터를 초기화하시겠습니까?\n복구할 수 없습니다!')) {
-            localStorage.removeItem(STORAGE_KEY);
-            setRecentEvents([]);
-            setExitedCars([]);
-            updateStatistics([]);
-            showToast('🗑️ 데이터 초기화 완료');
-        }
+        alert('⚠️ 데이터 초기화는 서버 관리자만 가능합니다.');
     };
 
     // 정렬 함수
@@ -291,12 +226,11 @@ const EventMonitor = ({ sensorData }) => {
         return sortData(data);
     };
 
-    // 통계 섹션 토글 (펼침: 기존 애니메이션, 숨김: 접힘 애니메이션 후 언마운트)
+    // 통계 섹션 토글
     const handleToggleStatistics = () => {
         if (isStatisticsExpanded) {
             setIsStatisticsAnimatingOut(true);
             setIsStatisticsExpanded(false);
-            // 접힘 트랜지션 시간과 맞춤 (500ms)
             setTimeout(() => setIsStatisticsAnimatingOut(false), 500);
         } else {
             setIsStatisticsExpanded(true);
@@ -406,14 +340,27 @@ const EventMonitor = ({ sensorData }) => {
                         boxShadow: '0 8px 32px rgba(0,0,0,0.25)'
                     })
             }}>
-            {/* 토스트 알림 */}
-            {toastMessage && (
-                <div className="absolute top-4 right-4 px-4 py-2 rounded-lg shadow-lg z-50 animate-pulse" style={{
-                    background: 'linear-gradient(135deg, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.6) 100%)',
-                    backdropFilter: 'blur(10px)',
-                    WebkitBackdropFilter: 'blur(10px)',
-                    border: '1px solid rgba(255, 255, 255, 0.18)'
+                {/* 토스트 알림 */}
+                {toastMessage && (
+                    <div className="absolute top-4 right-4 px-4 py-2 rounded-lg shadow-lg z-50 animate-pulse" style={{
+                        background: 'linear-gradient(135deg, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.6) 100%)',
+                        backdropFilter: 'blur(10px)',
+                        WebkitBackdropFilter: 'blur(10px)',
+                        border: '1px solid rgba(255, 255, 255, 0.18)'
+                    }}>
+                        <span className="text-white text-sm font-medium">{toastMessage}</span>
+                    </div>
+                )}
+
+                {/* 헤더 */}
+                <div className="rounded-xl p-6 mb-6" style={{
+                    background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.8) 0%, rgba(99, 102, 241, 0.8) 100%)',
+                    backdropFilter: 'blur(15px)',
+                    WebkitBackdropFilter: 'blur(15px)',
+                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                    boxShadow: '0 4px 16px 0 rgba(31, 38, 135, 0.2)'
                 }}>
+
                     <span className="text-white text-sm font-medium">{toastMessage}</span>
                 </div>
             )}
@@ -424,7 +371,86 @@ const EventMonitor = ({ sensorData }) => {
                     <h2 className="text-2xl font-bold text-white mb-8 text-center">입출차 현황 모니터링</h2>
                 </div>
 
+                    {/* 검색창 */}
+                    <div className="flex gap-2 md:gap-3 items-center">
+                        <input
+                            type="text"
+                            value={searchCarNumber}
+                            onChange={(e) => setSearchCarNumber(e.target.value)}
+                            onKeyPress={(e) => e.key === 'Enter' && searchCar()}
+                            className="flex-1 px-2 md:px-4 py-3 md:py-2 rounded-lg text-gray-800 border-0 focus:ring-2 focus:ring-blue-300 text-sm md:text-base"
+                            style={{
+                                background: 'rgba(255, 255, 255, 0.9)',
+                                backdropFilter: 'blur(10px)',
+                                WebkitBackdropFilter: 'blur(10px)'
+                            }}
+                            placeholder="차량번호 입력"
+                        />
+                        <button
+                            onClick={searchCar}
+                            className="px-2 md:px-4 py-3 md:py-2 rounded-lg text-white font-medium transition-all duration-200 hover:scale-105 text-sm md:text-base"
+                            style={{
+                                background: 'linear-gradient(135deg, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.6) 100%)',
+                                backdropFilter: 'blur(10px)',
+                                WebkitBackdropFilter: 'blur(10px)',
+                                border: '1px solid rgba(255, 255, 255, 0.2)',
+                                boxShadow: '0 2px 8px 0 rgba(0, 0, 0, 0.3)',
+                                fontSize: '0.75rem',
+                                fontWeight: '500'
+                            }}
+                        >
+                            검색
+                        </button>
+                    </div>
 
+                    {/* 모바일용 액션 버튼들 */}
+                    <div className="flex gap-1 sm:hidden mt-4">
+                        <button
+                            onClick={downloadExcel}
+                            className="flex-1 px-2 py-1 rounded-lg text-white font-bold transition-all duration-200 hover:scale-105 text-xs"
+                            style={{
+                                background: 'linear-gradient(135deg, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.6) 100%)',
+                                backdropFilter: 'blur(10px)',
+                                WebkitBackdropFilter: 'blur(10px)',
+                                border: '1px solid rgba(255, 255, 255, 0.2)',
+                                boxShadow: '0 2px 8px 0 rgba(0, 0, 0, 0.3)',
+                                fontSize: '0.75rem',
+                                fontWeight: '700'
+                            }}
+                        >
+                            엑셀 다운로드
+                        </button>
+                        <button
+                            onClick={refreshData}
+                            className="flex-1 px-2 py-1 rounded-lg text-white font-medium transition-all duration-200 hover:scale-105 text-xs"
+                            style={{
+                                background: 'linear-gradient(135deg, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.6) 100%)',
+                                backdropFilter: 'blur(10px)',
+                                WebkitBackdropFilter: 'blur(10px)',
+                                border: '1px solid rgba(255, 255, 255, 0.2)',
+                                boxShadow: '0 2px 8px 0 rgba(0, 0, 0, 0.3)',
+                                fontSize: '0.75rem',
+                                fontWeight: '500'
+                            }}
+                        >
+                            새로고침
+                        </button>
+                        <button
+                            onClick={clearAllData}
+                            className="flex-1 px-2 py-1 rounded-lg text-white font-bold transition-all duration-200 hover:scale-105 text-xs"
+                            style={{
+                                background: 'linear-gradient(135deg, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.6) 100%)',
+                                backdropFilter: 'blur(10px)',
+                                WebkitBackdropFilter: 'blur(10px)',
+                                border: '1px solid rgba(255, 255, 255, 0.2)',
+                                boxShadow: '0 2px 8px 0 rgba(0, 0, 0, 0.3)',
+                                fontSize: '0.75rem',
+                                fontWeight: '700'
+                            }}
+                        >
+                            데이터 초기화
+                        </button>
+                    </div>
 
                 {/* 검색창 */}
                 <div className="flex gap-2 md:gap-3 items-center">
@@ -688,8 +714,6 @@ const EventMonitor = ({ sensorData }) => {
                             <span className="text-gray-600 text-sm">점유율</span>
                             <span className="font-bold text-black text-lg sm:text-xl" style={{ animation: 'zoomInBounce 0.8s ease-out 1.4s both' }}>{((statistics.currentTotal / 80) * 100).toFixed(1)}%</span>
                         </div>
-                    </div>
-                </div>
 
                 {/* 점유율 차트 */}
                 <div className="lg:col-span-2 rounded-xl p-6 transform transition-all duration-700 ease-out hover:scale-105 hover:shadow-xl" style={{
@@ -731,20 +755,63 @@ const EventMonitor = ({ sensorData }) => {
                             <span className="font-semibold text-black">{((statistics.currentTotal / 80) * 100).toFixed(1)}%</span>
                             <span>100%</span>
                         </div>
-                    </div>
 
-                    <div className="grid grid-cols-3 gap-4 mt-6">
-                        <div className="text-center">
-                            <div className="text-lg font-bold text-black">80</div>
-                            <div className="text-xs text-gray-600">전체</div>
-                        </div>
-                        <div className="text-center">
-                            <div className="text-lg font-bold text-black">{statistics.currentTotal}</div>
-                            <div className="text-xs text-gray-600">주차중</div>
-                        </div>
-                        <div className="text-center">
-                            <div className="text-lg font-bold text-black">{80 - statistics.currentTotal}</div>
-                            <div className="text-xs text-gray-600">빈 자리</div>
+                        {/* 점유율 차트 */}
+                        <div className="lg:col-span-2 rounded-xl p-6 transform transition-all duration-700 ease-out hover:scale-105 hover:shadow-xl" style={{
+                            background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(99, 102, 241, 0.1) 100%)',
+                            backdropFilter: 'blur(15px)',
+                            WebkitBackdropFilter: 'blur(15px)',
+                            border: '1px solid rgba(255, 255, 255, 0.2)',
+                            boxShadow: '0 4px 16px 0 rgba(31, 38, 135, 0.1)',
+                            animation: 'slideInFromRight 0.8s ease-out 0.6s both, bounceIn 0.6s ease-out 0.8s both'
+                        }}>
+                            <div>
+                                <h3 className="font-bold text-gray-800 text-lg">주차장 점유율</h3>
+                            </div>
+                            <div className="flex justify-end mb-6">
+                                <div className="text-right">
+                                    <div className="text-2xl font-bold text-black">{statistics.currentTotal}/80</div>
+                                    <div className="text-sm text-gray-600">현재 주차중</div>
+                                </div>
+                            </div>
+
+                            <div className="relative">
+                                <div className="w-full rounded-full h-4 mb-2" style={{
+                                    background: 'rgba(156, 163, 175, 0.3)',
+                                    backdropFilter: 'blur(5px)'
+                                }}>
+                                    <div
+                                        className="h-4 rounded-full transition-all duration-1000 ease-out"
+                                        style={{
+                                            '--target-width': `${Math.min((statistics.currentTotal / 80) * 100, 100)}%`,
+                                            width: '0%',
+                                            background: 'linear-gradient(90deg, rgba(59, 130, 246, 0.8) 0%, rgba(99, 102, 241, 0.8) 100%)',
+                                            boxShadow: '0 2px 8px rgba(59, 130, 246, 0.3)',
+                                            animation: 'progressFill 2s ease-out 1.0s both'
+                                        }}
+                                    />
+                                </div>
+                                <div className="flex justify-between text-xs text-gray-500 mt-2">
+                                    <span>0%</span>
+                                    <span className="font-semibold text-black">{((statistics.currentTotal / 80) * 100).toFixed(1)}%</span>
+                                    <span>100%</span>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-3 gap-4 mt-6">
+                                <div className="text-center">
+                                    <div className="text-lg font-bold text-black">80</div>
+                                    <div className="text-xs text-gray-600">전체</div>
+                                </div>
+                                <div className="text-center">
+                                    <div className="text-lg font-bold text-black">{statistics.currentTotal}</div>
+                                    <div className="text-xs text-gray-600">주차중</div>
+                                </div>
+                                <div className="text-center">
+                                    <div className="text-lg font-bold text-black">{80 - statistics.currentTotal}</div>
+                                    <div className="text-xs text-gray-600">빈 자리</div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -782,7 +849,6 @@ const EventMonitor = ({ sensorData }) => {
                             </button>
                         ))}
                     </div>
-                </div>
 
                 {/* 테이블 컨테이너 - PLC 체크리스트 스타일 */}
                 <div className={`rounded-xl overflow-hidden shadow-2xl transform transition-all duration-700 ease-in-out ${theme === 'space' ? 'bg-gradient-to-br from-purple-900/80 to-indigo-900/80 border-purple-500/30' : 'bg-gradient-to-br from-purple-900/80 to-indigo-900/80 border-purple-500/30'}`}>
@@ -893,11 +959,8 @@ const EventMonitor = ({ sensorData }) => {
                     </div>
                 </div>
             </div>
-        </div>
         </>
     );
 };
 
 export default EventMonitor;
-
-

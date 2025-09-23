@@ -1,4 +1,4 @@
-﻿import React, { useState, useMemo, useEffect, useCallback } from 'react';
+﻿import React, { useState, useMemo, useEffect, _useCallback } from 'react';
 import { usePLCConnection } from '../hooks/usePLCConnection';
 import { useAuth } from '../hooks/useAuth';
 import { useTheme } from '../contexts/ThemeContext';
@@ -9,7 +9,7 @@ import ParkingMonitor from './ParkingMonitor';
 import EventMonitor from './EventMonitor';
 // ThemeSelector 제거
 // 속초 1호기 config import 추가
-import sokcho1Config from '../../config/sokcho1Config.js';
+import siteConfig from '../../config/sokcho1Config.js';
 // 권한 관리 import 추가
 import { ROLE_TABS } from './auth';
 
@@ -46,9 +46,14 @@ const PLCControl = ({ currentUser, onLogout }) => {
     const getDefaultTab = () => {
         if (allowedTabs.length === 0) return 'parking';
 
-        // Client는 events를 기본으로, 나머지는 첫 번째 탭
+        // Client는 events를 기본으로
         if (currentUser?.role === 'client') {
-            return allowedTabs.find(tab => tab.id === 'events')?.id || allowedTabs[0].id;
+            return 'events';
+        }
+
+        // admin/service는 connection을 기본으로
+        if (currentUser?.role === 'admin' || currentUser?.role === 'service') {
+            return 'connection';
         }
 
         return allowedTabs[0].id;
@@ -57,7 +62,7 @@ const PLCControl = ({ currentUser, onLogout }) => {
     const defaultTab = getDefaultTab();
     const [activeTab, setActiveTab] = useState(defaultTab);
 
-    const [showLogs, setShowLogs] = useState(false);
+    const [_showLogs, _setShowLogs] = useState(false);
     const [isDataPanelExpanded, setIsDataPanelExpanded] = useState(true);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [isClosing, setIsClosing] = useState(false);
@@ -72,14 +77,14 @@ const PLCControl = ({ currentUser, onLogout }) => {
         isAuthenticated,
         error,
         sensorData,
-        logs,
+        _logs,
         plcConfig,
         setPLCConfig,
         connectToPLC,
         disconnectFromPLC,
         sendCommand,
         clearError,
-        clearLogs
+        _clearLogs
     } = usePLCConnection();
 
     // 모바일 메뉴 애니메이션 타이머 관리
@@ -582,14 +587,18 @@ const PLCControl = ({ currentUser, onLogout }) => {
                         <div className={`mb-4 rounded-2xl shadow-lg overflow-hidden ${getDataPanelBorderClass()}`} style={getDataPanelStyle()}>
                             <div className="flex items-stretch">
                                 <div className="flex-1 min-w-0 flex flex-col">
+
                                     <div className={`text-white text-xs font-medium px-1 py-2 text-center h-10 flex items-center justify-center ${sensorData.rawData[sokcho1Config.systemAddresses.remoteOp] === 1 ? (theme === 'space' ? 'bg-purple-600' : theme === 'dark' ? 'bg-gray-600' : theme === 'ocean' ? 'bg-blue-600' : 'bg-blue-500') : 'bg-gray-400'}`} style={{
+
                                         backdropFilter: 'blur(10px)',
                                         WebkitBackdropFilter: 'blur(10px)',
                                     }}>
                                         원격조작
                                     </div>
+
                                     <div className={`text-sm px-2 py-3 text-center border-r h-16 flex items-center justify-center ${sensorData.rawData[sokcho1Config.systemAddresses.remoteOp] === 1 ? (theme === 'space' ? 'bg-purple-100 text-purple-900' : theme === 'dark' ? 'bg-gray-200 text-gray-800' : theme === 'ocean' ? 'bg-blue-100 text-blue-900' : 'bg-blue-50 text-blue-700') : 'bg-gray-100 text-gray-800'}`}>
                                         {sensorData.rawData[sokcho1Config.systemAddresses.remoteOp] === 1 ? '활성' : '비활성'}
+
                                     </div>
                                 </div>
 
@@ -600,8 +609,10 @@ const PLCControl = ({ currentUser, onLogout }) => {
                                     }}>
                                         위치정보
                                     </div>
+
                                     <div className={`text-sm px-2 py-3 text-center border-r h-16 flex items-center justify-center ${isPLCConnected ? (theme === 'space' ? 'bg-purple-100 text-purple-900' : theme === 'dark' ? 'bg-gray-200 text-gray-800' : theme === 'ocean' ? 'bg-blue-100 text-blue-900' : 'bg-blue-50 text-blue-700') : 'bg-gray-100 text-gray-800'}`}>
                                         {isPLCConnected ? sokcho1Config.siteInfo.location : '-'}
+
                                     </div>
                                 </div>
 
@@ -624,32 +635,37 @@ const PLCControl = ({ currentUser, onLogout }) => {
                                     }}>
                                         운전모드
                                     </div>
+
                                     <div className={`text-sm px-2 py-3 text-center border-r h-16 flex items-center justify-center ${isPLCConnected ? (theme === 'space' ? 'bg-purple-100 text-purple-900' : theme === 'dark' ? 'bg-gray-200 text-gray-800' : theme === 'ocean' ? 'bg-blue-100 text-blue-900' : 'bg-blue-50 text-blue-700') : 'bg-gray-100 text-gray-800'}`}>
                                         {isPLCConnected ? (sensorData.rawData[sokcho1Config.systemAddresses.manualMode] === 1 ? '수동' : '자동') : '-'}
                                     </div>
                                 </div>
 
                                 <div className="flex-1 min-w-0 flex flex-col">
-                                    <div className={`text-white text-xs font-medium px-1 py-2 text-center h-10 flex items-center justify-center ${isPLCConnected ? (sensorData.rawData[sokcho1Config.systemAddresses.errorStatus] === 1 ? 'bg-red-500' : 'bg-green-500') : 'bg-gray-400'}`} style={{
+                                        <div className={`text-white text-xs font-medium px-1 py-2 text-center h-10 flex items-center justify-center ${isPLCConnected ? (sensorData.rawData[siteConfig.systemAddresses.errorStatus] === 1 ? 'bg-red-500' : 'bg-green-500') : 'bg-gray-400'}`} style={{
                                         backdropFilter: 'blur(10px)',
                                         WebkitBackdropFilter: 'blur(10px)',
                                     }}>
                                         에러상태
                                     </div>
-                                    <div className={`text-sm px-2 py-3 text-center border-r h-16 flex items-center justify-center ${isPLCConnected ? (sensorData.rawData[sokcho1Config.systemAddresses.errorStatus] === 1 ? 'bg-red-50 text-red-700' : 'bg-green-50 text-green-700') : 'bg-gray-100 text-gray-800'}`}>
-                                        {isPLCConnected ? (sensorData.rawData[sokcho1Config.systemAddresses.errorStatus] === 1 ? '고장발생' : '정상') : '-'}
+                                        <div className={`text-sm px-2 py-3 text-center border-r h-16 flex items-center justify-center ${isPLCConnected ? (sensorData.rawData[siteConfig.systemAddresses.errorStatus] === 1 ? 'bg-red-50 text-red-700' : 'bg-green-50 text-green-700') : 'bg-gray-100 text-gray-800'}`}>
+                                            {isPLCConnected ? (sensorData.rawData[siteConfig.systemAddresses.errorStatus] === 1 ? '고장발생' : '정상') : '-'}
                                     </div>
                                 </div>
 
                                 <div className="flex-1 min-w-0 flex flex-col">
+
                                     <div className={`text-white text-xs font-medium px-1 py-2 text-center h-10 flex items-center justify-center ${sensorData.rawData[sokcho1Config.systemAddresses.plcComm] === 1 ? (theme === 'space' ? 'bg-purple-600' : theme === 'dark' ? 'bg-gray-600' : theme === 'ocean' ? 'bg-blue-600' : 'bg-blue-500') : 'bg-red-500'}`} style={{
+
                                         backdropFilter: 'blur(10px)',
                                         WebkitBackdropFilter: 'blur(10px)',
                                     }}>
                                         PLC통신
                                     </div>
+
                                     <div className={`text-sm px-2 py-3 text-center h-16 flex items-center justify-center ${sensorData.rawData[sokcho1Config.systemAddresses.plcComm] === 1 ? (theme === 'space' ? 'bg-purple-100 text-purple-900' : theme === 'dark' ? 'bg-gray-200 text-gray-800' : theme === 'ocean' ? 'bg-blue-100 text-blue-900' : 'bg-blue-50 text-blue-700') : 'bg-red-50 text-red-700'}`}>
                                         {sensorData.rawData[sokcho1Config.systemAddresses.plcComm] === 1 ? '활성' : '비활성'}
+
                                     </div>
                                 </div>
                             </div>

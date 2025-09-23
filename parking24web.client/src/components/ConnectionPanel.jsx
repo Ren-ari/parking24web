@@ -1,4 +1,7 @@
 ﻿import React from 'react';
+import siteConfig from '../../config/sokcho1Config.js';
+
+const currentConfig = siteConfig;
 
 const ConnectionPanel = ({
     isSignalRConnected,
@@ -6,7 +9,6 @@ const ConnectionPanel = ({
     isConnecting,
     isAuthenticated,
     error,
-    plcConfig,
     setPLCConfig,
     connectToPLC,
     disconnectFromPLC,
@@ -15,22 +17,22 @@ const ConnectionPanel = ({
     setSelectedUnit,
     theme
 }) => {
-    const handleIPChange = (e) => {
+    const _handleIPChange = (e) => {
         setPLCConfig(prev => ({ ...prev, ip: e.target.value }));
     };
 
-    const handlePortChange = (e) => {
+    const _handlePortChange = (e) => {
         setPLCConfig(prev => ({ ...prev, port: parseInt(e.target.value) || 2005 }));
     };
 
-    const getConnectionStatusColor = () => {
+    const _getConnectionStatusColor = () => {
         if (!isSignalRConnected) return 'bg-gray-500';
         if (isPLCConnected && isAuthenticated) return 'bg-green-500';
         if (isPLCConnected && !isAuthenticated) return 'bg-yellow-500';
         return 'bg-red-500';
     };
 
-    const getConnectionStatusText = () => {
+    const _getConnectionStatusText = () => {
         if (!isSignalRConnected) return 'SignalR 연결 안됨';
         if (isPLCConnected && isAuthenticated) return 'PLC 연결됨 (인증 완료)';
         if (isPLCConnected && !isAuthenticated) return 'PLC 연결됨 (인증 대기)';
@@ -180,6 +182,7 @@ const ConnectionPanel = ({
             {/* PLC 선택 */}
             <div className="mb-8">
                 <div className="flex justify-center gap-6">
+
                     <button
                         onClick={() => {
                             setSelectedUnit(1);
@@ -267,6 +270,7 @@ const ConnectionPanel = ({
                                 <div>
                                     <span className={`text-sm font-semibold ${theme === 'space' ? 'text-purple-700' : theme === 'dark' ? 'text-gray-200' : theme === 'ocean' ? 'text-blue-700' : 'text-green-700'}`}>인증 완료</span>
                                     <div className={`text-xs ${theme === 'space' ? 'text-purple-600' : theme === 'dark' ? 'text-gray-400' : theme === 'ocean' ? 'text-blue-600' : 'text-green-600'}`}>C4 = 62</div>
+
                                 </div>
                             </>
                         ) : (

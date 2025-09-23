@@ -1,33 +1,38 @@
 ﻿import React, { useState, useEffect } from 'react';
-// 속초 1호기 config import (센서 표시용)
-import sokcho1Config from '../../config/sokcho1Config.js';
+// config import - 빌드별로 변경 (sokcho1Config 또는 sokcho2Config)
+import siteConfig from '../../config/sokcho1Config.js';
 // SignalR 서비스 import
 import signalRService from '../Services/signalrService.js';
 import { useTheme } from '../contexts/ThemeContext';
 
 const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMenuOpen }) => {
+
     const { theme, isSpaceTheme, isDarkTheme, isOceanTheme } = useTheme();
-    const [activeCommand, setActiveCommand] = useState(null);
-    const [isEmergencyMode, setIsEmergencyMode] = useState(false);
+    const [_activeCommand, setActiveCommand] = useState(null);
+    const [_isEmergencyMode, setIsEmergencyMode] = useState(false);
+
     const [activeTab, setActiveTab] = useState('page1');
     const [showSensors, setShowSensors] = useState(true);
-    
+    const [sensorStates, setSensorStates] = useState({});
+
+
+    const currentConfig = siteConfig;
+
     // 태블릿 모드에서 햄버거 메뉴가 열리면 센서 패널 숨기기
     useEffect(() => {
         if (isMobileMenuOpen !== undefined) {
             setShowSensors(!isMobileMenuOpen);
         }
     }, [isMobileMenuOpen]);
-    const [sensorStates, setSensorStates] = useState({});
 
-    // 속초 1호기 센서 상태 업데이트 (C060~C072 비트 구조)
+    // 센서 상태 업데이트 (config 기반)
     const updateSensorStates = () => {
         if (!sensorData || !sensorData.rawData) return;
 
         const newStates = {};
 
-        // 속초 config의 센서 매핑을 기반으로 센서 상태 업데이트
-        Object.entries(sokcho1Config.sensorMapping).forEach(([configKey, configData]) => {
+        // currentConfig의 센서 매핑을 기반으로 센서 상태 업데이트
+        Object.entries(currentConfig.sensorMapping).forEach(([ , configData]) => {
             const { address, sensors } = configData;
 
             if (address < sensorData.rawData.length) {
@@ -71,10 +76,73 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
         return 'C--.--';
     };
 
+    // config에서 센서 키 추출하는 헬퍼 함수
+    const getSensorKeysFromConfig = (pageKey, sensorType = 'input') => {
+        const pageConfig = currentConfig.manualControlSensors[pageKey];
+        if (!pageConfig) return [];
+
+        const sensorKeys = [];
+
+        // input 센서와 output 센서를 구분해서 처리
+        Object.entries(pageConfig).forEach(([key, value]) => {
+            // output 센서들 (MC, BK, INV 등이 포함된 키들)
+            const outputSensorPatterns = ['MC', 'BK', 'INV', '유도등', '부저', '입고중', '대기중', '출고중', 'FAN', '외장턴'];
+            const isOutputSensor = outputSensorPatterns.some(pattern => key.includes(pattern) || value.includes(pattern));
+
+            if (sensorType === 'input' && !isOutputSensor) {
+                sensorKeys.push(value);
+            } else if (sensorType === 'output' && isOutputSensor) {
+                sensorKeys.push(value);
+            }
+        });
+
+        return sensorKeys;
+    };
+
+    // 센서 아이템을 동적으로 렌더링하는 함수
+    const renderSensorItem = (sensorKey) => {
+        const transformedKey = sensorKey.replace(/[^a-zA-Z0-9]/g, '_');
+        const _sensor = sensorStates[transformedKey];
+        const isActive = getSensorValue(sensorKey);
+        const sensorCode = getSensorCode(sensorKey);
+
+        // 센서 이름을 표시용으로 정리 (P*** 부분 제거)
+        const displayName = sensorKey.replace(/^P\d+_/, '');
+
+        return (
+            <div
+                key={sensorKey}
+                className={`sensor-item ${isActive ? 'active' : 'inactive'}`}
+            >
+                <div className="sensor-code">{sensorCode}</div>
+                <div className="sensor-name">{displayName}</div>
+            </div>
+        );
+    };
+
+    // 센서 패널을 동적으로 렌더링하는 함수
+    const renderLeftSensorPanel = () => {
+        const inputSensors = getSensorKeysFromConfig(activeTab, 'input');
+        return (
+            <div>
+                {inputSensors.map(sensorKey => renderSensorItem(sensorKey))}
+            </div>
+        );
+    };
+
+    const renderRightSensorPanel = () => {
+        const outputSensors = getSensorKeysFromConfig(activeTab, 'output');
+        return (
+            <div>
+                {outputSensors.map(sensorKey => renderSensorItem(sensorKey))}
+            </div>
+        );
+    };
+
     // sensorData가 변경될 때마다 센서 상태 업데이트
     useEffect(() => {
         updateSensorStates();
-    }, [sensorData]);
+    }, [sensorData, currentConfig]);
 
     // 간단한 명령 실행 헬퍼 (UI 피드백용)
     const executeCommand = async (commandName, signalRMethod) => {
@@ -466,8 +534,6 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
                         font-size: 0.875rem;
                     }
                 }
-                
-                
 
                 .tab-navigation {
                     display: flex;
@@ -1171,6 +1237,9 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
                                 <span className="text-red-700 font-semibold text-sm">🚫 제어 불가</span>
                             </div>
                         )}
+                        <div className="bg-blue-100 border border-blue-300 px-3 py-2 rounded-2xl shadow-md">
+                            <span className="text-blue-700 font-semibold text-sm">📡 {currentConfig.siteInfo.name} {currentConfig.siteInfo.unitNumber}</span>
+                        </div>
                     </div>
                 </div>
 
@@ -1217,39 +1286,59 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
                     </div>
                 </div>
 
-                {/* 공용 버튼들 - 간단한 SignalR 호출 */}
+                {/* 공용 버튼들 - 홀드 방식으로 수정 */}
                 <div className="mb-12 md:mb-20">
                     <div className="flex flex-wrap gap-4 justify-center common-buttons-grid">
                         <button
-                            onClick={handleErrorReset}
+                            onMouseDown={handleErrorReset}
+                            onMouseUp={() => signalRService.errorReset(0)}
+                            onMouseLeave={() => signalRService.errorReset(0)}
+                            onTouchStart={handleErrorReset}
+                            onTouchEnd={() => signalRService.errorReset(0)}
                             disabled={isDisabled}
                             className={`learn-more common-button ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
                         >
                             에러 리셋
                         </button>
                         <button
-                            onClick={handleRemoteControl}
+                            onMouseDown={handleRemoteControl}
+                            onMouseUp={() => signalRService.remoteControl(0)}
+                            onMouseLeave={() => signalRService.remoteControl(0)}
+                            onTouchStart={handleRemoteControl}
+                            onTouchEnd={() => signalRService.remoteControl(0)}
                             disabled={isDisabled}
                             className={`learn-more common-button ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
                         >
                             원격 제어
                         </button>
                         <button
-                            onClick={handleHomeReturn}
+                            onMouseDown={handleHomeReturn}
+                            onMouseUp={() => signalRService.homeReturn(0)}
+                            onMouseLeave={() => signalRService.homeReturn(0)}
+                            onTouchStart={handleHomeReturn}
+                            onTouchEnd={() => signalRService.homeReturn(0)}
                             disabled={isDisabled}
                             className={`learn-more common-button ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
                         >
                             홈 복귀
                         </button>
                         <button
-                            onClick={handlePaletteChange}
+                            onMouseDown={handlePaletteChange}
+                            onMouseUp={() => signalRService.paletteChange(0)}
+                            onMouseLeave={() => signalRService.paletteChange(0)}
+                            onTouchStart={handlePaletteChange}
+                            onTouchEnd={() => signalRService.paletteChange(0)}
                             disabled={isDisabled}
                             className={`learn-more common-button ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
                         >
                             파레트 교체
                         </button>
                         <button
-                            onClick={handleEmergencyStop}
+                            onMouseDown={handleEmergencyStop}
+                            onMouseUp={() => signalRService.emergencyStop(0)}
+                            onMouseLeave={() => signalRService.emergencyStop(0)}
+                            onTouchStart={handleEmergencyStop}
+                            onTouchEnd={() => signalRService.emergencyStop(0)}
                             disabled={isDisabled}
                             className={`learn-more emergency-button ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
                         >
@@ -1268,6 +1357,10 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
                                 <div className="door-vertical">
                                     <button
                                         onMouseDown={handleTurnLeft}
+                                        onMouseUp={() => signalRService.turnLeft(0)}
+                                        onMouseLeave={() => signalRService.turnLeft(0)}
+                                        onTouchStart={handleTurnLeft}
+                                        onTouchEnd={() => signalRService.turnLeft(0)}
                                         disabled={isDisabled}
                                         className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
                                     >
@@ -1275,6 +1368,10 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
                                     </button>
                                     <button
                                         onMouseDown={handleTurnRight}
+                                        onMouseUp={() => signalRService.turnRight(0)}
+                                        onMouseLeave={() => signalRService.turnRight(0)}
+                                        onTouchStart={handleTurnRight}
+                                        onTouchEnd={() => signalRService.turnRight(0)}
                                         disabled={isDisabled}
                                         className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
                                     >
@@ -1288,6 +1385,10 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
                                 <div className="door-vertical">
                                     <button
                                         onMouseDown={handleDoorOpen}
+                                        onMouseUp={() => signalRService.doorOpen(0)}
+                                        onMouseLeave={() => signalRService.doorOpen(0)}
+                                        onTouchStart={handleDoorOpen}
+                                        onTouchEnd={() => signalRService.doorOpen(0)}
                                         disabled={isDisabled}
                                         className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
                                     >
@@ -1295,6 +1396,10 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
                                     </button>
                                     <button
                                         onMouseDown={handleDoorClose}
+                                        onMouseUp={() => signalRService.doorClose(0)}
+                                        onMouseLeave={() => signalRService.doorClose(0)}
+                                        onTouchStart={handleDoorClose}
+                                        onTouchEnd={() => signalRService.doorClose(0)}
                                         disabled={isDisabled}
                                         className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
                                     >
@@ -1374,6 +1479,10 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
                                 <div className="door-vertical">
                                     <button
                                         onMouseDown={handleLockingOn}
+                                        onMouseUp={() => signalRService.lockingOn(0)}
+                                        onMouseLeave={() => signalRService.lockingOn(0)}
+                                        onTouchStart={handleLockingOn}
+                                        onTouchEnd={() => signalRService.lockingOn(0)}
                                         disabled={isDisabled}
                                         className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
                                     >
@@ -1381,6 +1490,10 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
                                     </button>
                                     <button
                                         onMouseDown={handleLockingOff}
+                                        onMouseUp={() => signalRService.lockingOff(0)}
+                                        onMouseLeave={() => signalRService.lockingOff(0)}
+                                        onTouchStart={handleLockingOff}
+                                        onTouchEnd={() => signalRService.lockingOff(0)}
                                         disabled={isDisabled}
                                         className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
                                     >
@@ -1415,255 +1528,27 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
                 </div>
             </div>
 
-            {/* 좌측 센서 패널 - 속초 센서 표시 (기존과 동일) */}
+            {/* 좌측 센서 패널 - config 기반 동적 렌더링 */}
             {showSensors && (
-                <div className={`sensor-panel-left show ${theme === 'space' ? 'space-theme' : ''}`}>
-                    {activeTab === 'page1' && (
-                        <div>
-                            <div className={`sensor-item ${theme === 'space' ? 'space-theme' : ''} ${getSensorValue('P102_OP도어열림SW') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('P102_OP도어열림SW')}</div>
-                                <div className="sensor-name">도어열림SW</div>
-                            </div>
-                            <div className={`sensor-item ${theme === 'space' ? 'space-theme' : ''} ${getSensorValue('P103_OP도어닫힘SW') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('P103_OP도어닫힘SW')}</div>
-                                <div className="sensor-name">도어닫힘SW</div>
-                            </div>
-                            <div className={`sensor-item ${theme === 'space' ? 'space-theme' : ''} ${getSensorValue('P109_도어잠센서') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('P109_도어잠센서')}</div>
-                                <div className="sensor-name">도어잠센서</div>
-                            </div>
-                            <div className={`sensor-item ${theme === 'space' ? 'space-theme' : ''} ${getSensorValue('P10A_도어열림확인') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('P10A_도어열림확인')}</div>
-                                <div className="sensor-name">도어열림확인</div>
-                            </div>
-                            <div className={`sensor-item ${theme === 'space' ? 'space-theme' : ''} ${getSensorValue('P10B_도어닫힘확인') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('P10B_도어닫힘확인')}</div>
-                                <div className="sensor-name">도어닫힘확인</div>
-                            </div>
-                            <div className={`sensor-item ${theme === 'space' ? 'space-theme' : ''} ${getSensorValue('P134_턴0도확인') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('P134_턴0도확인')}</div>
-                                <div className="sensor-name">턴 0도 확인</div>
-                            </div>
-                            <div className={`sensor-item ${theme === 'space' ? 'space-theme' : ''} ${getSensorValue('P135_턴180확인') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('P135_턴180확인')}</div>
-                                <div className="sensor-name">턴 180도 확인</div>
-                            </div>
-                            <div className={`sensor-item ${theme === 'space' ? 'space-theme' : ''} ${getSensorValue('P137_턴좌정지') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('P137_턴좌정지')}</div>
-                                <div className="sensor-name">턴 좌정지</div>
-                            </div>
-                            <div className={`sensor-item ${theme === 'space' ? 'space-theme' : ''} ${getSensorValue('P138_턴우정지') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('P138_턴우정지')}</div>
-                                <div className="sensor-name">턴 우정지</div>
-                            </div>
-                            <div className={`sensor-item ${theme === 'space' ? 'space-theme' : ''} ${getSensorValue('P146_턴잠김') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('P146_턴잠김')}</div>
-                                <div className="sensor-name">턴 잠김</div>
-                            </div>
-                            <div className={`sensor-item ${theme === 'space' ? 'space-theme' : ''} ${getSensorValue('P147_턴해제') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('P147_턴해제')}</div>
-                                <div className="sensor-name">턴 해제</div>
-                            </div>
-                        </div>
-                    )}
 
-                    {activeTab === 'page2' && (
-                        <div>
-                            <div className={`sensor-item ${theme === 'space' ? 'space-theme' : ''} ${getSensorValue('P133_홈위치') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('P133_홈위치')}</div>
-                                <div className="sensor-name">홈 위치</div>
-                            </div>
-                            <div className={`sensor-item ${theme === 'space' ? 'space-theme' : ''} ${getSensorValue('P148_레벨상') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('P148_레벨상')}</div>
-                                <div className="sensor-name">레벨 상</div>
-                            </div>
-                            <div className={`sensor-item ${theme === 'space' ? 'space-theme' : ''} ${getSensorValue('P149_레벨하') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('P149_레벨하')}</div>
-                                <div className="sensor-name">레벨 하</div>
-                            </div>
-                            <div className={`sensor-item ${theme === 'space' ? 'space-theme' : ''} ${getSensorValue('P118_상승비상') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('P118_상승비상')}</div>
-                                <div className="sensor-name">상승 비상</div>
-                            </div>
-                            <div className={`sensor-item ${theme === 'space' ? 'space-theme' : ''} ${getSensorValue('P11A_상승감속') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('P11A_상승감속')}</div>
-                                <div className="sensor-name">상승 감속</div>
-                            </div>
-                            <div className={`sensor-item ${theme === 'space' ? 'space-theme' : ''} ${getSensorValue('P11B_하강감속') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('P11B_하강감속')}</div>
-                                <div className="sensor-name">하강 감속</div>
-                            </div>
-                            <div className={`sensor-item ${theme === 'space' ? 'space-theme' : ''} ${getSensorValue('P11D_하강비상') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('P11D_하강비상')}</div>
-                                <div className="sensor-name">하강 비상</div>
-                            </div>
-                            <div className={`sensor-item ${theme === 'space' ? 'space-theme' : ''} ${getSensorValue('P115_와이어절단') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('P115_와이어절단')}</div>
-                                <div className="sensor-name">와이어 절단</div>
-                            </div>
-                        </div>
-                    )}
+                <div className="sensor-panel-left show">
+                    <div className="mb-4 text-center">
+                        <h3 className="text-sm font-bold text-gray-600">입력 센서</h3>
+                    </div>
+                    {renderLeftSensorPanel()}
 
-                    {activeTab === 'page3' && (
-                        <div>
-                            <div className={`sensor-item ${theme === 'space' ? 'space-theme' : ''} ${getSensorValue('P140_후크중앙_전_') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('P140_후크중앙_전_')}</div>
-                                <div className="sensor-name">후크 중앙(전)</div>
-                            </div>
-                            <div className={`sensor-item ${theme === 'space' ? 'space-theme' : ''} ${getSensorValue('P141_후크중앙_후_') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('P141_후크중앙_후_')}</div>
-                                <div className="sensor-name">후크 중앙(후)</div>
-                            </div>
-                            <div className={`sensor-item ${theme === 'space' ? 'space-theme' : ''} ${getSensorValue('P142_홀수파렛정지') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('P142_홀수파렛정지')}</div>
-                                <div className="sensor-name">홀수 파렛 정지</div>
-                            </div>
-                            <div className={`sensor-item ${theme === 'space' ? 'space-theme' : ''} ${getSensorValue('P143_짝수파렛정지') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('P143_짝수파렛정지')}</div>
-                                <div className="sensor-name">짝수 파렛 정지</div>
-                            </div>
-                            <div className={`sensor-item ${theme === 'space' ? 'space-theme' : ''} ${getSensorValue('P144_파렛감지_홀_') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('P144_파렛감지_홀_')}</div>
-                                <div className="sensor-name">파렛 감지(홀)</div>
-                            </div>
-                            <div className={`sensor-item ${theme === 'space' ? 'space-theme' : ''} ${getSensorValue('P145_파렛감지_짝_') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('P145_파렛감지_짝_')}</div>
-                                <div className="sensor-name">파렛 감지(짝)</div>
-                            </div>
-                            <div className={`sensor-item ${theme === 'space' ? 'space-theme' : ''} ${getSensorValue('P116_피트센서_홀_') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('P116_피트센서_홀_')}</div>
-                                <div className="sensor-name">피트센서(홀)</div>
-                            </div>
-                            <div className={`sensor-item ${theme === 'space' ? 'space-theme' : ''} ${getSensorValue('P117_피트센서_짝_') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('P117_피트센서_짝_')}</div>
-                                <div className="sensor-name">피트센서(짝)</div>
-                            </div>
-                        </div>
-                    )}
                 </div>
             )}
 
-            {/* 우측 센서 패널 - 속초 출력 센서 표시 (기존과 동일) */}
+            {/* 우측 센서 패널 - config 기반 동적 렌더링 */}
             {showSensors && (
-                <div className={`sensor-panel-right show ${theme === 'space' ? 'space-theme' : ''}`}>
-                    {activeTab === 'page1' && (
-                        <div>
-                            <div className={`sensor-item ${theme === 'space' ? 'space-theme' : ''} ${getSensorValue('P212_도어열림MC') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('P212_도어열림MC')}</div>
-                                <div className="sensor-name">도어열림MC</div>
-                            </div>
-                            <div className={`sensor-item ${theme === 'space' ? 'space-theme' : ''} ${getSensorValue('P213_도어닫힘MC') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('P213_도어닫힘MC')}</div>
-                                <div className="sensor-name">도어닫힘MC</div>
-                            </div>
-                            <div className={`sensor-item ${theme === 'space' ? 'space-theme' : ''} ${getSensorValue('P22A_턴MC') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('P22A_턴MC')}</div>
-                                <div className="sensor-name">턴 MC</div>
-                            </div>
-                            <div className={`sensor-item ${theme === 'space' ? 'space-theme' : ''} ${getSensorValue('P22B_턴BK') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('P22B_턴BK')}</div>
-                                <div className="sensor-name">턴 BK</div>
-                            </div>
-                            <div className={`sensor-item ${theme === 'space' ? 'space-theme' : ''} ${getSensorValue('P22C_턴락MC') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('P22C_턴락MC')}</div>
-                                <div className="sensor-name">턴락 MC</div>
-                            </div>
-                            <div className={`sensor-item ${theme === 'space' ? 'space-theme' : ''} ${getSensorValue('P22D_턴언락MC') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('P22D_턴언락MC')}</div>
-                                <div className="sensor-name">턴언락 MC</div>
-                            </div>
-                            <div className={`sensor-item ${theme === 'space' ? 'space-theme' : ''} ${getSensorValue('P208_유도등1') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('P208_유도등1')}</div>
-                                <div className="sensor-name">유도등1</div>
-                            </div>
-                            <div className={`sensor-item ${theme === 'space' ? 'space-theme' : ''} ${getSensorValue('P209_유도등2') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('P209_유도등2')}</div>
-                                <div className="sensor-name">유도등2</div>
-                            </div>
-                            <div className={`sensor-item ${theme === 'space' ? 'space-theme' : ''} ${getSensorValue('P20A_유도등4') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('P20A_유도등4')}</div>
-                                <div className="sensor-name">유도등4</div>
-                            </div>
-                            <div className={`sensor-item ${theme === 'space' ? 'space-theme' : ''} ${getSensorValue('P20B_유도등8') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('P20B_유도등8')}</div>
-                                <div className="sensor-name">유도등8</div>
-                            </div>
-                        </div>
-                    )}
 
-                    {activeTab === 'page2' && (
-                        <div>
-                            <div className={`sensor-item ${theme === 'space' ? 'space-theme' : ''} ${getSensorValue('P200_L_INV정') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('P200_L_INV정')}</div>
-                                <div className="sensor-name">리프트 인버터 정</div>
-                            </div>
-                            <div className={`sensor-item ${theme === 'space' ? 'space-theme' : ''} ${getSensorValue('P201_L_INV역') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('P201_L_INV역')}</div>
-                                <div className="sensor-name">리프트 인버터 역</div>
-                            </div>
-                            <div className={`sensor-item ${theme === 'space' ? 'space-theme' : ''} ${getSensorValue('P210_리프트MC') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('P210_리프트MC')}</div>
-                                <div className="sensor-name">리프트 MC</div>
-                            </div>
-                            <div className={`sensor-item ${theme === 'space' ? 'space-theme' : ''} ${getSensorValue('P211_리프트BK') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('P211_리프트BK')}</div>
-                                <div className="sensor-name">리프트 BK</div>
-                            </div>
-                            <div className={`sensor-item ${theme === 'space' ? 'space-theme' : ''} ${getSensorValue('P202_L_INV_S3') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('P202_L_INV_S3')}</div>
-                                <div className="sensor-name">리프트 INV S3</div>
-                            </div>
-                            <div className={`sensor-item ${theme === 'space' ? 'space-theme' : ''} ${getSensorValue('P203_L_INV_S4') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('P203_L_INV_S4')}</div>
-                                <div className="sensor-name">리프트 INV S4</div>
-                            </div>
-                            <div className={`sensor-item ${theme === 'space' ? 'space-theme' : ''} ${getSensorValue('P204_L_INV_S5') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('P204_L_INV_S5')}</div>
-                                <div className="sensor-name">리프트 INV S5</div>
-                            </div>
-                            <div className={`sensor-item ${theme === 'space' ? 'space-theme' : ''} ${getSensorValue('P205_L_INV_S6') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('P205_L_INV_S6')}</div>
-                                <div className="sensor-name">리프트 INV S6</div>
-                            </div>
-                        </div>
-                    )}
+                <div className="sensor-panel-right show">
+                    <div className="mb-4 text-center">
+                        <h3 className="text-sm font-bold text-gray-600">출력 센서</h3>
+                    </div>
+                    {renderRightSensorPanel()}
 
-                    {activeTab === 'page3' && (
-                        <div>
-                            <div className={`sensor-item ${theme === 'space' ? 'space-theme' : ''} ${getSensorValue('P220_P_INV정') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('P220_P_INV정')}</div>
-                                <div className="sensor-name">횡행 인버터 정</div>
-                            </div>
-                            <div className={`sensor-item ${theme === 'space' ? 'space-theme' : ''} ${getSensorValue('P221_P_INV역') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('P221_P_INV역')}</div>
-                                <div className="sensor-name">횡행 인버터 역</div>
-                            </div>
-                            <div className={`sensor-item ${theme === 'space' ? 'space-theme' : ''} ${getSensorValue('P228_횡행MC') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('P228_횡행MC')}</div>
-                                <div className="sensor-name">횡행 MC</div>
-                            </div>
-                            <div className={`sensor-item ${theme === 'space' ? 'space-theme' : ''} ${getSensorValue('P229_횡행BK') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('P229_횡행BK')}</div>
-                                <div className="sensor-name">횡행 BK</div>
-                            </div>
-                            <div className={`sensor-item ${theme === 'space' ? 'space-theme' : ''} ${getSensorValue('P222_P_INV_S3') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('P222_P_INV_S3')}</div>
-                                <div className="sensor-name">횡행 INV S3</div>
-                            </div>
-                            <div className={`sensor-item ${theme === 'space' ? 'space-theme' : ''} ${getSensorValue('P223_P_INV_S4') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('P223_P_INV_S4')}</div>
-                                <div className="sensor-name">횡행 INV S4</div>
-                            </div>
-                            <div className={`sensor-item ${theme === 'space' ? 'space-theme' : ''} ${getSensorValue('P224_P_INV_S5') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('P224_P_INV_S5')}</div>
-                                <div className="sensor-name">횡행 INV S5</div>
-                            </div>
-                            <div className={`sensor-item ${theme === 'space' ? 'space-theme' : ''} ${getSensorValue('P225_P_INV_S6') ? 'active' : 'inactive'}`}>
-                                <div className="sensor-code">{getSensorCode('P225_P_INV_S6')}</div>
-                                <div className="sensor-name">횡행 INV S6</div>
-                            </div>
-                        </div>
-                    )}
                 </div>
             )}
         </>

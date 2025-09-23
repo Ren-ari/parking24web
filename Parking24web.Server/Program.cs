@@ -1,10 +1,12 @@
+using Microsoft.EntityFrameworkCore;
 using Parking24web.Server.Hubs;
+using Parking24web.Server.Models;
 using Parking24web.Server.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // 환경변수에서 현장명 가져오기
-var siteName = Environment.GetEnvironmentVariable("SITE_NAME") ?? "Sokcho1";
+var siteName = args.Length > 0 ? args[0] : "Sokcho1";
 Console.WriteLine($"현장 설정: {siteName}");
 
 // 사이트별 설정 파일 로드
@@ -20,7 +22,8 @@ else
     Console.WriteLine("기본 설정을 사용합니다.");
 }
 
-builder.WebHost.UseUrls("http://0.0.0.0:5123");
+var urls = builder.Configuration["Urls"] ?? "http://0.0.0.0:5123";
+builder.WebHost.UseUrls(urls);
 
 // 기존 서비스들
 builder.Services.AddControllers();
@@ -28,11 +31,29 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddControllersWithViews();
 
+// 실행 파일 위치 기준으로 DB 경로 설정
+var appDirectory = AppContext.BaseDirectory;
+var dbPath = Path.Combine(appDirectory, "Data", "parking.db");
+var dbDirectory = Path.GetDirectoryName(dbPath);
+
+// Data 폴더 없으면 생성
+if (!Directory.Exists(dbDirectory))
+{
+    Directory.CreateDirectory(dbDirectory);
+}
+
+// SQLite 데이터베이스 연결
+builder.Services.AddDbContext<ParkingDbContext>(options =>
+    options.UseSqlite($"Data Source={dbPath}"));
+
 // SignalR 서비스 추가
 builder.Services.AddSignalR();
 
 // PLC 서비스 싱글톤으로 등록
 builder.Services.AddSingleton<PLCService>();
+
+// 백그라운드 서비스 등록
+builder.Services.AddHostedService<ParkingEventService>();
 
 // Configuration을 강타입으로 바인딩
 builder.Services.Configure<SiteConfiguration>(
@@ -62,6 +83,13 @@ builder.Services.AddCors(options =>
 });
 
 var app = builder.Build();
+
+// 데이터베이스 자동 생성
+using (var scope = app.Services.CreateScope())
+{
+    var context = scope.ServiceProvider.GetRequiredService<ParkingDbContext>();
+    context.Database.EnsureCreated();
+}
 
 // 시작시 사이트 설정 검증
 try
@@ -125,7 +153,6 @@ app.MapFallbackToFile("index.html");
 // 애플리케이션 시작 로그
 var appLogger = app.Services.GetRequiredService<ILogger<Program>>();
 var environment = app.Environment;
-var urls = "http://0.0.0.0:5123";
 
 appLogger.LogInformation($"=== PLC 웹 제어 시스템 시작 ===");
 appLogger.LogInformation($"현장: {siteName}");
