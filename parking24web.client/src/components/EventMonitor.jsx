@@ -372,11 +372,11 @@ const EventMonitor = ({ sensorData, isPLCConnected }) => {
                     />
                     <button
                         onClick={searchCar}
-                        className={`px-2 md:px-4 py-3 md:py-2 rounded-lg font-medium transition-all duration-300 ease-in-out hover:scale-105 text-sm md:text-base ${theme === 'space' ? 'text-purple-500 hover:text-purple-600 bg-gradient-to-br from-gray-600/80 to-gray-700/80 border border-gray-500/70 hover:border-gray-400' : 'text-white'}`}
-                        style={theme === 'space' ? {} : {
-                            background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.9) 0%, rgba(99, 102, 241, 0.9) 100%)',
-                            border: '1px solid rgba(255, 255, 255, 0.35)',
-                            boxShadow: '0 2px 10px rgba(31, 38, 135, 0.25)'
+                        className={`px-2 md:px-4 py-3 md:py-2 rounded-lg font-medium transition-all duration-300 ease-in-out hover:scale-105 text-sm md:text-base text-white`}
+                        style={{
+                            background: 'linear-gradient(145deg, #1a1a1a 0%, #2d2d2d 50%, #1a1a1a 100%)',
+                            border: '1px solid rgba(255, 255, 255, 0.2)',
+                            boxShadow: 'inset 0 1px 2px rgba(255,255,255,0.1), inset 0 -1px 2px rgba(0,0,0,0.3), 0 4px 12px rgba(0,0,0,0.4)'
                         }}
                     >   
                         검색

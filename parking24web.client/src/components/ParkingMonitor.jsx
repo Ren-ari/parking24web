@@ -361,7 +361,9 @@ const ParkingMonitor = ({ sensorData, isPLCConnected, onVehicleEdit, theme }) =>
                             <div
                                 key={level}
                                 className={`border border-white/20 rounded-lg p-1 sm:p-2 md:p-3 shadow-lg ${level === 1
-                                        ? "bg-gradient-to-br from-yellow-50 to-orange-50 border-yellow-300"
+                                        ? theme === 'space' 
+                                            ? "bg-gradient-to-br from-gray-600 to-gray-700 border-gray-500"
+                                            : "bg-gradient-to-br from-yellow-50 to-orange-50 border-yellow-300"
                                         : theme === 'space' 
                                             ? "bg-gradient-to-br from-purple-800 to-violet-900 border-purple-900"
                                             : "bg-gradient-to-br from-blue-50 to-indigo-100 border-gray-200"
@@ -380,7 +382,7 @@ const ParkingMonitor = ({ sensorData, isPLCConnected, onVehicleEdit, theme }) =>
                                     {/* 층 라벨 */}
                                     <div className="w-12 sm:w-16 md:w-20 text-center flex-shrink-0">
                                         <div
-                                            className={`font-bold text-xs sm:text-sm md:text-base ${level === 1 ? "text-orange-600" : theme === 'space' ? "text-white" : "text-gray-700"
+                                            className={`font-bold text-xs sm:text-sm md:text-base ${level === 1 ? (theme === 'space' ? "text-gray-200" : "text-orange-600") : theme === 'space' ? "text-white" : "text-gray-700"
                                                 }`}
                                         >
                                             {levelText}

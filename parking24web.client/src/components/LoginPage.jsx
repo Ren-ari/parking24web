@@ -319,7 +319,7 @@ const LoginPage = ({ onLogin }) => {
                                 onFocus={() => setFocusedField('username')}
                                 onBlur={() => setFocusedField('')}
                                 disabled={isLoading}
-                                className={`${fieldErrors.username ? 'error-input' : ''} ${focusedField === 'username' ? 'focused' : ''}`}
+                                className={`${focusedField === 'username' ? 'focused' : ''}`}
                             />
                             <div className="input-border"></div>
                         </div>
@@ -349,7 +349,7 @@ const LoginPage = ({ onLogin }) => {
                                 onFocus={() => setFocusedField('password')}
                                 onBlur={() => setFocusedField('')}
                                 disabled={isLoading}
-                                className={`${fieldErrors.password ? 'error-input' : ''} ${focusedField === 'password' ? 'focused' : ''}`}
+                                className={`${focusedField === 'password' ? 'focused' : ''}`}
                             />
                             <button
                                 type="button"

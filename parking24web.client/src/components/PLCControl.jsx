@@ -709,13 +709,16 @@ const PLCControl = ({ currentUser, onLogout }) => {
                                     차량 및 주차 현황 데이터
                                 </h3>
                                 <button
-                                    className="p-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full transition-all duration-300 ease-in-out transform hover:scale-110 active:scale-95 relative z-10"
+                                    className={`p-2 rounded-full transition-all duration-300 ease-in-out transform hover:scale-110 active:scale-95 relative z-10 ${isDataPanelExpanded ? '' : 'bg-white/5 hover:bg-white/10 border border-white/10'}`}
+                                    style={isDataPanelExpanded ? {
+                                        background: theme === 'space' ? 'rgba(20, 20, 20, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+                                        backdropFilter: 'blur(25px)',
+                                        WebkitBackdropFilter: 'blur(25px)',
+                                        border: 'none'
+                                    } : {}}
                                 >
                                     <svg
-                                        className={`w-5 h-5 transform transition-transform duration-500 ease-in-out ${isDataPanelExpanded
-                                            ? 'rotate-180 text-purple-500'
-                                            : 'rotate-0 text-blue-500'
-                                            }`}
+                                        className={`w-5 h-5 transform transition-transform duration-500 ease-in-out ${isDataPanelExpanded ? 'rotate-180' : 'rotate-0'} ${theme === 'space' ? 'text-purple-500' : 'text-blue-500'}`}
                                         fill="none"
                                         stroke="currentColor"
                                         viewBox="0 0 24 24"
