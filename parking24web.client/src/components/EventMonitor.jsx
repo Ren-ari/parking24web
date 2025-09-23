@@ -1,7 +1,12 @@
-import React, { useState, useEffect, useCallback } from 'react';
+
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import sokcho1Config from '../../config/sokcho1Config.js';
+import { useTheme } from '../contexts/ThemeContext';
 
 const EventMonitor = () => {
+
+
+    const { theme } = useTheme();
     const [activeTab, setActiveTab] = useState('recent');
     const [recentEvents, setRecentEvents] = useState([]);
     const [currentParked, setCurrentParked] = useState([]);
@@ -17,6 +22,7 @@ const EventMonitor = () => {
         monthlyIn: 0,
         monthlyOut: 0
     });
+    const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
 
     // 토스트 알림 표시
     const showToast = useCallback((message) => {
@@ -159,18 +165,66 @@ const EventMonitor = () => {
         alert('⚠️ 데이터 초기화는 서버 관리자만 가능합니다.');
     };
 
+    // 정렬 함수
+    const handleSort = (key) => {
+        let direction = 'asc';
+        if (sortConfig.key === key && sortConfig.direction === 'asc') {
+            direction = 'desc';
+        }
+        setSortConfig({ key, direction });
+    };
+
+    // 데이터 정렬 함수
+    const sortData = (data) => {
+        if (!sortConfig.key) return data;
+
+        return [...data].sort((a, b) => {
+            let aValue = a[sortConfig.key];
+            let bValue = b[sortConfig.key];
+
+            // 시간 정렬을 위한 특별 처리
+            if (sortConfig.key === '시간') {
+                aValue = new Date(`2000-01-01 ${aValue}`);
+                bValue = new Date(`2000-01-01 ${bValue}`);
+            }
+            // 층 정렬을 위한 숫자 변환
+            else if (sortConfig.key === '층') {
+                aValue = parseInt(aValue) || 0;
+                bValue = parseInt(bValue) || 0;
+            }
+            // 차량번호 정렬을 위한 숫자 변환
+            else if (sortConfig.key === '차번') {
+                aValue = parseInt(aValue) || 0;
+                bValue = parseInt(bValue) || 0;
+            }
+
+            if (aValue < bValue) {
+                return sortConfig.direction === 'asc' ? -1 : 1;
+            }
+            if (aValue > bValue) {
+                return sortConfig.direction === 'asc' ? 1 : -1;
+            }
+            return 0;
+        });
+    };
+
     // 탭별 데이터
     const getTabData = () => {
+        let data = [];
         switch (activeTab) {
             case 'recent':
-                return recentEvents;
+                data = recentEvents;
+                break;
             case 'parked':
-                return currentParked;
+                data = currentParked;
+                break;
             case 'exited':
-                return exitedCars;
+                data = exitedCars;
+                break;
             default:
-                return [];
+                data = [];
         }
+        return sortData(data);
     };
 
     // 통계 섹션 토글
@@ -272,11 +326,20 @@ const EventMonitor = () => {
                     }
                 `}
             </style>
-            <div className="rounded-2xl p-6 border border-gray-200 shadow-xl relative" style={{
-                background: 'rgba(255, 255, 255, 0.95)',
-                backdropFilter: 'blur(20px)',
-                WebkitBackdropFilter: 'blur(20px)',
-                boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.25)'
+            <div className={`rounded-2xl p-6 border shadow-xl relative ${theme === 'space' ? 'border-gray-700' : 'border-gray-200'}`} style={{
+                ...(theme === 'space'
+                    ? {
+                        background: 'linear-gradient(135deg, rgba(20,20,20,0.98) 0%, rgba(10,10,10,0.98) 100%)',
+                        backdropFilter: 'blur(25px)',
+                        WebkitBackdropFilter: 'blur(25px)',
+                        boxShadow: '0 12px 40px rgba(0,0,0,0.6)'
+                    }
+                    : {
+                        background: 'rgba(255, 255, 255, 0.95)',
+                        backdropFilter: 'blur(20px)',
+                        WebkitBackdropFilter: 'blur(20px)',
+                        boxShadow: '0 8px 32px rgba(0,0,0,0.25)'
+                    })
             }}>
                 {/* 토스트 알림 */}
                 {toastMessage && (
@@ -298,9 +361,17 @@ const EventMonitor = () => {
                     border: '1px solid rgba(255, 255, 255, 0.2)',
                     boxShadow: '0 4px 16px 0 rgba(31, 38, 135, 0.2)'
                 }}>
-                    <div className="flex justify-between items-center mb-4">
-                        <h2 className="text-2xl font-bold text-white mb-8">입출차 현황 모니터링</h2>
-                    </div>
+
+                    <span className="text-white text-sm font-medium">{toastMessage}</span>
+                </div>
+            )}
+
+            {/* 헤더 */}
+            <div className={`rounded-xl p-6 mb-6 ${theme === 'space' ? 'bg-gradient-to-br from-purple-600/80 via-purple-700/70 to-purple-800/80 border-purple-500/90 shadow-lg shadow-purple-600/30' : 'bg-gradient-to-br from-blue-500/90 via-indigo-500/80 to-blue-600/90 border-blue-200/50 shadow-lg'}`}>
+                <div className="flex justify-center mb-4">
+                    <h2 className="text-2xl font-bold text-white mb-8 text-center">입출차 현황 모니터링</h2>
+                </div>
+
 
                     {/* 검색창 */}
                     <div className="flex gap-2 md:gap-3 items-center">
@@ -624,7 +695,6 @@ const EventMonitor = () => {
                             ))}
                         </div>
                     </div>
-
                     {/* 테이블 컨테이너 */}
                     <div className="rounded-xl overflow-hidden" style={{
                         maxHeight: '500px',
@@ -653,6 +723,7 @@ const EventMonitor = () => {
                                     </tr>
                                 ) : (
                                     getTabData().map((item, idx) => (
+
                                         <tr key={idx} className={`border-b transition-all duration-200 hover:scale-[1.01] hover:bg-blue-50/50`}
                                             style={{
                                                 background: 'rgba(59, 130, 246, 0.05)'
@@ -670,6 +741,7 @@ const EventMonitor = () => {
                                             </td>
                                             <td className="px-2 sm:px-4 py-3 sm:py-4 text-center font-semibold text-gray-700 w-1/4 text-xs sm:text-sm">{item.층}</td>
                                             <td className="px-2 sm:px-4 py-3 sm:py-4 text-center font-bold text-lg sm:text-xl text-gray-800 w-1/4">{item.차번}</td>
+
                                         </tr>
                                     ))
                                 )}

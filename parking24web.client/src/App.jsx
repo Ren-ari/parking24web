@@ -6,6 +6,8 @@ import './App.css';
 import { motion } from 'framer-motion';
 // 커스텀 인증 훅 import
 import { useAuth } from './hooks/useAuth';
+// 테마 Context import
+import { ThemeProvider } from './contexts/ThemeContext';
 
 document.body.style.fontFamily = "'Noto Sans KR', sans-serif";
 
@@ -34,28 +36,32 @@ function App() {
     // 인증되지 않은 경우 로그인 페이지 표시
     if (!isAuthenticated) {
         return (
-            <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-            >
-                <LoginPage onLogin={handleLogin} />
-            </motion.div>
+            <ThemeProvider>
+                <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                >
+                    <LoginPage onLogin={handleLogin} />
+                </motion.div>
+            </ThemeProvider>
         );
     }
 
     // 인증된 경우 메인 앱 표시
     return (
-        <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="App"
-        >
-            {/* 사용자 정보를 PLCControl에 props로 전달 */}
-            <PLCControl
-                currentUser={user}
-                onLogout={handleLogout}
-            />
-        </motion.div>
+        <ThemeProvider>
+            <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="App"
+            >
+                {/* 사용자 정보를 PLCControl에 props로 전달 */}
+                <PLCControl
+                    currentUser={user}
+                    onLogout={handleLogout}
+                />
+            </motion.div>
+        </ThemeProvider>
     );
 }
 

@@ -3,10 +3,13 @@
 import siteConfig from '../../config/sokcho1Config.js';
 // SignalR 서비스 import
 import signalRService from '../Services/signalrService.js';
+import { useTheme } from '../contexts/ThemeContext';
 
 const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMenuOpen }) => {
+
     const [_activeCommand, setActiveCommand] = useState(null);
     const [_isEmergencyMode, setIsEmergencyMode] = useState(false);
+    const { theme, isSpaceTheme, isDarkTheme, isOceanTheme } = useTheme();
     const [activeTab, setActiveTab] = useState('page1');
     const [showSensors, setShowSensors] = useState(true);
     const [sensorStates, setSensorStates] = useState({});
@@ -200,6 +203,90 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
 
     const isDisabled = !isPLCConnected || !isAuthenticated;
 
+    // 테마에 따른 카드 배경 스타일
+    const getCardBackgroundStyle = () => {
+        switch (theme) {
+            case 'space':
+                return {
+                    background: 'linear-gradient(135deg, rgba(147, 51, 234, 0.15) 0%, rgba(124, 58, 237, 0.08) 100%)', // 보라색 계열
+                    border: '1px solid rgba(147, 51, 234, 0.2)',
+                    boxShadow: '0 4px 16px 0 rgba(147, 51, 234, 0.1)'
+                };
+            case 'dark':
+                return {
+                    background: 'linear-gradient(135deg, rgba(75, 85, 99, 0.15) 0%, rgba(55, 65, 81, 0.08) 100%)', // 회색 계열
+                    border: '1px solid rgba(75, 85, 99, 0.2)',
+                    boxShadow: '0 4px 16px 0 rgba(75, 85, 99, 0.1)'
+                };
+            case 'ocean':
+                return {
+                    background: 'linear-gradient(135deg, rgba(37, 99, 235, 0.15) 0%, rgba(29, 78, 216, 0.08) 100%)', // 파란색 계열
+                    border: '1px solid rgba(37, 99, 235, 0.2)',
+                    boxShadow: '0 4px 16px 0 rgba(37, 99, 235, 0.1)'
+                };
+            default:
+                return {
+                    background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.03) 100%)',
+                    border: '1px solid rgba(255, 255, 255, 0.12)',
+                    boxShadow: '0 4px 16px 0 rgba(31, 38, 135, 0.15)'
+                };
+        }
+    };
+
+    // 테마에 따른 카드 값 배경 스타일
+    const getCardValueBackgroundStyle = () => {
+        switch (theme) {
+            case 'space':
+                return {
+                    background: 'linear-gradient(135deg, rgba(147, 51, 234, 0.2) 0%, rgba(124, 58, 237, 0.1) 100%)',
+                    border: '1px solid rgba(147, 51, 234, 0.3)',
+                    boxShadow: '0 2px 8px 0 rgba(147, 51, 234, 0.1)'
+                };
+            case 'dark':
+                return {
+                    background: 'linear-gradient(135deg, rgba(75, 85, 99, 0.2) 0%, rgba(55, 65, 81, 0.1) 100%)',
+                    border: '1px solid rgba(75, 85, 99, 0.3)',
+                    boxShadow: '0 2px 8px 0 rgba(75, 85, 99, 0.1)'
+                };
+            case 'ocean':
+                return {
+                    background: 'linear-gradient(135deg, rgba(37, 99, 235, 0.2) 0%, rgba(29, 78, 216, 0.1) 100%)',
+                    border: '1px solid rgba(37, 99, 235, 0.3)',
+                    boxShadow: '0 2px 8px 0 rgba(37, 99, 235, 0.1)'
+                };
+            default:
+                return {
+                    background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.8) 100%)',
+                    border: '1px solid rgba(255, 255, 255, 0.3)',
+                    boxShadow: '0 2px 8px 0 rgba(31, 38, 135, 0.15)'
+                };
+        }
+    };
+
+    // 테마에 따른 카드 라벨 색상 클래스
+    const getCardLabelColorClass = () => {
+        switch (theme) {
+            case 'space':
+            case 'dark':
+            case 'ocean':
+                return 'text-white';
+            default:
+                return 'text-blue-700';
+        }
+    };
+
+    // 테마에 따른 카드 값 색상 클래스
+    const getCardValueColorClass = () => {
+        switch (theme) {
+            case 'space':
+            case 'dark':
+            case 'ocean':
+                return 'text-purple-800';
+            default:
+                return 'text-purple-900';
+        }
+    };
+
     return (
         <>
             <style jsx>{`
@@ -225,6 +312,12 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
                     font-family: inherit;
                     min-width: 120px;
                 }
+
+                .learn-more.space-theme {
+                    color: #f3e8ff;
+                    background: #6b46c1;
+                    border: 1px solid #5b21b6;
+                }
                 
                 @media (min-width: 768px) {
                     .learn-more {
@@ -248,6 +341,11 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
                     transform: translate3d(0, 0.75em, -1em);
                     transition: transform 150ms cubic-bezier(0, 0, 0.58, 1), box-shadow 150ms cubic-bezier(0, 0, 0.58, 1);
                 }
+
+                .learn-more.space-theme::before {
+                    background: #2d1b69;
+                    box-shadow: 0 0 0 1px #5b21b6, 0 0.625em 0 0 #2d1b69;
+                }
                 
                 .learn-more:hover {
                     background: #bfdbfe;
@@ -258,6 +356,15 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
                     box-shadow: 0 0 0 1px #3b82f6, 0 0.5em 0 0 #bfdbfe;
                     transform: translate3d(0, 0.5em, -1em);
                 }
+
+                .learn-more.space-theme:hover {
+                    background: #4c1d95;
+                }
+                
+                .learn-more.space-theme:hover::before {
+                    box-shadow: 0 0 0 1px #5b21b6, 0 0.5em 0 0 #6b46c1;
+                    transform: translate3d(0, 0.5em, -1em);
+                }
                 
                 .learn-more:active {
                     background: #bfdbfe;
@@ -266,6 +373,15 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
                 
                 .learn-more:active::before {
                     box-shadow: 0 0 0 1px #3b82f6, 0 0 #bfdbfe;
+                    transform: translate3d(0, 0, -1em);
+                }
+
+                .learn-more.space-theme:active {
+                    background: #4c1d95;
+                }
+                
+                .learn-more.space-theme:active::before {
+                    box-shadow: 0 0 0 1px #5b21b6, 0 0 #6b46c1;
                     transform: translate3d(0, 0, -1em);
                 }
 
@@ -300,7 +416,7 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
                 }
 
                 .common-button {
-                    color: #374151;
+                    color: #6b7280;
                     background: #f3f4f6;
                     border: 1px solid #9ca3af;
                     min-width: 120px;
@@ -309,7 +425,7 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
                 }
                 
                 .common-button::before {
-                    background: #e5e7eb;
+                    background: #d1d5db;
                     box-shadow: 0 0 0 1px #9ca3af, 0 0.625em 0 0 #f3f4f6;
                 }
                 
@@ -329,10 +445,64 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
                     box-shadow: 0 0 0 1px #9ca3af, 0 0 #f3f4f6;
                 }
 
+                .common-button.space-theme {
+                    color: #f9fafb;
+                    background: #374151;
+                    border: 1px solid #1f2937;
+                }
+                
+                .common-button.space-theme::before {
+                    background: #111827;
+                    box-shadow: 0 0 0 1px #1f2937, 0 0.625em 0 0 #111827;
+                }
+                
+                .common-button.space-theme:hover {
+                    background: #1f2937;
+                }
+                
+                .common-button.space-theme:hover::before {
+                    box-shadow: 0 0 0 1px #1f2937, 0 0.5em 0 0 #111827;
+                }
+                
+                .common-button.space-theme:active {
+                    background: #1f2937;
+                }
+                
+                .common-button.space-theme:active::before {
+                    box-shadow: 0 0 0 1px #1f2937, 0 0 #111827;
+                }
+
+                .emergency-button.space-theme {
+                    color: #fef2f2;
+                    background: #991b1b;
+                    border: 1px solid #7f1d1d;
+                }
+                
+                .emergency-button.space-theme::before {
+                    background: #450a0a;
+                    box-shadow: 0 0 0 1px #7f1d1d, 0 0.625em 0 0 #450a0a;
+                }
+                
+                .emergency-button.space-theme:hover {
+                    background: #7f1d1d;
+                }
+                
+                .emergency-button.space-theme:hover::before {
+                    box-shadow: 0 0 0 1px #7f1d1d, 0 0.5em 0 0 #450a0a;
+                }
+                
+                .emergency-button.space-theme:active {
+                    background: #7f1d1d;
+                }
+                
+                .emergency-button.space-theme:active::before {
+                    box-shadow: 0 0 0 1px #7f1d1d, 0 0 #450a0a;
+                }
+
                 .common-buttons-grid {
                     display: flex;
                     flex-wrap: wrap;
-                    gap: 16px;
+                    gap: 20px;
                     justify-content: center;
                     max-width: none;
                 }
@@ -388,6 +558,14 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
                     border-radius: 20px 0 0 20px;
                     scrollbar-width: none;
                     -ms-overflow-style: none;
+                }
+                
+                .sensor-panel-right.space-theme {
+                    background: linear-gradient(135deg, rgba(20, 20, 20, 0.95) 0%, rgba(15, 15, 15, 0.9) 100%);
+                    border: 1px solid rgba(40, 40, 40, 0.3);
+                    box-shadow: -5px 0 20px rgba(0, 0, 0, 0.3);
+                    backdrop-filter: blur(25px);
+                    -webkit-backdrop-filter: blur(25px);
                 }
                 
                 @media (min-width: 768px) and (max-width: 1024px) {
@@ -448,6 +626,14 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
                     border-radius: 0 20px 20px 0;
                     scrollbar-width: none;
                     -ms-overflow-style: none;
+                }
+                
+                .sensor-panel-left.space-theme {
+                    background: linear-gradient(135deg, rgba(20, 20, 20, 0.95) 0%, rgba(15, 15, 15, 0.9) 100%);
+                    border: 1px solid rgba(40, 40, 40, 0.3);
+                    box-shadow: 5px 0 20px rgba(0, 0, 0, 0.3);
+                    backdrop-filter: blur(25px);
+                    -webkit-backdrop-filter: blur(25px);
                 }
                 
                 @media (min-width: 768px) and (max-width: 1024px) {
@@ -514,6 +700,36 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
                     animation: slideInFromCenter 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
                     position: relative;
                     overflow: hidden;
+                }
+                
+                .sensor-item.space-theme {
+                    background: 
+                        linear-gradient(145deg, 
+                            rgba(120, 120, 120, 0.95) 0%, 
+                            rgba(100, 100, 100, 0.9) 25%,
+                            rgba(80, 80, 80, 0.85) 50%,
+                            rgba(70, 70, 70, 0.9) 75%,
+                            rgba(60, 60, 60, 0.95) 100%),
+                        repeating-linear-gradient(
+                            45deg,
+                            transparent,
+                            transparent 2px,
+                            rgba(255, 255, 255, 0.03) 2px,
+                            rgba(255, 255, 255, 0.03) 4px,
+                            transparent 4px,
+                            transparent 6px,
+                            rgba(0, 0, 0, 0.05) 6px,
+                            rgba(0, 0, 0, 0.05) 8px
+                        ) !important;
+                    border: 1px solid rgba(140, 140, 140, 0.8) !important;
+                    box-shadow: 
+                        0 12px 40px rgba(0, 0, 0, 0.4),
+                        0 4px 12px rgba(0, 0, 0, 0.3),
+                        inset 0 2px 4px rgba(180, 180, 180, 0.3),
+                        inset 0 -1px 2px rgba(40, 40, 40, 0.5),
+                        0 0 0 1px rgba(140, 140, 140, 0.7),
+                        0 0 20px rgba(120, 120, 120, 0.3),
+                        0 0 40px rgba(100, 100, 100, 0.2) !important;
                 }
                 
                 .sensor-item::before {
@@ -609,6 +825,18 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
                     border-color: rgba(255, 255, 255, 0.5);
                 }
                 
+                .sensor-item.space-theme:hover {
+                    box-shadow: 
+                        0 20px 45px rgba(0, 0, 0, 0.4),
+                        0 6px 15px rgba(0, 0, 0, 0.3),
+                        inset 0 3px 6px rgba(255, 255, 255, 0.9),
+                        inset 0 -2px 4px rgba(100, 100, 100, 0.4),
+                        0 0 0 1px rgba(220, 220, 220, 1),
+                        0 0 40px rgba(220, 220, 220, 0.8),
+                        0 0 60px rgba(200, 200, 200, 0.6);
+                    border-color: rgba(220, 220, 220, 1);
+                }
+                
                 .sensor-item.active {
                     background: linear-gradient(145deg, 
                         rgba(16, 185, 129, 0.25) 0%, 
@@ -623,19 +851,87 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
                     opacity: 1 !important;
                 }
                 
+                .sensor-item.active.space-theme {
+                    background: 
+                        linear-gradient(145deg, 
+                            rgba(147, 51, 234, 0.4) 0%, 
+                            rgba(124, 58, 237, 0.35) 25%,
+                            rgba(109, 40, 217, 0.3) 50%,
+                            rgba(91, 33, 182, 0.35) 75%,
+                            rgba(76, 29, 149, 0.4) 100%),
+                        repeating-linear-gradient(
+                            45deg,
+                            transparent,
+                            transparent 2px,
+                            rgba(196, 181, 253, 0.1) 2px,
+                            rgba(196, 181, 253, 0.1) 4px,
+                            transparent 4px,
+                            transparent 6px,
+                            rgba(76, 29, 149, 0.1) 6px,
+                            rgba(76, 29, 149, 0.1) 8px
+                        ) !important;
+                    border: 1px solid rgba(147, 51, 234, 0.8) !important;
+                    box-shadow: 
+                        0 8px 25px rgba(0, 0, 0, 0.4),
+                        0 3px 8px rgba(0, 0, 0, 0.3),
+                        inset 0 2px 4px rgba(196, 181, 253, 0.4),
+                        inset 0 -1px 2px rgba(76, 29, 149, 0.4),
+                        0 0 0 1px rgba(147, 51, 234, 0.9),
+                        0 0 25px rgba(147, 51, 234, 0.6),
+                        0 0 50px rgba(196, 181, 253, 0.4) !important;
+                    animation: purpleGlow 2s ease-in-out infinite alternate;
+                }
+                
+                @keyframes purpleGlow {
+                    0% {
+                        box-shadow: 
+                            0 8px 25px rgba(0, 0, 0, 0.4),
+                            0 3px 8px rgba(0, 0, 0, 0.3),
+                            inset 0 2px 4px rgba(196, 181, 253, 0.4),
+                            inset 0 -1px 2px rgba(76, 29, 149, 0.4),
+                            0 0 0 1px rgba(147, 51, 234, 0.9),
+                            0 0 25px rgba(147, 51, 234, 0.6),
+                            0 0 50px rgba(196, 181, 253, 0.4);
+                    }
+                    100% {
+                        box-shadow: 
+                            0 8px 25px rgba(0, 0, 0, 0.4),
+                            0 3px 8px rgba(0, 0, 0, 0.3),
+                            inset 0 2px 4px rgba(196, 181, 253, 0.6),
+                            inset 0 -1px 2px rgba(76, 29, 149, 0.5),
+                            0 0 0 1px rgba(147, 51, 234, 1),
+                            0 0 35px rgba(147, 51, 234, 0.8),
+                            0 0 70px rgba(196, 181, 253, 0.6);
+                    }
+                }
+                
                 .sensor-item.inactive {
-                    background: linear-gradient(145deg, 
-                        rgba(107, 114, 128, 0.15) 0%, 
-                        rgba(156, 163, 175, 0.08) 50%, 
-                        rgba(107, 114, 128, 0.12) 100%);
-                    border: 1px solid rgba(156, 163, 175, 0.4);
+                    background: 
+                        linear-gradient(145deg, 
+                            rgba(80, 80, 80, 0.3) 0%, 
+                            rgba(70, 70, 70, 0.25) 25%,
+                            rgba(60, 60, 60, 0.2) 50%,
+                            rgba(55, 55, 55, 0.25) 75%,
+                            rgba(50, 50, 50, 0.3) 100%),
+                        repeating-linear-gradient(
+                            45deg,
+                            transparent,
+                            transparent 2px,
+                            rgba(120, 120, 120, 0.02) 2px,
+                            rgba(120, 120, 120, 0.02) 4px,
+                            transparent 4px,
+                            transparent 6px,
+                            rgba(40, 40, 40, 0.03) 6px,
+                            rgba(40, 40, 40, 0.03) 8px
+                        );
+                    border: 1px solid rgba(100, 100, 100, 0.4);
                     color: #6b7280;
                     opacity: 0.8;
                     box-shadow: 
-                        0 8px 25px rgba(0, 0, 0, 0.1),
-                        0 3px 8px rgba(0, 0, 0, 0.08),
-                        inset 0 1px 2px rgba(255, 255, 255, 0.2),
-                        inset 0 -1px 2px rgba(0, 0, 0, 0.05);
+                        0 8px 25px rgba(0, 0, 0, 0.2),
+                        0 3px 8px rgba(0, 0, 0, 0.15),
+                        inset 0 1px 2px rgba(120, 120, 120, 0.1),
+                        inset 0 -1px 2px rgba(40, 40, 40, 0.2);
                 }
                 
                 .sensor-item.inactive .sensor-code {
@@ -656,6 +952,19 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
                     font-weight: 600;
                 }
                 
+                .sensor-item.active.space-theme .sensor-code {
+                    background: linear-gradient(135deg, #c4b5fd 0%, #a78bfa 50%, #8b5cf6 100%);
+                    -webkit-background-clip: text;
+                    -webkit-text-fill-color: transparent;
+                    background-clip: text;
+                    text-shadow: 0 0 15px rgba(196, 181, 253, 0.6);
+                }
+                
+                .sensor-item.active.space-theme .sensor-name {
+                    color: #c4b5fd;
+                    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 0 10px rgba(196, 181, 253, 0.4);
+                }
+                
                 .sensor-item {
                     display: flex;
                     align-items: center;
@@ -674,6 +983,14 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
                     text-shadow: 0 0 10px rgba(102, 126, 234, 0.3);
                 }
                 
+                .sensor-item.space-theme .sensor-code {
+                    background: linear-gradient(135deg, #ffffff 0%, #f3f4f6 50%, #e5e7eb 100%);
+                    -webkit-background-clip: text;
+                    -webkit-text-fill-color: transparent;
+                    background-clip: text;
+                    text-shadow: 0 0 15px rgba(255, 255, 255, 0.7);
+                }
+                
                 .sensor-name {
                     font-weight: 600;
                     color: #1f2937;
@@ -683,9 +1000,19 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
                     transition: all 0.3s ease;
                 }
                 
+                .sensor-item.space-theme .sensor-name {
+                    color: #ffffff;
+                    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 0 8px rgba(255, 255, 255, 0.5);
+                }
+                
                 .sensor-item:hover .sensor-name {
-                    color: #111827;
+                    color: #1f2937;
                     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+                }
+                
+                .sensor-item.space-theme:hover .sensor-name {
+                    color: #ffffff;
+                    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 0 8px rgba(255, 255, 255, 0.5);
                 }
 
                 @media (max-width: 768px) {
@@ -716,6 +1043,51 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
                 .tab-button:hover:not(.active) {
                     background: #e5e7eb;
                     color: #374151;
+                }
+
+                .tab-button.space-theme {
+                    background: linear-gradient(145deg, 
+                        rgba(80, 80, 80, 0.8) 0%, 
+                        rgba(70, 70, 70, 0.7) 25%,
+                        rgba(60, 60, 60, 0.6) 50%,
+                        rgba(55, 55, 55, 0.7) 75%,
+                        rgba(50, 50, 50, 0.8) 100%);
+                    border: 1px solid rgba(100, 100, 100, 0.6);
+                    color: #c4b5fd;
+                    box-shadow: 
+                        0 4px 12px rgba(0, 0, 0, 0.3),
+                        inset 0 1px 2px rgba(120, 120, 120, 0.2),
+                        inset 0 -1px 2px rgba(40, 40, 40, 0.3);
+                }
+
+                .tab-button.space-theme.active {
+                    background: linear-gradient(145deg, 
+                        rgba(147, 51, 234, 0.8) 0%, 
+                        rgba(124, 58, 237, 0.7) 25%,
+                        rgba(109, 40, 217, 0.6) 50%,
+                        rgba(91, 33, 182, 0.7) 75%,
+                        rgba(76, 29, 149, 0.8) 100%);
+                    border: 1px solid rgba(147, 51, 234, 0.8);
+                    color: #ffffff;
+                    box-shadow: 
+                        0 4px 12px rgba(0, 0, 0, 0.4),
+                        0 0 20px rgba(147, 51, 234, 0.3),
+                        inset 0 1px 2px rgba(196, 181, 253, 0.3),
+                        inset 0 -1px 2px rgba(76, 29, 149, 0.4);
+                }
+
+                .tab-button.space-theme:hover:not(.active) {
+                    background: linear-gradient(145deg, 
+                        rgba(100, 100, 100, 0.9) 0%, 
+                        rgba(90, 90, 90, 0.8) 25%,
+                        rgba(80, 80, 80, 0.7) 50%,
+                        rgba(75, 75, 75, 0.8) 75%,
+                        rgba(70, 70, 70, 0.9) 100%);
+                    color: #e0e7ff;
+                    box-shadow: 
+                        0 4px 12px rgba(0, 0, 0, 0.4),
+                        inset 0 1px 2px rgba(140, 140, 140, 0.3),
+                        inset 0 -1px 2px rgba(50, 50, 50, 0.4);
                 }
 
                 .tab-content {
@@ -851,7 +1223,8 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
                 }
             `}</style>
 
-            <div className="bg-white rounded-2xl shadow-lg p-3 md:p-4 overflow-hidden border-2 border-gray-300" style={{
+            <div className={`rounded-2xl shadow-lg p-3 md:p-4 overflow-hidden border-2 ${theme === 'space' ? 'border-purple-500/30' : theme === 'dark' ? 'border-gray-600/30' : theme === 'ocean' ? 'border-blue-500/30' : 'border-white/20'}`} style={{
+                background: theme === 'space' ? 'rgba(20, 20, 20, 0.95)' : theme === 'dark' ? 'rgba(20, 20, 20, 0.95)' : theme === 'ocean' ? 'rgba(0, 20, 40, 0.95)' : 'rgba(255, 255, 255, 0.95)',
                 backdropFilter: 'blur(25px)',
                 WebkitBackdropFilter: 'blur(25px)',
             }}>
@@ -872,43 +1245,39 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
                 {/* 엔코더값/카운터값 표시 - PC에서는 더 넓게, 모바일/태블릿에서는 작게 */}
                 <div className="mb-6 md:mb-8">
                     <div className="grid grid-cols-2 gap-4 max-w-md lg:max-w-2xl mx-auto">
-                        <div className="p-3 rounded-lg transition-all duration-300 ease-out transform relative overflow-hidden"
+                        <div className={`p-2 sm:p-3 rounded-2xl transition-all duration-700 ease-out transform relative overflow-hidden`}
                             style={{
-                                background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0.08) 100%)',
-                                backdropFilter: 'blur(12px)',
-                                WebkitBackdropFilter: 'blur(12px)',
-                                border: '1px solid rgba(255, 255, 255, 0.18)',
-                                boxShadow: '0 3px 12px 0 rgba(31, 38, 135, 0.18)'
+                                backdropFilter: 'blur(25px)',
+                                WebkitBackdropFilter: 'blur(25px)',
+                                ...getCardBackgroundStyle()
                             }}>
-                            <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/6 to-blue-500/6 rounded-lg"></div>
-                            <label className="block text-xs font-medium text-gray-600 mb-1 relative z-10">엔코더값</label>
-                            <div className="text-gray-700 text-center rounded-2xl px-2 sm:px-3 py-2 sm:py-3 text-sm sm:text-lg md:text-xl font-bold relative z-10" style={{
-                                background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.75) 100%)',
-                                backdropFilter: 'blur(8px)',
-                                WebkitBackdropFilter: 'blur(8px)',
-                                border: '1px solid rgba(255, 255, 255, 0.25)',
-                                boxShadow: '0 1px 6px 0 rgba(31, 38, 135, 0.12)'
+                            <div className={`absolute inset-0 rounded-2xl ${theme === 'space' ? 'bg-gradient-to-br from-purple-500/8 to-purple-600/8' : theme === 'dark' ? 'bg-gradient-to-br from-gray-500/8 to-gray-600/8' : theme === 'ocean' ? 'bg-gradient-to-br from-blue-500/8 to-cyan-500/8' : 'bg-gradient-to-br from-blue-500/8 to-indigo-500/8'}`}></div>
+                            <label className={`block text-xs font-medium mb-1 relative z-10 ${getCardLabelColorClass()}`}>엔코더값</label>
+                            <div className={`rounded-2xl px-2 sm:px-3 py-3 sm:py-5 text-lg sm:text-2xl md:text-3xl font-bold relative z-10 ${getCardValueColorClass()}`} style={{
+                                background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.8) 100%)',
+                                backdropFilter: 'blur(10px)',
+                                WebkitBackdropFilter: 'blur(10px)',
+                                border: '1px solid rgba(255, 255, 255, 0.3)',
+                                boxShadow: '0 2px 8px 0 rgba(31, 38, 135, 0.15)'
                             }}>
                                 {sensorData?.rawData?.[240] || 0}
                             </div>
                         </div>
 
-                        <div className="p-3 rounded-lg transition-all duration-300 ease-out transform relative overflow-hidden"
+                        <div className={`p-2 sm:p-3 rounded-2xl transition-all duration-700 ease-out transform relative overflow-hidden`}
                             style={{
-                                background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0.08) 100%)',
-                                backdropFilter: 'blur(12px)',
-                                WebkitBackdropFilter: 'blur(12px)',
-                                border: '1px solid rgba(255, 255, 255, 0.18)',
-                                boxShadow: '0 3px 12px 0 rgba(31, 38, 135, 0.18)'
+                                backdropFilter: 'blur(25px)',
+                                WebkitBackdropFilter: 'blur(25px)',
+                                ...getCardBackgroundStyle()
                             }}>
-                            <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/6 to-blue-500/6 rounded-lg"></div>
-                            <label className="block text-xs font-medium text-gray-600 mb-1 relative z-10">카운터값</label>
-                            <div className="text-gray-700 text-center rounded-2xl px-2 sm:px-3 py-2 sm:py-3 text-sm sm:text-lg md:text-xl font-bold relative z-10" style={{
-                                background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.75) 100%)',
-                                backdropFilter: 'blur(8px)',
-                                WebkitBackdropFilter: 'blur(8px)',
-                                border: '1px solid rgba(255, 255, 255, 0.25)',
-                                boxShadow: '0 1px 6px 0 rgba(31, 38, 135, 0.12)'
+                            <div className={`absolute inset-0 rounded-2xl ${theme === 'space' ? 'bg-gradient-to-br from-purple-500/8 to-purple-600/8' : theme === 'dark' ? 'bg-gradient-to-br from-gray-500/8 to-gray-600/8' : theme === 'ocean' ? 'bg-gradient-to-br from-blue-500/8 to-cyan-500/8' : 'bg-gradient-to-br from-blue-500/8 to-indigo-500/8'}`}></div>
+                            <label className={`block text-xs font-medium mb-1 relative z-10 ${getCardLabelColorClass()}`}>카운터값</label>
+                            <div className={`rounded-2xl px-2 sm:px-3 py-3 sm:py-5 text-lg sm:text-2xl md:text-3xl font-bold relative z-10 ${getCardValueColorClass()}`} style={{
+                                background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.8) 100%)',
+                                backdropFilter: 'blur(10px)',
+                                WebkitBackdropFilter: 'blur(10px)',
+                                border: '1px solid rgba(255, 255, 255, 0.3)',
+                                boxShadow: '0 2px 8px 0 rgba(31, 38, 135, 0.15)'
                             }}>
                                 {sensorData?.rawData?.[200] || 0}
                             </div>
@@ -926,7 +1295,7 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
                             onTouchStart={handleErrorReset}
                             onTouchEnd={() => signalRService.errorReset(0)}
                             disabled={isDisabled}
-                            className={`learn-more common-button ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                            className={`learn-more common-button ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
                         >
                             에러 리셋
                         </button>
@@ -937,7 +1306,7 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
                             onTouchStart={handleRemoteControl}
                             onTouchEnd={() => signalRService.remoteControl(0)}
                             disabled={isDisabled}
-                            className={`learn-more common-button ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                            className={`learn-more common-button ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
                         >
                             원격 제어
                         </button>
@@ -948,7 +1317,7 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
                             onTouchStart={handleHomeReturn}
                             onTouchEnd={() => signalRService.homeReturn(0)}
                             disabled={isDisabled}
-                            className={`learn-more common-button ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                            className={`learn-more common-button ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
                         >
                             홈 복귀
                         </button>
@@ -959,7 +1328,7 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
                             onTouchStart={handlePaletteChange}
                             onTouchEnd={() => signalRService.paletteChange(0)}
                             disabled={isDisabled}
-                            className={`learn-more common-button ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                            className={`learn-more common-button ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
                         >
                             파레트 교체
                         </button>
@@ -970,7 +1339,7 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
                             onTouchStart={handleEmergencyStop}
                             onTouchEnd={() => signalRService.emergencyStop(0)}
                             disabled={isDisabled}
-                            className={`learn-more emergency-button ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                            className={`learn-more emergency-button ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
                         >
                             비상정지
                         </button>
@@ -992,7 +1361,7 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
                                         onTouchStart={handleTurnLeft}
                                         onTouchEnd={() => signalRService.turnLeft(0)}
                                         disabled={isDisabled}
-                                        className={`learn-more ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                        className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
                                     >
                                         좌회전
                                     </button>
@@ -1003,7 +1372,7 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
                                         onTouchStart={handleTurnRight}
                                         onTouchEnd={() => signalRService.turnRight(0)}
                                         disabled={isDisabled}
-                                        className={`learn-more ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                        className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
                                     >
                                         우회전
                                     </button>
@@ -1020,7 +1389,7 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
                                         onTouchStart={handleDoorOpen}
                                         onTouchEnd={() => signalRService.doorOpen(0)}
                                         disabled={isDisabled}
-                                        className={`learn-more ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                        className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
                                     >
                                         도어 열림
                                     </button>
@@ -1031,7 +1400,7 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
                                         onTouchStart={handleDoorClose}
                                         onTouchEnd={() => signalRService.doorClose(0)}
                                         disabled={isDisabled}
-                                        className={`learn-more ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                        className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
                                     >
                                         도어 닫힘
                                     </button>
@@ -1052,7 +1421,7 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
                                         onTouchStart={handleLiftUp}
                                         onTouchEnd={() => signalRService.liftUp(0)}
                                         disabled={isDisabled}
-                                        className={`learn-more ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                        className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
                                     >
                                         상승
                                     </button>
@@ -1064,7 +1433,7 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
                                         onTouchStart={handleLiftDown}
                                         onTouchEnd={() => signalRService.liftDown(0)}
                                         disabled={isDisabled}
-                                        className={`learn-more ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                        className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
                                     >
                                         하강
                                     </button>
@@ -1086,7 +1455,7 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
                                         onTouchStart={handleMoveLeft}
                                         onTouchEnd={() => signalRService.moveLeft(0)}
                                         disabled={isDisabled}
-                                        className={`learn-more ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                        className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
                                     >
                                         좌행
                                     </button>
@@ -1097,7 +1466,7 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
                                         onTouchStart={handleMoveRight}
                                         onTouchEnd={() => signalRService.moveRight(0)}
                                         disabled={isDisabled}
-                                        className={`learn-more ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                        className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
                                     >
                                         우행
                                     </button>
@@ -1114,7 +1483,7 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
                                         onTouchStart={handleLockingOn}
                                         onTouchEnd={() => signalRService.lockingOn(0)}
                                         disabled={isDisabled}
-                                        className={`learn-more ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                        className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
                                     >
                                         락킹 잠김
                                     </button>
@@ -1125,7 +1494,7 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
                                         onTouchStart={handleLockingOff}
                                         onTouchEnd={() => signalRService.lockingOff(0)}
                                         disabled={isDisabled}
-                                        className={`learn-more ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                        className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
                                     >
                                         락킹 해제
                                     </button>
@@ -1139,19 +1508,19 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
                 <div className="tab-navigation" style={{ marginTop: window.innerWidth <= 768 ? '40px' : '120px' }}>
                     <button
                         onClick={() => { setActiveTab('page1'); setShowSensors(true); }}
-                        className={`tab-button ${activeTab === 'page1' ? 'active' : ''}`}
+                        className={`tab-button ${theme === 'space' ? 'space-theme' : ''} ${activeTab === 'page1' ? 'active' : ''}`}
                     >
                         도어/턴테이블
                     </button>
                     <button
                         onClick={() => { setActiveTab('page2'); setShowSensors(true); }}
-                        className={`tab-button ${activeTab === 'page2' ? 'active' : ''}`}
+                        className={`tab-button ${theme === 'space' ? 'space-theme' : ''} ${activeTab === 'page2' ? 'active' : ''}`}
                     >
                         승강 제어
                     </button>
                     <button
                         onClick={() => { setActiveTab('page3'); setShowSensors(true); }}
-                        className={`tab-button ${activeTab === 'page3' ? 'active' : ''}`}
+                        className={`tab-button ${theme === 'space' ? 'space-theme' : ''} ${activeTab === 'page3' ? 'active' : ''}`}
                     >
                         횡행/락킹
                     </button>
@@ -1160,21 +1529,25 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
 
             {/* 좌측 센서 패널 - config 기반 동적 렌더링 */}
             {showSensors && (
+
                 <div className="sensor-panel-left show">
                     <div className="mb-4 text-center">
                         <h3 className="text-sm font-bold text-gray-600">입력 센서</h3>
                     </div>
                     {renderLeftSensorPanel()}
+
                 </div>
             )}
 
             {/* 우측 센서 패널 - config 기반 동적 렌더링 */}
             {showSensors && (
+
                 <div className="sensor-panel-right show">
                     <div className="mb-4 text-center">
                         <h3 className="text-sm font-bold text-gray-600">출력 센서</h3>
                     </div>
                     {renderRightSensorPanel()}
+
                 </div>
             )}
         </>

@@ -3,6 +3,16 @@
 @tailwind components;
 @tailwind utilities;
 
+/* 테마 관련 애니메이션 */
+@keyframes twinkle {
+    0%, 100% { opacity: 0.3; transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.2); }
+}
+
+.animate-twinkle {
+    animation: twinkle 3s ease-in-out infinite;
+}
+
 /* CSS Reset - 모든 요소 초기화 */
 *, *::before, *::after {
   box-sizing: border-box;
