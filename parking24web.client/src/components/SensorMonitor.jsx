@@ -1,6 +1,7 @@
 ﻿import React, { useState, useMemo, useEffect } from 'react';
 // 속초 1호기 config import
-import sokcho1Config from '../../config/sokcho1Config.js';
+
+import siteConfig from '../../config/sokcho1Config.js';
 import { useTheme } from '../contexts/ThemeContext';
 
 const SensorMonitor = ({ sensorData, isPLCConnected }) => {
@@ -47,7 +48,7 @@ const SensorMonitor = ({ sensorData, isPLCConnected }) => {
             data = [];
 
             // 속초 config의 센서 매핑을 기반으로 비트 데이터 생성
-            Object.entries(sokcho1Config.sensorMapping).forEach(([configKey, configData]) => {
+            Object.entries(siteConfig.sensorMapping).forEach(([  , configData]) => {
                 const { address, sensors } = configData;
 
                 if (address < sensorData.rawData.length) {
@@ -99,7 +100,7 @@ const SensorMonitor = ({ sensorData, isPLCConnected }) => {
 
         if (sensorData.rawData) {
             // 속초 config의 센서 매핑을 기반으로 비트 데이터 생성
-            Object.entries(sokcho1Config.sensorMapping).forEach(([configKey, configData]) => {
+            Object.entries(siteConfig.sensorMapping).forEach(([  , configData]) => {
                 const { address, sensors } = configData;
 
                 if (address < sensorData.rawData.length) {
@@ -191,7 +192,7 @@ const SensorMonitor = ({ sensorData, isPLCConnected }) => {
         return bits;
     };
 
-    const formatTimestamp = (timestamp) => {
+    const _formatTimestamp = (timestamp) => {
         if (!timestamp) return 'N/A';
         return new Date(timestamp).toLocaleTimeString();
     };
@@ -398,10 +399,16 @@ const SensorMonitor = ({ sensorData, isPLCConnected }) => {
     };
 
     return (
-        <div className={`rounded-2xl p-3 md:p-4 overflow-hidden border ${getMainBorderClass()} shadow-xl shadow-black/20`} style={getMainBackgroundStyle()}>
-            <div className="mb-6 md:mb-4">
-                <h2 className={`text-base md:text-lg font-bold ${getTitleGradient()} text-left`}>
-                    센서 데이터 모니터 - {sokcho1Config.siteInfo.name} {sokcho1Config.siteInfo.unitNumber}
+
+        <div className="rounded-2xl p-3 md:p-4 overflow-hidden border border-white/20 shadow-xl shadow-black/20" style={{
+            background: 'rgba(255, 255, 255, 0.95)',
+            backdropFilter: 'blur(25px)',
+            WebkitBackdropFilter: 'blur(25px)',
+        }}>
+            <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-6 md:mb-4 space-y-2 md:space-y-0">
+                <h2 className="text-base md:text-lg font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2 md:mb-0">
+                    센서 데이터 모니터 - {siteConfig.siteInfo.name} {siteConfig.siteInfo.unitNumber}
+
                 </h2>
             </div>
 

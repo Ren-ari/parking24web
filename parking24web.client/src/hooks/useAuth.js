@@ -1,6 +1,5 @@
-import { useState, useEffect } from 'react';
-import {
-    validateLogin,
+ï»¿import { useState, useEffect } from 'react';
+import { 
     checkAutoLogin,
     startSessionTimeout,
     clearSessionTimeout,
@@ -12,13 +11,13 @@ export const useAuth = () => {
     const [user, setUser] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
 
-    // ¼¼¼Ç Å¸ÀÓ¾Æ¿ô ÇÚµé·¯
+    // ì„¸ì…˜ íƒ€ì„ì•„ì›ƒ í•¸ë“¤ëŸ¬
     const handleSessionTimeout = () => {
         handleLogout();
-        alert('¼¼¼ÇÀÌ ¸¸·áµÇ¾î ·Î±×¾Æ¿ôµË´Ï´Ù.');
+        alert('ì„¸ì…˜ì´ ë§Œë£Œë˜ì–´ ë¡œê·¸ì•„ì›ƒë©ë‹ˆë‹¤.');
     };
 
-    // ÄÄÆ÷³ÍÆ® ¸¶¿îÆ® ½Ã ÀÚµ¿ ·Î±×ÀÎ Ã¼Å©
+    // ì»´í¬ë„ŒíŠ¸ ë§ˆìš´íŠ¸ ì‹œ ìë™ ë¡œê·¸ì¸ ì²´í¬
     useEffect(() => {
         const autoLoginCheck = checkAutoLogin();
 
@@ -26,39 +25,39 @@ export const useAuth = () => {
             setUser(autoLoginCheck.user);
             setIsAuthenticated(true);
 
-            // ¼¼¼Ç Å¸ÀÓ¾Æ¿ô ½ÃÀÛ
+            // ì„¸ì…˜ íƒ€ì„ì•„ì›ƒ ì‹œì‘
             startSessionTimeout(handleSessionTimeout);
 
-            console.log('ÀÚµ¿ ·Î±×ÀÎ ¼º°ø:', autoLoginCheck.user.name);
+            console.log('ìë™ ë¡œê·¸ì¸ ì„±ê³µ:', autoLoginCheck.user.name);
         } else {
-            console.log('ÀÚµ¿ ·Î±×ÀÎ ½ÇÆĞ:', autoLoginCheck.error);
+            console.log('ìë™ ë¡œê·¸ì¸ ì‹¤íŒ¨:', autoLoginCheck.error);
         }
 
         setIsLoading(false);
     }, []);
 
-    // ·Î±×ÀÎ Ã³¸®
+    // ë¡œê·¸ì¸ ì²˜ë¦¬
     const handleLogin = (userInfo) => {
-        console.log('·Î±×ÀÎ ½Ãµµ:', userInfo.username);
-        // ÀÌ¹Ì LoginPage¿¡¼­ °ËÁõ ¿Ï·áµÈ user °´Ã¼°¡ ¿È
+        console.log('ë¡œê·¸ì¸ ì‹œë„:', userInfo.username);
+        // ì´ë¯¸ LoginPageì—ì„œ ê²€ì¦ ì™„ë£Œëœ user ê°ì²´ê°€ ì˜´
         setUser(userInfo);
         setIsAuthenticated(true);
-        // ¼¼¼Ç Å¸ÀÓ¾Æ¿ô ½ÃÀÛ
+        // ì„¸ì…˜ íƒ€ì„ì•„ì›ƒ ì‹œì‘
         startSessionTimeout(handleSessionTimeout);
-        console.log('·Î±×ÀÎ ¼º°ø:', userInfo.name, '±ÇÇÑ:', userInfo.role);
+        console.log('ë¡œê·¸ì¸ ì„±ê³µ:', userInfo.name, 'ê¶Œí•œ:', userInfo.role);
         return true;
     };
 
-    // ·Î±×¾Æ¿ô Ã³¸®
+    // ë¡œê·¸ì•„ì›ƒ ì²˜ë¦¬
     const handleLogout = () => {
-        authLogout(); // authSystemÀÇ logout ÇÔ¼ö È£Ãâ
-        clearSessionTimeout(); // ¼¼¼Ç Å¸ÀÓ¾Æ¿ô Á¤¸®
+        authLogout(); // authSystemì˜ logout í•¨ìˆ˜ í˜¸ì¶œ
+        clearSessionTimeout(); // ì„¸ì…˜ íƒ€ì„ì•„ì›ƒ ì •ë¦¬
         setUser(null);
         setIsAuthenticated(false);
-        console.log('·Î±×¾Æ¿ô ¿Ï·á');
+        console.log('ë¡œê·¸ì•„ì›ƒ ì™„ë£Œ');
     };
 
-    // »ç¿ëÀÚ ±ÇÇÑ Ã¼Å© ÇÔ¼öµé
+    // ì‚¬ìš©ì ê¶Œí•œ ì²´í¬ í•¨ìˆ˜ë“¤
     const hasPermission = (component) => {
         if (!user || !user.permissions) return false;
         return user.permissions.includes(component);
@@ -69,16 +68,16 @@ export const useAuth = () => {
     const isClient = () => user?.role === 'client';
 
     return {
-        // »óÅÂ
+        // ìƒíƒœ
         isAuthenticated,
         user,
         isLoading,
 
-        // ¾×¼Ç
+        // ì•¡ì…˜
         handleLogin,
         handleLogout,
 
-        // ±ÇÇÑ Ã¼Å©
+        // ê¶Œí•œ ì²´í¬
         hasPermission,
         isAdmin,
         isService,

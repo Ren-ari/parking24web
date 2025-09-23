@@ -1,4 +1,6 @@
 ﻿import * as signalR from "@microsoft/signalr";
+import siteConfig from '../../config/sokcho1Config.js';
+
 
 class SignalRService {
     constructor() {
@@ -25,7 +27,9 @@ class SignalRService {
 
                 // 개발환경 감지 (포트 5173은 Vite 개발서버)
                 if (currentHost.includes(':5173')) {
-                    return `${currentProtocol}//localhost:5123/plcHub`;
+                    const configUrl = new URL(siteConfig.api.baseUrl);
+                    const signalRPort = configUrl.port || '5123';
+                    return `${currentProtocol}//localhost:${signalRPort}/plcHub`;
                 }
 
                 // 프로덕션 환경 (상대경로 사용)

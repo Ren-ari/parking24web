@@ -1,4 +1,7 @@
 ﻿import React from 'react';
+import siteConfig from '../../config/sokcho1Config.js';
+
+const currentConfig = siteConfig;
 
 const ConnectionPanel = ({
     isSignalRConnected,
@@ -6,7 +9,6 @@ const ConnectionPanel = ({
     isConnecting,
     isAuthenticated,
     error,
-    plcConfig,
     setPLCConfig,
     connectToPLC,
     disconnectFromPLC,
@@ -14,23 +16,24 @@ const ConnectionPanel = ({
     selectedUnit,
     setSelectedUnit,
     theme
+
 }) => {
-    const handleIPChange = (e) => {
+    const _handleIPChange = (e) => {
         setPLCConfig(prev => ({ ...prev, ip: e.target.value }));
     };
 
-    const handlePortChange = (e) => {
+    const _handlePortChange = (e) => {
         setPLCConfig(prev => ({ ...prev, port: parseInt(e.target.value) || 2005 }));
     };
 
-    const getConnectionStatusColor = () => {
+    const _getConnectionStatusColor = () => {
         if (!isSignalRConnected) return 'bg-gray-500';
         if (isPLCConnected && isAuthenticated) return 'bg-green-500';
         if (isPLCConnected && !isAuthenticated) return 'bg-yellow-500';
         return 'bg-red-500';
     };
 
-    const getConnectionStatusText = () => {
+    const _getConnectionStatusText = () => {
         if (!isSignalRConnected) return 'SignalR 연결 안됨';
         if (isPLCConnected && isAuthenticated) return 'PLC 연결됨 (인증 완료)';
         if (isPLCConnected && !isAuthenticated) return 'PLC 연결됨 (인증 대기)';
@@ -180,36 +183,22 @@ const ConnectionPanel = ({
             {/* PLC 선택 */}
             <div className="mb-8">
                 <div className="flex justify-center gap-6">
-                    <button
-                        onClick={() => {
-                            setSelectedUnit(1);
-                            connectToPLC('192.168.1.2', 2005);
-                        }}
-                        disabled={isPLCConnected || isConnecting}
-                        className={`px-12 py-6 rounded-lg font-semibold text-white transition-all duration-300 transform hover:scale-105 hover:shadow-lg focus:outline-none focus:ring-2 ${getFocusRingClass()} ${
-                            isPLCConnected || isConnecting
-                                ? `${getDisabledButtonClass()} cursor-not-allowed`
-                                : `${getButtonGradient()} shadow-lg hover:shadow-xl`
-                        }`}
-                    >
-                        <div className="text-xl font-bold">1호기</div>
-                    </button>
-                    
-                    <button
-                        // 2호기 버튼
-                        onClick={() => {
-                            setSelectedUnit(2);
-                            connectToPLC('192.168.100.101', 2005);
-                        }}
-                        disabled={isPLCConnected || isConnecting}
-                        className={`px-12 py-6 rounded-lg font-semibold text-white transition-all duration-300 transform hover:scale-105 hover:shadow-lg focus:outline-none focus:ring-2 ${getFocusRingClass()} ${
-                            isPLCConnected || isConnecting
-                                ? `${getDisabledButtonClass()} cursor-not-allowed`
-                                : `${getButtonGradient()} shadow-lg hover:shadow-xl`
-                        }`}
-                    >
-                        <div className="text-xl font-bold">2호기</div>
-                    </button>
+                    {currentConfig.connectionConfig.buttons.map(button => (
+                        <button
+                            key={button.unit}
+                            onClick={() => {
+                                setSelectedUnit(button.unit);
+                                connectToPLC(button.ip, button.port);
+                            }}
+                            disabled={isPLCConnected || isConnecting}
+                            className={`px-12 py-6 rounded-lg font-semibold text-white transition-all duration-300 transform hover:scale-105 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${isPLCConnected || isConnecting
+                                    ? 'bg-gray-400 cursor-not-allowed'
+                                    : 'bg-gradient-to-r from-blue-500 via-blue-600 to-indigo-600 hover:from-blue-600 hover:via-blue-700 hover:to-indigo-700 shadow-lg hover:shadow-xl'
+                                }`}
+                        >
+                            <div className="text-xl font-bold">{button.name}</div>
+                        </button>
+                    ))}
                 </div>
             </div>
 
