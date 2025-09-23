@@ -12,7 +12,8 @@ const ConnectionPanel = ({
     disconnectFromPLC,
     clearError,
     selectedUnit,
-    setSelectedUnit
+    setSelectedUnit,
+    theme
 }) => {
     const handleIPChange = (e) => {
         setPLCConfig(prev => ({ ...prev, ip: e.target.value }));
@@ -37,14 +38,140 @@ const ConnectionPanel = ({
         return 'PLC 연결 안됨';
     };
 
+    // 테마에 따른 스타일 함수들
+    const getPanelBackground = () => {
+        switch (theme) {
+            case 'space':
+                return {
+                    background: 'rgba(17, 24, 39, 0.9)',
+                    backdropFilter: 'blur(25px)',
+                    WebkitBackdropFilter: 'blur(25px)',
+                };
+            case 'dark':
+                return {
+                    background: 'rgba(31, 41, 55, 0.9)',
+                    backdropFilter: 'blur(25px)',
+                    WebkitBackdropFilter: 'blur(25px)',
+                };
+            case 'ocean':
+                return {
+                    background: 'rgba(30, 58, 138, 0.9)',
+                    backdropFilter: 'blur(25px)',
+                    WebkitBackdropFilter: 'blur(25px)',
+                };
+            default:
+                return {
+                    background: 'rgba(255, 255, 255, 0.95)',
+                    backdropFilter: 'blur(25px)',
+                    WebkitBackdropFilter: 'blur(25px)',
+                };
+        }
+    };
+
+    const getPanelBorderClass = () => {
+        switch (theme) {
+            case 'space':
+                return 'border-gray-700/30';
+            case 'dark':
+                return 'border-gray-500/30';
+            case 'ocean':
+                return 'border-blue-600/30';
+            default:
+                return 'border-white/20';
+        }
+    };
+
+    const getTitleGradient = () => {
+        switch (theme) {
+            case 'space':
+                return 'bg-gradient-to-r from-purple-400 to-purple-600 bg-clip-text text-transparent';
+            case 'dark':
+                return 'bg-gradient-to-r from-gray-300 to-gray-500 bg-clip-text text-transparent';
+            case 'ocean':
+                return 'bg-gradient-to-r from-blue-400 to-cyan-500 bg-clip-text text-transparent';
+            default:
+                return 'bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent';
+        }
+    };
+
+    const getButtonGradient = () => {
+        switch (theme) {
+            case 'space':
+                return 'bg-gradient-to-br from-purple-600 via-purple-700 to-purple-800 hover:from-purple-500 hover:via-purple-600 hover:to-purple-700 border border-purple-500/30';
+            case 'dark':
+                return 'bg-gradient-to-br from-gray-600 via-gray-700 to-gray-800 hover:from-gray-500 hover:via-gray-600 hover:to-gray-700 border border-gray-500/30';
+            case 'ocean':
+                return 'bg-gradient-to-br from-blue-600 via-blue-700 to-blue-800 hover:from-blue-500 hover:via-blue-600 hover:to-blue-700 border border-blue-500/30';
+            default:
+                return 'bg-gradient-to-r from-blue-500 via-blue-600 to-indigo-600 hover:from-blue-600 hover:via-blue-700 hover:to-indigo-700';
+        }
+    };
+
+    const getDisabledButtonClass = () => {
+        switch (theme) {
+            case 'space':
+            case 'dark':
+            case 'ocean':
+                return 'bg-gray-600';
+            default:
+                return 'bg-gray-400';
+        }
+    };
+
+    const getFocusRingClass = () => {
+        switch (theme) {
+            case 'space':
+                return 'focus:ring-purple-500';
+            case 'dark':
+                return 'focus:ring-gray-500';
+            case 'ocean':
+                return 'focus:ring-blue-500';
+            default:
+                return 'focus:ring-blue-500';
+        }
+    };
+
+    const getErrorPanelClass = () => {
+        switch (theme) {
+            case 'space':
+                return 'mb-4 p-3 bg-red-900/20 border border-red-700/30 rounded-md backdrop-blur-sm';
+            case 'dark':
+                return 'mb-4 p-3 bg-red-900/20 border border-red-600/30 rounded-md backdrop-blur-sm';
+            case 'ocean':
+                return 'mb-4 p-3 bg-red-900/20 border border-red-500/30 rounded-md backdrop-blur-sm';
+            default:
+                return 'mb-4 p-3 bg-red-50 border border-red-200 rounded-md';
+        }
+    };
+
+    const getErrorTextClass = () => {
+        switch (theme) {
+            case 'space':
+            case 'dark':
+            case 'ocean':
+                return 'text-sm text-red-300';
+            default:
+                return 'text-sm text-red-700';
+        }
+    };
+
+    const getAuthPanelClass = () => {
+        switch (theme) {
+            case 'space':
+                return 'mt-6 p-4 bg-gradient-to-r from-purple-900/20 to-purple-800/20 rounded-xl border border-purple-700/30 shadow-sm backdrop-blur-sm';
+            case 'dark':
+                return 'mt-6 p-4 bg-gradient-to-r from-gray-800/20 to-gray-700/20 rounded-xl border border-gray-600/30 shadow-sm backdrop-blur-sm';
+            case 'ocean':
+                return 'mt-6 p-4 bg-gradient-to-r from-blue-900/20 to-blue-800/20 rounded-xl border border-blue-600/30 shadow-sm backdrop-blur-sm';
+            default:
+                return 'mt-6 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-200 shadow-sm';
+        }
+    };
+
     return (
-        <div className="rounded-2xl p-3 md:p-4 mb-4 overflow-hidden border border-white/20 shadow-xl shadow-black/20" style={{
-            background: 'rgba(255, 255, 255, 0.95)',
-            backdropFilter: 'blur(25px)',
-            WebkitBackdropFilter: 'blur(25px)',
-        }}>
+        <div className={`rounded-2xl p-3 md:p-4 mb-4 overflow-hidden border ${getPanelBorderClass()} shadow-xl shadow-black/20`} style={getPanelBackground()}>
             <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-6 md:mb-4 space-y-2 md:space-y-0">
-                <h2 className="text-base md:text-lg font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2 md:mb-0">PLC 연결 관리</h2>
+                <h2 className={`text-base md:text-lg font-bold ${getTitleGradient()} mb-2 md:mb-0`}>PLC 연결 관리</h2>
                 <div className="flex items-center gap-3">
 
                 </div>
@@ -59,10 +186,10 @@ const ConnectionPanel = ({
                             connectToPLC('192.168.1.2', 2005);
                         }}
                         disabled={isPLCConnected || isConnecting}
-                        className={`px-12 py-6 rounded-lg font-semibold text-white transition-all duration-300 transform hover:scale-105 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                        className={`px-12 py-6 rounded-lg font-semibold text-white transition-all duration-300 transform hover:scale-105 hover:shadow-lg focus:outline-none focus:ring-2 ${getFocusRingClass()} ${
                             isPLCConnected || isConnecting
-                                ? 'bg-gray-400 cursor-not-allowed'
-                                : 'bg-gradient-to-r from-blue-500 via-blue-600 to-indigo-600 hover:from-blue-600 hover:via-blue-700 hover:to-indigo-700 shadow-lg hover:shadow-xl'
+                                ? `${getDisabledButtonClass()} cursor-not-allowed`
+                                : `${getButtonGradient()} shadow-lg hover:shadow-xl`
                         }`}
                     >
                         <div className="text-xl font-bold">1호기</div>
@@ -75,10 +202,10 @@ const ConnectionPanel = ({
                             connectToPLC('192.168.100.101', 2005);
                         }}
                         disabled={isPLCConnected || isConnecting}
-                        className={`px-12 py-6 rounded-lg font-semibold text-white transition-all duration-300 transform hover:scale-105 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                        className={`px-12 py-6 rounded-lg font-semibold text-white transition-all duration-300 transform hover:scale-105 hover:shadow-lg focus:outline-none focus:ring-2 ${getFocusRingClass()} ${
                             isPLCConnected || isConnecting
-                                ? 'bg-gray-400 cursor-not-allowed'
-                                : 'bg-gradient-to-r from-blue-500 via-blue-600 to-indigo-600 hover:from-blue-600 hover:via-blue-700 hover:to-indigo-700 shadow-lg hover:shadow-xl'
+                                ? `${getDisabledButtonClass()} cursor-not-allowed`
+                                : `${getButtonGradient()} shadow-lg hover:shadow-xl`
                         }`}
                     >
                         <div className="text-xl font-bold">2호기</div>
@@ -88,7 +215,7 @@ const ConnectionPanel = ({
 
             {/* 에러 메시지 */}
             {error && (
-                <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
+                <div className={getErrorPanelClass()}>
                     <div className="flex items-start">
                         <div className="flex-shrink-0">
                             <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
@@ -96,7 +223,7 @@ const ConnectionPanel = ({
                             </svg>
                         </div>
                         <div className="ml-3 flex-1">
-                            <p className="text-sm text-red-700">{error}</p>
+                            <p className={getErrorTextClass()}>{error}</p>
                         </div>
                         <div className="ml-auto">
                             <button
@@ -126,34 +253,34 @@ const ConnectionPanel = ({
 
             {/* 인증 상태 표시 */}
             {isPLCConnected && (
-                <div className="mt-6 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-200 shadow-sm">
+                <div className={getAuthPanelClass()}>
                     <div className="flex items-center space-x-3">
                         {isAuthenticated ? (
                             <>
                                 <div className="flex-shrink-0">
-                                    <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                                        <svg className="h-5 w-5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center ${theme === 'space' ? 'bg-purple-100' : theme === 'dark' ? 'bg-gray-200' : theme === 'ocean' ? 'bg-blue-100' : 'bg-green-100'}`}>
+                                        <svg className={`h-5 w-5 ${theme === 'space' ? 'text-purple-600' : theme === 'dark' ? 'text-gray-600' : theme === 'ocean' ? 'text-blue-600' : 'text-green-600'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                                         </svg>
                                     </div>
                                 </div>
                                 <div>
-                                    <span className="text-sm text-green-700 font-semibold">인증 완료</span>
-                                    <div className="text-xs text-green-600">C4 = 62</div>
+                                    <span className={`text-sm font-semibold ${theme === 'space' ? 'text-purple-700' : theme === 'dark' ? 'text-gray-200' : theme === 'ocean' ? 'text-blue-700' : 'text-green-700'}`}>인증 완료</span>
+                                    <div className={`text-xs ${theme === 'space' ? 'text-purple-600' : theme === 'dark' ? 'text-gray-400' : theme === 'ocean' ? 'text-blue-600' : 'text-green-600'}`}>C4 = 62</div>
                                 </div>
                             </>
                         ) : (
                             <>
                                 <div className="flex-shrink-0">
-                                    <div className="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center">
-                                        <svg className="h-5 w-5 text-yellow-600 animate-spin" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center ${theme === 'space' ? 'bg-purple-100' : theme === 'dark' ? 'bg-gray-200' : theme === 'ocean' ? 'bg-blue-100' : 'bg-yellow-100'}`}>
+                                        <svg className={`h-5 w-5 animate-spin ${theme === 'space' ? 'text-purple-600' : theme === 'dark' ? 'text-gray-600' : theme === 'ocean' ? 'text-blue-600' : 'text-yellow-600'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                                         </svg>
                                     </div>
                                 </div>
                                 <div>
-                                    <span className="text-sm text-yellow-700 font-semibold">인증 확인 중...</span>
-                                    <div className="text-xs text-yellow-600">잠시만 기다려주세요</div>
+                                    <span className={`text-sm font-semibold ${theme === 'space' ? 'text-purple-700' : theme === 'dark' ? 'text-gray-200' : theme === 'ocean' ? 'text-blue-700' : 'text-yellow-700'}`}>인증 확인 중...</span>
+                                    <div className={`text-xs ${theme === 'space' ? 'text-purple-600' : theme === 'dark' ? 'text-gray-400' : theme === 'ocean' ? 'text-blue-600' : 'text-yellow-600'}`}>잠시만 기다려주세요</div>
                                 </div>
                             </>
                         )}

@@ -2,7 +2,7 @@
 // 속초 1호기 config import
 import sokcho1Config from '../../config/sokcho1Config.js';
 
-const ParkingMonitor = ({ sensorData, isPLCConnected, onVehicleEdit }) => {
+const ParkingMonitor = ({ sensorData, isPLCConnected, onVehicleEdit, theme }) => {
     const [isEditMode, setIsEditMode] = useState(false);
     const [addressMapping, setAddressMapping] = useState({});
     const [isMobile, setIsMobile] = useState(false);
@@ -203,14 +203,26 @@ const ParkingMonitor = ({ sensorData, isPLCConnected, onVehicleEdit }) => {
                     `C${sokcho1Config.liftPositions.floor1 + (level - 1)}` :
                     `C${sokcho1Config.liftPositions.counter}`;
             const liftValue = getPLCValue(liftAddress);
-            return liftValue === 0 ? "bg-gray-400" : "bg-orange-400";
+            if (theme === 'space') {
+                return liftValue === 0 ? "bg-gray-800" : "bg-orange-400";
+            } else {
+                return liftValue === 0 ? "bg-gray-400" : "bg-orange-400";
+            }
         } else if (box === 1 || box === 3) {
-            // 차판상태 - 차량이 있으면 녹색, 없으면 회색
-            return value === 0 ? "bg-gray-300" : "bg-green-300";
+            // 차판상태 - 우주테마는 차량이 있으면 진한 카본, 없으면 회색
+            if (theme === 'space') {
+                return value === 0 ? "bg-gray-600" : "bg-gray-900";
+            } else {
+                return value === 0 ? "bg-gray-300" : "bg-green-300";
+            }
         } else if (box === 0 || box === 4) {
             // 차량
             if (isOnLift) return "bg-orange-400";
-            return value === 0 ? "bg-gray-300" : "bg-blue-300";
+            if (theme === 'space') {
+                return value === 0 ? "bg-gray-600" : "bg-purple-400";
+            } else {
+                return value === 0 ? "bg-gray-300" : "bg-blue-300";
+            }
         }
 
         return "bg-white";
@@ -292,19 +304,53 @@ const ParkingMonitor = ({ sensorData, isPLCConnected, onVehicleEdit }) => {
     };
 
     return (
-        <div className="rounded-2xl p-3 md:p-4 border border-white/20 shadow-xl shadow-black/20" style={{
-            background: 'rgba(255, 255, 255, 0.95)',
-            backdropFilter: 'blur(25px)',
-            WebkitBackdropFilter: 'blur(25px)',
+        <>
+            <style jsx>{`
+                .space-scrollbar::-webkit-scrollbar {
+                    width: 8px;
+                }
+                .space-scrollbar::-webkit-scrollbar-track {
+                    background: rgba(20, 20, 20, 0.8);
+                    border-radius: 4px;
+                }
+                .space-scrollbar::-webkit-scrollbar-thumb {
+                    background: linear-gradient(145deg, rgba(147, 51, 234, 0.8) 0%, rgba(124, 58, 237, 0.7) 50%, rgba(76, 29, 149, 0.8) 100%);
+                    border-radius: 4px;
+                    border: 1px solid rgba(147, 51, 234, 0.3);
+                }
+                .space-scrollbar::-webkit-scrollbar-thumb:hover {
+                    background: linear-gradient(145deg, rgba(147, 51, 234, 1) 0%, rgba(124, 58, 237, 0.9) 50%, rgba(76, 29, 149, 1) 100%);
+                    box-shadow: 0 0 8px rgba(147, 51, 234, 0.5);
+                }
+                .space-scrollbar::-webkit-scrollbar-corner {
+                    background: rgba(20, 20, 20, 0.8);
+                }
+            `}</style>
+            <div className={`rounded-2xl p-3 md:p-4 border shadow-xl ${theme === 'space' ? 'border-white/20 shadow-black/20' : 'border-gray-300 shadow-gray-200'}`} style={{
+            ...(theme === 'space' ? {
+                background: 'linear-gradient(135deg, rgba(10, 10, 10, 1) 0%, rgba(5, 5, 5, 1) 100%)',
+                backdropFilter: 'blur(25px)',
+                WebkitBackdropFilter: 'blur(25px)',
+            } : {
+                background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 0.9) 100%)',
+            })
         }}>
            
 
             {/* 속초 주차장 레이아웃 (5개 박스 구조 유지) */}
-            <div className="border border-gray-300 rounded-lg h-[60vh] sm:h-[55vh] md:h-[60vh] lg:h-[60vh]">
+            <div className={`border rounded-lg h-[60vh] sm:h-[55vh] md:h-[60vh] lg:h-[60vh] ${theme === 'space' ? 'border-gray-600' : 'border-gray-300'}`} style={{
+                ...(theme === 'space' ? {
+                    background: 'linear-gradient(135deg, rgba(15, 15, 15, 1) 0%, rgba(10, 10, 10, 1) 100%)',
+                    backdropFilter: 'blur(15px)',
+                    WebkitBackdropFilter: 'blur(15px)',
+                } : {
+                    background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.8) 0%, rgba(248, 250, 252, 0.7) 100%)',
+                })
+            }}>
                
                 <div
                     ref={scrollContainerRef}
-                    className="h-[95%] overflow-y-auto p-1 sm:p-2 md:p-3 space-y-1 sm:space-y-2 md:space-y-3"
+                    className={`h-[95%] overflow-y-auto p-1 sm:p-2 md:p-3 space-y-1 sm:space-y-2 md:space-y-3 ${theme === 'space' ? 'space-scrollbar' : ''}`}
                 >
                     {/* 38층부터 2층까지 역순, 그 다음 진입층(1층) */}
                     {[...Array.from({ length: 37 }, (_, i) => 38 - i), 1].map((level) => {
@@ -315,18 +361,25 @@ const ParkingMonitor = ({ sensorData, isPLCConnected, onVehicleEdit }) => {
                                 key={level}
                                 className={`border border-white/20 rounded-lg p-1 sm:p-2 md:p-3 shadow-lg ${level === 1
                                         ? "bg-gradient-to-br from-yellow-50 to-orange-50 border-yellow-300"
-                                        : "bg-gradient-to-br from-blue-50 to-indigo-100 border-gray-200"
+                                        : theme === 'space' 
+                                            ? "bg-gradient-to-br from-purple-800 to-violet-900 border-purple-900"
+                                            : "bg-gradient-to-br from-blue-50 to-indigo-100 border-gray-200"
                                     }`}
                                 style={{
                                     backdropFilter: 'blur(20px)',
                                     WebkitBackdropFilter: 'blur(20px)',
+                                    ...(level !== 1 && theme === 'space' ? {
+                                        background: 'linear-gradient(145deg, rgba(76, 29, 149, 0.9) 0%, rgba(91, 33, 182, 0.85) 25%, rgba(109, 40, 217, 0.8) 50%, rgba(124, 58, 237, 0.85) 75%, rgba(147, 51, 234, 0.9) 100%)',
+                                        border: '1px solid rgba(76, 29, 149, 1)',
+                                        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.4), inset 0 1px 2px rgba(196, 181, 253, 0.4), inset 0 -1px 2px rgba(76, 29, 149, 0.6)'
+                                    } : {})
                                 }}
                             >
                                 <div className="flex items-center space-x-4">
                                     {/* 층 라벨 */}
                                     <div className="w-12 sm:w-16 md:w-20 text-center flex-shrink-0">
                                         <div
-                                            className={`font-bold text-xs sm:text-sm md:text-base ${level === 1 ? "text-orange-600" : "text-gray-700"
+                                            className={`font-bold text-xs sm:text-sm md:text-base ${level === 1 ? "text-orange-600" : theme === 'space' ? "text-white" : "text-gray-700"
                                                 }`}
                                         >
                                             {levelText}
@@ -372,7 +425,7 @@ const ParkingMonitor = ({ sensorData, isPLCConnected, onVehicleEdit }) => {
                                                             style={{
                                                                 backdropFilter: 'blur(15px)',
                                                                 WebkitBackdropFilter: 'blur(15px)',
-                                                                ...((box === 1 || box === 3) && value !== 0
+                                                                ...((box === 1 || box === 3) && value !== 0 && theme !== 'space'
                                                                     ? { backgroundColor: "#F0F8FF" }
                                                                     : {})
                                                             }}
@@ -398,7 +451,7 @@ const ParkingMonitor = ({ sensorData, isPLCConnected, onVehicleEdit }) => {
                                                             {/* 데이터 표시 */}
                                                             {box === 1 || box === 3 ? (
                                                                 // 차판상태는 값에 따라 이미지 표시
-                                                                <div className="flex items-center justify-center bg-white border border-white/20 rounded-xl h-[32px] sm:h-[60px] md:h-[65px] lg:h-[70px] w-full shadow-sm" style={{
+                                                                <div className={`flex items-center justify-center ${theme === 'space' ? (value !== 0 ? 'bg-gray-900 border-gray-900' : 'bg-gray-700 border-gray-600') : 'bg-white border-white/20'} rounded-xl h-[32px] sm:h-[60px] md:h-[65px] lg:h-[70px] w-full shadow-sm`} style={{
                                                                     backdropFilter: 'blur(10px)',
                                                                     WebkitBackdropFilter: 'blur(10px)',
                                                                 }}>
@@ -421,7 +474,7 @@ const ParkingMonitor = ({ sensorData, isPLCConnected, onVehicleEdit }) => {
                                                                             }}
                                                                         />
                                                                     ) : (
-                                                                        <div className="text-xs sm:text-sm md:text-base text-gray-400"></div>
+                                                                        <span className="text-gray-400 text-xs"></span>
                                                                     )}
                                                                 </div>
                                                             ) : box === 2 ? (
@@ -429,7 +482,7 @@ const ParkingMonitor = ({ sensorData, isPLCConnected, onVehicleEdit }) => {
                                                                 <div className="flex items-center justify-center h-10 sm:h-14 md:h-16 w-full">
                                                                     {getCurrentLiftPosition() === level ? (
                                                                         // 현재 층에 리프트가 있으면 carPlate_mini.png 표시
-                                                                        <div className="bg-white border border-white/20 rounded-xl p-2 w-full h-full flex items-center justify-center" style={{
+                                                                        <div className={`border border-white/20 rounded-xl p-2 w-full h-full flex items-center justify-center ${theme === 'space' ? 'bg-purple-200' : 'bg-white'}`} style={{
                                                                             backdropFilter: 'blur(10px)',
                                                                             WebkitBackdropFilter: 'blur(10px)',
                                                                         }}>
@@ -450,7 +503,7 @@ const ParkingMonitor = ({ sensorData, isPLCConnected, onVehicleEdit }) => {
                                                             ) : (
                                                                 // 홀수차량, 짝수차량
                                                                 <div
-                                                                    className={`text-center font-bold px-1 sm:px-2 md:px-3 bg-white border border-white/20 rounded shadow-sm cursor-${box === 0 || box === 4
+                                                                    className={`text-center font-bold px-1 sm:px-2 md:px-3 ${theme === 'space' ? 'bg-black' : 'bg-white'} border ${theme === 'space' && value !== 0 ? 'border-purple-400' : 'border-white/20'} rounded shadow-sm cursor-${box === 0 || box === 4
                                                                             ? "pointer"
                                                                             : "default"
                                                                         } ${box === 0 || box === 4
@@ -460,7 +513,7 @@ const ParkingMonitor = ({ sensorData, isPLCConnected, onVehicleEdit }) => {
                                                                     style={{
                                                                         backdropFilter: 'blur(10px)',
                                                                         WebkitBackdropFilter: 'blur(10px)',
-                                                                        backgroundColor: '#ffffff'
+                                                                        ...(theme === 'space' ? { backgroundColor: '#000000' } : { backgroundColor: '#ffffff' })
                                                                     }}
                                                                     onDoubleClick={() =>
                                                                         handleVehicleEdit(level, box)
@@ -472,7 +525,7 @@ const ParkingMonitor = ({ sensorData, isPLCConnected, onVehicleEdit }) => {
                                                                             : ""
                                                                     }
                                                                 >
-                                                                    <span className="text-black font-bold text-lg" style={{ color: '#000000', fontWeight: 'bold', fontSize: '16px' }}>{displayValue}</span>
+                                                                    <span className={`${theme === 'space' ? 'text-white' : 'text-black'} font-bold text-lg`} style={{ fontWeight: 'bold', fontSize: '16px' }}>{displayValue}</span>
                                                                 </div>
                                                             )}
 
@@ -480,7 +533,7 @@ const ParkingMonitor = ({ sensorData, isPLCConnected, onVehicleEdit }) => {
                                                             {slotNumber && (
                                                                 <div className="text-xs sm:text-sm md:text-base text-center mt-1">
                                                                     <span
-                                                                        className={`px-1 sm:px-2 rounded text-white ${box === 0 ? "bg-blue-500" : "bg-red-500"
+                                                                        className={`px-1 sm:px-2 rounded text-white ${box === 0 ? (theme === 'space' ? "bg-purple-500" : "bg-blue-500") : "bg-red-500"
                                                                             }`}
                                                                     >
                                                                         {slotNumber}번
@@ -513,6 +566,7 @@ const ParkingMonitor = ({ sensorData, isPLCConnected, onVehicleEdit }) => {
             </div>
 
         </div>
+        </>
     );
 };
 
