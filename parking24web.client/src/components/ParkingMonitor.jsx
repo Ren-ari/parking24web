@@ -534,8 +534,7 @@ const ParkingMonitor = ({ sensorData, isPLCConnected, onVehicleEdit, theme }) =>
                                                             {slotNumber && (
                                                                 <div className="text-xs sm:text-sm md:text-base text-center mt-1">
                                                                     <span
-                                                                        className={`px-1 sm:px-2 rounded text-white ${box === 0 ? (theme === 'space' ? "bg-purple-500" : "bg-blue-500") : "bg-red-500"
-                                                                            }`}
+                                                                        className={`px-1 sm:px-2 rounded text-white ${theme === 'space' ? "bg-purple-500" : (box === 0 ? "bg-blue-500" : "bg-red-500")}`}
                                                                     >
                                                                         {slotNumber}번
                                                                     </span>

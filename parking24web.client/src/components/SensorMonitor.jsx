@@ -400,13 +400,9 @@ const SensorMonitor = ({ sensorData, isPLCConnected }) => {
 
     return (
 
-        <div className="rounded-2xl p-3 md:p-4 overflow-hidden border border-white/20 shadow-xl shadow-black/20" style={{
-            background: 'rgba(255, 255, 255, 0.95)',
-            backdropFilter: 'blur(25px)',
-            WebkitBackdropFilter: 'blur(25px)',
-        }}>
+        <div className={`rounded-2xl p-3 md:p-4 overflow-hidden border shadow-xl shadow-black/20 ${theme === 'space' ? 'border-purple-500/30' : 'border-white/20'}`} style={getMainBackgroundStyle()}>
             <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-6 md:mb-4 space-y-2 md:space-y-0">
-                <h2 className="text-base md:text-lg font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2 md:mb-0">
+                <h2 className={`text-base md:text-lg font-bold mb-2 md:mb-0 ${getTitleGradient()}`}>
                     센서 데이터 모니터 - {siteConfig.siteInfo.name} {siteConfig.siteInfo.unitNumber}
 
                 </h2>
@@ -601,10 +597,16 @@ const SensorMonitor = ({ sensorData, isPLCConnected }) => {
 
             {/* PLC 체크리스트 */}
             {showPLCChecklist && (
-                <div className={`mb-6 p-6 rounded-2xl shadow-2xl transform transition-all duration-700 ease-in-out ${theme === 'space' ? 'bg-gradient-to-br from-purple-900/80 to-indigo-900/80 border-purple-500/30' : theme === 'dark' ? 'bg-gradient-to-br from-gray-800/80 to-gray-900/80 border-gray-600/30' : theme === 'ocean' ? 'bg-gradient-to-br from-blue-900/80 to-cyan-900/80 border-blue-500/30' : 'bg-gradient-to-br from-white to-gray-50 border-gray-200'}`}>
+                <div className={`mb-6 p-6 rounded-2xl shadow-2xl transform transition-all duration-700 ease-in-out ${theme === 'space' ? 'border-purple-500/30' : theme === 'dark' ? 'bg-gradient-to-br from-gray-800/80 to-gray-900/80 border-gray-600/30' : theme === 'ocean' ? 'bg-gradient-to-br from-blue-900/80 to-cyan-900/80 border-blue-500/30' : 'bg-gradient-to-br from-white to-gray-50 border-gray-200'}`} style={theme === 'space' ? {
+                    background: 'linear-gradient(145deg, #e5e7eb 0%, #d1d5db 40%, #9ca3af 100%)',
+                    backdropFilter: 'blur(15px)',
+                    WebkitBackdropFilter: 'blur(15px)',
+                    border: '1px solid rgba(156, 163, 175, 0.8)',
+                    boxShadow: 'inset 0 2px 4px rgba(255,255,255,0.7), inset 0 -2px 4px rgba(0,0,0,0.15), 0 8px 24px rgba(0,0,0,0.2)'
+                } : {}}>
                     <div className="mb-4 flex items-center space-x-2">
                         <div className={`animate-pulse w-3 h-3 rounded-full ${theme === 'space' ? 'bg-purple-500' : theme === 'dark' ? 'bg-green-500' : theme === 'ocean' ? 'bg-blue-500' : 'bg-green-500'}`}></div>
-                        <div className={`font-bold text-lg ${theme === 'space' ? 'text-purple-200' : theme === 'dark' ? 'text-gray-200' : theme === 'ocean' ? 'text-blue-200' : 'text-gray-800'}`}>속초 1호기 PLC 체크리스트 (C060~C072)</div>
+                        <div className={`font-bold text-lg ${theme === 'space' ? 'text-gray-800' : theme === 'dark' ? 'text-gray-200' : theme === 'ocean' ? 'text-blue-200' : 'text-gray-800'}`}>속초 1호기 PLC 체크리스트 (C060~C072)</div>
                         <div className="flex space-x-1">
                             <div className={`w-2 h-2 rounded-full animate-ping ${theme === 'space' ? 'bg-purple-400' : theme === 'dark' ? 'bg-green-400' : theme === 'ocean' ? 'bg-blue-400' : 'bg-green-400'}`}></div>
                             <div className={`w-2 h-2 rounded-full animate-ping ${theme === 'space' ? 'bg-purple-300' : theme === 'dark' ? 'bg-indigo-500' : theme === 'ocean' ? 'bg-cyan-400' : 'bg-indigo-500'}`} style={{ animationDelay: '200ms' }}></div>
@@ -619,7 +621,7 @@ const SensorMonitor = ({ sensorData, isPLCConnected }) => {
                                         <th 
                                             className={`px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider cursor-pointer transition-colors duration-200 select-none ${theme === 'space' ? 'hover:bg-purple-700' : theme === 'dark' ? 'hover:bg-gray-700' : theme === 'ocean' ? 'hover:bg-blue-700' : 'hover:bg-gray-600'}`}
                                             onClick={() => handleSort('address')}
-                                        >
+                                        >   
                                             <div className="flex items-center justify-center space-x-1">
                                                 <span>주소</span>
                                                 {sortField === 'address' && (
@@ -737,7 +739,7 @@ const SensorMonitor = ({ sensorData, isPLCConnected }) => {
                 <div className="space-y-4">
                     {/* 속초 비트 모니터 모드 */}
                     {viewMode === 'bits' ? (
-                        <div className={`p-6 rounded-2xl shadow-2xl ${theme === 'space' ? 'bg-gradient-to-br from-purple-900 via-black to-purple-900 border-purple-700' : theme === 'dark' ? 'bg-gradient-to-br from-gray-900 via-black to-gray-900 border-gray-700' : theme === 'ocean' ? 'bg-gradient-to-br from-blue-900 via-black to-blue-900 border-blue-700' : 'bg-gradient-to-br from-gray-900 via-black to-gray-900 border-gray-700'}`}>
+                        <div className={`p-6 rounded-2xl shadow-2xl ${theme === 'space' ? 'bg-purple-950 border-purple-800' : theme === 'dark' ? 'bg-gradient-to-br from-gray-900 via-black to-gray-900 border-gray-700' : theme === 'ocean' ? 'bg-gradient-to-br from-blue-900 via-black to-blue-900 border-blue-700' : 'bg-gradient-to-br from-gray-900 via-black to-gray-900 border-gray-700'}`}>
                             <div className="mb-6 flex items-center space-x-3">
                                 <div className={`animate-pulse w-4 h-4 rounded-full ${theme === 'space' ? 'bg-purple-500' : theme === 'dark' ? 'bg-green-500' : theme === 'ocean' ? 'bg-blue-500' : 'bg-green-500'}`}></div>
                                 <div className={`font-mono text-lg font-semibold ${theme === 'space' ? 'text-purple-400' : theme === 'dark' ? 'text-green-400' : theme === 'ocean' ? 'text-blue-400' : 'text-green-400'}`}>
@@ -759,7 +761,7 @@ const SensorMonitor = ({ sensorData, isPLCConnected }) => {
                                 }, {})
                             ).map(([category, items]) => (
                                 <div key={category} className="mb-8">
-                                    <div className={`mb-4 p-3 rounded-xl bg-gradient-to-r ${getCategoryColor(category)} text-white shadow-lg`}>
+                                    <div className={`mb-4 p-3 rounded-xl shadow-lg ${theme === 'space' ? 'bg-gradient-to-r from-gray-300 to-gray-500 text-white' : `bg-gradient-to-r ${getCategoryColor(category)} text-white`}`}>
                                         <h3 className="text-lg font-bold">{category} ({items.length}개)</h3>
                                     </div>
                                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">

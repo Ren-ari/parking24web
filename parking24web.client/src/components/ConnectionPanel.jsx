@@ -191,10 +191,16 @@ const ConnectionPanel = ({
                                 connectToPLC(button.ip, button.port);
                             }}
                             disabled={isPLCConnected || isConnecting}
-                            className={`px-12 py-6 rounded-lg font-semibold text-white transition-all duration-300 transform hover:scale-105 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${isPLCConnected || isConnecting
+                            className={`px-12 py-6 rounded-lg font-semibold text-white transition-all duration-300 transform hover:scale-105 hover:shadow-lg focus:outline-none focus:ring-2 ${isPLCConnected || isConnecting
                                     ? 'bg-gray-400 cursor-not-allowed'
-                                    : 'bg-gradient-to-r from-blue-500 via-blue-600 to-indigo-600 hover:from-blue-600 hover:via-blue-700 hover:to-indigo-700 shadow-lg hover:shadow-xl'
+                                    : theme === 'space' 
+                                        ? 'bg-gradient-to-r from-purple-600 via-purple-700 to-purple-800 hover:from-purple-700 hover:via-purple-800 hover:to-purple-900 shadow-lg hover:shadow-xl shadow-purple-600/30'
+                                        : 'bg-gradient-to-r from-blue-500 via-blue-600 to-indigo-600 hover:from-blue-600 hover:via-blue-700 hover:to-indigo-700 shadow-lg hover:shadow-xl'
                                 }`}
+                            style={theme === 'space' && !isPLCConnected && !isConnecting ? {
+                                boxShadow: '0 8px 32px rgba(124, 58, 237, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
+                                border: '1px solid rgba(124, 58, 237, 0.4)'
+                            } : {}}
                         >
                             <div className="text-xl font-bold">{button.name}</div>
                         </button>

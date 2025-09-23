@@ -111,7 +111,7 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
         return (
             <div
                 key={sensorKey}
-                className={`sensor-item ${isActive ? 'active' : 'inactive'}`}
+                className={`sensor-item ${theme === 'space' ? 'space-theme' : ''} ${isActive ? 'active' : 'inactive'}`}
             >
                 <div className="sensor-code">{sensorCode}</div>
                 <div className="sensor-name">{displayName}</div>
@@ -1236,9 +1236,6 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
                                 <span className="text-red-700 font-semibold text-sm">🚫 제어 불가</span>
                             </div>
                         )}
-                        <div className="bg-blue-100 border border-blue-300 px-3 py-2 rounded-2xl shadow-md">
-                            <span className="text-blue-700 font-semibold text-sm">📡 {currentConfig.siteInfo.name} {currentConfig.siteInfo.unitNumber}</span>
-                        </div>
                     </div>
                 </div>
 
@@ -1530,9 +1527,9 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
             {/* 좌측 센서 패널 - config 기반 동적 렌더링 */}
             {showSensors && (
 
-                <div className="sensor-panel-left show">
+                <div className={`sensor-panel-left show ${theme === 'space' ? 'space-theme' : ''}`}>
                     <div className="mb-4 text-center">
-                        <h3 className="text-sm font-bold text-gray-600">입력 센서</h3>
+                        
                     </div>
                     {renderLeftSensorPanel()}
 
@@ -1542,9 +1539,9 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
             {/* 우측 센서 패널 - config 기반 동적 렌더링 */}
             {showSensors && (
 
-                <div className="sensor-panel-right show">
+                <div className={`sensor-panel-right show ${theme === 'space' ? 'space-theme' : ''}`}>
                     <div className="mb-4 text-center">
-                        <h3 className="text-sm font-bold text-gray-600">출력 센서</h3>
+                   
                     </div>
                     {renderRightSensorPanel()}
 
