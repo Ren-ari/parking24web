@@ -573,11 +573,16 @@ const PLCControl = ({ currentUser, onLogout }) => {
             )}
 
             {/* 메인 컨텐츠 */}
-            <div className={`min-h-screen pt-20 ${getMainBackgroundClass()}`} style={{ 
+            <div className={`min-h-screen pt-20 ${getMainBackgroundClass()} bg-render-fix`} style={{ 
                 width: '100vw',
                 WebkitOverflowScrolling: 'touch',
                 overscrollBehavior: 'contain',
-                touchAction: 'pan-x pan-y'
+                touchAction: 'pan-x pan-y',
+                transform: 'translateZ(0)',
+                willChange: 'background, transform',
+                backfaceVisibility: 'hidden',
+                WebkitTransform: 'translateZ(0)',
+                WebkitBackfaceVisibility: 'hidden'
             }}>
                 {/* 우주 테마 효과 */}
                 {isSpaceTheme && (
