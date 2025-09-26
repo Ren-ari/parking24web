@@ -329,7 +329,7 @@ const EventMonitor = ({ sensorData, isPLCConnected }) => {
             <div className={`rounded-2xl p-6 border shadow-xl relative ${theme === 'space' ? 'border-gray-700' : 'border-gray-200'}`} style={{
                 ...(theme === 'space'
                     ? {
-                        background: 'linear-gradient(135deg, rgba(20,20,20,0.98) 0%, rgba(10,10,10,0.98) 100%)',
+                        background: 'rgba(20, 20, 20, 0.95)',
                         backdropFilter: 'blur(25px)',
                         WebkitBackdropFilter: 'blur(25px)',
                         boxShadow: '0 12px 40px rgba(0,0,0,0.6)'
@@ -355,8 +355,8 @@ const EventMonitor = ({ sensorData, isPLCConnected }) => {
 
             {/* 헤더 */}
             <div className={`rounded-xl p-6 mb-6 ${theme === 'space' ? 'bg-gradient-to-br from-purple-600/80 via-purple-700/70 to-purple-800/80 border-purple-500/90 shadow-lg shadow-purple-600/30' : 'bg-gradient-to-br from-blue-500/90 via-indigo-500/80 to-blue-600/90 border-blue-200/50 shadow-lg'}`}>
-                <div className="flex justify-center mb-4">
-                    <h2 className={`text-2xl font-bold mb-8 text-center ${theme === 'space' ? 'text-white' : 'text-white'}`}>입출차 현황 모니터링</h2>
+                <div className="flex justify-center mb-2">
+                    <h2 className={`text-lg font-bold mb-4 text-center ${theme === 'space' ? 'text-white' : 'text-white'}`}>입출차 현황 모니터링</h2>
                 </div>
 
 
@@ -367,16 +367,16 @@ const EventMonitor = ({ sensorData, isPLCConnected }) => {
                         value={searchCarNumber}
                         onChange={(e) => setSearchCarNumber(e.target.value)}
                         onKeyPress={(e) => e.key === 'Enter' && searchCar()}
-                            className={`flex-1 px-2 md:px-4 py-3 md:py-2 rounded-lg border focus:ring-2 text-sm md:text-base ${theme === 'space' ? 'text-gray-200 border-gray-500/70 bg-gradient-to-br from-gray-600/80 to-gray-700/80 focus:ring-gray-500 focus:border-transparent hover:border-gray-400 focus:bg-gradient-to-br from-gray-500/80 to-gray-600/80' : 'text-gray-700 border border-gray-300 bg-white focus:ring-blue-300'}`}
+                            className={`flex-1 min-w-0 px-2 md:px-4 py-3 md:py-2 rounded-lg border focus:ring-2 text-sm md:text-base ${theme === 'space' ? 'text-gray-200 border-gray-500/70 bg-gradient-to-br from-gray-600/80 to-gray-700/80 focus:ring-gray-500 focus:border-transparent hover:border-gray-400 focus:bg-gradient-to-br from-gray-500/80 to-gray-600/80' : 'text-gray-700 border border-gray-300 bg-white focus:ring-blue-300'}`}
                             placeholder="차량번호 입력"
                     />
                     <button
                         onClick={searchCar}
-                        className={`px-2 md:px-4 py-3 md:py-2 rounded-lg font-medium transition-all duration-300 ease-in-out hover:scale-105 text-sm md:text-base ${theme === 'space' ? 'text-purple-500 hover:text-purple-600 bg-gradient-to-br from-gray-600/80 to-gray-700/80 border border-gray-500/70 hover:border-gray-400' : 'text-white'}`}
-                        style={theme === 'space' ? {} : {
-                            background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.9) 0%, rgba(99, 102, 241, 0.9) 100%)',
-                            border: '1px solid rgba(255, 255, 255, 0.35)',
-                            boxShadow: '0 2px 10px rgba(31, 38, 135, 0.25)'
+                        className={`flex-shrink-0 px-3 md:px-4 py-3 md:py-2 rounded-lg font-medium transition-all duration-300 ease-in-out hover:scale-105 text-sm md:text-base text-white`}
+                        style={{
+                            background: 'linear-gradient(145deg, #1a1a1a 0%, #2d2d2d 50%, #1a1a1a 100%)',
+                            border: '1px solid rgba(255, 255, 255, 0.2)',
+                            boxShadow: 'inset 0 1px 2px rgba(255,255,255,0.1), inset 0 -1px 2px rgba(0,0,0,0.3), 0 4px 12px rgba(0,0,0,0.4)'
                         }}
                     >   
                         검색
@@ -415,7 +415,7 @@ const EventMonitor = ({ sensorData, isPLCConnected }) => {
                             }
                             showToast(' 데이터 새로고침 완료');
                         }} 
-                        className="h-6 w-16 min-h-0 min-w-0 p-0 m-0 rounded-full text-gray-800 font-medium transition-all duration-200 hover:scale-105 text-xs leading-none flex items-center justify-center"
+                        className="h-6 w-16 min-h-0 min-w-0 p-0 m-0 rounded-full text-gray-800 font-bold transition-all duration-200 hover:scale-105 text-xs leading-none flex items-center justify-center"
                         style={theme === 'space' ? {
                             background: 'linear-gradient(145deg, #e5e7eb 0%, #d1d5db 40%, #9ca3af 100%)',
                             border: '1px solid rgba(156, 163, 175, 0.8)',

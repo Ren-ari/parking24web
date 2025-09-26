@@ -203,6 +203,30 @@ const LoginPage = ({ onLogin }) => {
                             setIsFormSuccess(true);
                             console.log('로그인 성공:', result.user);
 
+                            // 화면 줌 리셋
+                            const resetZoom = () => {
+                                // 모든 input 필드에서 포커스 제거
+                                const activeElement = document.activeElement;
+                                if (activeElement && activeElement.blur) {
+                                    activeElement.blur();
+                                }
+                                
+                                // 화면 줌 리셋
+                                setTimeout(() => {
+                                    window.scrollTo(0, 0);
+                                    document.body.style.zoom = '1';
+                                    document.body.style.transform = 'scale(1)';
+                                    
+                                    // 뷰포트 리셋
+                                    const viewport = document.querySelector('meta[name="viewport"]');
+                                    if (viewport) {
+                                        viewport.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no';
+                                    }
+                                }, 100);
+                            };
+
+                            resetZoom();
+
                             setTimeout(() => {
                                 onLogin(result.user);
                             }, 1000);
@@ -319,7 +343,7 @@ const LoginPage = ({ onLogin }) => {
                                 onFocus={() => setFocusedField('username')}
                                 onBlur={() => setFocusedField('')}
                                 disabled={isLoading}
-                                className={`${fieldErrors.username ? 'error-input' : ''} ${focusedField === 'username' ? 'focused' : ''}`}
+                                className={`${focusedField === 'username' ? 'focused' : ''}`}
                             />
                             <div className="input-border"></div>
                         </div>
@@ -349,7 +373,7 @@ const LoginPage = ({ onLogin }) => {
                                 onFocus={() => setFocusedField('password')}
                                 onBlur={() => setFocusedField('')}
                                 disabled={isLoading}
-                                className={`${fieldErrors.password ? 'error-input' : ''} ${focusedField === 'password' ? 'focused' : ''}`}
+                                className={`${focusedField === 'password' ? 'focused' : ''}`}
                             />
                             <button
                                 type="button"

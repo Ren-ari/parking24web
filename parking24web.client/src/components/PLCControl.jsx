@@ -64,6 +64,8 @@ const PLCControl = ({ currentUser, onLogout }) => {
 
     const [_showLogs, _setShowLogs] = useState(false);
     const [isDataPanelExpanded, setIsDataPanelExpanded] = useState(true);
+    // 역할 기반 고정 모드: client=요약, 그 외(관리자/서비스 등)=상세
+    const isSummaryMode = currentUser?.role === 'client';
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [isClosing, setIsClosing] = useState(false);
     const [pendingAction, setPendingAction] = useState(null);
@@ -455,35 +457,58 @@ const PLCControl = ({ currentUser, onLogout }) => {
                     WebkitOverflowScrolling: 'touch',
                     overscrollBehavior: 'contain'
                 }}>
-                    {/* 우주 테마 전용 별 배경 */}
+                    {/* 우주 테마 전용 배경 효과들 */}
                     {isSpaceTheme && (
-                        <div className="absolute inset-0 pointer-events-none">
-                            {Array.from({ length: 40 }, (_, i) => {
-                                const seed = i * 97.3;
-                                const x = (Math.sin(seed) * 50 + 50) % 100;
-                                const y = (Math.cos(seed * 0.7) * 50 + 50) % 100;
-                                const size = Math.abs(Math.sin(seed * 1.1)) * 2 + 1;
-                                const opacity = Math.abs(Math.cos(seed * 0.9)) * 0.5 + 0.2;
-                                const delay = Math.abs(Math.sin(seed * 0.6)) * 5;
-                                return (
-                                    <div
-                                        key={`menu-star-${i}`}
-                                        className="absolute animate-twinkle"
-                                        style={{
-                                            left: `${x}%`,
-                                            top: `${y}%`,
-                                            width: `${size}px`,
-                                            height: `${size}px`,
-                                            backgroundColor: 'white',
-                                            borderRadius: '50%',
-                                            opacity: opacity,
-                                            animationDelay: `${delay}s`,
-                                            boxShadow: `0 0 ${size * 2}px rgba(255,255,255,${opacity * 0.4})`
-                                        }}
-                                    />
-                                );
-                            })}
-                        </div>
+                        <>
+                            {/* 어둡기 오버레이 */}
+                            <div className="absolute inset-0 pointer-events-none" style={{
+                                background: 'radial-gradient(circle at 30% 30%, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.4) 25%, rgba(0,0,0,0.2) 50%, rgba(0,0,0,0.1) 75%, rgba(0,0,0,0) 100%)'
+                            }}></div>
+                            
+                            {/* 우주 네뷸라 효과 */}
+                            <div className="absolute inset-0 pointer-events-none overflow-hidden">
+                                <div className="absolute top-1/6 left-1/6 w-64 h-64 bg-purple-800/15 rounded-full blur-3xl animate-pulse"></div>
+                                <div className="absolute bottom-1/6 right-1/6 w-48 h-48 bg-indigo-700/12 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }}></div>
+                                <div className="absolute top-1/2 left-1/2 w-32 h-32 bg-blue-600/10 rounded-full blur-2xl animate-pulse" style={{ animationDelay: '4s' }}></div>
+                            </div>
+
+                            {/* 별들 */}
+                            <div className="absolute inset-0 pointer-events-none">
+                                {Array.from({ length: 60 }, (_, i) => {
+                                    const seed = i * 97.3;
+                                    const x = (Math.sin(seed) * 50 + 50) % 100;
+                                    const y = (Math.cos(seed * 0.7) * 50 + 50) % 100;
+                                    const size = Math.abs(Math.sin(seed * 1.1)) * 2 + 1;
+                                    const opacity = Math.abs(Math.cos(seed * 0.9)) * 0.6 + 0.3;
+                                    const delay = Math.abs(Math.sin(seed * 0.6)) * 5;
+                                    return (
+                                        <div
+                                            key={`menu-star-${i}`}
+                                            className="absolute animate-twinkle"
+                                            style={{
+                                                left: `${x}%`,
+                                                top: `${y}%`,
+                                                width: `${size}px`,
+                                                height: `${size}px`,
+                                                backgroundColor: 'white',
+                                                borderRadius: '50%',
+                                                opacity: opacity,
+                                                animationDelay: `${delay}s`,
+                                                boxShadow: `0 0 ${size * 3}px rgba(255,255,255,${opacity * 0.5})`
+                                            }}
+                                        />
+                                    );
+                                })}
+                            </div>
+
+                            {/* 코너 어둡기 */}
+                            <div className="absolute inset-0 pointer-events-none" style={{
+                                background: 'radial-gradient(circle at 85% 15%, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.3) 20%, rgba(0,0,0,0.1) 40%, rgba(0,0,0,0) 60%)'
+                            }}></div>
+                            <div className="absolute inset-0 pointer-events-none" style={{
+                                background: 'radial-gradient(circle at 15% 85%, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.3) 20%, rgba(0,0,0,0.1) 40%, rgba(0,0,0,0) 60%)'
+                            }}></div>
+                        </>
                     )}
                     <div className="h-full flex items-start justify-center p-4 pt-6 relative z-10">
                         <div className={`w-full max-w-md md:max-w-lg transform transition-all duration-500 ease-out ${isClosing ? 'animate-out slide-out-to-top-8 fade-out-0' : 'animate-in slide-in-from-top-8 fade-in-0'}`}>
@@ -557,6 +582,11 @@ const PLCControl = ({ currentUser, onLogout }) => {
                 {/* 우주 테마 효과 */}
                 {isSpaceTheme && (
                     <>
+                        {/* 중앙 어둡기 오버레이 (전역, 컨텐츠 아래) */}
+                        <div className="pointer-events-none fixed inset-0" style={{
+                            zIndex: 1,
+                            background: 'radial-gradient(circle at 50% 45%, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.45) 20%, rgba(0,0,0,0.25) 45%, rgba(0,0,0,0.12) 60%, rgba(0,0,0,0) 75%)'
+                        }}></div>
                         {/* 별들 - 클릭 방해 방지용 래퍼 */}
                         <div className="pointer-events-none fixed inset-0" style={{ zIndex: 0 }}>
                         {Array.from({ length: 120 }, (_, i) => {
@@ -594,10 +624,20 @@ const PLCControl = ({ currentUser, onLogout }) => {
                             <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-purple-700/10 rounded-full blur-3xl"></div>
                             <div className="absolute top-1/2 left-1/2 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl"></div>
                         </div>
+
+                        {/* 코너 어둡기 오버레이 (우상단, 좌하단) */}
+                        <div className="pointer-events-none fixed inset-0" style={{
+                            zIndex: 1,
+                            background: 'radial-gradient(circle at 85% 15%, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.28) 18%, rgba(0,0,0,0.14) 35%, rgba(0,0,0,0) 55%)'
+                        }}></div>
+                        <div className="pointer-events-none fixed inset-0" style={{
+                            zIndex: 1,
+                            background: 'radial-gradient(circle at 15% 85%, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.28) 18%, rgba(0,0,0,0.14) 35%, rgba(0,0,0,0) 55%)'
+                        }}></div>
                     </>
                 )}
                 
-                <main className="p-2 md:p-4 max-w-6xl mx-auto relative z-10">
+                <main className="p-2 md:p-4 mt-4 md:mt-4 max-w-6xl mx-auto relative z-10">
                     <div className="w-full">
                         {/* 상단 상태 표시 탭들 - 속초 config 적용 (클라이언트일 때 숨김) */}
                         {!isClient() && (
@@ -605,7 +645,7 @@ const PLCControl = ({ currentUser, onLogout }) => {
                             <div className="flex items-stretch">
                                 <div className="flex-1 min-w-0 flex flex-col">
 
-                                        <div className={`text-white text-xs font-medium px-1 py-2 text-center h-10 flex items-center justify-center ${sensorData.rawData[siteConfig.systemAddresses.remoteOp] === 1 ? (theme === 'space' ? 'bg-purple-600' : 'bg-blue-500') : 'bg-gray-400'}`} style={{
+                                        <div className={`text-white text-xs font-medium px-1 py-2 text-center h-10 flex items-center justify-center ${sensorData?.rawData?.[siteConfig.systemAddresses.remoteOp] === 1 ? (theme === 'space' ? 'bg-purple-600' : 'bg-blue-500') : 'bg-gray-400'}`} style={{
 
                                         backdropFilter: 'blur(10px)',
                                         WebkitBackdropFilter: 'blur(10px)',
@@ -709,13 +749,21 @@ const PLCControl = ({ currentUser, onLogout }) => {
                                     차량 및 주차 현황 데이터
                                 </h3>
                                 <button
-                                    className="p-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full transition-all duration-300 ease-in-out transform hover:scale-110 active:scale-95 relative z-10"
+                                    className={`p-2 rounded-full transition-all duration-300 ease-in-out transform hover:scale-110 active:scale-95 relative z-10 ${isDataPanelExpanded ? '' : 'hover:bg-white/10 border border-white/10'}`}
+                                    style={isDataPanelExpanded ? {
+                                        background: theme === 'space' ? 'rgba(20, 20, 20, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+                                        backdropFilter: 'blur(25px)',
+                                        WebkitBackdropFilter: 'blur(25px)',
+                                        border: 'none'
+                                    } : theme === 'space' ? {
+                                        background: 'rgba(20, 20, 20, 0.95)',
+                                        backdropFilter: 'blur(25px)',
+                                        WebkitBackdropFilter: 'blur(25px)',
+                                        border: 'none'
+                                    } : {}}
                                 >
                                     <svg
-                                        className={`w-5 h-5 transform transition-transform duration-500 ease-in-out ${isDataPanelExpanded
-                                            ? 'rotate-180 text-purple-500'
-                                            : 'rotate-0 text-blue-500'
-                                            }`}
+                                        className={`w-5 h-5 transform transition-transform duration-500 ease-in-out ${isDataPanelExpanded ? 'rotate-180' : 'rotate-0'} ${theme === 'space' ? 'text-purple-500' : 'text-blue-500'}`}
                                         fill="none"
                                         stroke="currentColor"
                                         viewBox="0 0 24 24"
@@ -733,8 +781,52 @@ const PLCControl = ({ currentUser, onLogout }) => {
                                 <div className="px-4 sm:px-6 pt-4 pb-4 sm:pb-6 relative" style={getDataPanelContentStyle()}>
                                     {/* 글래스모피즘 배경 그라데이션 */}
                                     <div className={`absolute inset-0 rounded-b-2xl ${getGlassmorphismClass()}`}></div>
+                                    {/* 요약 KPI - client 전용 */}
+                                    {isSummaryMode && (
+                                        <div className="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 mb-2">
+                                            {[
+                                                { label: '전체주차', value: sensorData.rawData?.[77] || 0, delay: '100ms' },
+                                                { label: '전체공차', value: sensorData.rawData?.[78] || 0, delay: '200ms' },
+                                                { label: '일반입고', value: sensorData.rawData?.[79] || 0, delay: '300ms' },
+                                                { label: '일반출차', value: sensorData.rawData?.[80] || 0, delay: '400ms' },
+                                                { label: 'RV입고', value: sensorData.rawData?.[82] || 0, delay: '500ms' },
+                                                { label: 'RV출차', value: sensorData.rawData?.[81] || 0, delay: '600ms' }
+                                            ].map((kpi, idx) => (
+                                                <div
+                                                    key={kpi.label}
+                                                    className={`p-3 rounded-2xl transition-all duration-700 ease-out transform relative overflow-hidden ${isDataPanelExpanded ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'}`}
+                                                    style={{
+                                                        transitionDelay: isDataPanelExpanded ? kpi.delay : '0ms',
+                                                        background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0.08) 100%)',
+                                                        backdropFilter: 'blur(12px)',
+                                                        WebkitBackdropFilter: 'blur(12px)',
+                                                        border: '1px solid rgba(255, 255, 255, 0.18)',
+                                                        boxShadow: '0 3px 12px 0 rgba(31, 38, 135, 0.18)'
+                                                    }}
+                                                >
+                                                    <div className="absolute inset-0 bg-gradient-to-br from-blue-500/6 to-indigo-500/6 rounded-2xl"></div>
+                                                    <label className={`block text-xs font-medium mb-1 relative z-10 ${getCardLabelColorClass()}`}>{kpi.label}</label>
+                                                    <div
+                                                        className={`text-center rounded-2xl px-1 sm:px-2 py-3 sm:py-5 text-xl sm:text-2xl md:text-3xl font-bold relative z-10 ${getCardValueColorClass()}`}
+                                                        style={{
+                                                            background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.75) 100%)',
+                                                            backdropFilter: 'blur(8px)',
+                                                            WebkitBackdropFilter: 'blur(8px)',
+                                                            border: '1px solid rgba(255, 255, 255, 0.25)',
+                                                            boxShadow: '0 1px 6px 0 rgba(31, 38, 135, 0.12)'
+                                                        }}
+                                                    >
+                                                        {kpi.value}
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
 
-                                    {/* 첫 번째 행 */}
+                                    {/* 상세 그리드 (기존 레이아웃) - 관리자/서비스 등 */}
+                                    {!isSummaryMode && (
+                                    <>
+                                    {/* 첫 번째 행 (차량번호/적재차판/출고차판) 복구 */}
                                     <div className="grid grid-cols-3 gap-3 sm:gap-4 mb-4">
                                         <div className={`p-2 sm:p-3 rounded-2xl transition-all duration-700 ease-out transform relative overflow-hidden ${isDataPanelExpanded
                                                 ? 'translate-y-0 opacity-100'
@@ -810,7 +902,7 @@ const PLCControl = ({ currentUser, onLogout }) => {
                                         </div>
                                     </div>
 
-                                    {/* 두 번째 행 */}
+                                    {/* 두 번째 행 (개수 지표 6개) */}
                                     <div className="grid grid-cols-2 md:grid-cols-6 gap-3 mb-4">
                                         <div className={`p-3 rounded-2xl transition-all duration-700 ease-out transform relative overflow-hidden ${isDataPanelExpanded
                                                 ? 'translate-y-0 opacity-100 scale-100'
@@ -962,6 +1054,8 @@ const PLCControl = ({ currentUser, onLogout }) => {
                                             </div>
                                         </div>
                                     </div>
+                                    </>
+                                    )}
 
                                 </div>
                             </div>

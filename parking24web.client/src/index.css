@@ -359,6 +359,11 @@ div.app {
   background: linear-gradient(-45deg, #dbeafe, #e9d5ff, #fce7f3, #fef3c7);
   background-size: 400% 400%;
   animation: colorChange 4s ease infinite;
+  /* GPU 가속 강제 활성화 */
+  transform: translateZ(0);
+  will-change: background-position;
+  backface-visibility: hidden;
+  perspective: 1000px;
 }
 
 @keyframes colorChange {
@@ -426,4 +431,40 @@ input, textarea, select {
         min-height: 48px;
         min-width: 48px;
     }
+}
+
+/* GPU 가속 최적화 - 배경 렌더링 문제 해결 */
+.gpu-optimized {
+    transform: translateZ(0);
+    will-change: background, backdrop-filter, transform;
+    backface-visibility: hidden;
+    perspective: 1000px;
+}
+
+/* 그라데이션 렌더링 최적화 */
+.bg-gradient-optimized {
+    background-attachment: fixed;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: cover;
+}
+
+/* 애니메이션 최적화 */
+.animation-optimized {
+    transform: translateZ(0);
+    will-change: transform, opacity;
+    backface-visibility: hidden;
+}
+
+/* 복합 그라데이션 레이어 분리 */
+.gradient-layer-1 {
+    transform: translateZ(0.1px);
+}
+
+.gradient-layer-2 {
+    transform: translateZ(0.2px);
+}
+
+.gradient-layer-3 {
+    transform: translateZ(0.3px);
 }

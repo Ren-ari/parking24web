@@ -2,7 +2,7 @@
 // config import - 빌드별로 변경 (sokcho1Config 또는 sokcho2Config)
 import siteConfig from '../../config/sokcho1Config.js';
 // SignalR 서비스 import
-import signalRService from '../Services/signalrService.js';
+import signalRService from '../services/signalrService.js';
 import { useTheme } from '../contexts/ThemeContext';
 
 const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMenuOpen }) => {
@@ -507,7 +507,7 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
                     max-width: none;
                 }
 
-                @media (min-width: 768px) and (max-width: 1023px) {
+                @media (min-width: 768px) and (max-width: 1400px) {
                     .common-buttons-grid {
                         display: grid;
                         grid-template-columns: 1fr 1fr;
@@ -568,12 +568,21 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
                     -webkit-backdrop-filter: blur(25px);
                 }
                 
-                @media (min-width: 768px) and (max-width: 1024px) {
+                @media (min-width: 768px) and (max-width: 1199px) {
                     .sensor-panel-right {
-                        width: 200px;
+                        width: 220px;
                         height: 60vh;
                         padding: 12px;
-                        top: 63%;
+                        top: 60%;
+                    }
+                }
+                
+                @media (min-width: 1200px) and (max-width: 1400px) {
+                    .sensor-panel-right {
+                        width: 250px;
+                        height: 65vh;
+                        padding: 14px;
+                        top: 58%;
                     }
                 }
                 
@@ -636,12 +645,21 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
                     -webkit-backdrop-filter: blur(25px);
                 }
                 
-                @media (min-width: 768px) and (max-width: 1024px) {
+                @media (min-width: 768px) and (max-width: 1199px) {
                     .sensor-panel-left {
-                        width: 200px;
+                        width: 220px;
                         height: 60vh;
                         padding: 12px;
-                        top: 63%;
+                        top: 60%;
+                    }
+                }
+                
+                @media (min-width: 1200px) and (max-width: 1400px) {
+                    .sensor-panel-left {
+                        width: 250px;
+                        height: 65vh;
+                        padding: 14px;
+                        top: 58%;
                     }
                 }
                 
@@ -1018,6 +1036,48 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
                 @media (max-width: 768px) {
                     .tab-navigation {
                         margin: 20px 0 20px 0;
+                    }
+                }
+
+                @media (min-width: 768px) and (max-width: 1199px) {
+                    .sensor-item {
+                        padding: 12px;
+                        margin-bottom: 12px;
+                        border-radius: 16px;
+                        height: 48px;
+                        min-height: 48px;
+                        max-height: 48px;
+                    }
+                    
+                    .sensor-code {
+                        font-size: 0.85rem;
+                        min-width: 42px;
+                    }
+                    
+                    .sensor-name {
+                        font-size: 0.7rem;
+                        line-height: 1.2;
+                    }
+                }
+                
+                @media (min-width: 1200px) and (max-width: 1400px) {
+                    .sensor-item {
+                        padding: 16px;
+                        margin-bottom: 16px;
+                        border-radius: 20px;
+                        height: 56px;
+                        min-height: 56px;
+                        max-height: 56px;
+                    }
+                    
+                    .sensor-code {
+                        font-size: 1rem;
+                        min-width: 50px;
+                    }
+                    
+                    .sensor-name {
+                        font-size: 0.85rem;
+                        line-height: 1.3;
                     }
                 }
 
