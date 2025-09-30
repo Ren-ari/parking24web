@@ -34,7 +34,7 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
                 // 화면 크기에 따라 스크롤 감도와 기본 위치 조정
                 const isTablet = window.innerWidth >= 768 && window.innerWidth <= 1400;
                 const scrollSensitivity = isTablet ? 0.5 : 1.0; // 태블릿에서는 움직임 폭을 줄임
-                const basePosition = isTablet ? 55 : 45; // 태블릿은 55%, PC는 45%에서 시작
+                const basePosition = isTablet ? 58 : 38; // 태블릿은 55%, PC는 35%에서 시작
                 const scrollOffset = scrollY * scrollSensitivity;
                 
                 leftPanel.style.top = `calc(${basePosition}% + ${scrollOffset}px)`;
@@ -597,7 +597,7 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
                 
                 .sensor-panel-right {
                     position: fixed;
-                    top: 60%;
+                    top: 38%;
                     right: -300px;
                     width: 300px;
                     height: 70vh;
