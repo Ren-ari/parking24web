@@ -170,23 +170,35 @@ div.app {
   outline-offset: 2px;
 }
 
-/* 스크롤바 스타일 (Webkit) */
+
+/* 스크롤바 스타일 (Webkit) - 터치 친화적으로 개선 */
 ::-webkit-scrollbar {
-  width: 8px;
+  width: 16px; 
 }
 
 ::-webkit-scrollbar-track {
   background: #f1f5f9;
+  border-radius: 8px;
+  margin: 4px; 
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 4px;
+  background: linear-gradient(to bottom, #cbd5e1, #94a3b8);
+  border-radius: 8px;
+  border: 2px solid #f1f5f9;
+  transition: all 0.2s ease;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: linear-gradient(to bottom, #94a3b8, #64748b);
+  transform: scaleX(1.1); /* 호버시 약간 확대 */
 }
+
+::-webkit-scrollbar-thumb:active {
+  background: linear-gradient(to bottom, #64748b, #475569);
+  transform: scaleX(1.2); /* 클릭시 더 확대 */
+}
+
 
 /* 모바일에서 스크롤바 최소화 */
 @media (max-width: 768px) {
@@ -335,24 +347,37 @@ div.app {
   }
 }
 
-/* 커스텀 스크롤바 */
+/* 커스텀 스크롤바 클래스 */
 .custom-scrollbar::-webkit-scrollbar {
-  width: 8px;
+  width: 18px; 
 }
 
 .custom-scrollbar::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.1);
-  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 9px;
+  margin: 4px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
   background: linear-gradient(to bottom, #10b981, #059669);
-  border-radius: 4px;
+  border-radius: 9px;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: linear-gradient(to bottom, #059669, #047857);
+  transform: scaleX(1.15);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
+
+.custom-scrollbar::-webkit-scrollbar-thumb:active {
+  background: linear-gradient(to bottom, #047857, #065f46);
+  transform: scaleX(1.25);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
 
 /* 모바일 메뉴 배경 애니메이션 */
 .mobile-menu-bg {

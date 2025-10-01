@@ -112,6 +112,7 @@ export const ROLE_TABS = {
     [USER_ROLES.ADMIN]: [
         { id: 'parking', name: '주차 현황', icon: '🚗' },
         { id: 'events', name: '입출차 이벤트', icon: '📋' },
+        { id: 'service', name: 'A/S 기록', icon: '🔧' },
         { id: 'manual', name: '수동 제어', icon: '🎮' },
         { id: 'sensor', name: '센서 모니터', icon: '📊' },
         { id: 'config', name: '설정', icon: '⚙️' }
@@ -119,12 +120,14 @@ export const ROLE_TABS = {
     [USER_ROLES.SERVICE]: [
         { id: 'parking', name: '주차 현황', icon: '🚗' },
         { id: 'events', name: '입출차 이벤트', icon: '📋' },
+        { id: 'service', name: 'A/S 기록', icon: '🔧' },
         { id: 'manual', name: '수동 제어', icon: '🎮' },
         { id: 'sensor', name: '센서 모니터', icon: '📊' },
         { id: 'config', name: '설정', icon: '⚙️' }
     ],
     [USER_ROLES.CLIENT]: [
         { id: 'events', name: '입출차 이벤트', icon: '📋' },
+        { id: 'service', name: 'A/S 기록', icon: '🔧' },
         { id: 'parking', name: '주차 현황', icon: '🚗' }
     ]
 };

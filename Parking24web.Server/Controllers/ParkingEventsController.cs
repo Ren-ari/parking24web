@@ -27,13 +27,14 @@ namespace Parking24web.Server.Controllers
             _siteConfig = siteConfig.Value;
         }
 
-        // 최근 이벤트 조회 (기본 100개)
+        // 최근 이벤트 조회 (오늘 하루치)
         [HttpGet("recent")]
-        public async Task<IActionResult> GetRecentEvents([FromQuery] int limit = 100)
+        public async Task<IActionResult> GetRecentEvents()
         {
+            var today = DateTime.Today;
             var events = await _context.ParkingEvents
+                .Where(e => e.Timestamp >= today)
                 .OrderByDescending(e => e.Timestamp)
-                .Take(limit)
                 .ToListAsync();
 
             return Ok(events);
@@ -44,6 +45,8 @@ namespace Parking24web.Server.Controllers
         public async Task<IActionResult> GetParkedVehicles()
         {
             var parkedVehicles = new List<object>();
+
+            _logger.LogInformation($"GetParkedVehicles 호출 - PLC 연결: {_plcService.IsConnected}");
 
             if (_plcService.IsConnected)
             {
@@ -134,50 +137,62 @@ namespace Parking24web.Server.Controllers
         [HttpGet("search/{carNumber}")]
         public async Task<IActionResult> SearchVehicle(string carNumber)
         {
-            // 현재 주차중인지 확인
+            var allEvents = new List<object>();
+
+            // 1. 현재 주차중 확인
             if (_plcService.IsConnected)
             {
                 var sensorData = _plcService.GetSensorData();
+                var vehicleStart = _siteConfig.VehicleStorage?.StartAddress ?? 101;
+                var vehicleEnd = _siteConfig.VehicleStorage?.EndAddress ?? 180;
 
-                for (int i = 101; i <= 180; i++)
+                for (int i = vehicleStart; i <= vehicleEnd; i++)
                 {
                     if (i < sensorData.Length && sensorData[i] != 0)
                     {
                         var vehicleNumber = sensorData[i].ToString().PadLeft(4, '0');
                         if (vehicleNumber.Contains(carNumber))
                         {
-                            var slotNumber = i - 100;
+                            var slotNumber = i - vehicleStart + 1;
                             var floor = Math.Ceiling(slotNumber / 2.0);
 
-                            return Ok(new
+                            allEvents.Add(new
                             {
-                                found = true,
-                                status = "주차중",
+                                eventType = "주차중",
                                 carNumber = vehicleNumber,
-                                floor = (int)floor,
                                 slotNumber,
-                                message = $"{vehicleNumber}번 차량이 {floor}층 {slotNumber}번 슬롯에 주차중입니다."
+                                timestamp = DateTime.Now
                             });
                         }
                     }
                 }
             }
 
-            // 최근 출차 기록에서 검색
-            var recentExit = await _context.ParkingEvents
-                .Where(e => e.EventType == "출차" && e.CarNumber.Contains(carNumber))
+            // 2. 과거 입차/출차 기록 검색 (6개월)
+            var sixMonthsAgo = DateTime.Now.AddMonths(-6);
+            var recentEvents = await _context.ParkingEvents
+                .Where(e => e.CarNumber.Contains(carNumber) && e.Timestamp >= sixMonthsAgo)
                 .OrderByDescending(e => e.Timestamp)
-                .FirstOrDefaultAsync();
+                .ToListAsync();
 
-            if (recentExit != null)
+            if (recentEvents.Any())
+            {
+                allEvents.AddRange(recentEvents.Select(e => new
+                {
+                    eventType = e.EventType,
+                    carNumber = e.CarNumber,
+                    slotNumber = e.SlotNumber,
+                    timestamp = e.Timestamp
+                }));
+            }
+
+            // 3. 결과 반환
+            if (allEvents.Count > 0)
             {
                 return Ok(new
                 {
                     found = true,
-                    status = "출차완료",
-                    carNumber = recentExit.CarNumber,
-                    exitTime = recentExit.Timestamp,
-                    message = $"{recentExit.CarNumber}번 차량은 {recentExit.Timestamp:yyyy-MM-dd HH:mm:ss}에 출차했습니다."
+                    events = allEvents
                 });
             }
 

@@ -406,7 +406,8 @@ export const sokcho2Config = {
     },
 
     api: {
-        baseUrl: 'http://localhost:5124',
+        baseUrl: '',
+        devPort: 5124,
         endpoints: {
             recent: '/api/parkingevents/recent',
             parked: '/api/parkingevents/parked',
