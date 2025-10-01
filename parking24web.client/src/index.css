@@ -384,6 +384,11 @@ div.app {
   background: linear-gradient(-45deg, #dbeafe, #e9d5ff, #fce7f3, #fef3c7);
   background-size: 400% 400%;
   animation: colorChange 4s ease infinite;
+  /* GPU 가속 강제 활성화 */
+  transform: translateZ(0);
+  will-change: background-position;
+  backface-visibility: hidden;
+  perspective: 1000px;
 }
 
 @keyframes colorChange {
@@ -451,4 +456,112 @@ input, textarea, select {
         min-height: 48px;
         min-width: 48px;
     }
+}
+
+/* GPU 가속 최적화 - 배경 렌더링 문제 해결 */
+.gpu-optimized {
+    transform: translateZ(0);
+    will-change: background, backdrop-filter, transform;
+    backface-visibility: hidden;
+    perspective: 1000px;
+    -webkit-transform: translateZ(0);
+    -webkit-backface-visibility: hidden;
+    -webkit-perspective: 1000px;
+}
+
+/* 그라데이션 렌더링 최적화 - 줄 생김 방지 */
+.bg-gradient-optimized {
+    background-attachment: fixed;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: cover;
+    /* 렌더링 최적화 */
+    transform: translateZ(0);
+    will-change: background-position;
+    backface-visibility: hidden;
+    -webkit-transform: translateZ(0);
+    -webkit-backface-visibility: hidden;
+}
+
+/* 애니메이션 최적화 */
+.animation-optimized {
+    transform: translateZ(0);
+    will-change: transform, opacity;
+    backface-visibility: hidden;
+    -webkit-transform: translateZ(0);
+    -webkit-backface-visibility: hidden;
+}
+
+/* 복합 그라데이션 레이어 분리 - z-index로 레이어 분리 */
+.gradient-layer-1 {
+    transform: translateZ(0.1px);
+    -webkit-transform: translateZ(0.1px);
+    isolation: isolate;
+}
+
+.gradient-layer-2 {
+    transform: translateZ(0.2px);
+    -webkit-transform: translateZ(0.2px);
+    isolation: isolate;
+}
+
+.gradient-layer-3 {
+    transform: translateZ(0.3px);
+    -webkit-transform: translateZ(0.3px);
+    isolation: isolate;
+}
+
+/* 배경 렌더링 문제 해결을 위한 새로운 클래스들 */
+.bg-render-fix {
+    /* GPU 가속 강제 활성화 */
+    transform: translateZ(0);
+    will-change: background, transform;
+    backface-visibility: hidden;
+    -webkit-transform: translateZ(0);
+    -webkit-backface-visibility: hidden;
+    /* 렌더링 최적화 */
+    contain: layout style paint;
+    -webkit-contain: layout style paint;
+}
+
+.bg-stable {
+    /* 안정적인 배경 렌더링 */
+    background-attachment: scroll;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 100% 100%;
+    /* 렌더링 최적화 */
+    transform: translateZ(0);
+    will-change: auto;
+    -webkit-transform: translateZ(0);
+}
+
+/* 별 애니메이션 최적화 */
+.star-optimized {
+    transform: translateZ(0);
+    will-change: transform, opacity;
+    backface-visibility: hidden;
+    -webkit-transform: translateZ(0);
+    -webkit-backface-visibility: hidden;
+    /* 별 렌더링 최적화 */
+    contain: layout style paint;
+    -webkit-contain: layout style paint;
+}
+
+/* 그라데이션 안정화 */
+.gradient-stable {
+    /* GPU 가속 활성화 */
+    transform: translateZ(0);
+    will-change: background;
+    backface-visibility: hidden;
+    -webkit-transform: translateZ(0);
+    -webkit-backface-visibility: hidden;
+    /* 렌더링 최적화 */
+    contain: layout style paint;
+    -webkit-contain: layout style paint;
+    /* 그라데이션 안정화 */
+    background-attachment: scroll;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 100% 100%;
 }

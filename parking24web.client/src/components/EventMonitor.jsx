@@ -304,8 +304,22 @@ const EventMonitor = ({ sensorData, isPLCConnected }) => {
                 `}
             </style>
             <div className={`rounded-2xl p-6 border shadow-xl relative ${theme === 'space' ? 'border-gray-700' : 'border-gray-200'}`} style={{
-                ...(theme === 'space' ? { background: 'linear-gradient(135deg, rgba(20,20,20,0.98) 0%, rgba(10,10,10,0.98) 100%)', backdropFilter: 'blur(25px)', boxShadow: '0 12px 40px rgba(0,0,0,0.6)' } : { background: 'rgba(255, 255, 255, 0.95)', backdropFilter: 'blur(20px)', boxShadow: '0 8px 32px rgba(0,0,0,0.25)' })
+
+                ...(theme === 'space'
+                    ? {
+                        background: 'rgba(20, 20, 20, 0.95)',
+                        backdropFilter: 'blur(25px)',
+                        WebkitBackdropFilter: 'blur(25px)',
+                        boxShadow: '0 12px 40px rgba(0,0,0,0.6)'
+                    }
+                    : {
+                        background: 'rgba(255, 255, 255, 0.95)',
+                        backdropFilter: 'blur(20px)',
+                        WebkitBackdropFilter: 'blur(20px)',
+                        boxShadow: '0 8px 32px rgba(0,0,0,0.25)'
+                    })
             }}>
+
 
                 {/* 토스트 알림 */}
                 {toastMessage && (
@@ -328,27 +342,103 @@ const EventMonitor = ({ sensorData, isPLCConnected }) => {
                         </div>
                     </div>
                 )}
-
                 {/* 헤더 */}
                 <div className={`rounded-xl p-6 mb-6 ${theme === 'space' ? 'bg-gradient-to-br from-purple-600/80 via-purple-700/70 to-purple-800/80 shadow-lg shadow-purple-600/30' : 'bg-gradient-to-br from-blue-500/90 via-indigo-500/80 to-blue-600/90 shadow-lg'}`}>
                     <div className="flex justify-center mb-4">
                         <h2 className="text-2xl font-bold mb-8 text-center text-white">입출차 현황 모니터링</h2>
                     </div>
 
-                    {/* 검색창 */}
-                    <div className="flex gap-2 md:gap-3 items-center">
-                        <input type="text" value={searchCarNumber} onChange={(e) => setSearchCarNumber(e.target.value)} onKeyPress={(e) => e.key === 'Enter' && searchCar()} className={`flex-1 px-2 md:px-4 py-3 md:py-2 rounded-lg border focus:ring-2 text-sm md:text-base ${theme === 'space' ? 'text-gray-200 border-gray-500/70 bg-gradient-to-br from-gray-600/80 to-gray-700/80 focus:ring-gray-500' : 'text-gray-700 border-gray-300 bg-white focus:ring-blue-300'}`} placeholder="차량번호 입력" />
-                        <button onClick={searchCar} className="px-2 md:px-4 py-3 md:py-2 rounded-lg font-medium transition-all hover:scale-105 text-sm md:text-base text-white" style={{ background: 'linear-gradient(145deg, #1a1a1a 0%, #2d2d2d 50%, #1a1a1a 100%)', border: '1px solid rgba(255, 255, 255, 0.2)', boxShadow: 'inset 0 1px 2px rgba(255,255,255,0.1), 0 4px 12px rgba(0,0,0,0.4)' }}>검색</button>
-                    </div>
+
+                {/* 검색창 */}
+                <div className="flex gap-2 md:gap-3 items-center">
+                    <input
+                        type="text"
+                        value={searchCarNumber}
+                        onChange={(e) => setSearchCarNumber(e.target.value)}
+                        onKeyPress={(e) => e.key === 'Enter' && searchCar()}
+                            className={`flex-1 min-w-0 px-2 md:px-4 py-3 md:py-2 rounded-lg border focus:ring-2 text-sm md:text-base ${theme === 'space' ? 'text-gray-200 border-gray-500/70 bg-gradient-to-br from-gray-600/80 to-gray-700/80 focus:ring-gray-500 focus:border-transparent hover:border-gray-400 focus:bg-gradient-to-br from-gray-500/80 to-gray-600/80' : 'text-gray-700 border border-gray-300 bg-white focus:ring-blue-300'}`}
+                            placeholder="차량번호 입력"
+                    />
+                    <button
+                        onClick={searchCar}
+                        className={`flex-shrink-0 px-3 md:px-4 py-3 md:py-2 rounded-lg font-medium transition-all duration-300 ease-in-out hover:scale-105 text-sm md:text-base text-white`}
+                        style={{
+                            background: 'linear-gradient(145deg, #1a1a1a 0%, #2d2d2d 50%, #1a1a1a 100%)',
+                            border: '1px solid rgba(255, 255, 255, 0.2)',
+                            boxShadow: 'inset 0 1px 2px rgba(255,255,255,0.1), inset 0 -1px 2px rgba(0,0,0,0.3), 0 4px 12px rgba(0,0,0,0.4)'
+                        }}
+                    >   
+                        검색
+                    </button>
+                </div>
+
 
                     {/* 액션 버튼들 - 모바일 */}
                     <div className="flex gap-1 sm:hidden mt-4">
-                        <button onClick={downloadExcel} className="h-6 w-16 p-0 rounded-full text-gray-800 font-bold hover:scale-105 text-xs flex items-center justify-center" style={theme === 'space' ? { background: 'linear-gradient(145deg, #e5e7eb 0%, #9ca3af 100%)', border: '1px solid rgba(156, 163, 175, 0.8)', boxShadow: 'inset 0 1px 2px rgba(255,255,255,0.7), 0 4px 12px rgba(0,0,0,0.2)' } : { background: 'rgba(255, 255, 255, 0.9)', border: '1px solid rgba(255, 255, 255, 0.3)', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)' }}>엑셀</button>
-                        <button onClick={loadAllData} className="h-6 w-16 p-0 rounded-full text-gray-800 font-medium hover:scale-105 text-xs flex items-center justify-center" style={theme === 'space' ? { background: 'linear-gradient(145deg, #e5e7eb 0%, #9ca3af 100%)', border: '1px solid rgba(156, 163, 175, 0.8)', boxShadow: 'inset 0 1px 2px rgba(255,255,255,0.7), 0 4px 12px rgba(0,0,0,0.2)' } : { background: 'rgba(255, 255, 255, 0.9)', border: '1px solid rgba(255, 255, 255, 0.3)', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)' }}>새로고침</button>
-                        {!isClient() && (
-                            <button onClick={clearAllData} className="h-6 w-16 p-0 rounded-full text-gray-800 font-bold hover:scale-105 text-xs flex items-center justify-center" style={theme === 'space' ? { background: 'linear-gradient(145deg, #e5e7eb 0%, #9ca3af 100%)', border: '1px solid rgba(156, 163, 175, 0.8)', boxShadow: 'inset 0 1px 2px rgba(255,255,255,0.7), 0 4px 12px rgba(0,0,0,0.2)' } : { background: 'rgba(255, 255, 255, 0.9)', border: '1px solid rgba(255, 255, 255, 0.3)', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)' }}>초기화</button>
-                        )}
-                    </div>
+
+                    <button 
+                        onClick={downloadExcel} 
+                        className="h-6 w-16 min-h-0 min-w-0 p-0 m-0 rounded-full text-gray-800 font-bold transition-all duration-200 hover:scale-105 text-xs leading-none flex items-center justify-center"
+                        style={theme === 'space' ? {
+                            background: 'linear-gradient(145deg, #e5e7eb 0%, #d1d5db 40%, #9ca3af 100%)',
+                            border: '1px solid rgba(156, 163, 175, 0.8)',
+                            boxShadow: 'inset 0 1px 2px rgba(255,255,255,0.7), inset 0 -1px 2px rgba(0,0,0,0.15), 0 4px 12px rgba(0,0,0,0.2)'
+                        } : {
+                            background: 'rgba(255, 255, 255, 0.9)',
+                            backdropFilter: 'blur(10px)',
+                            WebkitBackdropFilter: 'blur(10px)',
+                            border: '1px solid rgba(255, 255, 255, 0.3)',
+                            boxShadow: '0 2px 8px 0 rgba(0, 0, 0, 0.1)'
+                        }}
+                    >
+                        엑셀
+                    </button>
+                    <button 
+                        onClick={() => {
+                            // 데이터 새로고침
+                            const stored = localStorage.getItem(STORAGE_KEY);
+                            if (stored) {
+                                const events = JSON.parse(stored);
+                                setRecentEvents(events);
+                                updateStatistics(events);
+                                const exited = events.filter(e => e.구분 === '출차');
+                                setExitedCars(exited);
+                            }
+                            showToast(' 데이터 새로고침 완료');
+                        }} 
+                        className="h-6 w-16 min-h-0 min-w-0 p-0 m-0 rounded-full text-gray-800 font-bold transition-all duration-200 hover:scale-105 text-xs leading-none flex items-center justify-center"
+                        style={theme === 'space' ? {
+                            background: 'linear-gradient(145deg, #e5e7eb 0%, #d1d5db 40%, #9ca3af 100%)',
+                            border: '1px solid rgba(156, 163, 175, 0.8)',
+                            boxShadow: 'inset 0 1px 2px rgba(255,255,255,0.7), inset 0 -1px 2px rgba(0,0,0,0.15), 0 4px 12px rgba(0,0,0,0.2)'
+                        } : {
+                            background: 'rgba(255, 255, 255, 0.9)',
+                            backdropFilter: 'blur(10px)',
+                            WebkitBackdropFilter: 'blur(10px)',
+                            border: '1px solid rgba(255, 255, 255, 0.3)',
+                            boxShadow: '0 2px 8px 0 rgba(0, 0, 0, 0.1)'
+                        }}
+                    >
+                        새로고침
+                    </button>
+                    <button 
+                        onClick={clearAllData} 
+                        className="h-6 w-16 min-h-0 min-w-0 p-0 m-0 rounded-full text-gray-800 font-bold transition-all duration-200 hover:scale-105 text-xs leading-none flex items-center justify-center"
+                        style={theme === 'space' ? {
+                            background: 'linear-gradient(145deg, #e5e7eb 0%, #d1d5db 40%, #9ca3af 100%)',
+                            border: '1px solid rgba(156, 163, 175, 0.8)',
+                            boxShadow: 'inset 0 1px 2px rgba(255,255,255,0.7), inset 0 -1px 2px rgba(0,0,0,0.15), 0 4px 12px rgba(0,0,0,0.2)'
+                        } : {
+                            background: 'rgba(255, 255, 255, 0.9)',
+                            backdropFilter: 'blur(10px)',
+                            WebkitBackdropFilter: 'blur(10px)',
+                            border: '1px solid rgba(255, 255, 255, 0.3)',
+                            boxShadow: '0 2px 8px 0 rgba(0, 0, 0, 0.1)'
+                        }}
+                    >
+                        초기화
+                    </button>
+                </div>
 
                     {/* 액션 버튼들 - 데스크탑 */}
                     <div className="hidden sm:flex gap-3 mt-4">

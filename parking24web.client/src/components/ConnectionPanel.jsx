@@ -46,7 +46,7 @@ const ConnectionPanel = ({
         switch (theme) {
             case 'space':
                 return {
-                    background: 'rgba(17, 24, 39, 0.9)',
+                    background: 'rgba(20, 20, 20, 0.95)',
                     backdropFilter: 'blur(25px)',
                     WebkitBackdropFilter: 'blur(25px)',
                 };

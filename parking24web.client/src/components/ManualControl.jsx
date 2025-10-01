@@ -2,7 +2,7 @@
 // config import - 빌드별로 변경 (sokcho1Config 또는 sokcho2Config)
 import siteConfig from '../../config/sokcho1Config.js';
 // SignalR 서비스 import
-import signalRService from '../Services/signalrService.js';
+import signalRService from '../services/signalrService.js';
 import { useTheme } from '../contexts/ThemeContext';
 
 const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMenuOpen }) => {
@@ -13,9 +13,63 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
     const [activeTab, setActiveTab] = useState('page1');
     const [showSensors, setShowSensors] = useState(true);
     const [sensorStates, setSensorStates] = useState({});
+    const [scrollY, setScrollY] = useState(0);
 
 
     const currentConfig = siteConfig;
+
+    // 센서 패널 위치 조정을 위한 useEffect
+    useEffect(() => {
+        const updatePanelPosition = () => {
+            const scrollY = window.scrollY || document.documentElement.scrollTop || document.body.scrollTop || 0;
+            setScrollY(scrollY);
+            
+            console.log('현재 스크롤 위치:', scrollY);
+            
+            // 센서 패널들의 위치를 스크롤에 따라 조정
+            const leftPanel = document.querySelector('.sensor-panel-left');
+            const rightPanel = document.querySelector('.sensor-panel-right');
+            
+            if (leftPanel && rightPanel) {
+                // 화면 크기에 따라 스크롤 감도와 기본 위치 조정
+                const isTablet = window.innerWidth >= 768 && window.innerWidth <= 1400;
+                const scrollSensitivity = isTablet ? 0.5 : 1.0; // 태블릿에서는 움직임 폭을 줄임
+                const basePosition = isTablet ? 58 : 38; // 태블릿은 55%, PC는 35%에서 시작
+                const scrollOffset = scrollY * scrollSensitivity;
+                
+                leftPanel.style.top = `calc(${basePosition}% + ${scrollOffset}px)`;
+                rightPanel.style.top = `calc(${basePosition}% + ${scrollOffset}px)`;
+                
+                console.log('패널 위치 조정 완료:', scrollOffset, '감도:', scrollSensitivity, '기본위치:', basePosition);
+            } else {
+                console.log('패널을 찾을 수 없음');
+            }
+        };
+
+        // 즉시 실행
+        updatePanelPosition();
+        
+        // 스크롤 이벤트 리스너
+        const handleScroll = () => {
+            console.log('스크롤 이벤트 감지됨!');
+            updatePanelPosition();
+        };
+
+        // 다양한 이벤트에 등록
+        window.addEventListener('scroll', handleScroll, { passive: true });
+        document.addEventListener('scroll', handleScroll, { passive: true });
+        document.body.addEventListener('scroll', handleScroll, { passive: true });
+        
+        // 마우스 휠 이벤트도 추가
+        window.addEventListener('wheel', handleScroll, { passive: true });
+        
+        return () => {
+            window.removeEventListener('scroll', handleScroll);
+            document.removeEventListener('scroll', handleScroll);
+            document.body.removeEventListener('scroll', handleScroll);
+            window.removeEventListener('wheel', handleScroll);
+        };
+    }, [showSensors]);
 
     // 태블릿 모드에서 햄버거 메뉴가 열리면 센서 패널 숨기기
     useEffect(() => {
@@ -507,7 +561,7 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
                     max-width: none;
                 }
 
-                @media (min-width: 768px) and (max-width: 1023px) {
+                @media (min-width: 768px) and (max-width: 1400px) {
                     .common-buttons-grid {
                         display: grid;
                         grid-template-columns: 1fr 1fr;
@@ -543,15 +597,15 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
                 
                 .sensor-panel-right {
                     position: fixed;
-                    top: 55%;
+                    top: 38%;
                     right: -300px;
                     width: 300px;
-                    height: 85vh;
+                    height: 70vh;
                     transform: translateY(-50%);
                     background: #f8fafc;
                     border: 1px solid #e2e8f0;
                     box-shadow: -5px 0 20px rgba(0, 0, 0, 0.1);
-                    transition: right 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+                    transition: right 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55), top 0.3s ease-out;
                     z-index: 1000;
                     overflow-y: auto;
                     padding: 20px;
@@ -568,12 +622,21 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
                     -webkit-backdrop-filter: blur(25px);
                 }
                 
-                @media (min-width: 768px) and (max-width: 1024px) {
+                @media (min-width: 768px) and (max-width: 1199px) {
                     .sensor-panel-right {
-                        width: 200px;
-                        height: 60vh;
+                        width: 220px;
+                        height: 45vh;
                         padding: 12px;
-                        top: 63%;
+                        top: 62%;
+                    }
+                }
+                
+                @media (min-width: 1200px) and (max-width: 1400px) {
+                    .sensor-panel-right {
+                        width: 250px;
+                        height: 50vh;
+                        padding: 14px;
+                        top: 62%;
                     }
                 }
                 
@@ -611,15 +674,15 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
                 
                 .sensor-panel-left {
                     position: fixed;
-                    top: 55%; 
+                    top: 60%; 
                     left: -300px;
                     width: 300px;
-                    height: 85vh;
+                    height: 70vh;
                     transform: translateY(-50%);
                     background: #f8fafc;
                     border: 1px solid #e2e8f0;
                     box-shadow: 5px 0 20px rgba(0, 0, 0, 0.1);
-                    transition: left 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+                    transition: left 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55), top 0.3s ease-out;
                     z-index: 1000;
                     overflow-y: auto;
                     padding: 20px;
@@ -636,12 +699,21 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
                     -webkit-backdrop-filter: blur(25px);
                 }
                 
-                @media (min-width: 768px) and (max-width: 1024px) {
+                @media (min-width: 768px) and (max-width: 1199px) {
                     .sensor-panel-left {
-                        width: 200px;
-                        height: 60vh;
+                        width: 220px;
+                        height: 45vh;
                         padding: 12px;
-                        top: 63%;
+                        top: 62%;
+                    }
+                }
+                
+                @media (min-width: 1200px) and (max-width: 1400px) {
+                    .sensor-panel-left {
+                        width: 250px;
+                        height: 50vh;
+                        padding: 14px;
+                        top: 62%;
                     }
                 }
                 
@@ -1018,6 +1090,48 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
                 @media (max-width: 768px) {
                     .tab-navigation {
                         margin: 20px 0 20px 0;
+                    }
+                }
+
+                @media (min-width: 768px) and (max-width: 1199px) {
+                    .sensor-item {
+                        padding: 12px;
+                        margin-bottom: 12px;
+                        border-radius: 16px;
+                        height: 48px;
+                        min-height: 48px;
+                        max-height: 48px;
+                    }
+                    
+                    .sensor-code {
+                        font-size: 0.85rem;
+                        min-width: 42px;
+                    }
+                    
+                    .sensor-name {
+                        font-size: 0.7rem;
+                        line-height: 1.2;
+                    }
+                }
+                
+                @media (min-width: 1200px) and (max-width: 1400px) {
+                    .sensor-item {
+                        padding: 16px;
+                        margin-bottom: 16px;
+                        border-radius: 20px;
+                        height: 56px;
+                        min-height: 56px;
+                        max-height: 56px;
+                    }
+                    
+                    .sensor-code {
+                        font-size: 1rem;
+                        min-width: 50px;
+                    }
+                    
+                    .sensor-name {
+                        font-size: 0.85rem;
+                        line-height: 1.3;
                     }
                 }
 

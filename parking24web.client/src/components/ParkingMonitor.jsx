@@ -353,7 +353,7 @@ const ParkingMonitor = ({ sensorData, isPLCConnected, onVehicleEdit, theme }) =>
             `}</style>
             <div className={`rounded-2xl p-3 md:p-4 border shadow-xl ${theme === 'space' ? 'border-white/20 shadow-black/20' : 'border-gray-300 shadow-gray-200'}`} style={{
             ...(theme === 'space' ? {
-                background: 'linear-gradient(135deg, rgba(10, 10, 10, 1) 0%, rgba(5, 5, 5, 1) 100%)',
+                background: 'rgba(20, 20, 20, 0.95)',
                 backdropFilter: 'blur(25px)',
                 WebkitBackdropFilter: 'blur(25px)',
             } : {

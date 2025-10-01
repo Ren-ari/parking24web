@@ -399,7 +399,6 @@ const SensorMonitor = ({ sensorData, isPLCConnected }) => {
     };
 
     return (
-
         <div className={`rounded-2xl p-3 md:p-4 overflow-hidden border shadow-xl shadow-black/20 ${theme === 'space' ? 'border-purple-500/30' : 'border-white/20'}`} style={getMainBackgroundStyle()}>
             <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-6 md:mb-4 space-y-2 md:space-y-0">
                 <h2 className={`text-base md:text-lg font-bold mb-2 md:mb-0 ${getTitleGradient()}`}>
@@ -597,20 +596,15 @@ const SensorMonitor = ({ sensorData, isPLCConnected }) => {
 
             {/* PLC 체크리스트 */}
             {showPLCChecklist && (
-                <div className={`mb-6 p-6 rounded-2xl shadow-2xl transform transition-all duration-700 ease-in-out ${theme === 'space' ? 'border-purple-500/30' : theme === 'dark' ? 'bg-gradient-to-br from-gray-800/80 to-gray-900/80 border-gray-600/30' : theme === 'ocean' ? 'bg-gradient-to-br from-blue-900/80 to-cyan-900/80 border-blue-500/30' : 'bg-gradient-to-br from-white to-gray-50 border-gray-200'}`} style={theme === 'space' ? {
+                <div className={`mb-6 p-3 md:p-6 rounded-2xl shadow-2xl transform transition-all duration-700 ease-in-out ${theme === 'space' ? 'border-purple-500/30' : theme === 'dark' ? 'bg-gradient-to-br from-gray-800/80 to-gray-900/80 border-gray-600/30' : theme === 'ocean' ? 'bg-gradient-to-br from-blue-900/80 to-cyan-900/80 border-blue-500/30' : 'bg-gradient-to-br from-white to-gray-50 border-gray-200'}`} style={theme === 'space' ? {
                     background: 'linear-gradient(145deg, #e5e7eb 0%, #d1d5db 40%, #9ca3af 100%)',
                     backdropFilter: 'blur(15px)',
                     WebkitBackdropFilter: 'blur(15px)',
                     border: '1px solid rgba(156, 163, 175, 0.8)',
                     boxShadow: 'inset 0 2px 4px rgba(255,255,255,0.7), inset 0 -2px 4px rgba(0,0,0,0.15), 0 8px 24px rgba(0,0,0,0.2)'
                 } : {}}>
-                    <div className="mb-4 flex items-center space-x-2">
-                        <div className={`animate-pulse w-3 h-3 rounded-full ${theme === 'space' ? 'bg-purple-500' : theme === 'dark' ? 'bg-green-500' : theme === 'ocean' ? 'bg-blue-500' : 'bg-green-500'}`}></div>
-                        <div className={`font-bold text-lg ${theme === 'space' ? 'text-gray-800' : theme === 'dark' ? 'text-gray-200' : theme === 'ocean' ? 'text-blue-200' : 'text-gray-800'}`}>속초 1호기 PLC 체크리스트 (C060~C072)</div>
-                        <div className="flex space-x-1">
-                            <div className={`w-2 h-2 rounded-full animate-ping ${theme === 'space' ? 'bg-purple-400' : theme === 'dark' ? 'bg-green-400' : theme === 'ocean' ? 'bg-blue-400' : 'bg-green-400'}`}></div>
-                            <div className={`w-2 h-2 rounded-full animate-ping ${theme === 'space' ? 'bg-purple-300' : theme === 'dark' ? 'bg-indigo-500' : theme === 'ocean' ? 'bg-cyan-400' : 'bg-indigo-500'}`} style={{ animationDelay: '200ms' }}></div>
-                        </div>
+                    <div className="mb-4">
+                        <div className={`font-bold text-lg ${theme === 'space' ? 'text-purple-400' : theme === 'dark' ? 'text-gray-200' : theme === 'ocean' ? 'text-blue-200' : 'text-gray-800'}`}>속초 1호기 PLC 체크리스트 (C060~C072)</div>
                     </div>
 
                     <div className={`rounded-xl overflow-hidden shadow-lg ${theme === 'space' ? 'bg-gradient-to-br from-purple-700/60 via-purple-800/50 to-purple-900/60 border-purple-500/30 shadow-xl shadow-purple-500/20' : theme === 'dark' ? 'bg-gradient-to-br from-gray-700/60 via-gray-800/50 to-gray-900/60 border-gray-600/30 shadow-xl shadow-gray-500/20' : theme === 'ocean' ? 'bg-gradient-to-br from-blue-700/60 via-blue-800/50 to-blue-900/60 border-blue-500/30 shadow-xl shadow-blue-500/20' : 'bg-gradient-to-br from-gray-100 to-gray-200 border-gray-200 shadow-xl shadow-gray-500/10'}`}>
