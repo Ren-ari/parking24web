@@ -14,7 +14,7 @@ export const sokcho1Config = {
             {
                 unit: 1,
                 name: "1호기",
-                ip: "192.168.0.101",
+                ip: "192.168.1.2",
                 port: 2005
             }
         ]
@@ -413,7 +413,8 @@ export const sokcho1Config = {
     },
 
     api: {
-        baseUrl: 'http://localhost:5123',
+        baseUrl: '',
+        devPort: 5123,
         endpoints: {
             recent: '/api/parkingevents/recent',
             parked: '/api/parkingevents/parked',

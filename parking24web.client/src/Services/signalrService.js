@@ -27,8 +27,7 @@ class SignalRService {
 
                 // 개발환경 감지 (포트 5173은 Vite 개발서버)
                 if (currentHost.includes(':5173')) {
-                    const configUrl = new URL(siteConfig.api.baseUrl);
-                    const signalRPort = configUrl.port || '5123';
+                    const signalRPort = siteConfig.api.devPort || '5123';
                     return `${currentProtocol}//localhost:${signalRPort}/plcHub`;
                 }
 

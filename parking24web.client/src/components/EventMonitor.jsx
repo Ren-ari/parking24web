@@ -1,17 +1,22 @@
-
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import sokcho1Config from '../../config/sokcho1Config.js';
+import siteConfig from '../../config/sokcho1Config.js';
 import { useTheme } from '../contexts/ThemeContext';
+import { useAuth } from '../hooks/useAuth';
+import signalRService from '../services/SignalRService';
 
 const EventMonitor = ({ sensorData, isPLCConnected }) => {
     console.log('EventMonitor 렌더링됨:', { sensorData, isPLCConnected });
 
     const { theme } = useTheme();
+    const { isClient } = useAuth();
+    const [showConnectionButtons, setShowConnectionButtons] = useState(false);
     const [activeTab, setActiveTab] = useState('recent');
     const [recentEvents, setRecentEvents] = useState([]);
     const [currentParked, setCurrentParked] = useState([]);
     const [exitedCars, setExitedCars] = useState([]);
     const [searchCarNumber, setSearchCarNumber] = useState('');
+    const [searchResults, setSearchResults] = useState([]);
+    const [isSearchResultExpanded, setIsSearchResultExpanded] = useState(false);
     const [toastMessage, setToastMessage] = useState('');
     const [isStatisticsExpanded, setIsStatisticsExpanded] = useState(true);
     const [isStatisticsAnimatingOut, setIsStatisticsAnimatingOut] = useState(false);
@@ -24,6 +29,18 @@ const EventMonitor = ({ sensorData, isPLCConnected }) => {
     });
     const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
 
+    // 날짜 범위 계산
+    const getDateRanges = () => {
+        const now = new Date();
+        const today = now.toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' });
+        const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' });
+        const monthEnd = now.toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' });
+
+        return { today, monthStart, monthEnd };
+    };
+
+    const dateRanges = getDateRanges();
+
     // 토스트 알림 표시
     const showToast = useCallback((message) => {
         setToastMessage(message);
@@ -32,18 +49,17 @@ const EventMonitor = ({ sensorData, isPLCConnected }) => {
     // 토스트 메시지 타이머 관리
     useEffect(() => {
         if (!toastMessage) return;
-
-        const timer = setTimeout(() => {
-            setToastMessage('');
-        }, 3000);
-
+        const timer = setTimeout(() => setToastMessage(''), 3000);
         return () => clearTimeout(timer);
     }, [toastMessage]);
 
     // API 호출 함수들
     const fetchRecentEvents = async () => {
         try {
-            const response = await fetch(`${sokcho1Config.api.baseUrl}${sokcho1Config.api.endpoints.recent}`);
+            const apiBaseUrl = window.location.host.includes(':5173')
+                ? `http://localhost:${siteConfig.api.devPort}`
+                : siteConfig.api.baseUrl;
+            const response = await fetch(`${apiBaseUrl}${siteConfig.api.endpoints.recent}`);
             const data = await response.json();
 
             const formattedEvents = data.map(event => ({
@@ -56,7 +72,6 @@ const EventMonitor = ({ sensorData, isPLCConnected }) => {
             }));
 
             setRecentEvents(formattedEvents);
-
             const exited = formattedEvents.filter(e => e.구분 === '출차');
             setExitedCars(exited);
         } catch (error) {
@@ -66,7 +81,10 @@ const EventMonitor = ({ sensorData, isPLCConnected }) => {
 
     const fetchParkedVehicles = async () => {
         try {
-            const response = await fetch(`${sokcho1Config.api.baseUrl}${sokcho1Config.api.endpoints.parked}`);
+            const apiBaseUrl = window.location.host.includes(':5173')
+                ? `http://localhost:${siteConfig.api.devPort}`
+                : siteConfig.api.baseUrl;
+            const response = await fetch(`${apiBaseUrl}${siteConfig.api.endpoints.parked}`);
             const data = await response.json();
 
             const formattedParked = data.map(vehicle => ({
@@ -85,7 +103,10 @@ const EventMonitor = ({ sensorData, isPLCConnected }) => {
 
     const fetchStatistics = async () => {
         try {
-            const response = await fetch(`${sokcho1Config.api.baseUrl}${sokcho1Config.api.endpoints.statistics}`);
+            const apiBaseUrl = window.location.host.includes(':5173')
+                ? `http://localhost:${siteConfig.api.devPort}`
+                : siteConfig.api.baseUrl;
+            const response = await fetch(`${apiBaseUrl}${siteConfig.api.endpoints.statistics}`);
             const data = await response.json();
             setStatistics(data);
         } catch (error) {
@@ -93,35 +114,83 @@ const EventMonitor = ({ sensorData, isPLCConnected }) => {
         }
     };
 
-    // 차량 검색 (API 연동)
     const searchCar = async () => {
         if (!searchCarNumber) {
-            alert('차량번호를 입력하세요');
+            showToast('⚠️ 차량번호를 입력하세요');
             return;
         }
 
         try {
-            const response = await fetch(`${sokcho1Config.api.baseUrl}${sokcho1Config.api.endpoints.search}/${searchCarNumber}`);
-            const result = await response.json();
+            const apiBaseUrl = window.location.host.includes(':5173')
+                ? `http://localhost:${siteConfig.api.devPort}`
+                : siteConfig.api.baseUrl;
 
-            if (result.found) {
-                alert(result.message);
+            // 1. 과거 이벤트 검색
+            const eventsResponse = await fetch(`${apiBaseUrl}${siteConfig.api.endpoints.search}/${searchCarNumber}`);
+            const eventsData = await eventsResponse.json();
+            console.log('📜 DB 이벤트 데이터:', eventsData);
+            console.log('📜 events 배열:', eventsData.events);
+            console.log('📜 events 길이:', eventsData.events?.length);
+
+            // 2. 현재 주차중 차량 검색
+            const parkedResponse = await fetch(`${apiBaseUrl}${siteConfig.api.endpoints.parked}`);
+            const parkedData = await parkedResponse.json();
+            console.log('🔍 검색 차량번호:', searchCarNumber, '(타입:', typeof searchCarNumber, ')');
+            console.log('📦 주차중 데이터:', parkedData);
+            const currentParked = parkedData.filter(v => {
+                console.log(`  비교: ${v.carNumber} (${typeof v.carNumber}) === ${searchCarNumber} (${typeof searchCarNumber})`);
+                return v.carNumber === searchCarNumber;
+            });
+            console.log('✅ 검색 결과:', currentParked);
+
+            // 3. 결과 합치기
+            const allResults = [];
+
+            // 현재 주차중이면 맨 위에 추가
+            if (currentParked.length > 0) {
+                currentParked.forEach(vehicle => {
+                    allResults.push({
+                        시간: new Date().toLocaleTimeString('ko-KR'),
+                        날짜: new Date().toLocaleDateString('ko-KR'),
+                        구분: '주차중',
+                        차판: vehicle.slotNumber,
+                        차번: vehicle.carNumber
+                    });
+                });
+            }
+
+            // 과거 이벤트 추가 (배열 처리)
+            if (eventsData && eventsData.found && eventsData.events) {
+                eventsData.events.forEach(event => {
+                    allResults.push({
+                        시간: new Date(event.timestamp).toLocaleTimeString('ko-KR'),
+                        날짜: new Date(event.timestamp).toLocaleDateString('ko-KR'),
+                        구분: event.eventType,
+                        차판: event.slotNumber || '-',
+                        차번: event.carNumber
+                    });
+                });
+            }
+
+            if (allResults.length > 0) {
+                setSearchResults(allResults);
+                setIsSearchResultExpanded(true);
+                showToast(`🔍 ${searchCarNumber}번 차량 ${allResults.length}건 검색 완료`);
             } else {
-                alert('해당 차량을 찾을 수 없습니다');
+                setSearchResults([]);
+                showToast('⚠️ 해당 차량을 찾을 수 없습니다');
             }
         } catch (error) {
             console.error('차량 검색 실패:', error);
-            alert('검색 중 오류가 발생했습니다');
+            showToast('❌ 검색 중 오류가 발생했습니다');
         }
     };
 
     // 엑셀 다운로드
     const downloadExcel = () => {
-        const BOM = '\uFEFF'; // UTF-8 BOM for Korean
+        const BOM = '\uFEFF';
         const csvContent = BOM + "시간,날짜,구분,차판번호,차량번호,슬롯\n" +
-            recentEvents.map(e =>
-                `${e.시간},${e.날짜},${e.구분},${e.차판},${e.차번},${e.슬롯}`
-            ).join('\n');
+            recentEvents.map(e => `${e.시간},${e.날짜},${e.구분},${e.차판},${e.차번},${e.슬롯}`).join('\n');
 
         const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
         const url = URL.createObjectURL(blob);
@@ -129,81 +198,71 @@ const EventMonitor = ({ sensorData, isPLCConnected }) => {
         a.href = url;
         a.download = `입출차현황_${new Date().toLocaleDateString('ko-KR').replace(/\./g, '-')}.csv`;
         a.click();
-
         showToast('📊 엑셀 다운로드 완료!');
     };
 
-    // 초기 데이터 로드 및 주기적 업데이트
-    useEffect(() => {
-        const loadAllData = async () => {
-            await Promise.all([
-                fetchRecentEvents(),
-                fetchParkedVehicles(),
-                fetchStatistics()
-            ]);
-        };
-
-        loadAllData();
-
-        // 30초마다 데이터 새로고침
-        const interval = setInterval(loadAllData, 30000);
-        return () => clearInterval(interval);
+    // loadAllData를 useCallback으로 정의
+    const loadAllData = useCallback(async () => {
+        await Promise.all([fetchRecentEvents(), fetchParkedVehicles(), fetchStatistics()]);
     }, []);
 
-    // 데이터 새로고침
-    const refreshData = async () => {
-        await Promise.all([
-            fetchRecentEvents(),
-            fetchParkedVehicles(),
-            fetchStatistics()
-        ]);
-        showToast('🔄 데이터 새로고침 완료');
-    };
+    // 초기 데이터 로드 및 주기적 업데이트
+    useEffect(() => {
+        loadAllData();
+        const interval = setInterval(loadAllData, 30000);
+        return () => clearInterval(interval);
+    }, [loadAllData]);
 
-    // 데이터 초기화 (DB 초기화는 서버에서 처리해야 함)
+    // PLC 연결 완료 시 데이터 다시 로드
+    useEffect(() => {
+        if (isPLCConnected && isClient()) {
+            console.log('PLC 연결 완료 - 1초 후 데이터 로드');
+            setTimeout(() => {
+                loadAllData();
+            }, 1000);
+        }
+    }, [isPLCConnected]);
+
+    // CLIENT 자동연결 로직
+    useEffect(() => {
+        if (!isClient()) return;
+        if (isPLCConnected) return;
+        const buttons = siteConfig.connectionConfig.buttons;
+        if (buttons.length === 1) {
+            console.log('CLIENT 자동연결 시작:', buttons[0].name);
+            signalRService.connectToPLC(buttons[0].ip, buttons[0].port).catch(err => console.error('자동연결 실패:', err));
+        } else if (buttons.length > 1) {
+            setShowConnectionButtons(true);
+        }
+    }, [isClient]);
+
+    // 데이터 초기화 (ADMIN만)
     const clearAllData = () => {
-        alert('⚠️ 데이터 초기화는 서버 관리자만 가능합니다.');
+        showToast('⚠️ 데이터 초기화는 서버 관리자만 가능합니다.');
     };
 
     // 정렬 함수
     const handleSort = (key) => {
         let direction = 'asc';
-        if (sortConfig.key === key && sortConfig.direction === 'asc') {
-            direction = 'desc';
-        }
+        if (sortConfig.key === key && sortConfig.direction === 'asc') direction = 'desc';
         setSortConfig({ key, direction });
     };
 
-    // 데이터 정렬 함수
+    // 데이터 정렬
     const sortData = (data) => {
         if (!sortConfig.key) return data;
-
         return [...data].sort((a, b) => {
             let aValue = a[sortConfig.key];
             let bValue = b[sortConfig.key];
-
-            // 시간 정렬을 위한 특별 처리
             if (sortConfig.key === '시간') {
                 aValue = new Date(`2000-01-01 ${aValue}`);
                 bValue = new Date(`2000-01-01 ${bValue}`);
-            }
-            // 층 정렬을 위한 숫자 변환
-            else if (sortConfig.key === '층') {
+            } else if (sortConfig.key === '차판' || sortConfig.key === '차번') {
                 aValue = parseInt(aValue) || 0;
                 bValue = parseInt(bValue) || 0;
             }
-            // 차량번호 정렬을 위한 숫자 변환
-            else if (sortConfig.key === '차번') {
-                aValue = parseInt(aValue) || 0;
-                bValue = parseInt(bValue) || 0;
-            }
-
-            if (aValue < bValue) {
-                return sortConfig.direction === 'asc' ? -1 : 1;
-            }
-            if (aValue > bValue) {
-                return sortConfig.direction === 'asc' ? 1 : -1;
-            }
+            if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1;
+            if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1;
             return 0;
         });
     };
@@ -212,17 +271,10 @@ const EventMonitor = ({ sensorData, isPLCConnected }) => {
     const getTabData = () => {
         let data = [];
         switch (activeTab) {
-            case 'recent':
-                data = recentEvents;
-                break;
-            case 'parked':
-                data = currentParked;
-                break;
-            case 'exited':
-                data = exitedCars;
-                break;
-            default:
-                data = [];
+            case 'recent': data = recentEvents; break;
+            case 'parked': data = currentParked; break;
+            case 'exited': data = exitedCars; break;
+            default: data = [];
         }
         return sortData(data);
     };
@@ -242,91 +294,17 @@ const EventMonitor = ({ sensorData, isPLCConnected }) => {
         <>
             <style>
                 {`
-                    @keyframes slideInFromTop {
-                        0% {
-                            transform: translateY(-100px);
-                            opacity: 0;
-                        }
-                        100% {
-                            transform: translateY(0);
-                            opacity: 1;
-                        }
-                    }
-                    
-                    @keyframes slideInFromLeft {
-                        0% {
-                            transform: translateX(-100px);
-                            opacity: 0;
-                        }
-                        100% {
-                            transform: translateX(0);
-                            opacity: 1;
-                        }
-                    }
-                    
-                    @keyframes slideInFromRight {
-                        0% {
-                            transform: translateX(100px);
-                            opacity: 0;
-                        }
-                        100% {
-                            transform: translateX(0);
-                            opacity: 1;
-                        }
-                    }
-                    
-                    @keyframes zoomIn {
-                        0% {
-                            transform: scale(0.5);
-                            opacity: 0;
-                        }
-                        100% {
-                            transform: scale(1);
-                            opacity: 1;
-                        }
-                    }
-                    
-                    @keyframes bounceIn {
-                        0% {
-                            transform: scale(0.3);
-                            opacity: 0;
-                        }
-                        50% {
-                            transform: scale(1.1);
-                            opacity: 1;
-                        }
-                        100% {
-                            transform: scale(1);
-                            opacity: 1;
-                        }
-                    }
-                    
-                    @keyframes zoomInBounce {
-                        0% {
-                            transform: scale(0);
-                            opacity: 0;
-                        }
-                        50% {
-                            transform: scale(1.2);
-                            opacity: 1;
-                        }
-                        100% {
-                            transform: scale(1);
-                            opacity: 1;
-                        }
-                    }
-                    
-                    @keyframes progressFill {
-                        0% {
-                            width: 0%;
-                        }
-                        100% {
-                            width: var(--target-width);
-                        }
-                    }
+                    @keyframes slideInFromTop { 0% { transform: translateY(-100px); opacity: 0; } 100% { transform: translateY(0); opacity: 1; } }
+                    @keyframes slideInFromLeft { 0% { transform: translateX(-100px); opacity: 0; } 100% { transform: translateX(0); opacity: 1; } }
+                    @keyframes slideInFromRight { 0% { transform: translateX(100px); opacity: 0; } 100% { transform: translateX(0); opacity: 1; } }
+                    @keyframes zoomIn { 0% { transform: scale(0.5); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+                    @keyframes bounceIn { 0% { transform: scale(0.3); opacity: 0; } 50% { transform: scale(1.1); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
+                    @keyframes zoomInBounce { 0% { transform: scale(0); opacity: 0; } 50% { transform: scale(1.2); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
+                    @keyframes progressFill { 0% { width: 0%; } 100% { width: var(--target-width); } }
                 `}
             </style>
             <div className={`rounded-2xl p-6 border shadow-xl relative ${theme === 'space' ? 'border-gray-700' : 'border-gray-200'}`} style={{
+
                 ...(theme === 'space'
                     ? {
                         background: 'rgba(20, 20, 20, 0.95)',
@@ -341,23 +319,34 @@ const EventMonitor = ({ sensorData, isPLCConnected }) => {
                         boxShadow: '0 8px 32px rgba(0,0,0,0.25)'
                     })
             }}>
-            {/* 토스트 알림 */}
-            {toastMessage && (
-                <div className="absolute top-4 right-4 px-4 py-2 rounded-lg shadow-lg z-50 animate-pulse" style={{
-                    background: 'linear-gradient(135deg, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.6) 100%)',
-                    backdropFilter: 'blur(10px)',
-                    WebkitBackdropFilter: 'blur(10px)',
-                    border: '1px solid rgba(255, 255, 255, 0.18)'
-                }}>
-                    <span className="text-white text-sm font-medium">{toastMessage}</span>
-                </div>
-            )}
 
-            {/* 헤더 */}
-            <div className={`rounded-xl p-6 mb-6 ${theme === 'space' ? 'bg-gradient-to-br from-purple-600/80 via-purple-700/70 to-purple-800/80 border-purple-500/90 shadow-lg shadow-purple-600/30' : 'bg-gradient-to-br from-blue-500/90 via-indigo-500/80 to-blue-600/90 border-blue-200/50 shadow-lg'}`}>
-                <div className="flex justify-center mb-2">
-                    <h2 className={`text-lg font-bold mb-4 text-center ${theme === 'space' ? 'text-white' : 'text-white'}`}>입출차 현황 모니터링</h2>
-                </div>
+
+                {/* 토스트 알림 */}
+                {toastMessage && (
+                    <div className="absolute top-4 right-4 px-4 py-2 rounded-lg shadow-lg z-50 animate-pulse" style={{ background: 'linear-gradient(135deg, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.6) 100%)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255, 255, 255, 0.18)' }}>
+                        <span className="text-white text-sm font-medium">{toastMessage}</span>
+                    </div>
+                )}
+
+                {/* CLIENT 연결 선택 버튼 */}
+                {showConnectionButtons && !isPLCConnected && (
+                    <div className="mb-6 p-6 bg-white/10 backdrop-blur-md rounded-2xl border border-white/20">
+                        <h3 className="text-xl font-bold mb-4 text-center text-purple-700">연결할 주차장을 선택하세요</h3>
+                        <div className="grid grid-cols-2 gap-4">
+                            {siteConfig.connectionConfig.buttons.map((button, index) => (
+                                <button key={index} onClick={() => { console.log('CLIENT 수동 연결:', button.name); signalRService.connectToPLC(button.ip, button.port).then(() => setShowConnectionButtons(false)).catch(err => console.error('연결 실패:', err)); }} className="px-6 py-4 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-xl font-bold hover:from-blue-600 hover:to-purple-600 transition-all">
+                                    {button.name}
+                                    <div className="text-xs mt-1 opacity-80">{button.ip}:{button.port}</div>
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                )}
+                {/* 헤더 */}
+                <div className={`rounded-xl p-6 mb-6 ${theme === 'space' ? 'bg-gradient-to-br from-purple-600/80 via-purple-700/70 to-purple-800/80 shadow-lg shadow-purple-600/30' : 'bg-gradient-to-br from-blue-500/90 via-indigo-500/80 to-blue-600/90 shadow-lg'}`}>
+                    <div className="flex justify-center mb-4">
+                        <h2 className="text-2xl font-bold mb-8 text-center text-white">입출차 현황 모니터링</h2>
+                    </div>
 
 
                 {/* 검색창 */}
@@ -383,8 +372,10 @@ const EventMonitor = ({ sensorData, isPLCConnected }) => {
                     </button>
                 </div>
 
-                    {/* 모바일용 액션 버튼들 */}
+
+                    {/* 액션 버튼들 - 모바일 */}
                     <div className="flex gap-1 sm:hidden mt-4">
+
                     <button 
                         onClick={downloadExcel} 
                         className="h-6 w-16 min-h-0 min-w-0 p-0 m-0 rounded-full text-gray-800 font-bold transition-all duration-200 hover:scale-105 text-xs leading-none flex items-center justify-center"
@@ -449,400 +440,180 @@ const EventMonitor = ({ sensorData, isPLCConnected }) => {
                     </button>
                 </div>
 
-                {/* 데스크탑용 액션 버튼들 */}
-                <div className="hidden sm:flex gap-3 mt-4">
-                    <button 
-                        onClick={downloadExcel} 
-                        className="px-4 py-2 rounded-full text-gray-800 font-bold transition-all duration-200 hover:scale-105 text-base"
-                        style={theme === 'space' ? {
-                            background: 'linear-gradient(145deg, #e5e7eb 0%, #d1d5db 40%, #9ca3af 100%)',
-                            border: '1px solid rgba(156, 163, 175, 0.8)',
-                            boxShadow: 'inset 0 1px 2px rgba(255,255,255,0.7), inset 0 -1px 2px rgba(0,0,0,0.15), 0 6px 16px rgba(0,0,0,0.25)',
-                            fontSize: '0.75rem',
-                            fontWeight: '700'
-                        } : {
-                            background: 'rgba(255, 255, 255, 0.9)',
-                            backdropFilter: 'blur(10px)',
-                            WebkitBackdropFilter: 'blur(10px)',
-                            border: '1px solid rgba(255, 255, 255, 0.3)',
-                            boxShadow: '0 2px 8px 0 rgba(0, 0, 0, 0.1)',
-                            fontSize: '0.75rem',
-                            fontWeight: '700'
-                        }}
-                    >
-                        엑셀 다운로드
-                    </button>
-                    <button 
-                        onClick={() => {
-                            // 데이터 새로고침
-                            const stored = localStorage.getItem(STORAGE_KEY);
-                            if (stored) {
-                                const events = JSON.parse(stored);
-                                setRecentEvents(events);
-                                updateStatistics(events);
-                                const exited = events.filter(e => e.구분 === '출차');
-                                setExitedCars(exited);
-                            }
-                            showToast(' 데이터 새로고침 완료');
-                        }} 
-                        className="px-4 py-2 rounded-full text-gray-800 font-medium transition-all duration-200 hover:scale-105 text-base"
-                        style={theme === 'space' ? {
-                            background: 'linear-gradient(145deg, #e5e7eb 0%, #d1d5db 40%, #9ca3af 100%)',
-                            border: '1px solid rgba(156, 163, 175, 0.8)',
-                            boxShadow: 'inset 0 1px 2px rgba(255,255,255,0.7), inset 0 -1px 2px rgba(0,0,0,0.15), 0 6px 16px rgba(0,0,0,0.25)',
-                            fontSize: '0.75rem',
-                            fontWeight: '500'
-                        } : {
-                            background: 'rgba(255, 255, 255, 0.9)',
-                            backdropFilter: 'blur(10px)',
-                            WebkitBackdropFilter: 'blur(10px)',
-                            border: '1px solid rgba(255, 255, 255, 0.3)',
-                            boxShadow: '0 2px 8px 0 rgba(0, 0, 0, 0.1)',
-                            fontSize: '0.75rem',
-                            fontWeight: '500'
-                        }}
-                    >
-                        새로고침
-                    </button>
-                    <button 
-                        onClick={clearAllData} 
-                        className="px-4 py-2 rounded-full text-gray-800 font-bold transition-all duration-200 hover:scale-105 text-base"
-                        style={theme === 'space' ? {
-                            background: 'linear-gradient(145deg, #e5e7eb 0%, #d1d5db 40%, #9ca3af 100%)',
-                            border: '1px solid rgba(156, 163, 175, 0.8)',
-                            boxShadow: 'inset 0 1px 2px rgba(255,255,255,0.7), inset 0 -1px 2px rgba(0,0,0,0.15), 0 6px 16px rgba(0,0,0,0.25)',
-                            fontSize: '0.75rem',
-                            fontWeight: '700'
-                        } : {
-                            background: 'rgba(255, 255, 255, 0.9)',
-                            backdropFilter: 'blur(10px)',
-                            WebkitBackdropFilter: 'blur(10px)',
-                            border: '1px solid rgba(255, 255, 255, 0.3)',
-                            boxShadow: '0 2px 8px 0 rgba(0, 0, 0, 0.1)',
-                            fontSize: '0.75rem',
-                            fontWeight: '700'
-                        }}
-                    >
-                        데이터 초기화
-                    </button>
+                    {/* 액션 버튼들 - 데스크탑 */}
+                    <div className="hidden sm:flex gap-3 mt-4">
+                        <button onClick={downloadExcel} className="px-4 py-2 rounded-full text-gray-800 font-bold hover:scale-105" style={theme === 'space' ? { background: 'linear-gradient(145deg, #e5e7eb 0%, #9ca3af 100%)', border: '1px solid rgba(156, 163, 175, 0.8)', boxShadow: 'inset 0 1px 2px rgba(255,255,255,0.7), 0 6px 16px rgba(0,0,0,0.25)', fontSize: '0.75rem' } : { background: 'rgba(255, 255, 255, 0.9)', border: '1px solid rgba(255, 255, 255, 0.3)', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)', fontSize: '0.75rem' }}>엑셀 다운로드</button>
+                        <button onClick={loadAllData} className="px-4 py-2 rounded-full text-gray-800 font-medium hover:scale-105" style={theme === 'space' ? { background: 'linear-gradient(145deg, #e5e7eb 0%, #9ca3af 100%)', border: '1px solid rgba(156, 163, 175, 0.8)', boxShadow: 'inset 0 1px 2px rgba(255,255,255,0.7), 0 6px 16px rgba(0,0,0,0.25)', fontSize: '0.75rem' } : { background: 'rgba(255, 255, 255, 0.9)', border: '1px solid rgba(255, 255, 255, 0.3)', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)', fontSize: '0.75rem' }}>새로고침</button>
+                        {!isClient() && (
+                            <button onClick={clearAllData} className="px-4 py-2 rounded-full text-gray-800 font-bold hover:scale-105" style={theme === 'space' ? { background: 'linear-gradient(145deg, #e5e7eb 0%, #9ca3af 100%)', border: '1px solid rgba(156, 163, 175, 0.8)', boxShadow: 'inset 0 1px 2px rgba(255,255,255,0.7), 0 6px 16px rgba(0,0,0,0.25)', fontSize: '0.75rem' } : { background: 'rgba(255, 255, 255, 0.9)', border: '1px solid rgba(255, 255, 255, 0.3)', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)', fontSize: '0.75rem' }}>데이터 초기화</button>
+                        )}
+                    </div>
                 </div>
-            </div>
 
-            {/* 통계 섹션 헤더 */}
-            <div className="flex items-center justify-between mb-4">
+                {/* 검색 결과 섹션 */}
+                {searchResults.length > 0 && (
+                    <div className={`mb-6 rounded-2xl overflow-hidden shadow-xl ${theme === 'space' ? 'border-gray-700' : 'border-gray-200'}`} style={theme === 'space' ? { background: 'rgba(20, 20, 20, 0.95)', backdropFilter: 'blur(25px)', border: '1px solid rgba(75, 85, 99, 0.3)' } : { background: 'rgba(255, 255, 255, 0.95)', backdropFilter: 'blur(25px)', border: '1px solid rgba(255, 255, 255, 0.2)' }}>
+                        <div className="p-4 sm:p-6 flex justify-between items-center cursor-pointer" onClick={() => setIsSearchResultExpanded(!isSearchResultExpanded)} style={theme === 'space' ? { background: 'rgba(20, 20, 20, 0.95)', borderBottom: '1px solid rgba(75, 85, 99, 0.3)' } : { background: 'rgba(255, 255, 255, 0.9)', borderBottom: '1px solid rgba(255, 255, 255, 0.3)' }}>
+                            <h3 className={`text-lg font-bold ${theme === 'space' ? 'bg-gradient-to-r from-purple-400 to-purple-600 bg-clip-text text-transparent' : 'bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent'}`}>{searchCarNumber}번 차량 검색 결과 ({searchResults.length}건)</h3>
+                            <svg className={`w-5 h-5 transition-transform duration-500 ${isSearchResultExpanded ? 'rotate-180' : ''} ${theme === 'space' ? 'text-purple-500' : 'text-blue-500'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                        </div>
+                        <div className={`overflow-hidden transition-all duration-700 ${isSearchResultExpanded ? 'max-h-[600px] opacity-100' : 'max-h-0 opacity-0'}`}>
+                            <div className="p-4 sm:p-6">
+                                <div className="overflow-x-auto max-h-96 overflow-y-auto">
+                                    <table className="w-full">
+                                        <thead className={`text-white ${theme === 'space' ? 'bg-gradient-to-br from-purple-500 to-purple-700' : 'bg-gradient-to-br from-blue-500 to-blue-700'}`}>
+                                            <tr>
+                                                <th className="px-4 py-3 text-center text-xs font-semibold">날짜</th>
+                                                <th className="px-4 py-3 text-center text-xs font-semibold">시간</th>
+                                                <th className="px-4 py-3 text-center text-xs font-semibold">구분</th>
+                                                <th className="px-4 py-3 text-center text-xs font-semibold">차판</th>
+                                                <th className="px-4 py-3 text-center text-xs font-semibold">차량번호</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className={`divide-y ${theme === 'space' ? 'divide-purple-600/30 bg-gray-900/95' : 'divide-gray-200 bg-white'}`}>
+                                            {searchResults.map((item, idx) => (
+                                                <tr key={idx} className={`transition-all ${theme === 'space' ? 'hover:bg-purple-800/50' : 'hover:bg-blue-50/50'}`}>
+                                                    <td className="px-4 py-3 text-center"><span className={`text-sm ${theme === 'space' ? 'text-purple-300' : 'text-gray-600'}`}>{item.날짜}</span></td>
+                                                    <td className="px-4 py-3 text-center"><span className={`text-sm font-mono ${theme === 'space' ? 'text-purple-300' : 'text-gray-600'}`}>{item.시간}</span></td>
+                                                    <td className="px-4 py-3 text-center">
+                                                        <span className={`inline-flex px-3 py-1 rounded-full text-xs font-semibold ${item.구분 === '입차' ? 'bg-blue-500 text-white border-2 border-blue-600' :
+                                                                item.구분 === '주차중' ? 'bg-green-500 text-white border-2 border-green-600' :
+                                                                    'bg-red-500 text-white border-2 border-red-600'
+                                                            }`}>{item.구분}</span>
+                                                    </td>
+                                                    <td className="px-4 py-3 text-center">
+                                                        <div className={`w-8 h-8 rounded-full mx-auto flex items-center justify-center text-sm font-bold ${item.구분 === '입차' ? 'bg-blue-500 text-white' :
+                                                                item.구분 === '주차중' ? 'bg-green-500 text-white' :
+                                                                    'bg-red-500 text-white'
+                                                            }`}>{item.차판}</div>
+                                                    </td>
+                                                    <td className="px-4 py-3 text-center"><div className={`text-lg font-bold ${theme === 'space' ? 'text-purple-100' : 'text-gray-800'}`}>{item.차번}</div></td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* 통계 섹션 헤더 */}
+                <div className="flex items-center justify-between mb-4">
                     <h2 className={`text-xl font-bold ${theme === 'space' ? 'bg-gradient-to-r from-purple-400 to-purple-600 bg-clip-text text-transparent' : 'bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent'}`}>통계 및 점유율</h2>
-                <button
-                    onClick={handleToggleStatistics}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${theme === 'space' ? 'text-gray-300 bg-transparent border-0 hover:text-gray-200' : 'text-gray-600 hover:text-gray-800'}`}
-                    style={theme === 'space' ? {
-                        background: 'transparent'
-                    } : {
-                        background: 'rgba(255, 255, 255, 0.7)',
-                        backdropFilter: 'blur(10px)',
-                        WebkitBackdropFilter: 'blur(10px)',
-                        border: '1px solid rgba(255, 255, 255, 0.2)'
-                    }}
-                >
-                    <span className="text-sm font-medium">
-                        {isStatisticsExpanded ? '숨기기' : '보기'}
-                    </span>
-                    <svg 
-                        className={`w-4 h-4 transition-transform duration-200 ${isStatisticsExpanded ? 'rotate-180' : ''}`}
-                        fill="none" 
-                        stroke="currentColor" 
-                        viewBox="0 0 24 24"
-                    >
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
-                </button>
-            </div>
-
-            {/* 통계 카드 그리드 */}
-            {(isStatisticsExpanded || isStatisticsAnimatingOut) && (
-                <div 
-                        className={`grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8 overflow-hidden transition-all duration-500 ease-in-out ${isStatisticsExpanded
-                            ? 'opacity-100 max-h-[1000px] translate-y-0' 
-                            : 'opacity-0 max-h-0 -translate-y-6'
-                    }`}
-                    style={isStatisticsExpanded ? {
-                        animation: 'slideInFromTop 1s ease-out, zoomIn 1s ease-out'
-                    } : {}}
-                >
-                {/* 월간 통계 */}
-                <div className="lg:col-span-1 rounded-xl p-4 sm:p-7 transform transition-all duration-700 ease-out hover:scale-105 hover:shadow-xl" style={{
-                            background: theme === 'space' ? 'linear-gradient(145deg, #e5e7eb 0%, #d1d5db 40%, #9ca3af 100%)' : 'linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(99, 102, 241, 0.1) 100%)',
-                    backdropFilter: 'blur(15px)',
-                    WebkitBackdropFilter: 'blur(15px)',
-                            border: theme === 'space' ? '1px solid rgba(156, 163, 175, 0.8)' : '1px solid rgba(255, 255, 255, 0.2)',
-                            boxShadow: theme === 'space' ? 'inset 0 2px 4px rgba(255,255,255,0.7), inset 0 -2px 4px rgba(0,0,0,0.15), 0 8px 24px rgba(0,0,0,0.2)' : '0 4px 16px 0 rgba(31, 38, 135, 0.1)',
-                    animation: 'slideInFromLeft 0.8s ease-out 0.2s both, bounceIn 0.6s ease-out 0.4s both'
-                }}>
-                    <div className="mb-4">
-                        <h3 className="font-bold text-gray-800 text-base sm:text-lg">월간 통계</h3>
-                    </div>
-                    <div className="space-y-3 sm:space-y-4 mt-6 sm:mt-12">
-                        <div className="flex justify-between items-center">
-                            <span className="text-gray-600 text-sm">입차</span>
-                            <span className="font-bold text-black text-lg sm:text-xl" style={{ animation: 'zoomInBounce 0.8s ease-out 0.8s both' }}>{statistics.monthlyIn}대</span>
-                        </div>
-                        <div className="flex justify-between items-center"> 
-                            <span className="text-gray-600 text-sm">출차</span>
-                            <span className="font-bold text-black text-lg sm:text-xl" style={{ animation: 'zoomInBounce 0.8s ease-out 1.0s both' }}>{statistics.monthlyOut}대</span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                            <span className="text-gray-600 text-sm">현재</span>
-                            <span className="font-bold text-black text-lg sm:text-xl" style={{ animation: 'zoomInBounce 0.8s ease-out 1.2s both' }}>{statistics.currentTotal}대</span>
-                        </div>
-                    </div>
+                    <button onClick={handleToggleStatistics} className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${theme === 'space' ? 'text-gray-300 hover:text-gray-200' : 'text-gray-600 hover:text-gray-800'}`} style={theme === 'space' ? { background: 'transparent' } : { background: 'rgba(255, 255, 255, 0.7)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255, 255, 255, 0.2)' }}>
+                        <span className="text-sm font-medium">{isStatisticsExpanded ? '숨기기' : '보기'}</span>
+                        <svg className={`w-4 h-4 transition-transform ${isStatisticsExpanded ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                    </button>
                 </div>
 
-                {/* 일간 통계 */}
-                <div className="lg:col-span-1 rounded-xl p-4 sm:p-7 transform transition-all duration-700 ease-out hover:scale-105 hover:shadow-xl" style={{
-                            background: theme === 'space' ? 'linear-gradient(145deg, #e5e7eb 0%, #d1d5db 40%, #9ca3af 100%)' : 'linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(99, 102, 241, 0.1) 100%)',
-                    backdropFilter: 'blur(15px)',
-                    WebkitBackdropFilter: 'blur(15px)',
-                            border: theme === 'space' ? '1px solid rgba(156, 163, 175, 0.8)' : '1px solid rgba(255, 255, 255, 0.2)',
-                            boxShadow: theme === 'space' ? 'inset 0 2px 4px rgba(255,255,255,0.7), inset 0 -2px 4px rgba(0,0,0,0.15), 0 8px 24px rgba(0,0,0,0.2)' : '0 4px 16px 0 rgba(31, 38, 135, 0.1)',
-                    animation: 'slideInFromLeft 0.8s ease-out 0.4s both, bounceIn 0.6s ease-out 0.6s both'
-                }}>
-                    <div className="mb-4">
-                        <h3 className="font-bold text-gray-800 text-base sm:text-lg">일간 통계</h3>
-                    </div>
-                    <div className="space-y-3 sm:space-y-4 mt-6 sm:mt-12">
-                        <div className="flex justify-between items-center">
-                            <span className="text-gray-600 text-sm">입차</span>
-                            <span className="font-bold text-black text-lg sm:text-xl" style={{ animation: 'zoomInBounce 0.8s ease-out 1.0s both' }}>{statistics.todayIn}대</span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                            <span className="text-gray-600 text-sm">출차</span>
-                            <span className="font-bold text-black text-lg sm:text-xl" style={{ animation: 'zoomInBounce 0.8s ease-out 1.2s both' }}>{statistics.todayOut}대</span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                            <span className="text-gray-600 text-sm">점유율</span>
-                            <span className="font-bold text-black text-lg sm:text-xl" style={{ animation: 'zoomInBounce 0.8s ease-out 1.4s both' }}>{((statistics.currentTotal / 80) * 100).toFixed(1)}%</span>
-                        </div>
-                    </div>
-                </div>
+                {/* 통계 카드 그리드 */}
+                {(isStatisticsExpanded || isStatisticsAnimatingOut) && (
+                    <div className={`grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8 overflow-hidden transition-all duration-500 ${isStatisticsExpanded ? 'opacity-100 max-h-[1000px]' : 'opacity-0 max-h-0'}`} style={isStatisticsExpanded ? { animation: 'slideInFromTop 1s ease-out' } : {}}>
 
-                {/* 점유율 차트 */}
-                <div className="lg:col-span-2 rounded-xl p-6 transform transition-all duration-700 ease-out hover:scale-105 hover:shadow-xl" style={{
-                            background: theme === 'space' ? 'linear-gradient(145deg, #e5e7eb 0%, #d1d5db 40%, #9ca3af 100%)' : 'linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(99, 102, 241, 0.1) 100%)',
-                    backdropFilter: 'blur(15px)',
-                    WebkitBackdropFilter: 'blur(15px)',
-                            border: theme === 'space' ? '1px solid rgba(156, 163, 175, 0.8)' : '1px solid rgba(255, 255, 255, 0.2)',
-                            boxShadow: theme === 'space' ? 'inset 0 2px 4px rgba(255,255,255,0.7), inset 0 -2px 4px rgba(0,0,0,0.15), 0 8px 24px rgba(0,0,0,0.2)' : '0 4px 16px 0 rgba(31, 38, 135, 0.1)',
-                    animation: 'slideInFromRight 0.8s ease-out 0.6s both, bounceIn 0.6s ease-out 0.8s both'
-                }}>
-                    <div>
-                        <h3 className="font-bold text-gray-800 text-lg">주차장 점유율</h3>
-                    </div>
-                    <div className="flex justify-end mb-6">
-                        <div className="text-right">
-                            <div className="text-2xl font-bold text-black">{statistics.currentTotal}/80</div>
-                            <div className="text-sm text-gray-600">현재 주차중</div>
+                        {/* 월간 통계 */}
+                        <div className="lg:col-span-1 rounded-xl p-4 sm:p-7 transform hover:scale-105 hover:shadow-xl" style={{ background: theme === 'space' ? 'linear-gradient(145deg, #e5e7eb 0%, #9ca3af 100%)' : 'linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(99, 102, 241, 0.1) 100%)', backdropFilter: 'blur(15px)', border: theme === 'space' ? '1px solid rgba(156, 163, 175, 0.8)' : '1px solid rgba(255, 255, 255, 0.2)', boxShadow: theme === 'space' ? 'inset 0 2px 4px rgba(255,255,255,0.7), 0 8px 24px rgba(0,0,0,0.2)' : '0 4px 16px rgba(31, 38, 135, 0.1)', animation: 'slideInFromLeft 0.8s ease-out 0.2s both' }}>
+                            <div className="mb-4">
+                                <h3 className="font-bold text-gray-800 text-base sm:text-lg">월간 통계</h3>
+                                <div className="text-xs text-gray-500 mt-1">{dateRanges.monthStart} ~ {dateRanges.monthEnd}</div>
+                            </div>
+                            <div className="space-y-3 sm:space-y-4 mt-6 sm:mt-12">
+                                <div className="flex justify-between items-center"><span className="text-gray-600 text-sm">입차</span><span className="font-bold text-black text-lg sm:text-xl">{statistics.monthlyIn}대</span></div>
+                                <div className="flex justify-between items-center"><span className="text-gray-600 text-sm">출차</span><span className="font-bold text-black text-lg sm:text-xl">{statistics.monthlyOut}대</span></div>
+                                <div className="flex justify-between items-center"><span className="text-gray-600 text-sm">현재</span><span className="font-bold text-black text-lg sm:text-xl">{statistics.currentTotal}대</span></div>
+                            </div>
+                        </div>
+
+                        {/* 일간 통계 */}
+                        <div className="lg:col-span-1 rounded-xl p-4 sm:p-7 transform hover:scale-105 hover:shadow-xl" style={{ background: theme === 'space' ? 'linear-gradient(145deg, #e5e7eb 0%, #9ca3af 100%)' : 'linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(99, 102, 241, 0.1) 100%)', backdropFilter: 'blur(15px)', border: theme === 'space' ? '1px solid rgba(156, 163, 175, 0.8)' : '1px solid rgba(255, 255, 255, 0.2)', boxShadow: theme === 'space' ? 'inset 0 2px 4px rgba(255,255,255,0.7), 0 8px 24px rgba(0,0,0,0.2)' : '0 4px 16px rgba(31, 38, 135, 0.1)', animation: 'slideInFromLeft 0.8s ease-out 0.4s both' }}>
+                            <div className="mb-4">
+                                <h3 className="font-bold text-gray-800 text-base sm:text-lg">일간 통계</h3>
+                                <div className="text-xs text-gray-500 mt-1">{dateRanges.today}</div>
+                            </div>
+                            <div className="space-y-3 sm:space-y-4 mt-6 sm:mt-12">
+                                <div className="flex justify-between items-center"><span className="text-gray-600 text-sm">입차</span><span className="font-bold text-black text-lg sm:text-xl">{statistics.todayIn}대</span></div>
+                                <div className="flex justify-between items-center"><span className="text-gray-600 text-sm">출차</span><span className="font-bold text-black text-lg sm:text-xl">{statistics.todayOut}대</span></div>
+                                <div className="flex justify-between items-center"><span className="text-gray-600 text-sm">점유율</span><span className="font-bold text-black text-lg sm:text-xl">{((statistics.currentTotal / 80) * 100).toFixed(1)}%</span></div>
+                            </div>
+                        </div>
+
+                        {/* 점유율 차트 */}
+                        <div className="lg:col-span-2 rounded-xl p-6 transform hover:scale-105 hover:shadow-xl" style={{ background: theme === 'space' ? 'linear-gradient(145deg, #e5e7eb 0%, #9ca3af 100%)' : 'linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(99, 102, 241, 0.1) 100%)', backdropFilter: 'blur(15px)', border: theme === 'space' ? '1px solid rgba(156, 163, 175, 0.8)' : '1px solid rgba(255, 255, 255, 0.2)', boxShadow: theme === 'space' ? 'inset 0 2px 4px rgba(255,255,255,0.7), 0 8px 24px rgba(0,0,0,0.2)' : '0 4px 16px rgba(31, 38, 135, 0.1)', animation: 'slideInFromRight 0.8s ease-out 0.6s both' }}>
+                            <div><h3 className="font-bold text-gray-800 text-lg">주차장 점유율</h3></div>
+                            <div className="flex justify-end mb-6"><div className="text-right"><div className="text-2xl font-bold text-black">{statistics.currentTotal}/80</div><div className="text-sm text-gray-600">현재 주차중</div></div></div>
+                            <div className="relative">
+                                <div className="w-full rounded-full h-4 mb-2" style={{ background: 'rgba(156, 163, 175, 0.3)' }}>
+                                    <div className="h-4 rounded-full transition-all duration-1000" style={{ '--target-width': `${Math.min((statistics.currentTotal / 80) * 100, 100)}%`, width: '0%', background: theme === 'space' ? 'linear-gradient(90deg, rgba(124, 58, 237, 0.9) 0%, rgba(109, 40, 217, 0.9) 100%)' : 'linear-gradient(90deg, rgba(59, 130, 246, 0.8) 0%, rgba(99, 102, 241, 0.8) 100%)', animation: 'progressFill 2s ease-out 1.0s both' }} />
+                                </div>
+                                <div className="flex justify-between text-xs text-gray-500 mt-2"><span>0%</span><span className="font-semibold text-black">{((statistics.currentTotal / 80) * 100).toFixed(1)}%</span><span>100%</span></div>
+                            </div>
+                            <div className="grid grid-cols-3 gap-4 mt-6">
+                                <div className="text-center"><div className="text-lg font-bold text-black">80</div><div className="text-xs text-gray-600">전체</div></div>
+                                <div className="text-center"><div className="text-lg font-bold text-black">{statistics.currentTotal}</div><div className="text-xs text-gray-600">주차중</div></div>
+                                <div className="text-center"><div className="text-lg font-bold text-black">{80 - statistics.currentTotal}</div><div className="text-xs text-gray-600">빈 자리</div></div>
+                            </div>
                         </div>
                     </div>
-                    
-                    <div className="relative">
-                        <div className="w-full rounded-full h-4 mb-2" style={{
-                            background: 'rgba(156, 163, 175, 0.3)',
-                            backdropFilter: 'blur(5px)'
-                        }}>
-                            <div
-                                className="h-4 rounded-full transition-all duration-1000 ease-out"
-                                style={{ 
-                                    '--target-width': `${Math.min((statistics.currentTotal / 80) * 100, 100)}%`,
-                                    width: '0%',
-                                    background: theme === 'space' ? 'linear-gradient(90deg, rgba(124, 58, 237, 0.9) 0%, rgba(109, 40, 217, 0.9) 100%)' : 'linear-gradient(90deg, rgba(59, 130, 246, 0.8) 0%, rgba(99, 102, 241, 0.8) 100%)',
-                                    boxShadow: theme === 'space' ? '0 2px 8px rgba(124, 58, 237, 0.4)' : '0 2px 8px rgba(59, 130, 246, 0.3)',
-                                    animation: 'progressFill 2s ease-out 1.0s both'
-                                }}
-                            />
-                        </div>
-                        <div className="flex justify-between text-xs text-gray-500 mt-2">
-                            <span>0%</span>
-                            <span className="font-semibold text-black">{((statistics.currentTotal / 80) * 100).toFixed(1)}%</span>
-                            <span>100%</span>
+                )}
+
+                {/* 메인 테이블 섹션 */}
+                <div className="space-y-6">
+                    {/* 탭 네비게이션 */}
+                    <div className="flex justify-center">
+                        <div className={`inline-flex rounded-2xl p-1 gap-1 shadow-lg ${theme === 'space' ? 'bg-gradient-to-br from-purple-600/80 via-purple-700/70 to-purple-800/80' : ''}`} style={theme === 'space' ? {} : { background: 'rgba(255, 255, 255, 0.3)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255, 255, 255, 0.2)' }}>
+                            {['recent', 'parked', 'exited'].map(tab => (
+                                <button key={tab} onClick={() => setActiveTab(tab)} className={`px-4 sm:px-8 py-2 sm:py-3 rounded-xl text-xs sm:text-sm font-semibold transition-all transform ${activeTab === tab ? 'text-white shadow-lg scale-105' : 'text-gray-300 hover:text-gray-200'}`} style={activeTab === tab ? { background: theme === 'space' ? 'linear-gradient(135deg, rgba(196, 181, 253, 0.9) 0%, rgba(167, 139, 250, 0.9) 100%)' : 'linear-gradient(135deg, rgba(59, 130, 246, 0.8) 0%, rgba(99, 102, 241, 0.8) 100%)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255, 255, 255, 0.2)' } : { background: 'transparent' }}>
+                                    {tab === 'recent' && '최근 이벤트'}
+                                    {tab === 'parked' && '현재 주차중'}
+                                    {tab === 'exited' && '출차된 차량'}
+                                </button>
+                            ))}
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-3 gap-4 mt-6">
-                        <div className="text-center">
-                            <div className="text-lg font-bold text-black">80</div>
-                            <div className="text-xs text-gray-600">전체</div>
-                        </div>
-                        <div className="text-center">
-                            <div className="text-lg font-bold text-black">{statistics.currentTotal}</div>
-                            <div className="text-xs text-gray-600">주차중</div>
-                        </div>
-                        <div className="text-center">
-                            <div className="text-lg font-bold text-black">{80 - statistics.currentTotal}</div>
-                            <div className="text-xs text-gray-600">빈 자리</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            )}
-
-            {/* 메인 테이블 섹션 */}
-            <div className="space-y-6">
-                {/* 탭 네비게이션 - 보라색 메탈릭 스타일 */}
-                <div className="flex justify-center">
-                    <div className={`inline-flex rounded-2xl p-1 gap-1 shadow-lg ${theme === 'space' ? 'bg-gradient-to-br from-purple-600/80 via-purple-700/70 to-purple-800/80 border-purple-500/90 shadow-purple-600/30' : 'bg-gradient-to-br from-blue-500/80 via-blue-600/70 to-blue-700/80 border-blue-400/90 shadow-blue-500/30'}`} style={theme === 'space' ? {} : {
-                        background: 'rgba(255, 255, 255, 0.3)',
-                        backdropFilter: 'blur(10px)',
-                        WebkitBackdropFilter: 'blur(10px)',
-                        border: '1px solid rgba(255, 255, 255, 0.2)'
-                    }}>
-                        {['recent', 'parked', 'exited'].map(tab => (
-                            <button
-                                key={tab}
-                                onClick={() => setActiveTab(tab)}
-                                className={`px-4 sm:px-8 py-2 sm:py-3 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-500 ease-in-out transform ${activeTab === tab
-                                        ? 'text-white shadow-lg scale-105'
-                                        : 'text-gray-300 hover:text-gray-200 hover:scale-102'
-                                    }`}
-                                style={activeTab === tab ? {
-                                    background: theme === 'space' ? 'linear-gradient(135deg, rgba(196, 181, 253, 0.9) 0%, rgba(167, 139, 250, 0.9) 100%)' : 'linear-gradient(135deg, rgba(59, 130, 246, 0.8) 0%, rgba(99, 102, 241, 0.8) 100%)',
-                                    backdropFilter: 'blur(10px)',
-                                    WebkitBackdropFilter: 'blur(10px)',
-                                    border: theme === 'space' ? '1px solid rgba(255, 255, 255, 0.2)' : '1px solid rgba(255, 255, 255, 0.2)',
-                                    boxShadow: theme === 'space' ? '0 4px 16px 0 rgba(196, 181, 253, 0.3)' : '0 4px 16px 0 rgba(31, 38, 135, 0.3)'
-                                } : {
-                                    background: 'transparent',
-                                    backdropFilter: 'blur(10px)',
-                                    WebkitBackdropFilter: 'blur(10px)'
-                                }}
-                            >
-                                {tab === 'recent' && '최근 이벤트'}
-                                {tab === 'parked' && '현재 주차중'}
-                                {tab === 'exited' && '출차된 차량'}
-                            </button>
-                        ))}
-                    </div>
-                </div>
-                {/* 테이블 컨테이너 - PLC 체크리스트 스타일 */}
-                <div className={`rounded-xl overflow-hidden shadow-2xl transform transition-all duration-700 ease-in-out ${theme === 'space' ? 'bg-gradient-to-br from-purple-900/80 to-indigo-900/80 border-purple-500/30' : 'bg-white border-gray-200'}`} style={theme === 'space' ? {} : {
-                    background: 'rgba(255, 255, 255, 0.7)',
-                    backdropFilter: 'blur(15px)',
-                    WebkitBackdropFilter: 'blur(15px)',
-                    border: '1px solid rgba(255, 255, 255, 0.2)',
-                    boxShadow: '0 4px 16px 0 rgba(31, 38, 135, 0.1)'
-                }}>
-                    <div className="overflow-x-auto">
-                        <table className="w-full">
-                            <thead className={`text-white ${theme === 'space' ? 'bg-gradient-to-br from-purple-500 to-purple-700 shadow-lg shadow-purple-500/25' : 'bg-gradient-to-br from-blue-500 to-blue-700 shadow-lg shadow-blue-500/25'}`} style={theme === 'space' ? {} : {
-                                background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.8) 0%, rgba(99, 102, 241, 0.8) 100%)',
-                                backdropFilter: 'blur(10px)',
-                                WebkitBackdropFilter: 'blur(10px)',
-                                border: '1px solid rgba(255, 255, 255, 0.2)',
-                                boxShadow: '0 2px 8px rgba(59, 130, 246, 0.3)'
-                            }}>
-                                <tr>
-                                    <th 
-                                        className={`px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider cursor-pointer transition-colors duration-200 select-none ${theme === 'space' ? 'hover:bg-purple-700' : 'hover:bg-blue-700'}`}
-                                        onClick={() => handleSort('시간')}
-                                    >
-                                        <div className="flex items-center justify-center space-x-1">
-                                            <span>시간</span>
-                                            {sortConfig.key === '시간' && (
-                                                <span className="text-yellow-300">
-                                                    {sortConfig.direction === 'asc' ? '↑' : '↓'}
-                                                </span>
-                                            )}
-                                        </div>
-                                    </th>
-                                    <th 
-                                        className={`px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider cursor-pointer transition-colors duration-200 select-none ${theme === 'space' ? 'hover:bg-purple-700' : 'hover:bg-blue-700'}`}
-                                        onClick={() => handleSort('구분')}
-                                    >
-                                        <div className="flex items-center justify-center space-x-1">
-                                            <span>구분</span>
-                                            {sortConfig.key === '구분' && (
-                                                <span className="text-yellow-300">
-                                                    {sortConfig.direction === 'asc' ? '↑' : '↓'}
-                                                </span>
-                                            )}
-                                        </div>
-                                    </th>
-                                    <th 
-                                        className={`px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider cursor-pointer transition-colors duration-200 select-none ${theme === 'space' ? 'hover:bg-purple-700' : 'hover:bg-blue-700'}`}
-                                        onClick={() => handleSort('차판')}
-                                    >
-                                        <div className="flex items-center justify-center space-x-1">
-                                            <span>차판번호</span>
-                                            {sortConfig.key === '차판' && (
-                                                <span className="text-yellow-300">
-                                                    {sortConfig.direction === 'asc' ? '↑' : '↓'}
-                                                </span>
-                                            )}
-                                        </div>
-                                    </th>
-                                    <th 
-                                        className={`px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider cursor-pointer transition-colors duration-200 select-none ${theme === 'space' ? 'hover:bg-purple-700' : 'hover:bg-blue-700'}`}
-                                        onClick={() => handleSort('차번')}
-                                    >
-                                        <div className="flex items-center justify-center space-x-1">
-                                            <span>차량번호</span>
-                                            {sortConfig.key === '차번' && (
-                                                <span className="text-yellow-300">
-                                                    {sortConfig.direction === 'asc' ? '↑' : '↓'}
-                                                </span>
-                                            )}
-                                        </div>
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody className={`divide-y ${theme === 'space' ? 'divide-purple-600/30 bg-gray-900/95' : 'divide-gray-200 bg-white'}`}>
-                                {getTabData().length === 0 ? (
+                    {/* 테이블 */}
+                    <div className={`rounded-xl overflow-hidden shadow-2xl ${theme === 'space' ? 'bg-gradient-to-br from-purple-900/80 to-indigo-900/80' : 'bg-white'}`} style={theme === 'space' ? {} : { background: 'rgba(255, 255, 255, 0.7)', backdropFilter: 'blur(15px)', border: '1px solid rgba(255, 255, 255, 0.2)' }}>
+                        <div className="overflow-x-auto">
+                            <table className="w-full">
+                                <thead className={`text-white ${theme === 'space' ? 'bg-gradient-to-br from-purple-500 to-purple-700' : 'bg-gradient-to-br from-blue-500 to-blue-700'}`}>
                                     <tr>
-                                        <td colSpan="4" className={`text-center py-8 sm:py-12 text-sm sm:text-lg ${theme === 'space' ? 'text-purple-400' : 'text-gray-500'}`}>
-                                            데이터가 없습니다
-                                        </td>
+                                        <th className={`px-4 py-3 text-center text-xs font-semibold cursor-pointer ${theme === 'space' ? 'hover:bg-purple-700' : 'hover:bg-blue-700'}`} onClick={() => handleSort('날짜')}><div className="flex items-center justify-center space-x-1"><span>날짜</span>{sortConfig.key === '날짜' && <span className="text-yellow-300">{sortConfig.direction === 'asc' ? '↑' : '↓'}</span>}</div></th>
+                                        <th className={`px-4 py-3 text-center text-xs font-semibold cursor-pointer ${theme === 'space' ? 'hover:bg-purple-700' : 'hover:bg-blue-700'}`} onClick={() => handleSort('시간')}><div className="flex items-center justify-center space-x-1"><span>시간</span>{sortConfig.key === '시간' && <span className="text-yellow-300">{sortConfig.direction === 'asc' ? '↑' : '↓'}</span>}</div></th>
+                                        <th className={`px-4 py-3 text-center text-xs font-semibold cursor-pointer ${theme === 'space' ? 'hover:bg-purple-700' : 'hover:bg-blue-700'}`} onClick={() => handleSort('구분')}><div className="flex items-center justify-center space-x-1"><span>구분</span>{sortConfig.key === '구분' && <span className="text-yellow-300">{sortConfig.direction === 'asc' ? '↑' : '↓'}</span>}</div></th>
+                                        <th className={`px-4 py-3 text-center text-xs font-semibold cursor-pointer ${theme === 'space' ? 'hover:bg-purple-700' : 'hover:bg-blue-700'}`} onClick={() => handleSort('차판')}><div className="flex items-center justify-center space-x-1"><span>차판번호</span>{sortConfig.key === '차판' && <span className="text-yellow-300">{sortConfig.direction === 'asc' ? '↑' : '↓'}</span>}</div></th>
+                                        <th className={`px-4 py-3 text-center text-xs font-semibold cursor-pointer ${theme === 'space' ? 'hover:bg-purple-700' : 'hover:bg-blue-700'}`} onClick={() => handleSort('차번')}><div className="flex items-center justify-center space-x-1"><span>차량번호</span>{sortConfig.key === '차번' && <span className="text-yellow-300">{sortConfig.direction === 'asc' ? '↑' : '↓'}</span>}</div></th>
                                     </tr>
-                                ) : (
-                                    getTabData().map((item, idx) => (
-                                        <tr
-                                            key={idx}
-                                            className={`transition-all duration-300 ${theme === 'space' ? `hover:bg-purple-800/50 ${item.구분 === '입차' ? 'bg-purple-700/50' : item.구분 === '출차' ? 'bg-indigo-700/50' : ''}` : `hover:bg-blue-50/50 ${item.구분 === '입차' ? 'bg-blue-50' : item.구분 === '출차' ? 'bg-indigo-50' : ''}`}`}
-                                        >
-                                            <td className="px-4 py-3 whitespace-nowrap">
-                                                <span className={`text-sm font-mono font-semibold ${theme === 'space' ? 'text-purple-300' : 'text-gray-600'}`}>
-                                                    {item.시간}
-                                                </span>
-                                            </td>
-                                            <td className="px-4 py-3 whitespace-nowrap">
-                                                <span className={`inline-flex px-3 py-1 rounded-full text-xs font-semibold ${item.구분 === '입차'
-                                                        ? theme === 'space' ? 'bg-purple-200 text-purple-800 border border-purple-300' : 'bg-blue-200 text-blue-800 border border-blue-300'
-                                                        : item.구분 === '출차' 
-                                                        ? theme === 'space' ? 'bg-indigo-200 text-indigo-800 border border-indigo-300' : 'bg-indigo-200 text-indigo-800 border border-indigo-300'
-                                                        : theme === 'space' ? 'bg-purple-800/50 text-purple-300 border border-purple-600/50' : 'bg-blue-600 text-white border border-blue-700'
-                                                    }`}>
-                                                    {item.구분}
-                                                </span>
-                                            </td>
-                                            <td className="px-4 py-3 text-center whitespace-nowrap">
-                                                <div className={`w-8 h-8 rounded-full mx-auto flex items-center justify-center text-sm font-bold ${item.구분 === '입차'
-                                                        ? theme === 'space' ? 'bg-purple-500 text-white animate-pulse' : 'bg-blue-500 text-white animate-pulse'
-                                                        : item.구분 === '출차'
-                                                        ? theme === 'space' ? 'bg-indigo-500 text-white animate-pulse' : 'bg-indigo-500 text-white animate-pulse'
-                                                        : theme === 'space' ? 'bg-purple-700 text-purple-300' : 'bg-blue-600 text-white'
-                                                    }`}>
-                                                    {item.차판}
-                                                </div>
-                                            </td>
-                                            <td className="px-4 py-3 text-center whitespace-nowrap">
-                                                <div className={`text-lg font-bold ${theme === 'space' ? 'text-purple-100' : 'text-gray-800'}`}>{item.차번}</div>
-                                            </td>
-                                        </tr>
-                                    ))
-                                )}
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody className={`divide-y ${theme === 'space' ? 'divide-purple-600/30 bg-gray-900/95' : 'divide-gray-200 bg-white'}`}>
+                                    {getTabData().length === 0 ? (
+                                        <tr><td colSpan="4" className={`text-center py-12 text-lg ${theme === 'space' ? 'text-purple-400' : 'text-gray-500'}`}>데이터가 없습니다</td></tr>
+                                    ) : (
+                                        getTabData().map((item, idx) => (
+                                            <tr key={idx} className={`transition-all ${theme === 'space' ? 'hover:bg-purple-800/50' : 'hover:bg-blue-50/50'}`}>
+                                                <td className="px-4 py-3 whitespace-nowrap"><span className={`text-sm ${theme === 'space' ? 'text-purple-300' : 'text-gray-600'}`}>{item.날짜}</span></td>
+                                                <td className="px-4 py-3 whitespace-nowrap"><span className={`text-sm font-mono font-semibold ${theme === 'space' ? 'text-purple-300' : 'text-gray-600'}`}>{item.시간}</span></td>
+                                                <td className="px-4 py-3 whitespace-nowrap">
+                                                    <span className={`inline-flex px-3 py-1 rounded-full text-xs font-semibold ${item.구분 === '입차' ? 'bg-blue-500 text-white border-2 border-blue-600' :
+                                                            item.구분 === '주차중' ? 'bg-green-500 text-white border-2 border-green-600' :
+                                                                'bg-red-500 text-white border-2 border-red-600'
+                                                        }`}>{item.구분}</span>
+                                                </td>
+                                                <td className="px-4 py-3 text-center whitespace-nowrap">
+                                                    <div className={`w-8 h-8 rounded-full mx-auto flex items-center justify-center text-sm font-bold ${item.구분 === '입차' ? 'bg-blue-500 text-white' :
+                                                            item.구분 === '주차중' ? 'bg-green-500 text-white' :
+                                                                'bg-red-500 text-white'
+                                                        }`}>{item.차판}</div>
+                                                </td>
+                                                <td className="px-4 py-3 text-center whitespace-nowrap"><div className={`text-lg font-bold ${theme === 'space' ? 'text-purple-100' : 'text-gray-800'}`}>{item.차번}</div></td>
+                                            </tr>
+                                        ))
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
         </>
     );
 };

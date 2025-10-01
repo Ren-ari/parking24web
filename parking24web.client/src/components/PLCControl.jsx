@@ -7,10 +7,9 @@ import SensorMonitor from './SensorMonitor';
 import ManualControl from './ManualControl';
 import ParkingMonitor from './ParkingMonitor';
 import EventMonitor from './EventMonitor';
-// ThemeSelector 제거
+import ServiceRecordTab from './ServiceRecordTab';
 // 속초 1호기 config import 추가
 import siteConfig from '../../config/sokcho1Config.js';
-// 권한 관리 import 추가
 import { ROLE_TABS } from './auth';
 
 const PLCControl = ({ currentUser, onLogout }) => {
@@ -24,6 +23,7 @@ const PLCControl = ({ currentUser, onLogout }) => {
     const TAB_MAPPING = {
         'parking': 'parking',      // 주차 현황
         'events': 'events',        // 입출차 이벤트
+        'service': 'service',
         'manual': 'control',       // 수동 제어  
         'sensor': 'monitor',       // 센서 모니터
         'config': 'connection'     // 연결 관리 (설정)
@@ -366,6 +366,17 @@ const PLCControl = ({ currentUser, onLogout }) => {
                                 <span className="relative z-10">입출차 이벤트</span>
                             </button>
                         )}
+
+                        {/* A/S 기록 - service 권한 */}
+                        {hasTabAccess('service') && (
+                            <button
+                                onClick={() => handleTabClick('service')}
+                                className={`${getTabStyle('service')} group overflow-hidden`}
+                            >
+                                <span className="relative z-10">A/S 기록</span>
+                            </button>
+                        )}
+
                     </nav>
 
                     {/* 사용자 정보 & 로그아웃 (오른쪽) - 데스크톱용만 */}
@@ -754,17 +765,21 @@ const PLCControl = ({ currentUser, onLogout }) => {
                                     차량 및 주차 현황 데이터
                                 </h3>
                                 <button
+
                                     className={`p-2 rounded-full transition-all duration-300 ease-in-out transform hover:scale-110 active:scale-95 relative z-10 ${isDataPanelExpanded ? '' : 'hover:bg-white/10 border border-white/10'}`}
+
                                     style={isDataPanelExpanded ? {
                                         background: theme === 'space' ? 'rgba(20, 20, 20, 0.95)' : 'rgba(255, 255, 255, 0.95)',
                                         backdropFilter: 'blur(25px)',
                                         WebkitBackdropFilter: 'blur(25px)',
                                         border: 'none'
+
                                     } : theme === 'space' ? {
                                         background: 'rgba(20, 20, 20, 0.95)',
                                         backdropFilter: 'blur(25px)',
                                         WebkitBackdropFilter: 'blur(25px)',
                                         border: 'none'
+
                                     } : {}}
                                 >
                                     <svg
@@ -828,84 +843,87 @@ const PLCControl = ({ currentUser, onLogout }) => {
                                         </div>
                                     )}
 
+
                                     {/* 상세 그리드 (기존 레이아웃) - 관리자/서비스 등 */}
                                     {!isSummaryMode && (
                                     <>
                                     {/* 첫 번째 행 (차량번호/적재차판/출고차판) 복구 */}
                                     <div className="grid grid-cols-3 gap-3 sm:gap-4 mb-4">
                                         <div className={`p-2 sm:p-3 rounded-2xl transition-all duration-700 ease-out transform relative overflow-hidden ${isDataPanelExpanded
-                                                ? 'translate-y-0 opacity-100'
-                                                : 'translate-y-4 opacity-0'
-                                            }`}
-                                            style={{
-                                                transitionDelay: isDataPanelExpanded ? '100ms' : '0ms',
-                                                background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.03) 100%)',
-                                                backdropFilter: 'blur(25px)',
-                                                WebkitBackdropFilter: 'blur(25px)',
-                                                border: '1px solid rgba(255, 255, 255, 0.12)',
-                                                boxShadow: '0 4px 16px 0 rgba(31, 38, 135, 0.15)'
-                                            }}>
-                                            <div className="absolute inset-0 bg-gradient-to-br from-blue-500/8 to-indigo-500/8 rounded-2xl"></div>
-                                            <label className={`block text-xs font-medium mb-1 relative z-10 ${getCardLabelColorClass()}`}>차량번호</label>
-                                            <div className={`rounded-2xl px-2 sm:px-3 py-3 sm:py-5 text-lg sm:text-2xl md:text-3xl font-bold relative z-10 ${getCardValueColorClass()}`} style={{
-                                                background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.8) 100%)',
-                                                backdropFilter: 'blur(10px)',
-                                                WebkitBackdropFilter: 'blur(10px)',
-                                                border: '1px solid rgba(255, 255, 255, 0.3)',
-                                                boxShadow: '0 2px 8px 0 rgba(31, 38, 135, 0.15)'
-                                            }}>----</div>
-                                        </div>
 
-                                        <div className={`p-2 sm:p-3 rounded-2xl transition-all duration-700 ease-out transform relative overflow-hidden ${isDataPanelExpanded
                                                 ? 'translate-y-0 opacity-100'
                                                 : 'translate-y-4 opacity-0'
-                                            }`}
-                                            style={{
-                                                transitionDelay: isDataPanelExpanded ? '200ms' : '0ms',
-                                                background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0.12) 100%)',
-                                                backdropFilter: 'blur(15px)',
-                                                WebkitBackdropFilter: 'blur(15px)',
-                                                border: '1px solid rgba(255, 255, 255, 0.2)',
-                                                boxShadow: '0 4px 16px 0 rgba(31, 38, 135, 0.2)'
-                                            }}>
-                                            <div className="absolute inset-0 bg-gradient-to-br from-blue-500/8 to-indigo-500/8 rounded-2xl"></div>
-                                            <label className={`block text-xs font-medium mb-1 relative z-10 ${getCardLabelColorClass()}`}>적재차판</label>
-                                            <div className={`rounded-2xl px-2 sm:px-3 py-3 sm:py-5 text-lg sm:text-2xl md:text-3xl font-bold relative z-10 ${getCardValueColorClass()}`} style={{
-                                                background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.8) 100%)',
-                                                backdropFilter: 'blur(10px)',
-                                                WebkitBackdropFilter: 'blur(10px)',
-                                                border: '1px solid rgba(255, 255, 255, 0.3)',
-                                                boxShadow: '0 2px 8px 0 rgba(31, 38, 135, 0.15)'
-                                            }}>
-                                                {sensorData.rawData?.[75] || 0}
+                                                }`}
+                                                style={{
+                                                    transitionDelay: isDataPanelExpanded ? '100ms' : '0ms',
+                                                    background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.03) 100%)',
+                                                    backdropFilter: 'blur(25px)',
+                                                    WebkitBackdropFilter: 'blur(25px)',
+                                                    border: '1px solid rgba(255, 255, 255, 0.12)',
+                                                    boxShadow: '0 4px 16px 0 rgba(31, 38, 135, 0.15)'
+                                                }}>
+                                                <div className="absolute inset-0 bg-gradient-to-br from-blue-500/8 to-indigo-500/8 rounded-2xl"></div>
+                                                <label className={`block text-xs font-medium mb-1 relative z-10 ${getCardLabelColorClass()}`}>차량번호</label>
+                                                <div className={`rounded-2xl px-2 sm:px-3 py-3 sm:py-5 text-lg sm:text-2xl md:text-3xl font-bold relative z-10 ${getCardValueColorClass()}`} style={{
+                                                    background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.8) 100%)',
+                                                    backdropFilter: 'blur(10px)',
+                                                    WebkitBackdropFilter: 'blur(10px)',
+                                                    border: '1px solid rgba(255, 255, 255, 0.3)',
+                                                    boxShadow: '0 2px 8px 0 rgba(31, 38, 135, 0.15)'
+                                                }}>----</div>
+                                            </div>
+
+                                            <div className={`p-2 sm:p-3 rounded-2xl transition-all duration-700 ease-out transform relative overflow-hidden ${isDataPanelExpanded
+                                                ? 'translate-y-0 opacity-100'
+                                                : 'translate-y-4 opacity-0'
+                                                }`}
+                                                style={{
+                                                    transitionDelay: isDataPanelExpanded ? '200ms' : '0ms',
+                                                    background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0.12) 100%)',
+                                                    backdropFilter: 'blur(15px)',
+                                                    WebkitBackdropFilter: 'blur(15px)',
+                                                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                                                    boxShadow: '0 4px 16px 0 rgba(31, 38, 135, 0.2)'
+                                                }}>
+                                                <div className="absolute inset-0 bg-gradient-to-br from-blue-500/8 to-indigo-500/8 rounded-2xl"></div>
+                                                <label className={`block text-xs font-medium mb-1 relative z-10 ${getCardLabelColorClass()}`}>적재차판</label>
+                                                <div className={`rounded-2xl px-2 sm:px-3 py-3 sm:py-5 text-lg sm:text-2xl md:text-3xl font-bold relative z-10 ${getCardValueColorClass()}`} style={{
+                                                    background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.8) 100%)',
+                                                    backdropFilter: 'blur(10px)',
+                                                    WebkitBackdropFilter: 'blur(10px)',
+                                                    border: '1px solid rgba(255, 255, 255, 0.3)',
+                                                    boxShadow: '0 2px 8px 0 rgba(31, 38, 135, 0.15)'
+                                                }}>
+                                                    {sensorData.rawData?.[75] || 0}
+                                                </div>
+                                            </div>
+
+                                            <div className={`p-2 sm:p-3 rounded-2xl transition-all duration-700 ease-out transform relative overflow-hidden ${isDataPanelExpanded
+                                                ? 'translate-y-0 opacity-100'
+                                                : 'translate-y-4 opacity-0'
+                                                }`}
+                                                style={{
+                                                    transitionDelay: isDataPanelExpanded ? '300ms' : '0ms',
+                                                    background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0.12) 100%)',
+                                                    backdropFilter: 'blur(15px)',
+                                                    WebkitBackdropFilter: 'blur(15px)',
+                                                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                                                    boxShadow: '0 4px 16px 0 rgba(31, 38, 135, 0.2)'
+                                                }}>
+                                                <div className="absolute inset-0 bg-gradient-to-br from-blue-500/8 to-indigo-500/8 rounded-2xl"></div>
+                                                <label className={`block text-xs font-medium mb-1 relative z-10 ${getCardLabelColorClass()}`}>출고차판</label>
+                                                <div className={`rounded-2xl px-2 sm:px-3 py-3 sm:py-5 text-lg sm:text-2xl md:text-3xl font-bold relative z-10 ${getCardValueColorClass()}`} style={{
+                                                    background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.8) 100%)',
+                                                    backdropFilter: 'blur(10px)',
+                                                    WebkitBackdropFilter: 'blur(10px)',
+                                                    border: '1px solid rgba(255, 255, 255, 0.3)',
+                                                    boxShadow: '0 2px 8px 0 rgba(31, 38, 135, 0.15)'
+                                                }}>
+                                                    {sensorData.rawData?.[76] || 0}
+                                                </div>
                                             </div>
                                         </div>
-
-                                        <div className={`p-2 sm:p-3 rounded-2xl transition-all duration-700 ease-out transform relative overflow-hidden ${isDataPanelExpanded
-                                                ? 'translate-y-0 opacity-100'
-                                                : 'translate-y-4 opacity-0'
-                                            }`}
-                                            style={{
-                                                transitionDelay: isDataPanelExpanded ? '300ms' : '0ms',
-                                                background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0.12) 100%)',
-                                                backdropFilter: 'blur(15px)',
-                                                WebkitBackdropFilter: 'blur(15px)',
-                                                border: '1px solid rgba(255, 255, 255, 0.2)',
-                                                boxShadow: '0 4px 16px 0 rgba(31, 38, 135, 0.2)'
-                                            }}>
-                                            <div className="absolute inset-0 bg-gradient-to-br from-blue-500/8 to-indigo-500/8 rounded-2xl"></div>
-                                            <label className={`block text-xs font-medium mb-1 relative z-10 ${getCardLabelColorClass()}`}>출고차판</label>
-                                            <div className={`rounded-2xl px-2 sm:px-3 py-3 sm:py-5 text-lg sm:text-2xl md:text-3xl font-bold relative z-10 ${getCardValueColorClass()}`} style={{
-                                                background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.8) 100%)',
-                                                backdropFilter: 'blur(10px)',
-                                                WebkitBackdropFilter: 'blur(10px)',
-                                                border: '1px solid rgba(255, 255, 255, 0.3)',
-                                                boxShadow: '0 2px 8px 0 rgba(31, 38, 135, 0.15)'
-                                            }}>
-                                                {sensorData.rawData?.[76] || 0}
-                                            </div>
-                                        </div>
-                                    </div>
+                                    )}
 
                                     {/* 두 번째 행 (개수 지표 6개) */}
                                     <div className="grid grid-cols-2 md:grid-cols-6 gap-3 mb-4">
@@ -1122,6 +1140,11 @@ const PLCControl = ({ currentUser, onLogout }) => {
                                     sensorData={sensorData}
                                     isPLCConnected={isPLCConnected}
                                 />
+                            )}
+
+                            {/* A/S 기록 탭 - service 권한 */}
+                            {activeTab === 'service' && hasTabAccess('service') && (
+                                <ServiceRecordTab />
                             )}
 
                             {/* 권한 없는 경우 안내 메시지 */}

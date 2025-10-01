@@ -1,5 +1,6 @@
 ﻿import React, { useState, useEffect, useRef } from "react";
-// 속초 1호기 config import
+import { useAuth } from '../hooks/useAuth';
+import signalRService from '../services/SignalRService';
 import siteConfig from '../../config/sokcho1Config.js';
 
 
@@ -8,6 +9,7 @@ const ParkingMonitor = ({ sensorData, isPLCConnected, onVehicleEdit, theme }) =>
     const [addressMapping, setAddressMapping] = useState({});
     const [isMobile, setIsMobile] = useState(false);
     const scrollContainerRef = useRef(null);
+    const { isClient } = useAuth();
 
     // 박스 타입 정의 (속초용)
     const _boxTypes = [
@@ -57,6 +59,28 @@ const ParkingMonitor = ({ sensorData, isPLCConnected, onVehicleEdit, theme }) =>
 
         return () => clearTimeout(timer);
     }, []);
+
+    // CLIENT 자동연결 로직
+    useEffect(() => {
+        // 이미 연결되어있으면 아무것도 안함
+        if (isPLCConnected) return;
+
+        // CLIENT 권한이 아니면 실행 안함
+        if (!isClient()) return;
+
+        const buttons = siteConfig.connectionConfig.buttons;
+
+        // 1개면 자동연결
+        if (buttons.length === 1) {
+            console.log('CLIENT 자동연결 시작:', buttons[0].name);
+            signalRService.connectToPLC(buttons[0].ip, buttons[0].port)
+                .catch(err => console.error('자동연결 실패:', err));
+        }
+        // 2개 이상이면 선택 UI 필요 (다음 단계에서)
+
+    }, [isPLCConnected, isClient]);
+
+
 
     // 박스 표시 여부 결정 (속초용)
     const shouldShowBox = (level, box) => {
