@@ -89,8 +89,27 @@ using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<ParkingDbContext>();
     context.Database.EnsureCreated();
-}
 
+    // ServiceRecords 테이블 수동 생성 (기존 DB 호환)
+    var connection = context.Database.GetDbConnection();
+    connection.Open();
+    using var command = connection.CreateCommand();
+    command.CommandText = @"
+        CREATE TABLE IF NOT EXISTS ServiceRecords (
+            Id INTEGER PRIMARY KEY AUTOINCREMENT,
+            VisitDate TEXT NOT NULL,
+            TechnicianName TEXT NOT NULL,
+            WorkDescription TEXT NOT NULL,
+            Status TEXT NOT NULL,
+            Notes TEXT,
+            CreatedAt TEXT NOT NULL,
+            CreatedBy TEXT NOT NULL
+        );
+        CREATE INDEX IF NOT EXISTS IX_ServiceRecords_VisitDate ON ServiceRecords (VisitDate);
+        CREATE INDEX IF NOT EXISTS IX_ServiceRecords_Status ON ServiceRecords (Status);
+    ";
+    command.ExecuteNonQuery();
+}
 // 시작시 사이트 설정 검증
 try
 {
