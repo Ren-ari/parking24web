@@ -932,7 +932,7 @@ const PLCControl = ({ currentUser, onLogout }) => {
                                                 </div>
                                             </div>
                                         </div>
-                                    )}
+                                    
 
                                     {/* 두 번째 행 (개수 지표 6개) */}
                                     <div className="grid grid-cols-2 md:grid-cols-6 gap-3 mb-4">

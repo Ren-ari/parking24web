@@ -34,7 +34,7 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
                 // 화면 크기에 따라 스크롤 감도와 기본 위치 조정
                 const isTablet = window.innerWidth >= 768 && window.innerWidth <= 1400;
                 const scrollSensitivity = isTablet ? 0.5 : 1.0; // 태블릿에서는 움직임 폭을 줄임
-                const basePosition = isTablet ? 58 : 38; // 태블릿은 55%, PC는 35%에서 시작
+                const basePosition = isTablet ? 50 : 38; // 태블릿은 50%, PC는 38%에서 시작
                 const scrollOffset = scrollY * scrollSensitivity;
                 
                 leftPanel.style.top = `calc(${basePosition}% + ${scrollOffset}px)`;
@@ -350,10 +350,10 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
                     font-weight: 600;
                     color: #1e3a8a;
                     text-transform: uppercase;
-                    padding: 20px 32px;
+                    padding: 14px 20px;
                     background: #dbeafe;
                     border: 1px solid #3b82f6;
-                    border-radius: 24px;
+                    border-radius: 20px;
                     transform-style: preserve-3d;
                     transition: transform 150ms cubic-bezier(0, 0, 0.58, 1), background 150ms cubic-bezier(0, 0, 0.58, 1);
                     position: relative;
@@ -362,9 +362,9 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
                     outline: none;
                     vertical-align: middle;
                     text-decoration: none;
-                    font-size: 0.875rem;
+                    font-size: 0.75rem;
                     font-family: inherit;
-                    min-width: 120px;
+                    min-width: 90px;
                 }
 
                 .learn-more.space-theme {
@@ -373,7 +373,15 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
                     border: 1px solid #5b21b6;
                 }
                 
-                @media (min-width: 768px) {
+                @media (min-width: 768px) and (max-width: 1199px) {
+                    .learn-more {
+                        min-width: 120px;
+                        padding: 18px 32px;
+                        font-size: 0.8rem;
+                    }
+                }
+                
+                @media (min-width: 1200px) {
                     .learn-more {
                         min-width: 160px;
                         padding: 24px 48px;
@@ -627,7 +635,7 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
                         width: 220px;
                         height: 45vh;
                         padding: 12px;
-                        top: 62%;
+                        top: 50%;
                     }
                 }
                 
@@ -704,7 +712,7 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
                         width: 220px;
                         height: 45vh;
                         padding: 12px;
-                        top: 62%;
+                        top: 50%;
                     }
                 }
                 
@@ -1520,7 +1528,7 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
                         </div>
                     )}
 
-                    {/* 2페이지: 승강 제어 */}
+                    {/* 2페이지: 승강/횡행/락킹 제어 */}
                     {activeTab === 'page2' && (
                         <div className="space-y-6">
                             <div>
@@ -1537,6 +1545,31 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
                                         상승
                                     </button>
 
+                                    <div className="flex gap-6 md:gap-8 justify-center items-center">
+                                        <button
+                                            onMouseDown={handleMoveLeft}
+                                            onMouseUp={() => signalRService.moveLeft(0)}
+                                            onMouseLeave={() => signalRService.moveLeft(0)}
+                                            onTouchStart={handleMoveLeft}
+                                            onTouchEnd={() => signalRService.moveLeft(0)}
+                                            disabled={isDisabled}
+                                            className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                        >
+                                            좌행
+                                        </button>
+                                        <button
+                                            onMouseDown={handleMoveRight}
+                                            onMouseUp={() => signalRService.moveRight(0)}
+                                            onMouseLeave={() => signalRService.moveRight(0)}
+                                            onTouchStart={handleMoveRight}
+                                            onTouchEnd={() => signalRService.moveRight(0)}
+                                            disabled={isDisabled}
+                                            className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                        >
+                                            우행
+                                        </button>
+                                    </div>
+
                                     <button
                                         onMouseDown={handleLiftDown}
                                         onMouseUp={() => signalRService.liftDown(0)}
@@ -1548,6 +1581,31 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
                                     >
                                         하강
                                     </button>
+
+                                    <div className="flex gap-6 md:gap-8 justify-center items-center mt-8 md:mt-12">
+                                        <button
+                                            onMouseDown={handleLockingOn}
+                                            onMouseUp={() => signalRService.lockingOn(0)}
+                                            onMouseLeave={() => signalRService.lockingOn(0)}
+                                            onTouchStart={handleLockingOn}
+                                            onTouchEnd={() => signalRService.lockingOn(0)}
+                                            disabled={isDisabled}
+                                            className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                        >
+                                            락킹 잠김
+                                        </button>
+                                        <button
+                                            onMouseDown={handleLockingOff}
+                                            onMouseUp={() => signalRService.lockingOff(0)}
+                                            onMouseLeave={() => signalRService.lockingOff(0)}
+                                            onTouchStart={handleLockingOff}
+                                            onTouchEnd={() => signalRService.lockingOff(0)}
+                                            disabled={isDisabled}
+                                            className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                        >
+                                            락킹 해제
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -1555,62 +1613,8 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
 
                     {/* 3페이지: 횡행/락킹 */}
                     {activeTab === 'page3' && (
-                        <div className="page1-layout">
-                            {/* 횡행 제어 */}
-                            <div className="turn-table-section">
-                                <div className="door-vertical">
-                                    <button
-                                        onMouseDown={handleMoveLeft}
-                                        onMouseUp={() => signalRService.moveLeft(0)}
-                                        onMouseLeave={() => signalRService.moveLeft(0)}
-                                        onTouchStart={handleMoveLeft}
-                                        onTouchEnd={() => signalRService.moveLeft(0)}
-                                        disabled={isDisabled}
-                                        className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                    >
-                                        좌행
-                                    </button>
-                                    <button
-                                        onMouseDown={handleMoveRight}
-                                        onMouseUp={() => signalRService.moveRight(0)}
-                                        onMouseLeave={() => signalRService.moveRight(0)}
-                                        onTouchStart={handleMoveRight}
-                                        onTouchEnd={() => signalRService.moveRight(0)}
-                                        disabled={isDisabled}
-                                        className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                    >
-                                        우행
-                                    </button>
-                                </div>
-                            </div>
-
-                            {/* 락킹 제어 */}
-                            <div className="door-section">
-                                <div className="door-vertical">
-                                    <button
-                                        onMouseDown={handleLockingOn}
-                                        onMouseUp={() => signalRService.lockingOn(0)}
-                                        onMouseLeave={() => signalRService.lockingOn(0)}
-                                        onTouchStart={handleLockingOn}
-                                        onTouchEnd={() => signalRService.lockingOn(0)}
-                                        disabled={isDisabled}
-                                        className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                    >
-                                        락킹 잠김
-                                    </button>
-                                    <button
-                                        onMouseDown={handleLockingOff}
-                                        onMouseUp={() => signalRService.lockingOff(0)}
-                                        onMouseLeave={() => signalRService.lockingOff(0)}
-                                        onTouchStart={handleLockingOff}
-                                        onTouchEnd={() => signalRService.lockingOff(0)}
-                                        disabled={isDisabled}
-                                        className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                    >
-                                        락킹 해제
-                                    </button>
-                                </div>
-                            </div>
+                        <div className="flex justify-center items-center md:min-h-[200px]">
+                            {/* 락킹 버튼은 승강 제어 탭에만 표시 */}
                         </div>
                     )}
                 </div>

@@ -372,14 +372,24 @@ const SensorMonitor = ({ sensorData, isPLCConnected }) => {
     const getSearchInputStyle = () => {
         switch (theme) {
             case 'space':
-                return 'w-full pl-10 pr-4 py-3 border border-gray-500/70 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent transition-all duration-300 hover:border-gray-400 bg-gradient-to-br from-gray-600/80 to-gray-700/80 focus:bg-gradient-to-br from-gray-500/80 to-gray-600/80 text-gray-200';
+                return 'w-full pl-4 pr-10 py-3 rounded-xl text-sm focus:outline-none transition-all duration-300 text-white';
             case 'dark':
-                return 'w-full pl-10 pr-4 py-3 border border-gray-600/30 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-transparent transition-all duration-300 hover:border-gray-500 bg-gradient-to-br from-gray-800/50 to-gray-900/50 focus:bg-gradient-to-br from-gray-700/50 to-gray-800/50 text-gray-200';
+                return 'w-full pl-4 pr-10 py-3 border border-gray-600/30 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-transparent transition-all duration-300 hover:border-gray-500 bg-gradient-to-br from-gray-800/50 to-gray-900/50 focus:bg-gradient-to-br from-gray-700/50 to-gray-800/50 text-gray-200';
             case 'ocean':
-                return 'w-full pl-10 pr-4 py-3 border border-blue-500/30 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 hover:border-blue-400 bg-gradient-to-br from-blue-900/50 to-cyan-900/50 focus:bg-gradient-to-br from-blue-800/50 to-blue-900/50 text-blue-100';
+                return 'w-full pl-4 pr-10 py-3 border border-blue-500/30 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 hover:border-blue-400 bg-gradient-to-br from-blue-900/50 to-cyan-900/50 focus:bg-gradient-to-br from-blue-800/50 to-blue-900/50 text-blue-100';
             default:
-                return 'w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 hover:border-blue-400 bg-gray-50 focus:bg-white text-gray-900';
+                return 'w-full pl-4 pr-10 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 hover:border-blue-400 bg-gray-50 focus:bg-white text-gray-900';
         }
+    };
+
+    const getSearchInputInlineStyle = () => {
+        if (theme === 'space') {
+            return {
+                background: 'linear-gradient(145deg, #1a1a1a 0%, #2d2d2d 50%, #1a1a1a 100%)',
+                border: '1px solid rgba(255, 255, 255, 0.2)'
+            };
+        }
+        return {};
     };
 
     // 카테고리별 색상 정의 (속초용)
@@ -399,6 +409,38 @@ const SensorMonitor = ({ sensorData, isPLCConnected }) => {
     };
 
     return (
+        <>
+            <style jsx>{`
+                .custom-scrollbar::-webkit-scrollbar {
+                    width: 8px;
+                }
+                .custom-scrollbar::-webkit-scrollbar-track {
+                    background: rgba(0, 0, 0, 0.3);
+                    border-radius: 10px;
+                }
+                .custom-scrollbar::-webkit-scrollbar-thumb {
+                    background: rgba(34, 197, 94, 0.5);
+                    border-radius: 10px;
+                }
+                .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+                    background: rgba(34, 197, 94, 0.7);
+                }
+
+                .custom-scrollbar-purple::-webkit-scrollbar {
+                    width: 8px;
+                }
+                .custom-scrollbar-purple::-webkit-scrollbar-track {
+                    background: rgba(0, 0, 0, 0.3);
+                    border-radius: 10px;
+                }
+                .custom-scrollbar-purple::-webkit-scrollbar-thumb {
+                    background: rgba(168, 85, 247, 0.5);
+                    border-radius: 10px;
+                }
+                .custom-scrollbar-purple::-webkit-scrollbar-thumb:hover {
+                    background: rgba(168, 85, 247, 0.7);
+                }
+            `}</style>
         <div className={`rounded-2xl p-3 md:p-4 overflow-hidden border shadow-xl shadow-black/20 ${theme === 'space' ? 'border-purple-500/30' : 'border-white/20'}`} style={getMainBackgroundStyle()}>
             <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-6 md:mb-4 space-y-2 md:space-y-0">
                 <h2 className={`text-base md:text-lg font-bold mb-2 md:mb-0 ${getTitleGradient()}`}>
@@ -528,16 +570,12 @@ const SensorMonitor = ({ sensorData, isPLCConnected }) => {
 
                         {/* 검색창 - 세련된 디자인 */}
                         <div className="relative">
-                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <svg className={`h-4 w-4 ${theme === 'space' ? 'text-purple-500' : theme === 'dark' ? 'text-gray-400' : theme === 'ocean' ? 'text-blue-400' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                                </svg>
-                            </div>
                             <input
                                 type="text"                      
                                 value={searchFilter}
                                 onChange={(e) => setSearchFilter(e.target.value)}
                                 className={getSearchInputStyle()}
+                                style={getSearchInputInlineStyle()}
                             />
                             {searchFilter && (
                                 <button
@@ -556,27 +594,22 @@ const SensorMonitor = ({ sensorData, isPLCConnected }) => {
 
             {/* 실시간 바이트 스트림 */}
             {showRawStream && (
-                <div className="mb-6 bg-gradient-to-br from-gray-900 via-black to-gray-900 text-green-400 p-6 rounded-2xl shadow-2xl border border-gray-700 transform transition-all duration-700 ease-in-out">
+                <div className={`mb-6 bg-gradient-to-br from-gray-900 via-black to-gray-900 text-green-400 p-6 rounded-2xl shadow-2xl border transform transition-all duration-700 ease-in-out ${theme === 'space' ? 'border-purple-700' : 'border-gray-700'}`}>
                     <div className="mb-4 flex items-center space-x-2">
-                        <div className="animate-pulse w-3 h-3 bg-green-500 rounded-full"></div>
-                        <div className="text-yellow-400 font-semibold">실시간 속초 PLC 데이터 스트림</div>
-                        <div className="flex space-x-1">
-                            <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-                            <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-                            <div className="w-2 h-2 bg-pink-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
-                        </div>
+                        <div className={`animate-pulse w-3 h-3 rounded-full ${theme === 'space' ? 'bg-purple-500' : 'bg-green-500'}`}></div>
+                        <div className={`font-semibold ${theme === 'space' ? 'text-purple-400' : 'text-yellow-400'}`}>실시간 속초 PLC 데이터 스트림</div>                     
                     </div>
-                    <div className="h-64 overflow-y-auto font-mono text-xs space-y-1 custom-scrollbar">
+                    <div className={`h-64 overflow-y-auto font-mono text-xs space-y-1 ${theme === 'space' ? 'custom-scrollbar-purple' : 'custom-scrollbar'}`}>
                         {rawLog.map((entry, index) => (
                             <div
                                 key={index}
-                                className={`transition-all duration-500 ease-in-out transform ${index === 0 ? 'scale-105 bg-green-900/30 rounded px-2 py-1' : ''
+                                className={`transition-all duration-500 ease-in-out transform ${index === 0 ? `scale-105 rounded px-2 py-1 ${theme === 'space' ? 'bg-purple-900/30' : 'bg-green-900/30'}` : ''
                                     }`}
                                 style={{
                                     animationDelay: `${index * 50}ms`
                                 }}
                             >
-                                <span className="text-blue-400 font-semibold">[{entry.timestamp}]</span>
+                                <span className={`font-semibold ${theme === 'space' ? 'text-purple-400' : 'text-blue-400'}`}>[{entry.timestamp}]</span>
                                 <span className="ml-2 text-green-300">
                                     {entry.data.map((byte, byteIndex) => (
                                         <span
@@ -604,118 +637,113 @@ const SensorMonitor = ({ sensorData, isPLCConnected }) => {
                     boxShadow: 'inset 0 2px 4px rgba(255,255,255,0.7), inset 0 -2px 4px rgba(0,0,0,0.15), 0 8px 24px rgba(0,0,0,0.2)'
                 } : {}}>
                     <div className="mb-4">
-                        <div className={`font-bold text-lg ${theme === 'space' ? 'text-purple-400' : theme === 'dark' ? 'text-gray-200' : theme === 'ocean' ? 'text-blue-200' : 'text-gray-800'}`}>속초 1호기 PLC 체크리스트 (C060~C072)</div>
+                        <div className="flex items-center gap-3">
+                            <button
+                                onClick={() => handleSort('address')}
+                                className={`px-4 py-2 w-24 text-xs font-semibold rounded-lg transition-all duration-300 ${
+                                    sortField === 'address'
+                                        ? theme === 'space'
+                                            ? 'text-white shadow-lg'
+                                            : 'text-white shadow-lg'
+                                        : theme === 'space'
+                                            ? 'text-gray-300 hover:shadow-md'
+                                            : 'text-blue-700 hover:shadow-md'
+                                }`}
+                                style={theme === 'space' ? {
+                                    background: sortField === 'address'
+                                        ? 'linear-gradient(145deg, #4b5563, #1f2937)'
+                                        : 'linear-gradient(145deg, #374151, #1f2937)',
+                                    border: sortField === 'address'
+                                        ? '1px solid rgba(167, 139, 250, 0.4)'
+                                        : '1px solid rgba(107, 114, 128, 0.3)',
+                                    boxShadow: sortField === 'address'
+                                        ? 'inset 0 1px 2px rgba(255,255,255,0.1), 0 4px 12px rgba(167, 139, 250, 0.3)'
+                                        : 'inset 0 1px 2px rgba(255,255,255,0.05), 0 2px 8px rgba(0,0,0,0.4)'
+                                } : {
+                                    background: sortField === 'address'
+                                        ? 'linear-gradient(145deg, #3b82f6, #2563eb)'
+                                        : 'linear-gradient(145deg, #dbeafe, #bfdbfe)',
+                                    border: sortField === 'address'
+                                        ? '1px solid rgba(59, 130, 246, 0.5)'
+                                        : '1px solid rgba(147, 197, 253, 0.5)',
+                                    boxShadow: sortField === 'address'
+                                        ? 'inset 0 1px 2px rgba(255,255,255,0.3), 0 4px 12px rgba(59, 130, 246, 0.3)'
+                                        : 'inset 0 1px 2px rgba(255,255,255,0.5), 0 2px 8px rgba(59, 130, 246, 0.2)'
+                                }}
+                            >
+                                주소 {sortField === 'address' && (sortDirection === 'asc' ? '↑' : '↓')}
+                            </button>
+                            <button
+                                onClick={() => handleSort('name')}
+                                className={`px-4 py-2 w-24 text-xs font-semibold rounded-lg transition-all duration-300 ${
+                                    sortField === 'name'
+                                        ? theme === 'space'
+                                            ? 'text-white shadow-lg'
+                                            : 'text-white shadow-lg'
+                                        : theme === 'space'
+                                            ? 'text-gray-300 hover:shadow-md'
+                                            : 'text-blue-700 hover:shadow-md'
+                                }`}
+                                style={theme === 'space' ? {
+                                    background: sortField === 'name'
+                                        ? 'linear-gradient(145deg, #4b5563, #1f2937)'
+                                        : 'linear-gradient(145deg, #374151, #1f2937)',
+                                    border: sortField === 'name'
+                                        ? '1px solid rgba(167, 139, 250, 0.4)'
+                                        : '1px solid rgba(107, 114, 128, 0.3)',
+                                    boxShadow: sortField === 'name'
+                                        ? 'inset 0 1px 2px rgba(255,255,255,0.1), 0 4px 12px rgba(167, 139, 250, 0.3)'
+                                        : 'inset 0 1px 2px rgba(255,255,255,0.05), 0 2px 8px rgba(0,0,0,0.4)'
+                                } : {
+                                    background: sortField === 'name'
+                                        ? 'linear-gradient(145deg, #3b82f6, #2563eb)'
+                                        : 'linear-gradient(145deg, #dbeafe, #bfdbfe)',
+                                    border: sortField === 'name'
+                                        ? '1px solid rgba(59, 130, 246, 0.5)'
+                                        : '1px solid rgba(147, 197, 253, 0.5)',
+                                    boxShadow: sortField === 'name'
+                                        ? 'inset 0 1px 2px rgba(255,255,255,0.3), 0 4px 12px rgba(59, 130, 246, 0.3)'
+                                        : 'inset 0 1px 2px rgba(255,255,255,0.5), 0 2px 8px rgba(59, 130, 246, 0.2)'
+                                }}
+                            >
+                                이름 {sortField === 'name' && (sortDirection === 'asc' ? '↑' : '↓')}
+                            </button>
+                        </div>
                     </div>
 
-                    <div className={`rounded-xl overflow-hidden shadow-lg ${theme === 'space' ? 'bg-gradient-to-br from-purple-700/60 via-purple-800/50 to-purple-900/60 border-purple-500/30 shadow-xl shadow-purple-500/20' : theme === 'dark' ? 'bg-gradient-to-br from-gray-700/60 via-gray-800/50 to-gray-900/60 border-gray-600/30 shadow-xl shadow-gray-500/20' : theme === 'ocean' ? 'bg-gradient-to-br from-blue-700/60 via-blue-800/50 to-blue-900/60 border-blue-500/30 shadow-xl shadow-blue-500/20' : 'bg-gradient-to-br from-gray-100 to-gray-200 border-gray-200 shadow-xl shadow-gray-500/10'}`}>
-                        <div className="overflow-x-auto">
-                            <table className="w-full">
-                                <thead className={`text-white ${theme === 'space' ? 'bg-gradient-to-br from-purple-500 to-purple-700 shadow-lg shadow-purple-500/25' : theme === 'dark' ? 'bg-gradient-to-br from-gray-500 to-gray-700 shadow-lg shadow-gray-500/25' : theme === 'ocean' ? 'bg-gradient-to-br from-blue-500 to-blue-700 shadow-lg shadow-blue-500/25' : 'bg-gradient-to-br from-gray-400 to-gray-600 shadow-lg shadow-gray-500/25'}`}>
-                                    <tr>
-                                        <th 
-                                            className={`px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider cursor-pointer transition-colors duration-200 select-none ${theme === 'space' ? 'hover:bg-purple-700' : theme === 'dark' ? 'hover:bg-gray-700' : theme === 'ocean' ? 'hover:bg-blue-700' : 'hover:bg-gray-600'}`}
-                                            onClick={() => handleSort('address')}
-                                        >   
-                                            <div className="flex items-center justify-center space-x-1">
-                                                <span>주소</span>
-                                                {sortField === 'address' && (
-                                                    <span className="text-yellow-300">
-                                                        {sortDirection === 'asc' ? '↑' : '↓'}
-                                                    </span>
-                                                )}
-                                            </div>
-                                        </th>
-                                        <th 
-                                            className={`px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider cursor-pointer transition-colors duration-200 select-none ${theme === 'space' ? 'hover:bg-purple-700' : theme === 'dark' ? 'hover:bg-gray-700' : theme === 'ocean' ? 'hover:bg-blue-700' : 'hover:bg-gray-600'}`}
-                                            onClick={() => handleSort('name')}
-                                        >
-                                            <div className="flex items-center justify-center space-x-1">
-                                                <span>설명</span>
-                                                {sortField === 'name' && (
-                                                    <span className="text-yellow-300">
-                                                        {sortDirection === 'asc' ? '↑' : '↓'}
-                                                    </span>
-                                                )}
-                                            </div>
-                                        </th>
-                                        <th 
-                                            className={`px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider cursor-pointer transition-colors duration-200 select-none ${theme === 'space' ? 'hover:bg-purple-700' : theme === 'dark' ? 'hover:bg-gray-700' : theme === 'ocean' ? 'hover:bg-blue-700' : 'hover:bg-gray-600'}`}
-                                            onClick={() => handleSort('status')}
-                                        >
-                                            <div className="flex items-center justify-center space-x-1">
-                                                <span>상태</span>
-                                                {sortField === 'status' && (
-                                                    <span className="text-yellow-300">
-                                                        {sortDirection === 'asc' ? '↑' : '↓'}
-                                                    </span>
-                                                )}
-                                            </div>
-                                        </th>
-                                        <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider">값</th>
-                                        <th 
-                                            className={`px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider cursor-pointer transition-colors duration-200 select-none ${theme === 'space' ? 'hover:bg-purple-700' : theme === 'dark' ? 'hover:bg-gray-700' : theme === 'ocean' ? 'hover:bg-blue-700' : 'hover:bg-gray-600'}`}
-                                            onClick={() => handleSort('category')}
-                                        >
-                                            <div className="flex items-center justify-center space-x-1">
-                                                <span>카테고리</span>
-                                                {sortField === 'category' && (
-                                                    <span className="text-yellow-300">
-                                                        {sortDirection === 'asc' ? '↑' : '↓'}
-                                                    </span>
-                                                )}
-                                            </div>
-                                        </th>
-                                    </tr>
-                                </thead>
-                                <tbody className={`divide-y ${theme === 'space' ? 'divide-purple-600/30 bg-gray-900/95' : theme === 'dark' ? 'divide-gray-600/30 bg-gray-900/95' : theme === 'ocean' ? 'divide-blue-600/30 bg-gray-900/95' : 'divide-gray-200 bg-gradient-to-br from-gray-50 to-gray-100'}`}>
-                                    {plcChecklistData.map((item, index) => (
-                                        <tr
-                                            key={index}
-                                            className={`transition-all duration-300 ${theme === 'space' ? `hover:bg-purple-800/50 ${item.status === 'active' ? 'bg-purple-700/50' : ''}` : theme === 'dark' ? `hover:bg-gray-700/50 ${item.status === 'active' ? 'bg-gray-600/50' : ''}` : theme === 'ocean' ? `hover:bg-blue-800/50 ${item.status === 'active' ? 'bg-blue-700/50' : ''}` : `hover:bg-gray-50 ${item.status === 'active' ? 'bg-green-50' : ''}`}`}
-                                        >
-                                            <td className="px-4 py-3 whitespace-nowrap">
-                                                <span className={`text-sm font-mono font-semibold ${theme === 'space' ? 'text-purple-300' : theme === 'dark' ? 'text-blue-400' : theme === 'ocean' ? 'text-blue-300' : 'text-blue-600'}`}>
-                                                    {item.address}
-                                                </span>
-                                            </td>
-                                            <td className="px-4 py-3">
-                                                <div className={`text-sm font-medium ${theme === 'space' ? 'text-purple-100' : theme === 'dark' ? 'text-gray-200' : theme === 'ocean' ? 'text-blue-100' : 'text-gray-900'}`}>{item.name}</div>
-                                                <div className={`text-xs ${theme === 'space' ? 'text-purple-300' : theme === 'dark' ? 'text-gray-400' : theme === 'ocean' ? 'text-blue-300' : 'text-gray-500'}`}>{item.description}</div>
-                                            </td>
-                                            <td className="px-4 py-3 whitespace-nowrap">
-                                                <span className={`inline-flex px-3 py-1 rounded-full text-xs font-semibold ${item.status === 'active'
-                                                        ? theme === 'space' ? 'bg-purple-200 text-purple-800 border border-purple-300' : theme === 'dark' ? 'bg-purple-200 text-purple-800 border border-purple-300' : theme === 'ocean' ? 'bg-purple-200 text-purple-800 border border-purple-300' : 'bg-purple-100 text-purple-800 border border-purple-300'
-                                                        : theme === 'space' ? 'bg-purple-800/50 text-purple-300 border border-purple-600/50' : theme === 'dark' ? 'bg-gray-200 text-gray-600 border border-gray-300' : theme === 'ocean' ? 'bg-blue-800/50 text-blue-300 border border-blue-600/50' : 'bg-gray-100 text-gray-600 border border-gray-300'
-                                                    }`}>
-                                                    {item.displayValue}
-                                                </span>
-                                            </td>
-                                            <td className="px-4 py-3 text-center whitespace-nowrap">
-                                                <div className={`w-6 h-6 rounded-full mx-auto flex items-center justify-center text-xs font-bold ${item.status === 'active'
-                                                        ? theme === 'space' ? 'bg-purple-500 text-white animate-pulse' : theme === 'dark' ? 'bg-purple-500 text-white animate-pulse' : theme === 'ocean' ? 'bg-purple-500 text-white animate-pulse' : 'bg-purple-500 text-white animate-pulse'
-                                                        : theme === 'space' ? 'bg-purple-700 text-purple-300' : theme === 'dark' ? 'bg-gray-500 text-gray-300' : theme === 'ocean' ? 'bg-blue-700 text-blue-300' : 'bg-gray-300 text-gray-600'
-                                                    }`}>
-                                                    {item.rawValue}
-                                                </div>
-                                            </td>
-                                            <td className="px-4 py-3 whitespace-nowrap">
-                                                <span className={`inline-flex px-2 py-1 rounded-lg text-xs font-medium bg-gradient-to-r ${getCategoryColor(item.category)} text-white`}>
-                                                    {item.category}
-                                                </span>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
+                    <div className={`rounded-xl overflow-hidden shadow-lg border-2 ${theme === 'space' ? 'bg-gradient-to-br from-purple-700/60 via-purple-800/50 to-purple-900/60 border-gray-400 shadow-xl shadow-purple-500/20' : theme === 'dark' ? 'bg-gradient-to-br from-gray-700/60 via-gray-800/50 to-gray-900/60 border-gray-600/50 shadow-xl shadow-gray-500/20' : theme === 'ocean' ? 'bg-gradient-to-br from-blue-700/60 via-blue-800/50 to-blue-900/60 border-blue-500/50 shadow-xl shadow-blue-500/20' : 'bg-gradient-to-br from-blue-50 via-indigo-50 to-indigo-100 border-indigo-300 shadow-xl shadow-indigo-500/20'}`}>
+                        <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-4 p-2">
+                            {plcChecklistData.map((item, index) => (
+                                <div
+                                    key={index}
+                                    className={`px-4 py-3 h-12 xl:h-16 transition-all duration-300 ${
+                                        theme === 'space' 
+                                            ? `${item.status === 'active' ? 'bg-purple-700/70' : 'bg-gray-900/95'}` 
+                                            : theme === 'dark' 
+                                            ? `${item.status === 'active' ? 'bg-gray-600/70' : 'bg-gray-900/95'}` 
+                                            : theme === 'ocean' 
+                                            ? `${item.status === 'active' ? 'bg-blue-700/70' : 'bg-gray-900/95'}` 
+                                            : `${item.status === 'active' ? 'bg-green-400/90' : 'bg-white'}`
+                                    }`}
+                                    style={{
+                                        border: theme === 'space' ? '1px solid rgba(156, 163, 175, 0.3)' : theme === 'dark' ? '1px solid rgba(156, 163, 175, 0.3)' : theme === 'ocean' ? '1px solid rgba(59, 130, 246, 0.3)' : '1px solid rgba(156, 163, 175, 0.5)'
+                                    }}
+                                >
+                                    <div className="flex items-center space-x-3 h-full overflow-hidden">
+                                        <span className={`text-xs xl:text-sm font-mono font-semibold w-16 flex-shrink-0 ${theme === 'space' ? 'text-purple-300' : theme === 'dark' ? 'text-blue-400' : theme === 'ocean' ? 'text-blue-300' : 'text-blue-600'}`}>
+                                            {item.address}
+                                        </span>
+                                        <span className={`text-xs xl:text-sm truncate xl:line-clamp-2 ${theme === 'space' ? 'text-purple-100' : theme === 'dark' ? 'text-gray-200' : theme === 'ocean' ? 'text-blue-100' : 'text-gray-900'}`}>
+                                            {item.name}
+                                        </span>
+                                    </div>
+                                </div>
+                            ))}
                         </div>
                     </div>  
 
-                    <div className="mt-4 text-center">
-                        <p className={`text-sm ${theme === 'space' ? 'text-purple-300' : theme === 'dark' ? 'text-gray-400' : theme === 'ocean' ? 'text-blue-300' : 'text-gray-600'}`}>
-                            총 {plcChecklistData.length}개 센서 |
-                            <span className={`font-semibold ${theme === 'space' ? 'text-purple-400' : theme === 'dark' ? 'text-green-400' : theme === 'ocean' ? 'text-blue-400' : 'text-green-600'}`}> {plcChecklistData.filter(item => item.status === 'active').length}개 활성화</span> |
-                            <span className={`${theme === 'space' ? 'text-purple-400' : theme === 'dark' ? 'text-gray-500' : theme === 'ocean' ? 'text-blue-400' : 'text-gray-500'}`}> {plcChecklistData.filter(item => item.status === 'inactive').length}개 비활성화</span>
-                        </p>
+                    <div className="mt-8 text-center">
+                       
                     </div>
                 </div>
             )}
@@ -857,6 +885,7 @@ const SensorMonitor = ({ sensorData, isPLCConnected }) => {
                 </div>
             )}
         </div>
+        </>
     );
 };
 

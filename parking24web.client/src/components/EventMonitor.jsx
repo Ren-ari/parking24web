@@ -356,8 +356,12 @@ const EventMonitor = ({ sensorData, isPLCConnected }) => {
                         value={searchCarNumber}
                         onChange={(e) => setSearchCarNumber(e.target.value)}
                         onKeyPress={(e) => e.key === 'Enter' && searchCar()}
-                            className={`flex-1 min-w-0 px-2 md:px-4 py-3 md:py-2 rounded-lg border focus:ring-2 text-sm md:text-base ${theme === 'space' ? 'text-gray-200 border-gray-500/70 bg-gradient-to-br from-gray-600/80 to-gray-700/80 focus:ring-gray-500 focus:border-transparent hover:border-gray-400 focus:bg-gradient-to-br from-gray-500/80 to-gray-600/80' : 'text-gray-700 border border-gray-300 bg-white focus:ring-blue-300'}`}
-                            placeholder="차량번호 입력"
+                        className={`flex-1 min-w-0 px-2 md:px-4 py-3 md:py-2 rounded-lg focus:outline-none text-sm md:text-base ${theme === 'space' ? 'text-white' : 'text-gray-700 border border-gray-300 bg-white focus:ring-2 focus:ring-blue-300'}`}
+                        style={theme === 'space' ? {
+                            background: 'linear-gradient(145deg, #1a1a1a 0%, #2d2d2d 50%, #1a1a1a 100%)',
+                            border: '1px solid rgba(255, 255, 255, 0.2)'
+                        } : {}}
+                        placeholder=""
                     />
                     <button
                         onClick={searchCar}
@@ -443,7 +447,7 @@ const EventMonitor = ({ sensorData, isPLCConnected }) => {
                     {/* 액션 버튼들 - 데스크탑 */}
                     <div className="hidden sm:flex gap-3 mt-4">
                         <button onClick={downloadExcel} className="px-4 py-2 rounded-full text-gray-800 font-bold hover:scale-105" style={theme === 'space' ? { background: 'linear-gradient(145deg, #e5e7eb 0%, #9ca3af 100%)', border: '1px solid rgba(156, 163, 175, 0.8)', boxShadow: 'inset 0 1px 2px rgba(255,255,255,0.7), 0 6px 16px rgba(0,0,0,0.25)', fontSize: '0.75rem' } : { background: 'rgba(255, 255, 255, 0.9)', border: '1px solid rgba(255, 255, 255, 0.3)', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)', fontSize: '0.75rem' }}>엑셀 다운로드</button>
-                        <button onClick={loadAllData} className="px-4 py-2 rounded-full text-gray-800 font-medium hover:scale-105" style={theme === 'space' ? { background: 'linear-gradient(145deg, #e5e7eb 0%, #9ca3af 100%)', border: '1px solid rgba(156, 163, 175, 0.8)', boxShadow: 'inset 0 1px 2px rgba(255,255,255,0.7), 0 6px 16px rgba(0,0,0,0.25)', fontSize: '0.75rem' } : { background: 'rgba(255, 255, 255, 0.9)', border: '1px solid rgba(255, 255, 255, 0.3)', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)', fontSize: '0.75rem' }}>새로고침</button>
+                        <button onClick={loadAllData} className="px-4 py-2 rounded-full text-gray-800 font-bold hover:scale-105" style={theme === 'space' ? { background: 'linear-gradient(145deg, #e5e7eb 0%, #9ca3af 100%)', border: '1px solid rgba(156, 163, 175, 0.8)', boxShadow: 'inset 0 1px 2px rgba(255,255,255,0.7), 0 6px 16px rgba(0,0,0,0.25)', fontSize: '0.75rem' } : { background: 'rgba(255, 255, 255, 0.9)', border: '1px solid rgba(255, 255, 255, 0.3)', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)', fontSize: '0.75rem' }}>새로고침</button>
                         {!isClient() && (
                             <button onClick={clearAllData} className="px-4 py-2 rounded-full text-gray-800 font-bold hover:scale-105" style={theme === 'space' ? { background: 'linear-gradient(145deg, #e5e7eb 0%, #9ca3af 100%)', border: '1px solid rgba(156, 163, 175, 0.8)', boxShadow: 'inset 0 1px 2px rgba(255,255,255,0.7), 0 6px 16px rgba(0,0,0,0.25)', fontSize: '0.75rem' } : { background: 'rgba(255, 255, 255, 0.9)', border: '1px solid rgba(255, 255, 255, 0.3)', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)', fontSize: '0.75rem' }}>데이터 초기화</button>
                         )}
@@ -476,18 +480,18 @@ const EventMonitor = ({ sensorData, isPLCConnected }) => {
                                                     <td className="px-4 py-3 text-center"><span className={`text-sm ${theme === 'space' ? 'text-purple-300' : 'text-gray-600'}`}>{item.날짜}</span></td>
                                                     <td className="px-4 py-3 text-center"><span className={`text-sm font-mono ${theme === 'space' ? 'text-purple-300' : 'text-gray-600'}`}>{item.시간}</span></td>
                                                     <td className="px-4 py-3 text-center">
-                                                        <span className={`inline-flex px-3 py-1 rounded-full text-xs font-semibold ${item.구분 === '입차' ? 'bg-blue-500 text-white border-2 border-blue-600' :
-                                                                item.구분 === '주차중' ? 'bg-green-500 text-white border-2 border-green-600' :
-                                                                    'bg-red-500 text-white border-2 border-red-600'
-                                                            }`}>{item.구분}</span>
+                                                        <span className={`inline-flex px-3 py-1 rounded-full text-xs font-semibold ${
+                                                            theme === 'space'
+                                                                ? 'bg-purple-500 text-white border-2 border-purple-600'
+                                                                : (item.구분 === '입차' ? 'bg-blue-500 text-white border-2 border-blue-600' :
+                                                                    item.구분 === '주차중' ? 'bg-green-500 text-white border-2 border-green-600' :
+                                                                    'bg-red-500 text-white border-2 border-red-600')
+                                                        }`}>{item.구분}</span>
                                                     </td>
                                                     <td className="px-4 py-3 text-center">
-                                                        <div className={`w-8 h-8 rounded-full mx-auto flex items-center justify-center text-sm font-bold ${item.구분 === '입차' ? 'bg-blue-500 text-white' :
-                                                                item.구분 === '주차중' ? 'bg-green-500 text-white' :
-                                                                    'bg-red-500 text-white'
-                                                            }`}>{item.차판}</div>
+                                                        <span className={`text-sm font-bold ${theme === 'space' ? 'text-purple-300' : 'text-gray-600'}`}>{item.차판}</span>
                                                     </td>
-                                                    <td className="px-4 py-3 text-center"><div className={`text-lg font-bold ${theme === 'space' ? 'text-purple-100' : 'text-gray-800'}`}>{item.차번}</div></td>
+                                                    <td className="px-4 py-3 text-center"><div className={`text-lg font-bold ${theme === 'space' ? 'text-purple-300' : 'text-gray-800'}`}>{item.차번}</div></td>
                                                 </tr>
                                             ))}
                                         </tbody>
@@ -586,25 +590,25 @@ const EventMonitor = ({ sensorData, isPLCConnected }) => {
                                 </thead>
                                 <tbody className={`divide-y ${theme === 'space' ? 'divide-purple-600/30 bg-gray-900/95' : 'divide-gray-200 bg-white'}`}>
                                     {getTabData().length === 0 ? (
-                                        <tr><td colSpan="4" className={`text-center py-12 text-lg ${theme === 'space' ? 'text-purple-400' : 'text-gray-500'}`}>데이터가 없습니다</td></tr>
+                                        <tr><td colSpan="5" className={`text-center py-12 text-lg ${theme === 'space' ? 'text-purple-400' : 'text-gray-500'}`}>데이터가 없습니다</td></tr>
                                     ) : (
                                         getTabData().map((item, idx) => (
                                             <tr key={idx} className={`transition-all ${theme === 'space' ? 'hover:bg-purple-800/50' : 'hover:bg-blue-50/50'}`}>
                                                 <td className="px-4 py-3 whitespace-nowrap"><span className={`text-sm ${theme === 'space' ? 'text-purple-300' : 'text-gray-600'}`}>{item.날짜}</span></td>
                                                 <td className="px-4 py-3 whitespace-nowrap"><span className={`text-sm font-mono font-semibold ${theme === 'space' ? 'text-purple-300' : 'text-gray-600'}`}>{item.시간}</span></td>
                                                 <td className="px-4 py-3 whitespace-nowrap">
-                                                    <span className={`inline-flex px-3 py-1 rounded-full text-xs font-semibold ${item.구분 === '입차' ? 'bg-blue-500 text-white border-2 border-blue-600' :
-                                                            item.구분 === '주차중' ? 'bg-green-500 text-white border-2 border-green-600' :
-                                                                'bg-red-500 text-white border-2 border-red-600'
-                                                        }`}>{item.구분}</span>
+                                                    <span className={`inline-flex px-3 py-1 rounded-full text-xs font-semibold ${
+                                                        theme === 'space' 
+                                                            ? 'bg-purple-500 text-white border-2 border-purple-600'
+                                                            : (item.구분 === '입차' ? 'bg-blue-500 text-white border-2 border-blue-600' :
+                                                                item.구분 === '주차중' ? 'bg-green-500 text-white border-2 border-green-600' :
+                                                                'bg-red-500 text-white border-2 border-red-600')
+                                                    }`}>{item.구분}</span>
                                                 </td>
                                                 <td className="px-4 py-3 text-center whitespace-nowrap">
-                                                    <div className={`w-8 h-8 rounded-full mx-auto flex items-center justify-center text-sm font-bold ${item.구분 === '입차' ? 'bg-blue-500 text-white' :
-                                                            item.구분 === '주차중' ? 'bg-green-500 text-white' :
-                                                                'bg-red-500 text-white'
-                                                        }`}>{item.차판}</div>
+                                                    <span className={`text-sm font-bold ${theme === 'space' ? 'text-purple-300' : 'text-gray-600'}`}>{item.차판}</span>
                                                 </td>
-                                                <td className="px-4 py-3 text-center whitespace-nowrap"><div className={`text-lg font-bold ${theme === 'space' ? 'text-purple-100' : 'text-gray-800'}`}>{item.차번}</div></td>
+                                                <td className="px-4 py-3 text-center whitespace-nowrap"><div className={`text-lg font-bold ${theme === 'space' ? 'text-purple-300' : 'text-gray-800'}`}>{item.차번}</div></td>
                                             </tr>
                                         ))
                                     )}
