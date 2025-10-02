@@ -8,6 +8,7 @@ import ManualControl from './ManualControl';
 import ParkingMonitor from './ParkingMonitor';
 import EventMonitor from './EventMonitor';
 import ServiceRecordTab from './ServiceRecordTab';
+import CCTVMonitor from './CCTVMonitor';
 // 속초 1호기 config import 추가
 import siteConfig from '../../config/sokcho1Config.js';
 import { ROLE_TABS } from './auth';
@@ -24,6 +25,7 @@ const PLCControl = ({ currentUser, onLogout }) => {
         'parking': 'parking',      // 주차 현황
         'events': 'events',        // 입출차 이벤트
         'service': 'service',
+        'cctv': 'cctv',
         'manual': 'control',       // 수동 제어  
         'sensor': 'monitor',       // 센서 모니터
         'config': 'connection'     // 연결 관리 (설정)
@@ -374,6 +376,13 @@ const PLCControl = ({ currentUser, onLogout }) => {
                                 className={`${getTabStyle('service')} group overflow-hidden`}
                             >
                                 <span className="relative z-10">A/S 기록</span>
+                            </button>
+                        )}
+
+                        {/* CCTV - cctv 권한 */}
+                        {hasTabAccess('cctv') && (
+                            <button onClick={() => handleTabClick('cctv')}>
+                                <span>CCTV</span>
                             </button>
                         )}
 
@@ -1145,6 +1154,11 @@ const PLCControl = ({ currentUser, onLogout }) => {
                             {/* A/S 기록 탭 - service 권한 */}
                             {activeTab === 'service' && hasTabAccess('service') && (
                                 <ServiceRecordTab />
+                            )}
+
+                            {/* CCTV 탭 */}
+                            {activeTab === 'cctv' && hasTabAccess('cctv') && (
+                                <CCTVMonitor />
                             )}
 
                             {/* 권한 없는 경우 안내 메시지 */}

@@ -157,6 +157,17 @@ else
 app.UseDefaultFiles(); // index.html을 기본 파일로 설정
 app.UseStaticFiles();  // wwwroot 폴더의 정적 파일 서빙
 
+// HLS 스트리밍 파일 서빙
+var hlsPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "Parking24web", "hls");
+Directory.CreateDirectory(hlsPath);
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(hlsPath),
+    RequestPath = "/hls",
+    ServeUnknownFileTypes = true,
+    DefaultContentType = "application/octet-stream"
+});
+
 app.UseRouting();
 app.UseAuthorization();
 

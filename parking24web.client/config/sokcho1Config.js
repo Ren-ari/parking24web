@@ -423,6 +423,23 @@ export const sokcho1Config = {
         }
     },
 
+    // CCTV 설정
+    cctvConfig: {
+        channels: [
+            { number: 33, name: '입구' },
+            { number: 34, name: '엘리베이터' },
+            { number: 35, name: '출구' }
+        ],
+        defaultConnection: {
+            ipAddress: '175.206.165.220',
+            port: 8080,
+            rtspPort: 8888,
+            username: 'admin',
+            password: '!yanry4880'
+        }
+    },
+
+
     // 주차장 모니터링 설정
     parkingMonitor: {
         // 속초는 순차적 구조 (1~80번)
