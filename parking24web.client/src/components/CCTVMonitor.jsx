@@ -1,7 +1,41 @@
-﻿import { useState, useEffect, useRef } from 'react';
+﻿import { useState, useEffect, useRef, memo, useCallback } from 'react';
 import Hls from 'hls.js';
-import { isClient } from './auth';
-import siteConfig from '../config/sokcho1Config';
+import siteConfig from '../../config/sokcho1Config';
+
+// 위치 이름 매핑 (채널 번호 기준)
+const getLocationName = (channelNumber) => {
+    const locations = {
+        1: 'ch1',
+        2: 'ch2',
+        3: 'ch3',
+        4: 'ch4',
+        5: 'ch5'
+    };
+    return locations[channelNumber] || '';
+};
+
+// 썸네일 카드 컴포넌트
+const ThumbnailCard = memo(({ channel, isActive, onClick }) => (
+    <div
+        className={`cursor-pointer border-2 rounded-lg overflow-hidden transition-all duration-300 hover:scale-105 hover:shadow-lg ${isActive ? 'border-green-500 shadow-lg shadow-green-500/50' : 'border-transparent'
+            }`}
+        onClick={onClick}
+    >
+        <img
+            src={`/thumbnails/ch${channel.number}.jpg`}
+            alt={channel.name}
+            className="w-full h-24 object-cover"
+            loading="lazy"
+            onError={(e) => {
+                e.target.onerror = null;
+                e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect fill="%23ddd" width="100" height="100"/%3E%3Ctext fill="%23999" x="50%25" y="50%25" text-anchor="middle" dy=".3em"%3ENo Image%3C/svg%3E';
+            }}
+        />
+        <div className="bg-white p-2 text-center text-sm font-medium">
+            {channel.number}번 - {getLocationName(channel.number)}
+        </div>
+    </div>
+));
 
 const CCTVMonitor = () => {
     const [isConnected, setIsConnected] = useState(false);
@@ -21,14 +55,10 @@ const CCTVMonitor = () => {
     );
 
     const videoRef = useRef(null);
-
-    const videoRef = useRef(null);
     const hlsRef = useRef(null);
 
     // API 기본 URL
-    const apiBaseUrl = import.meta.env.DEV
-        ? 'http://localhost:5203'
-        : window.location.origin;
+    const apiBaseUrl = '';
 
     // 연결 상태 체크
     useEffect(() => {
@@ -37,15 +67,15 @@ const CCTVMonitor = () => {
         return () => clearInterval(interval);
     }, []);
 
-    // HLS 정리
+    // HLS 정리 + FFmpeg 프로세스 정리
     useEffect(() => {
         return () => {
-            if (hlsRef.current) {
-                hlsRef.current.destroy();
-                hlsRef.current = null;
+            // 컴포넌트 언마운트시 (탭 이동, 브라우저 닫기 등)
+            if (isStreaming) {
+                stopStream(); // 기존 stopStream 함수 재활용
             }
         };
-    }, []);
+    }, [isStreaming]);
 
     const checkStatus = async () => {
         try {
@@ -54,7 +84,6 @@ const CCTVMonitor = () => {
             setIsConnected(data.isConnected);
             setStatusMessage(data.statusMessage);
             setCurrentChannel(data.currentChannel);
-            setIsStreaming(data.isStreaming);
         } catch (error) {
             console.error('상태 체크 실패:', error);
         }
@@ -101,7 +130,7 @@ const CCTVMonitor = () => {
         }
     };
 
-    const handleChannelChange = async (channelNumber) => {
+    const handleChannelChange = useCallback(async (channelNumber) => {
         if (!isConnected) {
             alert('먼저 CCTV에 연결하세요');
             return;
@@ -116,21 +145,21 @@ const CCTVMonitor = () => {
 
         // 새 채널 시작
         await startStream(channelNumber);
-    };
+    }, [isConnected, isStreaming]);
 
     const startStream = async (channel = currentChannel) => {
         try {
-            const response = await fetch(`${apiBaseUrl}/api/cctv/hls/start/${channel}?stream=main`, {
+            const response = await fetch(`${apiBaseUrl}/api/cctv/hls/start/${channel}?stream=sub`, {
                 method: 'POST'
             });
 
             const result = await response.json();
             if (result.success) {
                 setIsStreaming(true);
-                // 1초 대기 후 재생 (세그먼트 생성 대기)
+                // 1.5초 대기 후 재생 (세그먼트 생성 대기)
                 setTimeout(() => {
                     playHLS(channel);
-                }, 1000);
+                }, 1500);
             } else {
                 alert('스트리밍 시작 실패');
             }
@@ -170,11 +199,11 @@ const CCTVMonitor = () => {
 
         if (Hls.isSupported()) {
             const hls = new Hls({
-                maxBufferLength: 3,        // 버퍼 3초
-                maxMaxBufferLength: 5,     // 최대 5초
-                liveSyncDuration: 1,       // 라이브 지점 1초
-                liveMaxLatencyDuration: 3, // 최대 3초 지연
-                highBufferWatchdogPeriod: 1
+                maxBufferLength: 3,
+                maxMaxBufferLength: 5,
+                liveSyncDuration: 1,
+                liveMaxLatencyDuration: 3,
+                highBufferWatchdogPeriod: 2
             });
 
             hls.loadSource(videoUrl);
@@ -208,7 +237,6 @@ const CCTVMonitor = () => {
 
             hlsRef.current = hls;
         } else if (videoRef.current.canPlayType('application/vnd.apple.mpegurl')) {
-            // Safari 네이티브 지원
             videoRef.current.src = videoUrl;
             videoRef.current.play();
         }
@@ -233,117 +261,99 @@ const CCTVMonitor = () => {
                 </div>
             </div>
 
-            {/* 연결 설정 */}
-            <div className="bg-white rounded-lg shadow p-4">
-                <h3 className="text-lg font-semibold mb-3">연결 설정</h3>
-                <div className="grid grid-cols-2 gap-3">
-                    <div>
-                        <label className="block text-sm font-medium mb-1">IP 주소</label>
-                        <input
-                            type="text"
-                            value={connectionInfo.ipAddress}
-                            onChange={(e) => setConnectionInfo({ ...connectionInfo, ipAddress: e.target.value })}
-                            className="w-full px-3 py-2 border rounded"
-                            disabled={isConnected}
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium mb-1">HTTP 포트</label>
-                        <input
-                            type="number"
-                            value={connectionInfo.port}
-                            onChange={(e) => setConnectionInfo({ ...connectionInfo, port: parseInt(e.target.value) })}
-                            className="w-full px-3 py-2 border rounded"
-                            disabled={isConnected}
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium mb-1">RTSP 포트</label>
-                        <input
-                            type="number"
-                            value={connectionInfo.rtspPort}
-                            onChange={(e) => setConnectionInfo({ ...connectionInfo, rtspPort: parseInt(e.target.value) })}
-                            className="w-full px-3 py-2 border rounded"
-                            disabled={isConnected}
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium mb-1">사용자명</label>
-                        <input
-                            type="text"
-                            value={connectionInfo.username}
-                            onChange={(e) => setConnectionInfo({ ...connectionInfo, username: e.target.value })}
-                            className="w-full px-3 py-2 border rounded"
-                            disabled={isConnected}
-                        />
-                    </div>
-                    <div className="col-span-2">
-                        <label className="block text-sm font-medium mb-1">비밀번호</label>
-                        <input
-                            type="password"
-                            value={connectionInfo.password}
-                            onChange={(e) => setConnectionInfo({ ...connectionInfo, password: e.target.value })}
-                            className="w-full px-3 py-2 border rounded"
-                            disabled={isConnected}
-                        />
-                    </div>
-                </div>
-                <div className="mt-4 flex gap-2">
-                    {!isConnected ? (
-                        <button
-                            onClick={handleConnect}
-                            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-                        >
-                            연결
-                        </button>
-                    ) : (
-                        <button
-                            onClick={handleDisconnect}
-                            className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
-                        >
-                            연결 해제
-                        </button>
-                    )}
-                </div>
-            </div>
-
-            {/* 채널 선택 */}
+            {/* 썸네일 그리드 */}
             {isConnected && (
-                <div className="bg-white rounded-lg shadow p-4">
-                    <h3 className="text-lg font-semibold mb-3">채널 선택</h3>
-                    <div className="flex gap-2">
+                <div className="bg-gray-50 rounded-lg p-4">
+                    <div className="grid grid-cols-5 gap-3">
                         {channels.map(ch => (
-                            <button
+                            <ThumbnailCard
                                 key={ch.number}
+                                channel={ch}
+                                isActive={currentChannel === ch.number}
                                 onClick={() => handleChannelChange(ch.number)}
-                                className={`px-4 py-2 rounded font-semibold ${currentChannel === ch.number
-                                        ? 'bg-purple-600 text-white'
-                                        : 'bg-gray-200 hover:bg-gray-300'
-                                    }`}
-                            >
-                                {ch.number}번 - {ch.name}
-                            </button>
+                            />
                         ))}
                     </div>
-                    <div className="mt-3 flex gap-2">
-                        {!isStreaming ? (
+                </div>
+            )}
+
+            {/* 연결 설정 - 접을 수 있게 */}
+            <details className="bg-white rounded-lg shadow">
+                <summary className="cursor-pointer font-semibold p-4 hover:bg-gray-50 rounded-lg">
+                    ⚙️ 연결 설정
+                </summary>
+                <div className="p-4 pt-0">
+                    <div className="grid grid-cols-2 gap-3">
+                        <div>
+                            <label className="block text-sm font-medium mb-1">IP 주소</label>
+                            <input
+                                type="text"
+                                value={connectionInfo.ipAddress}
+                                onChange={(e) => setConnectionInfo({ ...connectionInfo, ipAddress: e.target.value })}
+                                className="w-full px-3 py-2 border rounded"
+                                disabled={isConnected}
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium mb-1">HTTP 포트</label>
+                            <input
+                                type="number"
+                                value={connectionInfo.port}
+                                onChange={(e) => setConnectionInfo({ ...connectionInfo, port: parseInt(e.target.value) })}
+                                className="w-full px-3 py-2 border rounded"
+                                disabled={isConnected}
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium mb-1">RTSP 포트</label>
+                            <input
+                                type="number"
+                                value={connectionInfo.rtspPort}
+                                onChange={(e) => setConnectionInfo({ ...connectionInfo, rtspPort: parseInt(e.target.value) })}
+                                className="w-full px-3 py-2 border rounded"
+                                disabled={isConnected}
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium mb-1">사용자명</label>
+                            <input
+                                type="text"
+                                value={connectionInfo.username}
+                                onChange={(e) => setConnectionInfo({ ...connectionInfo, username: e.target.value })}
+                                className="w-full px-3 py-2 border rounded"
+                                disabled={isConnected}
+                            />
+                        </div>
+                        <div className="col-span-2">
+                            <label className="block text-sm font-medium mb-1">비밀번호</label>
+                            <input
+                                type="password"
+                                value={connectionInfo.password}
+                                onChange={(e) => setConnectionInfo({ ...connectionInfo, password: e.target.value })}
+                                className="w-full px-3 py-2 border rounded"
+                                disabled={isConnected}
+                            />
+                        </div>
+                    </div>
+                    <div className="mt-4 flex gap-2">
+                        {!isConnected ? (
                             <button
-                                onClick={() => startStream()}
-                                className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
+                                onClick={handleConnect}
+                                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
                             >
-                                ▶ 스트리밍 시작
+                                연결
                             </button>
                         ) : (
                             <button
-                                onClick={stopStream}
+                                onClick={handleDisconnect}
                                 className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
                             >
-                                ■ 스트리밍 중지
+                                연결 해제
                             </button>
                         )}
                     </div>
                 </div>
-            )}
+            </details>
 
             {/* 비디오 플레이어 */}
             {isConnected && (
@@ -359,7 +369,7 @@ const CCTVMonitor = () => {
                         브라우저가 비디오를 지원하지 않습니다.
                     </video>
                     <div className="bg-gray-800 text-white p-2 text-sm">
-                        현재 채널: {currentChannel}번 |
+                        현재 채널: {currentChannel}번 - {getLocationName(currentChannel)} |
                         {isStreaming ? ' 🔴 스트리밍 중' : ' ⚪ 대기 중'}
                     </div>
                 </div>

@@ -24,3 +24,20 @@ dist/
 *.g.props
 *.cache
 *.FileListAbsolute.txt
+
+
+# React 빌드 결과물
+wwwroot/
+
+# SQLite 데이터베이스
+*.db
+*.db-shm
+*.db-wal
+Data/
+
+# FFmpeg HLS 파일
+hls/
+
+# Publish 결과물
+publish*/
+Publish*/

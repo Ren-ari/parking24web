@@ -52,6 +52,9 @@ builder.Services.AddSignalR();
 // PLC 서비스 싱글톤으로 등록
 builder.Services.AddSingleton<PLCService>();
 
+// CCTV 서비스 싱글톤으로 등록
+builder.Services.AddSingleton<CCTVService>();
+
 // 백그라운드 서비스 등록
 builder.Services.AddHostedService<ParkingEventService>();
 
@@ -191,6 +194,18 @@ appLogger.LogInformation($"URL: {urls}");
 appLogger.LogInformation($"설정 파일: {(File.Exists(siteConfigFile) ? siteConfigFile : "기본 설정")}");
 appLogger.LogInformation($"정적 파일: {(environment.IsDevelopment() ? "React 개발서버" : "내장된 React 앱")}");
 appLogger.LogInformation($"===========================");
+
+// 서버 종료시 CCTV 정리 등록 (Graceful Shutdown)
+var lifetime = app.Services.GetRequiredService<IHostApplicationLifetime>();
+lifetime.ApplicationStopping.Register(() =>
+{
+    appLogger.LogInformation("서버 종료 중 - CCTV 서비스 정리 시작");
+
+    var cctvService = app.Services.GetService<CCTVService>();
+    cctvService?.Dispose();
+
+    appLogger.LogInformation("CCTV 서비스 정리 완료");
+});
 
 app.Run();
 

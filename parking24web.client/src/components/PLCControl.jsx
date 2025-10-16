@@ -8,7 +8,7 @@ import ManualControl from './ManualControl';
 import ParkingMonitor from './ParkingMonitor';
 import EventMonitor from './EventMonitor';
 import ServiceRecordTab from './ServiceRecordTab';
-import CCTVMonitor from './CCTVMonitor';
+const CCTVMonitor = React.lazy(() => import('./CCTVMonitor'));
 // 속초 1호기 config import 추가
 import siteConfig from '../../config/sokcho1Config.js';
 import { ROLE_TABS } from './auth';
@@ -381,8 +381,11 @@ const PLCControl = ({ currentUser, onLogout }) => {
 
                         {/* CCTV - cctv 권한 */}
                         {hasTabAccess('cctv') && (
-                            <button onClick={() => handleTabClick('cctv')}>
-                                <span>CCTV</span>
+                            <button
+                                onClick={() => handleTabClick('cctv')}
+                                className={`${getTabStyle('cctv')} group overflow-hidden`}
+                            >
+                                <span className="relative z-10">CCTV</span>
                             </button>
                         )}
 
@@ -1158,7 +1161,9 @@ const PLCControl = ({ currentUser, onLogout }) => {
 
                             {/* CCTV 탭 */}
                             {activeTab === 'cctv' && hasTabAccess('cctv') && (
-                                <CCTVMonitor />
+                                <React.Suspense fallback={<div className="text-center p-8">CCTV 로딩중...</div>}>
+                                    <CCTVMonitor />
+                                </React.Suspense>
                             )}
 
                             {/* 권한 없는 경우 안내 메시지 */}

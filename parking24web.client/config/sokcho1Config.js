@@ -14,7 +14,7 @@ export const sokcho1Config = {
             {
                 unit: 1,
                 name: "1호기",
-                ip: "192.168.1.2",
+                ip: "192.168.0.101",
                 port: 2005
             }
         ]
@@ -426,9 +426,11 @@ export const sokcho1Config = {
     // CCTV 설정
     cctvConfig: {
         channels: [
-            { number: 33, name: '입구' },
-            { number: 34, name: '엘리베이터' },
-            { number: 35, name: '출구' }
+            { number: 1, name: 'Camera 01 (D1)' },
+            { number: 2, name: 'Channel 2 (D2)' },
+            { number: 3, name: 'Channel 3 (D3)' },
+            { number: 4, name: 'Channel 4 (D4)' },
+            { number: 5, name: 'Camera 01 (D5)' }
         ],
         defaultConnection: {
             ipAddress: '175.206.165.220',

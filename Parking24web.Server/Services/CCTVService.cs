@@ -202,10 +202,10 @@ namespace Parking24web.Server.Services
                                $"-an -c:v libx264 -preset ultrafast -tune zerolatency " +
                                $"-vf scale=-2:480,format=yuv420p " +
                                $"-b:v 1000k -maxrate 1200k -bufsize 1000k " +
-                               $"-g 12 -keyint_min 12 -sc_threshold 0 " +
+                               $"-g 30 -keyint_min 30 -sc_threshold 0 " +
                                $"-profile:v baseline -level 3.1 " +
                                $"-max_muxing_queue_size 1024 " +
-                               $"-f hls -hls_time 0.5 -hls_list_size 10 " +
+                               $"-f hls -hls_time 1 -hls_list_size 10 " +
                                $"-hls_flags delete_segments+omit_endlist+independent_segments+program_date_time " +
                                $"-hls_segment_filename \"{Path.Combine(outDir, "%03d.ts")}\" " +
                                $"\"{Path.Combine(outDir, "index.m3u8")}\"";
