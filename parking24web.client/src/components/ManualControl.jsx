@@ -32,9 +32,20 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
             
             if (leftPanel && rightPanel) {
                 // 화면 크기에 따라 스크롤 감도와 기본 위치 조정
-                const isTablet = window.innerWidth >= 768 && window.innerWidth <= 1400;
-                const scrollSensitivity = isTablet ? 0.5 : 1.0; // 태블릿에서는 움직임 폭을 줄임
-                const basePosition = isTablet ? 50 : 38; // 태블릿은 50%, PC는 38%에서 시작
+                const width = window.innerWidth;
+                let scrollSensitivity = 1.0;
+                let basePosition = 35; // PC 기본
+                
+                if (width >= 768 && width < 1200) {
+                    // 작은 태블릿
+                    scrollSensitivity = 0.5;
+                    basePosition = 50;
+                } else if (width >= 1200 && width <= 1400) {
+                    // 큰 태블릿
+                    scrollSensitivity = 0.5;
+                    basePosition = 40;
+                }
+                
                 const scrollOffset = scrollY * scrollSensitivity;
                 
                 leftPanel.style.top = `calc(${basePosition}% + ${scrollOffset}px)`;
@@ -605,7 +616,7 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
                 
                 .sensor-panel-right {
                     position: fixed;
-                    top: 38%;
+                    top: 35%;
                     right: -300px;
                     width: 300px;
                     height: 70vh;
@@ -644,7 +655,7 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
                         width: 250px;
                         height: 50vh;
                         padding: 14px;
-                        top: 62%;
+                        top: 60%;
                     }
                 }
                 
@@ -682,7 +693,7 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
                 
                 .sensor-panel-left {
                     position: fixed;
-                    top: 60%; 
+                    top: 35%; 
                     left: -300px;
                     width: 300px;
                     height: 70vh;
@@ -721,7 +732,7 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
                         width: 250px;
                         height: 50vh;
                         padding: 14px;
-                        top: 62%;
+                        top: 60%;
                     }
                 }
                 
@@ -1469,66 +1480,96 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
                 <div className="tab-content">
                     {/* 1페이지: 도어/턴테이블 */}
                     {activeTab === 'page1' && (
-                        <div className="page1-layout">
-                            {/* 턴테이블 제어 */}
-                            <div className="turn-table-section">
-                                <div className="door-vertical">
-                                    <button
-                                        onMouseDown={handleTurnLeft}
-                                        onMouseUp={() => signalRService.turnLeft(0)}
-                                        onMouseLeave={() => signalRService.turnLeft(0)}
-                                        onTouchStart={handleTurnLeft}
-                                        onTouchEnd={() => signalRService.turnLeft(0)}
-                                        disabled={isDisabled}
-                                        className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                    >
-                                        좌회전
-                                    </button>
-                                    <button
-                                        onMouseDown={handleTurnRight}
-                                        onMouseUp={() => signalRService.turnRight(0)}
-                                        onMouseLeave={() => signalRService.turnRight(0)}
-                                        onTouchStart={handleTurnRight}
-                                        onTouchEnd={() => signalRService.turnRight(0)}
-                                        disabled={isDisabled}
-                                        className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                    >
-                                        우회전
-                                    </button>
+                        <div>
+                            <div className="page1-layout" style={{ gridTemplateRows: '1fr 1fr 1fr' }}>
+                                {/* 턴테이블 제어 */}
+                                <div className="turn-table-section">
+                                    <div className="door-vertical">
+                                        <button
+                                            onMouseDown={handleTurnLeft}
+                                            onMouseUp={() => signalRService.turnLeft(0)}
+                                            onMouseLeave={() => signalRService.turnLeft(0)}
+                                            onTouchStart={handleTurnLeft}
+                                            onTouchEnd={() => signalRService.turnLeft(0)}
+                                            disabled={isDisabled}
+                                            className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                        >
+                                            좌회전
+                                        </button>
+                                        <button
+                                            onMouseDown={handleTurnRight}
+                                            onMouseUp={() => signalRService.turnRight(0)}
+                                            onMouseLeave={() => signalRService.turnRight(0)}
+                                            onTouchStart={handleTurnRight}
+                                            onTouchEnd={() => signalRService.turnRight(0)}
+                                            disabled={isDisabled}
+                                            className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                        >
+                                            우회전
+                                        </button>
+                                    </div>
                                 </div>
-                            </div>
 
-                            {/* 도어 제어 */}
-                            <div className="door-section">
-                                <div className="door-vertical">
-                                    <button
-                                        onMouseDown={handleDoorOpen}
-                                        onMouseUp={() => signalRService.doorOpen(0)}
-                                        onMouseLeave={() => signalRService.doorOpen(0)}
-                                        onTouchStart={handleDoorOpen}
-                                        onTouchEnd={() => signalRService.doorOpen(0)}
-                                        disabled={isDisabled}
-                                        className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                    >
-                                        도어 열림
-                                    </button>
-                                    <button
-                                        onMouseDown={handleDoorClose}
-                                        onMouseUp={() => signalRService.doorClose(0)}
-                                        onMouseLeave={() => signalRService.doorClose(0)}
-                                        onTouchStart={handleDoorClose}
-                                        onTouchEnd={() => signalRService.doorClose(0)}
-                                        disabled={isDisabled}
-                                        className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                    >
-                                        도어 닫힘
-                                    </button>
+                                {/* 도어 제어 */}
+                                <div className="door-section">
+                                    <div className="door-vertical">
+                                        <button
+                                            onMouseDown={handleDoorOpen}
+                                            onMouseUp={() => signalRService.doorOpen(0)}
+                                            onMouseLeave={() => signalRService.doorOpen(0)}
+                                            onTouchStart={handleDoorOpen}
+                                            onTouchEnd={() => signalRService.doorOpen(0)}
+                                            disabled={isDisabled}
+                                            className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                        >
+                                            도어 열림
+                                        </button>
+                                        <button
+                                            onMouseDown={handleDoorClose}
+                                            onMouseUp={() => signalRService.doorClose(0)}
+                                            onMouseLeave={() => signalRService.doorClose(0)}
+                                            onTouchStart={handleDoorClose}
+                                            onTouchEnd={() => signalRService.doorClose(0)}
+                                            disabled={isDisabled}
+                                            className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                        >
+                                            도어 닫힘
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {/* 락킹 제어 */}
+                                <div className="door-section">
+                                    <div className="door-vertical">
+                                <button
+                                    onMouseDown={handleLockingOn}
+                                    onMouseUp={() => signalRService.lockingOn(0)}
+                                    onMouseLeave={() => signalRService.lockingOn(0)}
+                                    onTouchStart={handleLockingOn}
+                                    onTouchEnd={() => signalRService.lockingOn(0)}
+                                    disabled={isDisabled}
+                                    className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                >
+                                    락킹 잠김
+                                </button>
+                                <button
+                                    onMouseDown={handleLockingOff}
+                                    onMouseUp={() => signalRService.lockingOff(0)}
+                                    onMouseLeave={() => signalRService.lockingOff(0)}
+                                    onTouchStart={handleLockingOff}
+                                    onTouchEnd={() => signalRService.lockingOff(0)}
+                                    disabled={isDisabled}
+                                    className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                >
+                                    락킹 해제
+                                </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     )}
 
-                    {/* 2페이지: 승강/횡행/락킹 제어 */}
+                    {/* 2페이지: 승강/횡행 제어 */}
                     {activeTab === 'page2' && (
                         <div className="space-y-6">
                             <div>
@@ -1581,31 +1622,6 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
                                     >
                                         하강
                                     </button>
-
-                                    <div className="flex gap-6 md:gap-8 justify-center items-center mt-8 md:mt-12">
-                                        <button
-                                            onMouseDown={handleLockingOn}
-                                            onMouseUp={() => signalRService.lockingOn(0)}
-                                            onMouseLeave={() => signalRService.lockingOn(0)}
-                                            onTouchStart={handleLockingOn}
-                                            onTouchEnd={() => signalRService.lockingOn(0)}
-                                            disabled={isDisabled}
-                                            className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                        >
-                                            락킹 잠김
-                                        </button>
-                                        <button
-                                            onMouseDown={handleLockingOff}
-                                            onMouseUp={() => signalRService.lockingOff(0)}
-                                            onMouseLeave={() => signalRService.lockingOff(0)}
-                                            onTouchStart={handleLockingOff}
-                                            onTouchEnd={() => signalRService.lockingOff(0)}
-                                            disabled={isDisabled}
-                                            className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                        >
-                                            락킹 해제
-                                        </button>
-                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -1614,7 +1630,7 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
                     {/* 3페이지: 횡행/락킹 */}
                     {activeTab === 'page3' && (
                         <div className="flex justify-center items-center md:min-h-[200px]">
-                            {/* 락킹 버튼은 승강 제어 탭에만 표시 */}
+                            {/* 락킹 버튼은 도어/턴테이블 탭에 표시 */}
                         </div>
                     )}
                 </div>

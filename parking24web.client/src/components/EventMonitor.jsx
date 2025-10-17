@@ -467,11 +467,11 @@ const EventMonitor = ({ sensorData, isPLCConnected }) => {
                                     <table className="w-full">
                                         <thead className={`text-white ${theme === 'space' ? 'bg-gradient-to-br from-purple-500 to-purple-700' : 'bg-gradient-to-br from-blue-500 to-blue-700'}`}>
                                             <tr>
-                                                <th className="px-4 py-3 text-center text-xs font-semibold">날짜</th>
-                                                <th className="px-4 py-3 text-center text-xs font-semibold">시간</th>
-                                                <th className="px-4 py-3 text-center text-xs font-semibold">구분</th>
-                                                <th className="px-4 py-3 text-center text-xs font-semibold">차판</th>
-                                                <th className="px-4 py-3 text-center text-xs font-semibold">차량번호</th>
+                                                <th className="px-4 py-3 text-center text-xs font-semibold whitespace-nowrap">날짜</th>
+                                                <th className="px-4 py-3 text-center text-xs font-semibold whitespace-nowrap">시간</th>
+                                                <th className="px-4 py-3 text-center text-xs font-semibold whitespace-nowrap">구분</th>
+                                                <th className="px-4 py-3 text-center text-xs font-semibold whitespace-nowrap">차판</th>
+                                                <th className="px-4 py-3 text-center text-xs font-semibold whitespace-nowrap">차량번호</th>
                                             </tr>
                                         </thead>
                                         <tbody className={`divide-y ${theme === 'space' ? 'divide-purple-600/30 bg-gray-900/95' : 'divide-gray-200 bg-white'}`}>
@@ -581,11 +581,11 @@ const EventMonitor = ({ sensorData, isPLCConnected }) => {
                             <table className="w-full">
                                 <thead className={`text-white ${theme === 'space' ? 'bg-gradient-to-br from-purple-500 to-purple-700' : 'bg-gradient-to-br from-blue-500 to-blue-700'}`}>
                                     <tr>
-                                        <th className={`px-4 py-3 text-center text-xs font-semibold cursor-pointer ${theme === 'space' ? 'hover:bg-purple-700' : 'hover:bg-blue-700'}`} onClick={() => handleSort('날짜')}><div className="flex items-center justify-center space-x-1"><span>날짜</span>{sortConfig.key === '날짜' && <span className="text-yellow-300">{sortConfig.direction === 'asc' ? '↑' : '↓'}</span>}</div></th>
-                                        <th className={`px-4 py-3 text-center text-xs font-semibold cursor-pointer ${theme === 'space' ? 'hover:bg-purple-700' : 'hover:bg-blue-700'}`} onClick={() => handleSort('시간')}><div className="flex items-center justify-center space-x-1"><span>시간</span>{sortConfig.key === '시간' && <span className="text-yellow-300">{sortConfig.direction === 'asc' ? '↑' : '↓'}</span>}</div></th>
-                                        <th className={`px-4 py-3 text-center text-xs font-semibold cursor-pointer ${theme === 'space' ? 'hover:bg-purple-700' : 'hover:bg-blue-700'}`} onClick={() => handleSort('구분')}><div className="flex items-center justify-center space-x-1"><span>구분</span>{sortConfig.key === '구분' && <span className="text-yellow-300">{sortConfig.direction === 'asc' ? '↑' : '↓'}</span>}</div></th>
-                                        <th className={`px-4 py-3 text-center text-xs font-semibold cursor-pointer ${theme === 'space' ? 'hover:bg-purple-700' : 'hover:bg-blue-700'}`} onClick={() => handleSort('차판')}><div className="flex items-center justify-center space-x-1"><span>차판번호</span>{sortConfig.key === '차판' && <span className="text-yellow-300">{sortConfig.direction === 'asc' ? '↑' : '↓'}</span>}</div></th>
-                                        <th className={`px-4 py-3 text-center text-xs font-semibold cursor-pointer ${theme === 'space' ? 'hover:bg-purple-700' : 'hover:bg-blue-700'}`} onClick={() => handleSort('차번')}><div className="flex items-center justify-center space-x-1"><span>차량번호</span>{sortConfig.key === '차번' && <span className="text-yellow-300">{sortConfig.direction === 'asc' ? '↑' : '↓'}</span>}</div></th>
+                                        <th className={`px-4 py-3 text-center text-xs font-semibold cursor-pointer whitespace-nowrap ${theme === 'space' ? 'hover:bg-purple-700' : 'hover:bg-blue-700'}`} onClick={() => handleSort('날짜')}><div className="flex items-center justify-center space-x-1"><span>날짜</span>{sortConfig.key === '날짜' && <span className="text-yellow-300">{sortConfig.direction === 'asc' ? '↑' : '↓'}</span>}</div></th>
+                                        <th className={`px-4 py-3 text-center text-xs font-semibold cursor-pointer whitespace-nowrap ${theme === 'space' ? 'hover:bg-purple-700' : 'hover:bg-blue-700'}`} onClick={() => handleSort('시간')}><div className="flex items-center justify-center space-x-1"><span>시간</span>{sortConfig.key === '시간' && <span className="text-yellow-300">{sortConfig.direction === 'asc' ? '↑' : '↓'}</span>}</div></th>
+                                        <th className={`px-4 py-3 text-center text-xs font-semibold cursor-pointer whitespace-nowrap ${theme === 'space' ? 'hover:bg-purple-700' : 'hover:bg-blue-700'}`} onClick={() => handleSort('구분')}><div className="flex items-center justify-center space-x-1"><span>구분</span>{sortConfig.key === '구분' && <span className="text-yellow-300">{sortConfig.direction === 'asc' ? '↑' : '↓'}</span>}</div></th>
+                                        <th className={`px-4 py-3 text-center text-xs font-semibold cursor-pointer whitespace-nowrap ${theme === 'space' ? 'hover:bg-purple-700' : 'hover:bg-blue-700'}`} onClick={() => handleSort('차판')}><div className="flex items-center justify-center space-x-1"><span>차판번호</span>{sortConfig.key === '차판' && <span className="text-yellow-300">{sortConfig.direction === 'asc' ? '↑' : '↓'}</span>}</div></th>
+                                        <th className={`px-4 py-3 text-center text-xs font-semibold cursor-pointer whitespace-nowrap ${theme === 'space' ? 'hover:bg-purple-700' : 'hover:bg-blue-700'}`} onClick={() => handleSort('차번')}><div className="flex items-center justify-center space-x-1"><span>차량번호</span>{sortConfig.key === '차번' && <span className="text-yellow-300">{sortConfig.direction === 'asc' ? '↑' : '↓'}</span>}</div></th>
                                     </tr>
                                 </thead>
                                 <tbody className={`divide-y ${theme === 'space' ? 'divide-purple-600/30 bg-gray-900/95' : 'divide-gray-200 bg-white'}`}>
@@ -622,4 +622,4 @@ const EventMonitor = ({ sensorData, isPLCConnected }) => {
     );
 };
 
-export default EventMonitor;
+export default EventMonitor;    

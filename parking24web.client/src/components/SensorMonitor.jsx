@@ -59,7 +59,7 @@ const SensorMonitor = ({ sensorData, isPLCConnected }) => {
                         const bitValue = (wordValue >> parseInt(bitIndex)) & 1;
 
                         data.push({
-                            address: `C${address}.${bitIndex}`,
+                            address: sensorInfo.name.substring(0, 4), // P주소 (예: P100)
                             name: sensorInfo.name,
                             description: sensorInfo.description,
                             category: sensorInfo.category,
@@ -111,7 +111,7 @@ const SensorMonitor = ({ sensorData, isPLCConnected }) => {
                         const bitValue = (wordValue >> parseInt(bitIndex)) & 1;
 
                         data.push({
-                            address: `C${address}.${bitIndex}`,
+                            address: sensorInfo.name.substring(0, 4), // P주소 (예: P100)
                             name: sensorInfo.name,
                             description: sensorInfo.description,
                             category: sensorInfo.category,
@@ -131,25 +131,16 @@ const SensorMonitor = ({ sensorData, isPLCConnected }) => {
             
             switch (sortField) {
                 case 'address':
-                    const aAddr = a.address.split('.');
-                    const bAddr = b.address.split('.');
-                    const aWord = parseInt(aAddr[0].substring(1));
-                    const bWord = parseInt(bAddr[0].substring(1));
-                    const aBit = parseInt(aAddr[1]);
-                    const bBit = parseInt(bAddr[1]);
-                    
-                    if (aWord !== bWord) {
-                        aValue = aWord;
-                        bValue = bWord;
-                    } else {
-                        aValue = aBit;
-                        bValue = bBit;
-                    }
+                    // P주소 형식 (P100, P102 등) 정렬
+                    aValue = parseInt(a.address.substring(1), 16); // P100 -> 100 (hex)
+                    bValue = parseInt(b.address.substring(1), 16);
                     break;
                 case 'name':
-                    aValue = a.name.toLowerCase();
-                    bValue = b.name.toLowerCase();
-                    break;
+                    // P주소 뒤의 이름 부분으로 한국어 가나다순 정렬
+                    aValue = a.name.substring(5);
+                    bValue = b.name.substring(5);
+                    const nameCompare = aValue.localeCompare(bValue, 'ko', { numeric: true });
+                    return sortDirection === 'asc' ? nameCompare : -nameCompare;
                 case 'status':
                     aValue = a.status === 'active' ? 1 : 0;
                     bValue = b.status === 'active' ? 1 : 0;
@@ -729,14 +720,14 @@ const SensorMonitor = ({ sensorData, isPLCConnected }) => {
                                         border: theme === 'space' ? '1px solid rgba(156, 163, 175, 0.3)' : theme === 'dark' ? '1px solid rgba(156, 163, 175, 0.3)' : theme === 'ocean' ? '1px solid rgba(59, 130, 246, 0.3)' : '1px solid rgba(156, 163, 175, 0.5)'
                                     }}
                                 >
-                                    <div className="flex items-center space-x-3 h-full overflow-hidden">
-                                        <span className={`text-xs xl:text-sm font-mono font-semibold w-16 flex-shrink-0 ${theme === 'space' ? 'text-purple-300' : theme === 'dark' ? 'text-blue-400' : theme === 'ocean' ? 'text-blue-300' : 'text-blue-600'}`}>
-                                            {item.address}
-                                        </span>
-                                        <span className={`text-xs xl:text-sm truncate xl:line-clamp-2 ${theme === 'space' ? 'text-purple-100' : theme === 'dark' ? 'text-gray-200' : theme === 'ocean' ? 'text-blue-100' : 'text-gray-900'}`}>
-                                            {item.name}
-                                        </span>
-                                    </div>
+                                <div className="flex items-center h-full overflow-hidden">
+                                    <span className={`text-xs xl:text-sm font-mono font-bold flex-shrink-0 ${theme === 'space' ? 'text-purple-300' : theme === 'dark' ? 'text-blue-400' : theme === 'ocean' ? 'text-blue-300' : 'text-blue-600'}`}>
+                                        {item.name.substring(0, 4)}
+                                    </span>
+                                    <span className={`text-xs xl:text-sm truncate ml-2 ${theme === 'space' ? 'text-purple-100' : theme === 'dark' ? 'text-gray-200' : theme === 'ocean' ? 'text-blue-100' : 'text-gray-700'}`}>
+                                        {item.name.substring(5)}
+                                    </span>
+                                </div>
                                 </div>
                             ))}
                         </div>
@@ -805,13 +796,15 @@ const SensorMonitor = ({ sensorData, isPLCConnected }) => {
                                                         {item.address}
                                                     </div>
                                                     <div className="text-xs font-medium">
-                                                        {item.name}
+                                                        {item.name.substring(5)}
                                                     </div>
                                                     <div className="text-xs opacity-75">
                                                         {item.description}
                                                     </div>
                                                     <div className={`text-xs px-2 py-1 rounded-full ${item.status === 'active'
-                                                        ? 'bg-white/20 text-white'
+                                                        ? theme === 'space'
+                                                            ? 'bg-black text-white'
+                                                            : 'bg-white/20 text-white'
                                                         : 'bg-gray-600 text-gray-300'
                                                         }`}>
                                                         {item.displayValue}

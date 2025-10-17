@@ -173,12 +173,12 @@ const ServiceRecordTab = () => {
             }
         } catch (error) {
             console.error('삭제 실패:', error);
-            showToast('❌ 삭제 실패');
+            showToast('❌ 삭제 실패');  
         }
     };
 
     return (
-        <div className={`rounded-2xl p-6 border shadow-xl ${theme === 'space' ? 'border-gray-700' : 'border-gray-200'}`}
+        <div className={`rounded-2xl p-2 md:p-6 border shadow-xl ${theme === 'space' ? 'border-gray-700' : 'border-gray-200'}`}
             style={theme === 'space'
                 ? { background: 'linear-gradient(135deg, rgba(20,20,20,0.98) 0%, rgba(10,10,10,0.98) 100%)', backdropFilter: 'blur(25px)', boxShadow: '0 12px 40px rgba(0,0,0,0.6)' }
                 : { background: 'rgba(255, 255, 255, 0.95)', backdropFilter: 'blur(20px)', boxShadow: '0 8px 32px rgba(0,0,0,0.25)' }}>
@@ -192,8 +192,8 @@ const ServiceRecordTab = () => {
             )}
 
             {/* 헤더 */}
-            <div className={`rounded-xl p-6 mb-6 ${theme === 'space' ? 'bg-gradient-to-br from-purple-600/80 via-purple-700/70 to-purple-800/80' : 'bg-gradient-to-br from-blue-500/90 via-indigo-500/80 to-blue-600/90'}`}>
-                <h2 className="text-2xl font-bold text-white text-center mb-4">A/S 기록 관리</h2>
+            <div className={`rounded-xl p-3 md:p-6 mb-3 md:mb-6 ${theme === 'space' ? 'bg-gradient-to-br from-purple-600/80 via-purple-700/70 to-purple-800/80' : 'bg-gradient-to-br from-blue-500/90 via-indigo-500/80 to-blue-600/90'}`}>
+                <h2 className="text-lg md:text-2xl font-bold text-white text-center mb-2 md:mb-4">A/S 기록 관리</h2>
 
                 {!isClient() && !showAddForm && (
                     <button onClick={() => setShowAddForm(true)}
@@ -206,7 +206,7 @@ const ServiceRecordTab = () => {
 
             {/* 추가/수정 폼 */}
             {showAddForm && !isClient() && (
-                <div className={`rounded-xl p-6 mb-6 ${theme === 'space' ? 'bg-gray-800/50' : 'bg-gradient-to-br from-blue-50 via-indigo-50 to-blue-100'}`}>
+                <div className={`rounded-xl p-3 md:p-6 mb-3 md:mb-6 ${theme === 'space' ? 'bg-gray-800/50' : 'bg-gradient-to-br from-blue-50 via-indigo-50 to-blue-100'}`}>
                   
                     <form onSubmit={handleSubmit} className="space-y-4 max-w-2xl mx-auto py-12">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -328,13 +328,13 @@ const ServiceRecordTab = () => {
                                             </span>
                                         </td>
                                         <td className="px-2 md:px-4 py-2 md:py-3 text-center">
-                                            <span className={`text-[10px] md:text-base font-bold ${theme === 'space' ? 'text-purple-100' : 'text-gray-800'}`}>{record.technicianName}</span>
+                                            <span className={`text-[8px] md:text-base font-bold ${theme === 'space' ? 'text-purple-100' : 'text-gray-800'}`}>{record.technicianName}</span>
                                         </td>
                                         <td className="px-2 md:px-4 py-2 md:py-3">
-                                            <span className={`text-[10px] md:text-sm ${theme === 'space' ? 'text-gray-300' : 'text-gray-700'}`}>{record.workDescription}</span>
+                                            <span className={`text-[8px] md:text-sm ${theme === 'space' ? 'text-gray-300' : 'text-gray-700'}`}>{record.workDescription}</span>
                                         </td>
                                         <td className="px-2 md:px-4 py-2 md:py-3 text-center">
-                                            <span className={`inline-flex px-2 md:px-3 py-0.5 md:py-1 rounded-full text-[10px] md:text-xs font-semibold ${record.status === '완료' ? 'bg-green-500 text-white' :
+                                            <span className={`inline-flex items-center justify-center px-2 md:px-3 py-0.5 md:py-1 rounded-full text-[10px] md:text-xs font-semibold min-w-[36px] ${record.status === '완료' ? 'bg-green-500 text-white' :
                                                     record.status === '진행중' ? 'bg-yellow-500 text-white' :
                                                         'bg-blue-500 text-white'
                                                 }`}>{record.status}</span>
@@ -344,9 +344,9 @@ const ServiceRecordTab = () => {
                                         </td>
                                         {!isClient() && (
                                             <td className="px-1 md:px-4 py-2 md:py-3 text-center">
-                                                <div className="flex gap-1 md:gap-2 justify-center">
-                                                    <button onClick={() => handleEdit(record)} className={`text-white rounded text-[8px] md:text-xs leading-tight ${theme === 'space' ? 'bg-purple-500 hover:bg-purple-600' : 'bg-blue-500 hover:bg-blue-600'}`} style={{ padding: '1px 4px' }}>수정</button>
-                                                    <button onClick={() => handleDelete(record.id)} className="bg-red-500 text-white rounded text-[8px] md:text-xs leading-tight hover:bg-red-600" style={{ padding: '1px 4px' }}>삭제</button>
+                                                <div className="flex gap-1 justify-center items-center">
+                                                    <button onClick={() => handleEdit(record)} className={`edit-btn text-white rounded-md md:rounded-lg text-[7px] md:text-[10px] flex items-center justify-center ${theme === 'space' ? 'bg-purple-500 hover:bg-purple-600' : 'bg-blue-500 hover:bg-blue-600'}`}>수정</button>
+                                                    <button onClick={() => handleDelete(record.id)} className="delete-btn bg-red-500 text-white rounded-md md:rounded-lg text-[7px] md:text-[10px] flex items-center justify-center hover:bg-red-600">삭제</button>
                                                 </div>
                                             </td>
                                         )}
@@ -362,6 +362,28 @@ const ServiceRecordTab = () => {
                 @media (max-width: 768px) {
                     input[type="date"]::-webkit-calendar-picker-indicator {
                         display: none;
+                    }
+                    .edit-btn, .delete-btn {
+                        width: 24px !important;
+                        height: 14px !important;
+                        min-width: 24px !important;
+                        min-height: 14px !important;
+                        max-width: 24px !important;
+                        max-height: 14px !important;
+                        padding: 0 !important;
+                        line-height: 1 !important;
+                    }
+                }
+                @media (min-width: 769px) {
+                    .edit-btn, .delete-btn {
+                        width: 36px !important;
+                        height: 20px !important;
+                        min-width: 36px !important;
+                        min-height: 20px !important;
+                        max-width: 36px !important;
+                        max-height: 20px !important;
+                        padding: 0 !important;
+                        line-height: 1 !important;
                     }
                 }
                 .date-input-space::-webkit-calendar-picker-indicator {

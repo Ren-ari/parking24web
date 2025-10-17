@@ -208,8 +208,8 @@ const ParkingMonitor = ({ sensorData, isPLCConnected, onVehicleEdit, theme }) =>
         const loadingPlateValue = sensorData.rawData[siteConfig.dataAddresses.loadedPallet]; // C75
         if (loadingPlateValue === 0) return false;
 
-        if (level >= 1 && (box === 0 || box === 4)) {
-            const slotNumber = box === 0 ? (level - 1) * 2 + 1 : (level - 1) * 2 + 2;
+        if (level >= 2 && (box === 0 || box === 4)) {
+            const slotNumber = box === 0 ? (level - 2) * 2 + 1 : (level - 2) * 2 + 2;
             return loadingPlateValue === slotNumber;
         }
 
@@ -295,7 +295,7 @@ const ParkingMonitor = ({ sensorData, isPLCConnected, onVehicleEdit, theme }) =>
 
         const vehicleType = box === 0 ? "홀수차량" : "짝수차량";
         const levelText = level === 1 ? "진입층" : `${level}층`;
-        const slotNumber = box === 0 ? (level - 1) * 2 + 1 : (level - 1) * 2 + 2;
+        const slotNumber = box === 0 ? (level - 2) * 2 + 1 : (level - 2) * 2 + 2;
 
         const newValue = prompt(
             `${levelText} ${vehicleType} (${slotNumber}번) 편집\n표시주소: ${displayAddress}\n편집주소: ${editAddress}\n현재값: ${currentValue}\n\n새로운 차량번호 (0-9999):`,
@@ -435,8 +435,8 @@ const ParkingMonitor = ({ sensorData, isPLCConnected, onVehicleEdit, theme }) =>
 
                                                 // 슬롯 번호 계산
                                                 let slotNumber = null;
-                                                if ((box === 0 || box === 4) && level >= 1) {
-                                                    slotNumber = box === 0 ? (level - 1) * 2 + 1 : (level - 1) * 2 + 2;
+                                                if ((box === 0 || box === 4) && level >= 2) {
+                                                    slotNumber = box === 0 ? (level - 2) * 2 + 1 : (level - 2) * 2 + 2;
                                                 }
 
                                                 return (
@@ -564,11 +564,6 @@ const ParkingMonitor = ({ sensorData, isPLCConnected, onVehicleEdit, theme }) =>
                                                                     >
                                                                         {slotNumber}번
                                                                     </span>
-                                                                    {isVehicleOnLift(level, box) && (
-                                                                        <span className="ml-1 px-1 sm:px-2 rounded bg-orange-500 text-white text-xs">
-                                                                            적재중
-                                                                        </span>
-                                                                    )}
                                                                 </div>
                                                             )}
                                                         </div>

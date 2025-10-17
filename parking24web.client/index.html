@@ -10,7 +10,7 @@
     <link rel="apple-touch-icon" sizes="180x180" href="/logo.svg" />
     <link rel="apple-touch-icon" sizes="167x167" href="/logo.svg" />
     
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <title>EPSAI</title>
     
     <!-- PWA 매니페스트 -->
@@ -23,7 +23,6 @@
     <meta name="apple-mobile-web-app-title" content="EPSAI">
     <meta name="theme-color" content="#1a1a2e">
     <meta name="msapplication-navbutton-color" content="#1a1a2e">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
     <!-- 여기 추가 -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -50,6 +49,11 @@
             background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
             margin: 0;
             padding: 0;
+            /* 노치/상태바 영역까지 배경 확장 */
+            padding-top: env(safe-area-inset-top);
+            padding-bottom: env(safe-area-inset-bottom);
+            padding-left: env(safe-area-inset-left);
+            padding-right: env(safe-area-inset-right);
         }
         
         /* iOS Safari 주소창 숨기기 */
