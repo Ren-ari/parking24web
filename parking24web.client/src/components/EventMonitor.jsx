@@ -1,8 +1,9 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import siteConfig from '../../config/sokcho1Config.js';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../hooks/useAuth';
 import signalRService from '../services/SignalRService';
+import AnalyticsDashboard from './AnalyticsDashboard';
 
 const EventMonitor = ({ sensorData, isPLCConnected }) => {
     console.log('EventMonitor 렌더링됨:', { sensorData, isPLCConnected });
@@ -349,100 +350,89 @@ const EventMonitor = ({ sensorData, isPLCConnected }) => {
                     </div>
 
 
-                {/* 검색창 */}
-                <div className="flex gap-2 md:gap-3 items-center">
-                    <input
-                        type="text"
-                        value={searchCarNumber}
-                        onChange={(e) => setSearchCarNumber(e.target.value)}
-                        onKeyPress={(e) => e.key === 'Enter' && searchCar()}
-                        className={`flex-1 min-w-0 px-2 md:px-4 py-3 md:py-2 rounded-lg focus:outline-none text-sm md:text-base ${theme === 'space' ? 'text-white' : 'text-gray-700 border border-gray-300 bg-white focus:ring-2 focus:ring-blue-300'}`}
-                        style={theme === 'space' ? {
-                            background: 'linear-gradient(145deg, #1a1a1a 0%, #2d2d2d 50%, #1a1a1a 100%)',
-                            border: '1px solid rgba(255, 255, 255, 0.2)'
-                        } : {}}
-                        placeholder=""
-                    />
-                    <button
-                        onClick={searchCar}
-                        className={`flex-shrink-0 px-3 md:px-4 py-3 md:py-2 rounded-lg font-medium transition-all duration-300 ease-in-out hover:scale-105 text-sm md:text-base text-white`}
-                        style={{
-                            background: 'linear-gradient(145deg, #1a1a1a 0%, #2d2d2d 50%, #1a1a1a 100%)',
-                            border: '1px solid rgba(255, 255, 255, 0.2)',
-                            boxShadow: 'inset 0 1px 2px rgba(255,255,255,0.1), inset 0 -1px 2px rgba(0,0,0,0.3), 0 4px 12px rgba(0,0,0,0.4)'
-                        }}
-                    >   
-                        검색
-                    </button>
-                </div>
+                    {/* 검색창 */}
+                    <div className="flex gap-2 md:gap-3 items-center">
+                        <input
+                            type="text"
+                            value={searchCarNumber}
+                            onChange={(e) => setSearchCarNumber(e.target.value)}
+                            onKeyPress={(e) => e.key === 'Enter' && searchCar()}
+                            className={`flex-1 min-w-0 px-2 md:px-4 py-3 md:py-2 rounded-lg focus:outline-none text-sm md:text-base ${theme === 'space' ? 'text-white' : 'text-gray-700 border border-gray-300 bg-white focus:ring-2 focus:ring-blue-300'}`}
+                            style={theme === 'space' ? {
+                                background: 'linear-gradient(145deg, #1a1a1a 0%, #2d2d2d 50%, #1a1a1a 100%)',
+                                border: '1px solid rgba(255, 255, 255, 0.2)'
+                            } : {}}
+                            placeholder=""
+                        />
+                        <button
+                            onClick={searchCar}
+                            className={`flex-shrink-0 px-3 md:px-4 py-3 md:py-2 rounded-lg font-medium transition-all duration-300 ease-in-out hover:scale-105 text-sm md:text-base text-white`}
+                            style={{
+                                background: 'linear-gradient(145deg, #1a1a1a 0%, #2d2d2d 50%, #1a1a1a 100%)',
+                                border: '1px solid rgba(255, 255, 255, 0.2)',
+                                boxShadow: 'inset 0 1px 2px rgba(255,255,255,0.1), inset 0 -1px 2px rgba(0,0,0,0.3), 0 4px 12px rgba(0,0,0,0.4)'
+                            }}
+                        >
+                            검색
+                        </button>
+                    </div>
 
 
                     {/* 액션 버튼들 - 모바일 */}
                     <div className="flex gap-1 sm:hidden mt-4">
 
-                    <button 
-                        onClick={downloadExcel} 
-                        className="h-6 w-16 min-h-0 min-w-0 p-0 m-0 rounded-full text-gray-800 font-bold transition-all duration-200 hover:scale-105 text-xs leading-none flex items-center justify-center"
-                        style={theme === 'space' ? {
-                            background: 'linear-gradient(145deg, #e5e7eb 0%, #d1d5db 40%, #9ca3af 100%)',
-                            border: '1px solid rgba(156, 163, 175, 0.8)',
-                            boxShadow: 'inset 0 1px 2px rgba(255,255,255,0.7), inset 0 -1px 2px rgba(0,0,0,0.15), 0 4px 12px rgba(0,0,0,0.2)'
-                        } : {
-                            background: 'rgba(255, 255, 255, 0.9)',
-                            backdropFilter: 'blur(10px)',
-                            WebkitBackdropFilter: 'blur(10px)',
-                            border: '1px solid rgba(255, 255, 255, 0.3)',
-                            boxShadow: '0 2px 8px 0 rgba(0, 0, 0, 0.1)'
-                        }}
-                    >
-                        엑셀
-                    </button>
-                    <button 
-                        onClick={() => {
-                            // 데이터 새로고침
-                            const stored = localStorage.getItem(STORAGE_KEY);
-                            if (stored) {
-                                const events = JSON.parse(stored);
-                                setRecentEvents(events);
-                                updateStatistics(events);
-                                const exited = events.filter(e => e.구분 === '출차');
-                                setExitedCars(exited);
-                            }
-                            showToast(' 데이터 새로고침 완료');
-                        }} 
-                        className="h-6 w-16 min-h-0 min-w-0 p-0 m-0 rounded-full text-gray-800 font-bold transition-all duration-200 hover:scale-105 text-xs leading-none flex items-center justify-center"
-                        style={theme === 'space' ? {
-                            background: 'linear-gradient(145deg, #e5e7eb 0%, #d1d5db 40%, #9ca3af 100%)',
-                            border: '1px solid rgba(156, 163, 175, 0.8)',
-                            boxShadow: 'inset 0 1px 2px rgba(255,255,255,0.7), inset 0 -1px 2px rgba(0,0,0,0.15), 0 4px 12px rgba(0,0,0,0.2)'
-                        } : {
-                            background: 'rgba(255, 255, 255, 0.9)',
-                            backdropFilter: 'blur(10px)',
-                            WebkitBackdropFilter: 'blur(10px)',
-                            border: '1px solid rgba(255, 255, 255, 0.3)',
-                            boxShadow: '0 2px 8px 0 rgba(0, 0, 0, 0.1)'
-                        }}
-                    >
-                        새로고침
-                    </button>
-                    <button 
-                        onClick={clearAllData} 
-                        className="h-6 w-16 min-h-0 min-w-0 p-0 m-0 rounded-full text-gray-800 font-bold transition-all duration-200 hover:scale-105 text-xs leading-none flex items-center justify-center"
-                        style={theme === 'space' ? {
-                            background: 'linear-gradient(145deg, #e5e7eb 0%, #d1d5db 40%, #9ca3af 100%)',
-                            border: '1px solid rgba(156, 163, 175, 0.8)',
-                            boxShadow: 'inset 0 1px 2px rgba(255,255,255,0.7), inset 0 -1px 2px rgba(0,0,0,0.15), 0 4px 12px rgba(0,0,0,0.2)'
-                        } : {
-                            background: 'rgba(255, 255, 255, 0.9)',
-                            backdropFilter: 'blur(10px)',
-                            WebkitBackdropFilter: 'blur(10px)',
-                            border: '1px solid rgba(255, 255, 255, 0.3)',
-                            boxShadow: '0 2px 8px 0 rgba(0, 0, 0, 0.1)'
-                        }}
-                    >
-                        초기화
-                    </button>
-                </div>
+                        <button
+                            onClick={downloadExcel}
+                            className="h-6 w-16 min-h-0 min-w-0 p-0 m-0 rounded-full text-gray-800 font-bold transition-all duration-200 hover:scale-105 text-xs leading-none flex items-center justify-center"
+                            style={theme === 'space' ? {
+                                background: 'linear-gradient(145deg, #e5e7eb 0%, #d1d5db 40%, #9ca3af 100%)',
+                                border: '1px solid rgba(156, 163, 175, 0.8)',
+                                boxShadow: 'inset 0 1px 2px rgba(255,255,255,0.7), inset 0 -1px 2px rgba(0,0,0,0.15), 0 4px 12px rgba(0,0,0,0.2)'
+                            } : {
+                                background: 'rgba(255, 255, 255, 0.9)',
+                                backdropFilter: 'blur(10px)',
+                                WebkitBackdropFilter: 'blur(10px)',
+                                border: '1px solid rgba(255, 255, 255, 0.3)',
+                                boxShadow: '0 2px 8px 0 rgba(0, 0, 0, 0.1)'
+                            }}
+                        >
+                            엑셀
+                        </button>
+                        <button
+                            onClick={loadAllData}
+                            className="h-6 w-16 min-h-0 min-w-0 p-0 m-0 rounded-full text-gray-800 font-bold transition-all duration-200 hover:scale-105 text-xs leading-none flex items-center justify-center"
+                            style={theme === 'space' ? {
+                                background: 'linear-gradient(145deg, #e5e7eb 0%, #d1d5db 40%, #9ca3af 100%)',
+                                border: '1px solid rgba(156, 163, 175, 0.8)',
+                                boxShadow: 'inset 0 1px 2px rgba(255,255,255,0.7), inset 0 -1px 2px rgba(0,0,0,0.15), 0 4px 12px rgba(0,0,0,0.2)'
+                            } : {
+                                background: 'rgba(255, 255, 255, 0.9)',
+                                backdropFilter: 'blur(10px)',
+                                WebkitBackdropFilter: 'blur(10px)',
+                                border: '1px solid rgba(255, 255, 255, 0.3)',
+                                boxShadow: '0 2px 8px 0 rgba(0, 0, 0, 0.1)'
+                            }}
+                        >
+                            새로고침
+                        </button>
+                        <button
+                            onClick={clearAllData}
+                            className="h-6 w-16 min-h-0 min-w-0 p-0 m-0 rounded-full text-gray-800 font-bold transition-all duration-200 hover:scale-105 text-xs leading-none flex items-center justify-center"
+                            style={theme === 'space' ? {
+                                background: 'linear-gradient(145deg, #e5e7eb 0%, #d1d5db 40%, #9ca3af 100%)',
+                                border: '1px solid rgba(156, 163, 175, 0.8)',
+                                boxShadow: 'inset 0 1px 2px rgba(255,255,255,0.7), inset 0 -1px 2px rgba(0,0,0,0.15), 0 4px 12px rgba(0,0,0,0.2)'
+                            } : {
+                                background: 'rgba(255, 255, 255, 0.9)',
+                                backdropFilter: 'blur(10px)',
+                                WebkitBackdropFilter: 'blur(10px)',
+                                border: '1px solid rgba(255, 255, 255, 0.3)',
+                                boxShadow: '0 2px 8px 0 rgba(0, 0, 0, 0.1)'
+                            }}
+                        >
+                            초기화
+                        </button>
+                    </div>
 
                     {/* 액션 버튼들 - 데스크탑 */}
                     <div className="hidden sm:flex gap-3 mt-4">
@@ -480,13 +470,12 @@ const EventMonitor = ({ sensorData, isPLCConnected }) => {
                                                     <td className="px-4 py-3 text-center"><span className={`text-sm ${theme === 'space' ? 'text-purple-300' : 'text-gray-600'}`}>{item.날짜}</span></td>
                                                     <td className="px-4 py-3 text-center"><span className={`text-sm font-mono ${theme === 'space' ? 'text-purple-300' : 'text-gray-600'}`}>{item.시간}</span></td>
                                                     <td className="px-4 py-3 text-center">
-                                                        <span className={`inline-flex px-3 py-1 rounded-full text-xs font-semibold ${
-                                                            theme === 'space'
+                                                        <span className={`inline-flex px-3 py-1 rounded-full text-xs font-semibold ${theme === 'space'
                                                                 ? 'bg-purple-500 text-white border-2 border-purple-600'
                                                                 : (item.구분 === '입차' ? 'bg-blue-500 text-white border-2 border-blue-600' :
                                                                     item.구분 === '주차중' ? 'bg-green-500 text-white border-2 border-green-600' :
-                                                                    'bg-red-500 text-white border-2 border-red-600')
-                                                        }`}>{item.구분}</span>
+                                                                        'bg-red-500 text-white border-2 border-red-600')
+                                                            }`}>{item.구분}</span>
                                                     </td>
                                                     <td className="px-4 py-3 text-center">
                                                         <span className={`text-sm font-bold ${theme === 'space' ? 'text-purple-300' : 'text-gray-600'}`}>{item.차판}</span>
@@ -511,54 +500,13 @@ const EventMonitor = ({ sensorData, isPLCConnected }) => {
                     </button>
                 </div>
 
-                {/* 통계 카드 그리드 */}
+                {/* 분석 대시보드 */}
                 {(isStatisticsExpanded || isStatisticsAnimatingOut) && (
-                    <div className={`grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8 overflow-hidden transition-all duration-500 ${isStatisticsExpanded ? 'opacity-100 max-h-[1000px]' : 'opacity-0 max-h-0'}`} style={isStatisticsExpanded ? { animation: 'slideInFromTop 1s ease-out' } : {}}>
-
-                        {/* 월간 통계 */}
-                        <div className="lg:col-span-1 rounded-xl p-4 sm:p-7 transform hover:scale-105 hover:shadow-xl" style={{ background: theme === 'space' ? 'linear-gradient(145deg, #e5e7eb 0%, #9ca3af 100%)' : 'linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(99, 102, 241, 0.1) 100%)', backdropFilter: 'blur(15px)', border: theme === 'space' ? '1px solid rgba(156, 163, 175, 0.8)' : '1px solid rgba(255, 255, 255, 0.2)', boxShadow: theme === 'space' ? 'inset 0 2px 4px rgba(255,255,255,0.7), 0 8px 24px rgba(0,0,0,0.2)' : '0 4px 16px rgba(31, 38, 135, 0.1)', animation: 'slideInFromLeft 0.8s ease-out 0.2s both' }}>
-                            <div className="mb-4">
-                                <h3 className="font-bold text-gray-800 text-base sm:text-lg">월간 통계</h3>
-                                <div className="text-xs text-gray-500 mt-1">{dateRanges.monthStart} ~ {dateRanges.monthEnd}</div>
-                            </div>
-                            <div className="space-y-3 sm:space-y-4 mt-6 sm:mt-12">
-                                <div className="flex justify-between items-center"><span className="text-gray-600 text-sm">입차</span><span className="font-bold text-black text-lg sm:text-xl">{statistics.monthlyIn}대</span></div>
-                                <div className="flex justify-between items-center"><span className="text-gray-600 text-sm">출차</span><span className="font-bold text-black text-lg sm:text-xl">{statistics.monthlyOut}대</span></div>
-                                <div className="flex justify-between items-center"><span className="text-gray-600 text-sm">현재</span><span className="font-bold text-black text-lg sm:text-xl">{statistics.currentTotal}대</span></div>
-                            </div>
-                        </div>
-
-                        {/* 일간 통계 */}
-                        <div className="lg:col-span-1 rounded-xl p-4 sm:p-7 transform hover:scale-105 hover:shadow-xl" style={{ background: theme === 'space' ? 'linear-gradient(145deg, #e5e7eb 0%, #9ca3af 100%)' : 'linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(99, 102, 241, 0.1) 100%)', backdropFilter: 'blur(15px)', border: theme === 'space' ? '1px solid rgba(156, 163, 175, 0.8)' : '1px solid rgba(255, 255, 255, 0.2)', boxShadow: theme === 'space' ? 'inset 0 2px 4px rgba(255,255,255,0.7), 0 8px 24px rgba(0,0,0,0.2)' : '0 4px 16px rgba(31, 38, 135, 0.1)', animation: 'slideInFromLeft 0.8s ease-out 0.4s both' }}>
-                            <div className="mb-4">
-                                <h3 className="font-bold text-gray-800 text-base sm:text-lg">일간 통계</h3>
-                                <div className="text-xs text-gray-500 mt-1">{dateRanges.today}</div>
-                            </div>
-                            <div className="space-y-3 sm:space-y-4 mt-6 sm:mt-12">
-                                <div className="flex justify-between items-center"><span className="text-gray-600 text-sm">입차</span><span className="font-bold text-black text-lg sm:text-xl">{statistics.todayIn}대</span></div>
-                                <div className="flex justify-between items-center"><span className="text-gray-600 text-sm">출차</span><span className="font-bold text-black text-lg sm:text-xl">{statistics.todayOut}대</span></div>
-                                <div className="flex justify-between items-center"><span className="text-gray-600 text-sm">점유율</span><span className="font-bold text-black text-lg sm:text-xl">{((statistics.currentTotal / 80) * 100).toFixed(1)}%</span></div>
-                            </div>
-                        </div>
-
-                        {/* 점유율 차트 */}
-                        <div className="lg:col-span-2 rounded-xl p-6 transform hover:scale-105 hover:shadow-xl" style={{ background: theme === 'space' ? 'linear-gradient(145deg, #e5e7eb 0%, #9ca3af 100%)' : 'linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(99, 102, 241, 0.1) 100%)', backdropFilter: 'blur(15px)', border: theme === 'space' ? '1px solid rgba(156, 163, 175, 0.8)' : '1px solid rgba(255, 255, 255, 0.2)', boxShadow: theme === 'space' ? 'inset 0 2px 4px rgba(255,255,255,0.7), 0 8px 24px rgba(0,0,0,0.2)' : '0 4px 16px rgba(31, 38, 135, 0.1)', animation: 'slideInFromRight 0.8s ease-out 0.6s both' }}>
-                            <div><h3 className="font-bold text-gray-800 text-lg">주차장 점유율</h3></div>
-                            <div className="flex justify-end mb-6"><div className="text-right"><div className="text-2xl font-bold text-black">{statistics.currentTotal}/80</div><div className="text-sm text-gray-600">현재 주차중</div></div></div>
-                            <div className="relative">
-                                <div className="w-full rounded-full h-4 mb-2" style={{ background: 'rgba(156, 163, 175, 0.3)' }}>
-                                    <div className="h-4 rounded-full transition-all duration-1000" style={{ '--target-width': `${Math.min((statistics.currentTotal / 80) * 100, 100)}%`, width: '0%', background: theme === 'space' ? 'linear-gradient(90deg, rgba(124, 58, 237, 0.9) 0%, rgba(109, 40, 217, 0.9) 100%)' : 'linear-gradient(90deg, rgba(59, 130, 246, 0.8) 0%, rgba(99, 102, 241, 0.8) 100%)', animation: 'progressFill 2s ease-out 1.0s both' }} />
-                                </div>
-                                <div className="flex justify-between text-xs text-gray-500 mt-2"><span>0%</span><span className="font-semibold text-black">{((statistics.currentTotal / 80) * 100).toFixed(1)}%</span><span>100%</span></div>
-                            </div>
-                            <div className="grid grid-cols-3 gap-4 mt-6">
-                                <div className="text-center"><div className="text-lg font-bold text-black">80</div><div className="text-xs text-gray-600">전체</div></div>
-                                <div className="text-center"><div className="text-lg font-bold text-black">{statistics.currentTotal}</div><div className="text-xs text-gray-600">주차중</div></div>
-                                <div className="text-center"><div className="text-lg font-bold text-black">{80 - statistics.currentTotal}</div><div className="text-xs text-gray-600">빈 자리</div></div>
-                            </div>
-                        </div>
+                    <div className={`transition-all duration-500 mb-8 ${isStatisticsExpanded ? 'opacity-100 max-h-[5000px]' : 'opacity-0 max-h-0'} overflow-hidden`}>
+                        <AnalyticsDashboard />
                     </div>
                 )}
+
 
                 {/* 메인 테이블 섹션 */}
                 <div className="space-y-6">
@@ -597,13 +545,12 @@ const EventMonitor = ({ sensorData, isPLCConnected }) => {
                                                 <td className="px-4 py-3 whitespace-nowrap"><span className={`text-sm ${theme === 'space' ? 'text-purple-300' : 'text-gray-600'}`}>{item.날짜}</span></td>
                                                 <td className="px-4 py-3 whitespace-nowrap"><span className={`text-sm font-mono font-semibold ${theme === 'space' ? 'text-purple-300' : 'text-gray-600'}`}>{item.시간}</span></td>
                                                 <td className="px-4 py-3 whitespace-nowrap">
-                                                    <span className={`inline-flex px-3 py-1 rounded-full text-xs font-semibold ${
-                                                        theme === 'space' 
+                                                    <span className={`inline-flex px-3 py-1 rounded-full text-xs font-semibold ${theme === 'space'
                                                             ? 'bg-purple-500 text-white border-2 border-purple-600'
                                                             : (item.구분 === '입차' ? 'bg-blue-500 text-white border-2 border-blue-600' :
                                                                 item.구분 === '주차중' ? 'bg-green-500 text-white border-2 border-green-600' :
-                                                                'bg-red-500 text-white border-2 border-red-600')
-                                                    }`}>{item.구분}</span>
+                                                                    'bg-red-500 text-white border-2 border-red-600')
+                                                        }`}>{item.구분}</span>
                                                 </td>
                                                 <td className="px-4 py-3 text-center whitespace-nowrap">
                                                     <span className={`text-sm font-bold ${theme === 'space' ? 'text-purple-300' : 'text-gray-600'}`}>{item.차판}</span>
