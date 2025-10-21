@@ -111,24 +111,37 @@ namespace Parking24web.Server.Services
             }
 
             // 이벤트가 있으면 DB에 저장
+            bool saveSuccess = true;
             if (events.Count > 0)
             {
-                await SaveEventsToDatabase(events);
+                saveSuccess = await SaveEventsToDatabase(events);
             }
 
-            // 현재 데이터를 이전 데이터로 복사
-            Array.Copy(currentData, _previousData, Math.Min(currentData.Length, _previousData.Length));
+            // DB 저장 성공했을 때만 현재 데이터를 이전 데이터로 복사
+            if (saveSuccess)
+            {
+                Array.Copy(currentData, _previousData, Math.Min(currentData.Length, _previousData.Length));
+            }
         }
 
-        private async Task SaveEventsToDatabase(List<ParkingEvent> events)
+        private async Task<bool> SaveEventsToDatabase(List<ParkingEvent> events)
         {
-            using var scope = _scopeFactory.CreateScope();
-            var context = scope.ServiceProvider.GetRequiredService<ParkingDbContext>();
+            try
+            {
+                using var scope = _scopeFactory.CreateScope();
+                var context = scope.ServiceProvider.GetRequiredService<ParkingDbContext>();
 
-            context.ParkingEvents.AddRange(events);
-            await context.SaveChangesAsync();
+                context.ParkingEvents.AddRange(events);
+                await context.SaveChangesAsync();
 
-            _logger.LogInformation($"{events.Count}개 이벤트 DB 저장 완료");
+                _logger.LogInformation($"{events.Count}개 이벤트 DB 저장 완료");
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "DB 저장 실패 - 다음 루프에서 재시도");
+                return false;
+            }
         }
     }
 }
