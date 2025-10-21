@@ -52,8 +52,12 @@ namespace Parking24web.Server.Services
                 _password = password;
                 _rtspPort = rtspPort;
 
-                // Digest 인증 지원 HttpClient 재생성
-                _httpClient.Dispose();
+                // HttpClient 정리 (handler도 같이 정리됨)
+                if (_httpClient != null)
+                {
+                    _httpClient.Dispose();
+                }
+
                 var handler = new HttpClientHandler
                 {
                     Credentials = new NetworkCredential(username, password),
@@ -269,9 +273,24 @@ namespace Parking24web.Server.Services
                             if (proc != null && !proc.HasExited)
                             {
                                 proc.Kill(true);
+
+                                // 3초 대기하고 안 죽으면 강제 종료
+                                if (!proc.WaitForExit(3000))
+                                {
+                                    _logger.LogWarning("FFmpeg 정상 종료 실패, 강제 종료 시도: PID {Pid}", proc.Id);
+                                    KillProcessTree(proc.Id);
+                                }
                             }
                         }
-                        catch { }
+                        catch (Exception ex)
+                        {
+                            _logger.LogError(ex, "프로세스 종료 실패");
+                            if (proc != null && !proc.HasExited)
+                            {
+                                try { KillProcessTree(proc.Id); } catch { }
+                            }
+                        }
+
                         finally
                         {
                             try { proc?.Dispose(); } catch { }
@@ -287,8 +306,46 @@ namespace Parking24web.Server.Services
                     _logger.LogError(ex, "HLS 중지 중 오류: 채널 {Channel}", channelNumber);
                     return false;
                 }
+                finally
+                {
+                    // HLS 폴더도 삭제
+                    try
+                    {
+                        var hlsDir = Path.Combine(_dataRoot, "hls", $"ch{channelNumber}");
+                        if (Directory.Exists(hlsDir))
+                        {
+                            Directory.Delete(hlsDir, true);
+                            _logger.LogInformation("HLS 폴더 삭제: {Dir}", hlsDir);
+                        }
+                    }
+                    catch (Exception cleanupEx)
+                    {
+                        _logger.LogWarning(cleanupEx, "HLS 폴더 삭제 실패: 채널 {Channel}", channelNumber);
+                    }
+                }
             }
         }
+
+        private void KillProcessTree(int pid)
+        {
+            try
+            {
+                var psi = new ProcessStartInfo
+                {
+                    FileName = "taskkill",
+                    Arguments = $"/PID {pid} /T /F",
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                };
+                var proc = Process.Start(psi);
+                proc?.WaitForExit(5000);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "강제 종료 실패: PID {Pid}", pid);
+            }
+        }
+
 
         public void Dispose()
         {

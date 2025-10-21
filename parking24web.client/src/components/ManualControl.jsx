@@ -1390,7 +1390,7 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
                                 border: '1px solid rgba(255, 255, 255, 0.3)',
                                 boxShadow: '0 2px 8px 0 rgba(31, 38, 135, 0.15)'
                             }}>
-                                {sensorData?.rawData?.[240] || 0}
+                                {sensorData?.rawData?.[currentConfig.dataAddresses.encoderValue] || 0}
                             </div>
                         </div>
 
@@ -1409,7 +1409,7 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
                                 border: '1px solid rgba(255, 255, 255, 0.3)',
                                 boxShadow: '0 2px 8px 0 rgba(31, 38, 135, 0.15)'
                             }}>
-                                {sensorData?.rawData?.[200] || 0}
+                                {sensorData?.rawData?.[currentConfig.liftPositions.counter] || 0}
                             </div>
                         </div>
                     </div>
