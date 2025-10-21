@@ -882,7 +882,9 @@ const PLCControl = ({ currentUser, onLogout }) => {
                                                     WebkitBackdropFilter: 'blur(10px)',
                                                     border: '1px solid rgba(255, 255, 255, 0.3)',
                                                     boxShadow: '0 2px 8px 0 rgba(31, 38, 135, 0.15)'
-                                                }}>----</div>
+                                                }}>
+                                                    {sensorData?.rawData?.[siteConfig.dataAddresses.vehicleNumber] || '----'}
+                                                </div>
                                             </div>
 
                                             <div className={`p-2 sm:p-3 rounded-2xl transition-all duration-700 ease-out transform relative overflow-hidden ${isDataPanelExpanded

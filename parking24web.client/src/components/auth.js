@@ -44,11 +44,6 @@ const verifyToken = (token) => {
         const [, payload] = token.split('.'); // header와 signature는 사용 안 하므로 생략
         const decodedPayload = JSON.parse(decodeURIComponent(atob(payload)));
 
-        // 만료 시간 체크
-        if (Date.now() > decodedPayload.exp) {
-            return null; // 토큰 만료
-        }
-
         return decodedPayload;
     } catch {
         return null; // 잘못된 토큰 (error 파라미터 제거)

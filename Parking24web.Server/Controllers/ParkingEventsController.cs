@@ -35,6 +35,7 @@ namespace Parking24web.Server.Controllers
             var events = await _context.ParkingEvents
                 .Where(e => e.Timestamp >= today)
                 .OrderByDescending(e => e.Timestamp)
+                .Take(100)
                 .ToListAsync();
 
             return Ok(events);
@@ -81,6 +82,9 @@ namespace Parking24web.Server.Controllers
         [HttpGet("exited")]
         public async Task<IActionResult> GetExitedVehicles([FromQuery] int limit = 50)
         {
+            // limit 범위 제한 (1~200)
+            limit = Math.Max(1, Math.Min(200, limit));
+
             var exitedVehicles = await _context.ParkingEvents
                 .Where(e => e.EventType == "출차")
                 .OrderByDescending(e => e.Timestamp)
