@@ -1,5 +1,7 @@
 ﻿import React, { useState, useEffect } from 'react';
-import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { ResponsiveBar } from '@nivo/bar';
+import { ResponsiveLine } from '@nivo/line';
+import { ResponsivePie } from '@nivo/pie';
 import siteConfig from '../../config/sokcho1Config.js';
 import { useTheme } from '../contexts/ThemeContext';
 
@@ -9,39 +11,69 @@ const AnalyticsDashboard = () => {
     const [weeklyData, setWeeklyData] = useState([]);
     const [hourlyData, setHourlyData] = useState([]);
     const [topSlotsData, setTopSlotsData] = useState([]);
+    const [topSlotsRawData, setTopSlotsRawData] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+    // 테마별 차트 색상 팔레트
+    const isSpace = theme === 'space';
+    const barColors = isSpace
+        ? ['#8b5cf6', '#22d3ee'] // violet → cyan
+        : ['#1e3a8a', '#60a5fa'];
+    const lineColors = isSpace
+        ? ['#a855f7', '#06b6d4'] // purple, cyan
+        : ['#1e40af', '#60a5fa'];
+    const pieColors = isSpace
+        ? ['#a855f7', '#c084fc', '#06b6d4', '#22d3ee', '#f0abfc']
+        : ['#1e40af', '#3b82f6', '#60a5fa', '#93c5fd', '#bfdbfe'];
 
     useEffect(() => {
         fetchAllAnalytics();
+        
+        // 화면 크기 변화 감지
+        const handleResize = () => {
+            setIsMobile(window.innerWidth < 768);
+        };
+        
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
     }, []);
+
+    // isMobile이 변경될 때마다 topSlotsData 재처리
+    useEffect(() => {
+        if (topSlotsRawData.length > 0) {
+            setTopSlotsData(processTopSlotsData(topSlotsRawData));
+        }
+    }, [isMobile, topSlotsRawData]);
 
     const fetchAllAnalytics = async () => {
         try {
-            const apiBaseUrl = window.location.host.includes(':5173')
-                ? `http://localhost:${siteConfig.api.devPort}`
-                : siteConfig.api.baseUrl;
-
-            const [monthly, weekly, hourly, topSlots] = await Promise.all([
-                fetch(`${apiBaseUrl}/api/analytics/monthly`).then(r => r.json()),
-                fetch(`${apiBaseUrl}/api/analytics/weekly`).then(r => r.json()),
-                fetch(`${apiBaseUrl}/api/analytics/hourly`).then(r => r.json()),
-                fetch(`${apiBaseUrl}/api/analytics/topslots`).then(r => r.json())
-            ]);
-
-            // 월별 데이터 가공
-            const monthlyFormatted = processMonthlyData(monthly);
+            const baseUrl = siteConfig.api.baseUrl || 'http://localhost:5123';
+            
+            // 월별 데이터
+            const monthlyResponse = await fetch(`${baseUrl}/api/analytics/monthly`);
+            const monthlyRaw = await monthlyResponse.json();
+            const monthlyFormatted = processMonthlyData(monthlyRaw);
             setMonthlyData(monthlyFormatted);
 
-            // 요일별 데이터 가공
-            const weeklyFormatted = processWeeklyData(weekly);
+            // 주별 데이터
+            const weeklyResponse = await fetch(`${baseUrl}/api/analytics/weekly`);
+            const weeklyRaw = await weeklyResponse.json();
+            const weeklyFormatted = processWeeklyData(weeklyRaw);
             setWeeklyData(weeklyFormatted);
 
-            // 시간대별 데이터 가공
-            const hourlyFormatted = processHourlyData(hourly);
+            // 시간대별 데이터
+            const hourlyResponse = await fetch(`${baseUrl}/api/analytics/hourly`);
+            const hourlyRaw = await hourlyResponse.json();
+            const hourlyFormatted = processHourlyData(hourlyRaw);
             setHourlyData(hourlyFormatted);
 
-            // TOP 10 데이터 가공
-            setTopSlotsData(topSlots);
+            // TOP 슬롯 데이터
+            const topSlotsResponse = await fetch(`${baseUrl}/api/analytics/topslots`);
+            const topSlotsRaw = await topSlotsResponse.json();
+            setTopSlotsRawData(topSlotsRaw);
+            const topSlotsFormatted = processTopSlotsData(topSlotsRaw);
+            setTopSlotsData(topSlotsFormatted);
 
             setLoading(false);
         } catch (error) {
@@ -51,8 +83,21 @@ const AnalyticsDashboard = () => {
     };
 
     const processMonthlyData = (data) => {
+        if (!data || data.length === 0) {
+            return [];
+        }
+
+        // 중복 제거: 같은 year-month-eventType 조합의 최신 데이터만 유지
+        const uniqueData = data.reduce((acc, item) => {
+            const key = `${item.year}-${item.month}-${item.eventType}`;
+            if (!acc[key] || new Date(item.timestamp || item.createdAt || 0) > new Date(acc[key].timestamp || acc[key].createdAt || 0)) {
+                acc[key] = item;
+            }
+            return acc;
+        }, {});
+
         const grouped = {};
-        data.forEach(item => {
+        Object.values(uniqueData).forEach(item => {
             const key = `${item.year}-${item.month}`;
             if (!grouped[key]) {
                 grouped[key] = { month: `${item.month}월`, 입차: 0, 출차: 0 };
@@ -65,8 +110,22 @@ const AnalyticsDashboard = () => {
 
     const processWeeklyData = (data) => {
         const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
+        
+        if (!data || data.length === 0) {
+            return [];
+        }
+
+        // 중복 제거: 같은 dayOfWeek-eventType 조합의 최신 데이터만 유지
+        const uniqueData = data.reduce((acc, item) => {
+            const key = `${item.dayOfWeek}-${item.eventType}`;
+            if (!acc[key] || new Date(item.timestamp || item.createdAt || 0) > new Date(acc[key].timestamp || acc[key].createdAt || 0)) {
+                acc[key] = item;
+            }
+            return acc;
+        }, {});
+        
         const grouped = {};
-        data.forEach(item => {
+        Object.values(uniqueData).forEach(item => {
             const day = dayNames[item.dayOfWeek];
             if (!grouped[day]) {
                 grouped[day] = { day, 입차: 0, 출차: 0 };
@@ -74,19 +133,64 @@ const AnalyticsDashboard = () => {
             if (item.eventType === '입차') grouped[day].입차 = item.count;
             if (item.eventType === '출차') grouped[day].출차 = item.count;
         });
-        return dayNames.map(day => grouped[day] || { day, 입차: 0, 출차: 0 });
+        const result = dayNames.map(day => grouped[day] || { day, 입차: 0, 출차: 0 });
+        return result;
     };
 
     const processHourlyData = (data) => {
-        const grouped = {};
-        for (let i = 0; i < 24; i++) {
-            grouped[i] = { hour: `${i}시`, 입차: 0, 출차: 0 };
+        if (!data || data.length === 0) {
+            return [];
         }
-        data.forEach(item => {
-            if (item.eventType === '입차') grouped[item.hour].입차 = item.count;
-            if (item.eventType === '출차') grouped[item.hour].출차 = item.count;
+
+        // 중복 제거: 같은 hour-eventType 조합의 최신 데이터만 유지
+        const uniqueData = data.reduce((acc, item) => {
+            const key = `${item.hour}-${item.eventType}`;
+            if (!acc[key] || new Date(item.timestamp || item.createdAt || 0) > new Date(acc[key].timestamp || acc[key].createdAt || 0)) {
+                acc[key] = item;
+            }
+            return acc;
+        }, {});
+        
+        const 입차Data = [];
+        const 출차Data = [];
+        
+        for (let i = 0; i < 24; i++) {
+            입차Data.push({ x: i, y: 0, size: 0 });
+            출차Data.push({ x: i, y: 0, size: 0 });
+        }
+        
+        Object.values(uniqueData).forEach(item => {
+            if (item.eventType === '입차') {
+                입차Data[item.hour] = { x: item.hour, y: item.count, size: item.count };
+            }
+            if (item.eventType === '출차') {
+                출차Data[item.hour] = { x: item.hour, y: item.count, size: item.count };
+            }
         });
-        return Object.values(grouped);
+        
+        const result = [    
+            { id: '입차', data: 입차Data },
+            { id: '출차', data: 출차Data }
+        ];
+        return result;
+    };
+
+    const processTopSlotsData = (data) => {
+        if (!data || data.length === 0) {
+            return [];
+        }
+
+        // API 응답: { slotNumber, count }
+        // Nivo Pie 차트 형식: { id, label, value }
+        const result = data
+            .slice(0, 5)
+            .map((item) => ({
+                id: `slot-${item.slotNumber}`,
+                label: isMobile ? `${item.slotNumber}번` : `${item.slotNumber}번 차판`,
+                value: item.count
+            }));
+        
+        return result;
     };
 
     if (loading) {
@@ -101,94 +205,419 @@ const AnalyticsDashboard = () => {
 
     return (
         <div className="space-y-6">
-            {/* 월별 입출차 추이 */}
-            <div className={`rounded-2xl p-6 ${theme === 'space' ? 'bg-gray-900/95 border border-gray-700' : 'bg-white border border-gray-200'}`}>
-                <h3 className={`text-xl font-bold mb-6 ${theme === 'space' ? 'text-purple-400' : 'text-blue-600'}`}>
-                    월별 입출차 추이 (최근 12개월)
-                </h3>
-                <ResponsiveContainer width="100%" height={300}>
-                    <LineChart data={monthlyData}>
-                        <CartesianGrid strokeDasharray="3 3" stroke={theme === 'space' ? '#444' : '#ddd'} />
-                        <XAxis dataKey="month" stroke={theme === 'space' ? '#999' : '#666'} />
-                        <YAxis stroke={theme === 'space' ? '#999' : '#666'} />
-                        <Tooltip
-                            contentStyle={{
-                                backgroundColor: theme === 'space' ? '#1a1a1a' : '#fff',
-                                border: `1px solid ${theme === 'space' ? '#444' : '#ddd'}`
+            {/* 반응형 그리드: 모바일 1열, 태블릿 1열, PC 2열 */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* 월별 입출차 추이 */}
+                <div className={`rounded-2xl ${isMobile ? 'p-1' : 'p-6'} ${theme === 'space' ? 'bg-gray-900/95 border border-gray-700' : 'bg-sky-50 border border-sky-200'}`}>
+                    <h3 className={`${isMobile ? 'text-lg' : 'text-xl'} font-bold mb-6 ${theme === 'space' ? 'text-purple-400' : 'text-blue-600'}`}>
+                        월별 입출차 추이 (최근 12개월)
+                    </h3>
+                    <div style={{ height: isMobile ? 250 : 300 }}>
+                        <ResponsiveBar
+                            data={monthlyData}
+                            keys={['입차', '출차']}
+                            indexBy="month"
+                            margin={{ top: 60, right: 10, bottom: 50, left: 30 }}
+                            padding={0.2}
+                            valueScale={{ type: 'linear', min: 0, max: 200 }}
+                            indexScale={{ type: 'band', round: true }}
+                            colors={barColors}
+                            borderRadius={0}
+                            borderColor={{ from: 'color', modifiers: [['darker', 1.6]] }}
+                            axisTop={null}
+                            axisRight={null}
+                            axisBottom={{
+                                tickSize: 5,
+                                tickPadding: 5,
+                                tickRotation: 0,
+                                legendPosition: 'middle',
+                                legendOffset: 32
                             }}
+                            axisLeft={{
+                                tickSize: 5,
+                                tickPadding: 5,
+                                tickRotation: 0,
+                                legendPosition: 'middle',
+                                legendOffset: -40
+                            }}
+                            labelSkipWidth={12}
+                            labelSkipHeight={12}
+                            labelTextColor={{ from: 'color', modifiers: [['darker', 3]] }}
+                            enableGridX={false}
+                            enableGridY={true}
+                            legends={[
+                                {
+                                    dataFrom: 'keys',
+                                    anchor: 'top',
+                                    direction: 'row',
+                                    justify: false,
+                                    translateX: 20,
+                                    translateY: -40,
+                                    itemsSpacing: 20,
+                                    itemWidth: 80,
+                                    itemHeight: 20,
+                                    itemDirection: 'left-to-right',
+                                    itemOpacity: 0.85,
+                                    symbolSize: 20,
+                                    effects: [
+                                        {
+                                            on: 'hover',
+                                            style: {
+                                                itemOpacity: 1
+                                            }
+                                        }
+                                    ]
+                                }
+                            ]}
+                            theme={{
+                                axis: {
+                                    ticks: {
+                                        text: {
+                                            fill: theme === 'space' ? '#999' : '#666'
+                                        }
+                                    }
+                                },
+                                grid: {
+                                    line: {
+                                        stroke: theme === 'space' ? '#444' : '#ddd',
+                                        strokeWidth: 1
+                                    }
+                                },
+                                legends: {
+                                    text: {
+                                        fill: theme === 'space' ? '#999' : '#666',
+                                        fontSize: isMobile ? 16 : 18,
+                                        fontWeight: 'bold'
+                                    }
+                                },
+                                tooltip: {
+                                    container: {
+                                        background: theme === 'space' ? '#1a1a1a' : '#fff',
+                                    color: theme === 'space' ? '#fff' : '#333',
+                                        fontSize: 12,
+                                    borderRadius: '8px',
+                                        boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                                        border: `1px solid ${theme === 'space' ? '#444' : '#ddd'}`
+                                    }
+                                },
+                                labels: {
+                                    text: {
+                                        fontSize: 16
+                                    }
+                                }
+                            }}
+                            role="application"
+                            ariaLabel="월별 입출차 추이"
                         />
-                        <Legend />
-                        <Line type="monotone" dataKey="입차" stroke="#8884d8" strokeWidth={2} />
-                        <Line type="monotone" dataKey="출차" stroke="#82ca9d" strokeWidth={2} />
-                    </LineChart>
-                </ResponsiveContainer>
-            </div>
+                    </div>
+                </div>
 
-            {/* 요일별 비교 */}
-            <div className={`rounded-2xl p-6 ${theme === 'space' ? 'bg-gray-900/95 border border-gray-700' : 'bg-white border border-gray-200'}`}>
-                <h3 className={`text-xl font-bold mb-6 ${theme === 'space' ? 'text-purple-400' : 'text-blue-600'}`}>
-                    요일별 입출차 비교 (최근 3개월)
-                </h3>
-                <ResponsiveContainer width="100%" height={300}>
-                    <BarChart data={weeklyData}>
-                        <CartesianGrid strokeDasharray="3 3" stroke={theme === 'space' ? '#444' : '#ddd'} />
-                        <XAxis dataKey="day" stroke={theme === 'space' ? '#999' : '#666'} />
-                        <YAxis stroke={theme === 'space' ? '#999' : '#666'} />
-                        <Tooltip
-                            contentStyle={{
-                                backgroundColor: theme === 'space' ? '#1a1a1a' : '#fff',
-                                border: `1px solid ${theme === 'space' ? '#444' : '#ddd'}`
+                {/* 요일별 비교 */}
+                <div className={`rounded-2xl ${isMobile ? 'p-1' : 'p-6'} ${theme === 'space' ? 'bg-gray-900/95 border border-gray-700' : 'bg-sky-50 border border-sky-200'}`}>
+                    <h3 className={`${isMobile ? 'text-lg' : 'text-xl'} font-bold mb-6 ${theme === 'space' ? 'text-purple-400' : 'text-blue-600'}`}>
+                        요일별 입출차 비교 (최근 3개월)
+                    </h3>
+                    <div style={{ height: isMobile ? 250 : 300 }}>
+                        <ResponsiveLine
+                            data={[
+                                {
+                                    id: '입차',
+                                    data: weeklyData.map(d => ({ x: d.day, y: d.입차 }))
+                                },
+                                {
+                                    id: '출차',
+                                    data: weeklyData.map(d => ({ x: d.day, y: d.출차 }))
+                                }
+                            ]}
+                            margin={{ top: 60, right: 10, bottom: 50, left: 30 }}
+                            xScale={{ type: 'point' }}
+                            yScale={{ type: 'linear', min: 0, max: 'auto', stacked: false, reverse: false }}
+                            curve="monotoneX"
+                            axisTop={null}
+                            axisRight={null}
+                            axisBottom={{
+                                tickSize: 5,
+                                tickPadding: 5,
+                                tickRotation: 0,
+                                legendPosition: 'middle',
+                                legendOffset: 32
                             }}
+                            axisLeft={{
+                                tickSize: 5,
+                                tickPadding: 5,
+                                tickRotation: 0,
+                                legendPosition: 'middle',
+                                legendOffset: -40
+                            }}
+                            enableGridX={false}
+                            colors={lineColors}
+                            lineWidth={3}
+                            pointSize={isMobile ? 6 : 8}
+                            pointColor={{ theme: 'background' }}
+                            pointBorderWidth={2}
+                            pointBorderColor={{ from: 'serieColor' }}
+                            enableArea={true}
+                            areaOpacity={1}
+                            defs={[
+                                {
+                                    id: 'line-area-in',
+                                    type: 'linearGradient',
+                                    colors: [
+                                        { offset: 0, color: isSpace ? '#a855f7' : '#1e40af', opacity: 0.7 },
+                                        { offset: 100, color: isSpace ? '#22d3ee' : '#60a5fa', opacity: 0.2 }
+                                    ]
+                                },
+                                {
+                                    id: 'line-area-out',
+                                    type: 'linearGradient',
+                                    colors: [
+                                        { offset: 0, color: isSpace ? '#06b6d4' : '#60a5fa', opacity: 0.6 },
+                                        { offset: 100, color: isSpace ? '#22d3ee' : '#93c5fd', opacity: 0.15 }
+                                    ]
+                                }
+                            ]}
+                            fill={[
+                                { match: { id: '입차' }, id: 'line-area-in' },
+                                { match: { id: '출차' }, id: 'line-area-out' }
+                            ]}
+                            enableSlices="x"
+                            useMesh={true}
+                            enableCrosshair={true}
+                            crosshairType="x"
+                            tooltip={({ point }) => (
+                                <div style={{
+                                    background: theme === 'space' ? '#1a1a1a' : '#fff',
+                                    color: theme === 'space' ? '#fff' : '#333',
+                                    fontSize: 12,
+                                    borderRadius: '8px',
+                                    boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                                    border: `1px solid ${theme === 'space' ? '#444' : '#ddd'}`,
+                                    padding: '8px 12px',
+                                    whiteSpace: 'nowrap'
+                                }}>
+                                     <strong>{point.data.x}요일 {point.serieId}</strong>: {point.data.y}대
+                                </div>
+                            )}
+                            legends={[
+                                {
+                                    anchor: 'top',
+                                    direction: 'row',
+                                    justify: false,
+                                    translateX: 20,
+                                    translateY: -40,
+                                    itemsSpacing: 20,
+                                    itemDirection: 'left-to-right',
+                                    itemWidth: 80,
+                                    itemHeight: 20,
+                                    itemOpacity: 0.85,
+                                    symbolSize: 20,
+                                    symbolShape: 'circle',
+                                    effects: [
+                                        {
+                                            on: 'hover',
+                                            style: {
+                                                itemOpacity: 1
+                                            }
+                                        }
+                                    ]
+                                }
+                            ]}
+                            theme={{
+                                axis: {
+                                    ticks: {
+                                        text: {
+                                            fill: theme === 'space' ? '#999' : '#666'
+                                        }
+                                    }
+                                },
+                                grid: {
+                                    line: {
+                                        stroke: theme === 'space' ? '#444' : '#ddd',
+                                        strokeWidth: 1
+                                    }
+                                },
+                                legends: {
+                                    text: {
+                                        fill: theme === 'space' ? '#999' : '#666',
+                                        fontSize: isMobile ? 16 : 18,
+                                        fontWeight: 'bold'
+                                    }
+                                },
+                                tooltip: {
+                                    container: {
+                                        background: theme === 'space' ? '#1a1a1a' : '#fff',
+                                    color: theme === 'space' ? '#fff' : '#333',
+                                        fontSize: 12,
+                                    borderRadius: '8px',
+                                        boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                                        border: `1px solid ${theme === 'space' ? '#444' : '#ddd'}`
+                                    }
+                                },
+                                labels: {
+                                    text: {
+                                        fontSize: 16
+                                    }
+                                }
+                            }}
+                            role="application"
+                            ariaLabel="요일별 입출차 비교"
                         />
-                        <Legend />
-                        <Bar dataKey="입차" fill="#8884d8" />
-                        <Bar dataKey="출차" fill="#82ca9d" />
-                    </BarChart>
-                </ResponsiveContainer>
-            </div>
+                    </div>
+                </div>
 
-            {/* 시간대별 패턴 */}
-            <div className={`rounded-2xl p-6 ${theme === 'space' ? 'bg-gray-900/95 border border-gray-700' : 'bg-white border border-gray-200'}`}>
-                <h3 className={`text-xl font-bold mb-6 ${theme === 'space' ? 'text-purple-400' : 'text-blue-600'}`}>
-                    시간대별 입출차 패턴 (최근 1개월)
-                </h3>
-                <ResponsiveContainer width="100%" height={300}>
-                    <LineChart data={hourlyData}>
-                        <CartesianGrid strokeDasharray="3 3" stroke={theme === 'space' ? '#444' : '#ddd'} />
-                        <XAxis dataKey="hour" stroke={theme === 'space' ? '#999' : '#666'} />
-                        <YAxis stroke={theme === 'space' ? '#999' : '#666'} />
-                        <Tooltip
-                            contentStyle={{
-                                backgroundColor: theme === 'space' ? '#1a1a1a' : '#fff',
-                                border: `1px solid ${theme === 'space' ? '#444' : '#ddd'}`
+                {/* 시간대별 패턴 (라인) */}
+                <div className={`rounded-2xl ${isMobile ? 'p-1' : 'p-6'} ${theme === 'space' ? 'bg-gray-900/95 border border-gray-700' : 'bg-sky-50 border border-sky-200'}`}>
+                    <h3 className={`${isMobile ? 'text-lg' : 'text-xl'} font-bold mb-6 ${theme === 'space' ? 'text-purple-400' : 'text-blue-600'}`}>
+                        시간대별 입출차 패턴 (최근 1개월)
+                    </h3>
+                    <div style={{ height: isMobile ? 250 : 300 }}>
+                        <ResponsiveLine
+                            data={hourlyData}
+                            margin={{ 
+                                top: isMobile ? 60 : 60, 
+                                right: isMobile ? 10 : 10, 
+                                bottom: isMobile ? 50 : 50, 
+                                left: isMobile ? 20 : 30 
                             }}
+                            xScale={{ type: 'linear', min: 0, max: 23 }}
+                            yScale={{ type: 'linear', min: 'auto', max: 'auto', stacked: false }}
+                            curve="catmullRom"
+                            axisTop={null}
+                            axisRight={null}
+                            axisBottom={{
+                                tickSize: 5,
+                                tickPadding: 5,
+                                tickRotation: 0,
+                                legendPosition: 'middle',
+                                legendOffset: 46,
+                                format: (value) => `${value}시`
+                            }}
+                            axisLeft={{
+                                tickSize: 5,
+                                tickPadding: 5,
+                                tickRotation: 0,
+                                legendPosition: 'middle',
+                                legendOffset: -50
+                            }}
+                            colors={lineColors}
+                            lineWidth={isMobile ? 1.5 : 2}
+                            pointSize={isMobile ? 6 : 8}
+                            pointColor={{ theme: 'background' }}
+                            pointBorderWidth={2}
+                            pointBorderColor={{ from: 'seriesColor' }}
+                            enableArea={false}
+                            useMesh={true}
+                            enableGridX={false}
+                            enableGridY={true}
+                            tooltip={({ point }) => (
+                                <div style={{
+                                    background: theme === 'space' ? '#1a1a1a' : '#fff',
+                                    color: theme === 'space' ? '#fff' : '#333',
+                                    fontSize: 12,
+                                    borderRadius: '8px',
+                                    boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                                    border: `1px solid ${theme === 'space' ? '#444' : '#ddd'}`,
+                                    padding: '8px 12px',
+                                    whiteSpace: 'nowrap'
+                                }}>
+                                     <strong>{point.data.x}시 {point.serieId}</strong>: {point.data.y}대
+                                </div>
+                            )}
+                            legends={[
+                                {
+                                    anchor: 'top',
+                                    direction: 'row',
+                                    justify: false,
+                                    translateX: 20,
+                                    translateY: -40,
+                                    itemsSpacing: 20,
+                                    itemWidth: 80,
+                                    itemHeight: 20,
+                                    itemDirection: 'left-to-right',
+                                    itemOpacity: 0.85,
+                                    symbolSize: 20,
+                                    symbolShape: 'circle',
+                                    effects: [
+                                        { on: 'hover', style: { itemOpacity: 1 } }
+                                    ]
+                                }
+                            ]}
+                            theme={{
+                                background: theme === 'space' ? '#111827' : '#f0f9ff',
+                                axis: {
+                                    ticks: { text: { fill: isSpace ? '#999' : '#666' } },
+                                    legend: { text: { fill: isSpace ? '#999' : '#666' } }
+                                },
+                                grid: { line: { stroke: isSpace ? '#444' : '#ddd', strokeWidth: 1 } },
+                                legends: { text: { fill: isSpace ? '#999' : '#666' } }
+                            }}
+                            role="application"
+                            ariaLabel="시간대별 입출차 패턴"
                         />
-                        <Legend />
-                        <Line type="monotone" dataKey="입차" stroke="#8884d8" strokeWidth={2} />
-                        <Line type="monotone" dataKey="출차" stroke="#82ca9d" strokeWidth={2} />
-                    </LineChart>
-                </ResponsiveContainer>
-            </div>
+                    </div>
+                </div>
 
-            {/* 차판 이용 빈도 TOP 10 */}
-            <div className={`rounded-2xl p-6 ${theme === 'space' ? 'bg-gray-900/95 border border-gray-700' : 'bg-white border border-gray-200'}`}>
-                <h3 className={`text-xl font-bold mb-6 ${theme === 'space' ? 'text-purple-400' : 'text-blue-600'}`}>
-                    차판 이용 빈도 TOP 10 (최근 3개월)
-                </h3>
-                <ResponsiveContainer width="100%" height={300}>
-                    <BarChart data={topSlotsData} layout="vertical">
-                        <CartesianGrid strokeDasharray="3 3" stroke={theme === 'space' ? '#444' : '#ddd'} />
-                        <XAxis type="number" stroke={theme === 'space' ? '#999' : '#666'} />
-                        <YAxis dataKey="slotNumber" type="category" stroke={theme === 'space' ? '#999' : '#666'} />
-                        <Tooltip
-                            contentStyle={{
-                                backgroundColor: theme === 'space' ? '#1a1a1a' : '#fff',
-                                border: `1px solid ${theme === 'space' ? '#444' : '#ddd'}`
+                {/* 차판 이용 빈도 TOP 5 */}
+                <div className={`rounded-2xl ${isMobile ? 'p-1' : 'p-6'} ${theme === 'space' ? 'bg-gray-900/95 border border-gray-700' : 'bg-sky-50 border border-sky-200'}`}>
+                    <h3 className={`${isMobile ? 'text-lg' : 'text-xl'} font-bold mb-6 ${theme === 'space' ? 'text-purple-400' : 'text-blue-600'}`}>
+                        차판 이용 빈도 TOP 5 (최근 3개월)
+                    </h3>
+                    <div style={{ height: isMobile ? 250 : 300 }}>
+                        <ResponsivePie
+                                data={topSlotsData}
+                            margin={{ 
+                                top: isMobile ? 40 : 40, 
+                                right: isMobile ? 60 : 120, 
+                                bottom: isMobile ? 40 : 40, 
+                                left: isMobile ? 60 : 120 
                             }}
+                            innerRadius={0.5}
+                            padAngle={0.7}
+                            cornerRadius={3}
+                            activeOuterRadiusOffset={8}
+                            colors={pieColors}
+                            borderWidth={1}
+                            borderColor={{ from: 'color', modifiers: [['darker', 0.2]] }}
+                            startAngle={-90}
+                            endAngle={270}
+                            sortByValue={true}
+                            arcLabel="value"
+                            arcLabelsSkipAngle={10}
+                            arcLabelsTextColor={{ from: 'color', modifiers: [['darker', 2]] }}
+                            arcLinkLabel="label"
+                            arcLinkLabelsSkipAngle={10}
+                            arcLinkLabelsTextColor={theme === 'space' ? '#999' : '#666'}
+                            arcLinkLabelsThickness={2}
+                            arcLinkLabelsDiagonalLength={isMobile ? 8 : 16}
+                            arcLinkLabelsStraightLength={isMobile ? 8 : 16}
+                            arcLinkLabelsColor={{ from: 'color' }}
+                            theme={{
+                                tooltip: {
+                                    container: {
+                                        background: theme === 'space' ? '#1a1a1a' : '#fff',
+                                        color: theme === 'space' ? '#fff' : '#333',
+                                        fontSize: 12,
+                                        borderRadius: '8px',
+                                        boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                                        border: `1px solid ${theme === 'space' ? '#444' : '#ddd'}`
+                                    }
+                                },
+                                labels: {
+                                    text: {
+                                        fontSize: isMobile ? 12 : 16
+                                    }
+                                },
+                                arcLabels: {
+                                    text: {
+                                        fontSize: isMobile ? 10 : 14
+                                    }
+                                }
+                            }}
+                            role="application"
+                            ariaLabel="차판 이용 빈도 TOP 5"
                         />
-                        <Bar dataKey="count" fill="#8884d8" />
-                    </BarChart>
-                </ResponsiveContainer>
+                    </div>
+                </div>
             </div>
         </div>
     );

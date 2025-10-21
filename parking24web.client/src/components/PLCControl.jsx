@@ -665,7 +665,7 @@ const PLCControl = ({ currentUser, onLogout }) => {
                     </>
                 )}
                 
-                <main className="p-2 md:p-4 mt-4 md:mt-4 max-w-6xl mx-auto relative z-10">
+                <main className={`p-2 md:p-4 mt-4 md:mt-4 mx-auto relative z-10 ${activeTab === 'events' ? 'max-w-7xl' : 'max-w-6xl'}`}>
                     <div className="w-full">
                         {/* 상단 상태 표시 탭들 - 속초 config 적용 (클라이언트일 때 숨김) */}
                         {!isClient() && (

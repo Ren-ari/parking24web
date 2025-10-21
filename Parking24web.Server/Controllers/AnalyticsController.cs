@@ -77,6 +77,10 @@ namespace Parking24web.Server.Controllers
                 .OrderBy(x => x.hour)
                 .ToListAsync();
 
+            // 디버깅: 전체 데이터 개수 로그
+            _logger.LogInformation($"시간대별 데이터 개수: {hourlyData.Count}");
+            _logger.LogInformation($"전체 ParkingEvents 개수: {await _context.ParkingEvents.CountAsync()}");
+
             return Ok(hourlyData);
         }
 
