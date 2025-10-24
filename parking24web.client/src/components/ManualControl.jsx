@@ -1,6 +1,5 @@
 ﻿import React, { useState, useEffect } from 'react';
-// config import - 빌드별로 변경 (sokcho1Config 또는 sokcho2Config)
-import siteConfig from '../../config/sokcho1Config.js';
+import siteConfig from '../../config/sokcho2Config.js';
 // SignalR 서비스 import
 import signalRService from '../services/signalrService.js';
 import { useTheme } from '../contexts/ThemeContext';

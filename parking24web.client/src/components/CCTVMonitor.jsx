@@ -1,6 +1,6 @@
 ﻿import { useState, useEffect, useRef, memo, useCallback } from 'react';
 import Hls from 'hls.js';
-import siteConfig from '../../config/sokcho1Config';
+import siteConfig from '../../config/sokcho2Config';
 import { useTheme } from '../contexts/ThemeContext';
 
 // 위치 이름 매핑 (채널 번호 기준)
@@ -35,7 +35,7 @@ const ThumbnailCard = memo(({ channel, isActive, onClick, theme }) => (
         }}
     >
         <img
-            src={`/thumbnails/ch${channel.number}.jpg`}
+            src={`/thumbnails/${siteConfig.siteInfo.siteId}/ch${channel.number}.jpg`}
             alt={channel.name}
             className="w-full h-24 object-cover"
             loading="lazy"
@@ -159,19 +159,15 @@ const CCTVMonitor = () => {
     // 언마운트 시 정리
     useEffect(() => {
         return () => {
-            // HLS 정리
+            // HLS만 정리
             if (hlsRef.current) {
                 hlsRef.current.destroy();
                 hlsRef.current = null;
             }
-            // 연결 해제는 서버에 요청 (비동기 처리는 하지 않음)
-            if (isStreaming) {
-                fetch(`${apiBaseUrl}/api/cctv/hls/stop/${currentChannel}`, {
-                    method: 'POST'
-                }).catch(err => console.error('정리 중 오류:', err));
-            }
+            // 서버 stop은 handleChannelChange와 handleDisconnect에서만 처리
+            // (여기서 stop 호출하면 stale closure 문제 발생)
         };
-    }, [isStreaming, currentChannel]);
+    }, []);
 
     const checkStatus = async () => {
         try {
@@ -232,16 +228,17 @@ const CCTVMonitor = () => {
             return;
         }
 
+        const prevChannel = currentChannel;
         setCurrentChannel(channelNumber);
 
-        // 기존 스트리밍 중지
+        // 기존 스트리밍 중지 (이전 채널 번호 전달)
         if (isStreaming) {
-            await stopStream();
+            await stopStream(prevChannel);
         }
 
         // 새 채널 시작
         await startStream(channelNumber);
-    }, [isConnected, isStreaming]);
+    }, [isConnected, isStreaming, currentChannel]);
 
     const startStream = async (channel = currentChannel) => {
         try {
@@ -264,7 +261,9 @@ const CCTVMonitor = () => {
         }
     };
 
-    const stopStream = async () => {
+    const stopStream = async (channel) => {
+        const targetChannel = channel ?? currentChannel;
+
         try {
             // HLS 정리
             if (hlsRef.current) {
@@ -273,7 +272,7 @@ const CCTVMonitor = () => {
             }
 
             // 서버에 중지 요청
-            await fetch(`${apiBaseUrl}/api/cctv/hls/stop/${currentChannel}`, {
+            await fetch(`${apiBaseUrl}/api/cctv/hls/stop/${targetChannel}`, {
                 method: 'POST'
             });
 

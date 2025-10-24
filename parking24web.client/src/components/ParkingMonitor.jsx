@@ -1,7 +1,7 @@
 ﻿import React, { useState, useEffect, useRef } from "react";
 import { useAuth } from '../hooks/useAuth';
 import signalRService from '../services/SignalRService';
-import siteConfig from '../../config/sokcho1Config.js';
+import siteConfig from '../../config/sokcho2Config.js';
 
 
 const ParkingMonitor = ({ sensorData, isPLCConnected, onVehicleEdit, theme }) => {
@@ -87,10 +87,10 @@ const ParkingMonitor = ({ sensorData, isPLCConnected, onVehicleEdit, theme }) =>
         switch (box) {
             case 0: // 홀수차량
             case 4: // 짝수차량
-                return level >= 2 && level <= 38; // 2층부터 38층까지만 주차 가능
+                return level >= 2 && level <= siteConfig.parkingMonitor.maxFloor; // 2층부터 38층까지만 주차 가능
             case 1: // 홀수차판상태
             case 3: // 짝수차판상태
-                return level >= 2 && level <= 38; // 2층부터만 차판상태 표시
+                return level >= 2 && level <= siteConfig.parkingMonitor.maxFloor; // 2층부터만 차판상태 표시
             case 2: // 승강로정보
                 return level >= 1; // 1층(진입층)부터 38층까지
             default:
@@ -117,8 +117,7 @@ const ParkingMonitor = ({ sensorData, isPLCConnected, onVehicleEdit, theme }) =>
 
             case 2: // 승강로정보 (C200~C245)
                 if (level === 1) return `C${siteConfig.liftPositions.entrancePos}`; // 1층(진입층)
-                if (level >= 2 && level <= 43) {
-                    // 2층=C203, 3층=C204, ... 43층=C245
+                if (level >= 2 && level <= siteConfig.parkingMonitor.maxFloor) {
                     return `C${siteConfig.liftPositions.floor1 + (level - 2)}`;
                 }
                 return `C${siteConfig.liftPositions.counter}`;                     // 카운터
@@ -183,8 +182,8 @@ const ParkingMonitor = ({ sensorData, isPLCConnected, onVehicleEdit, theme }) =>
         if (!sensorData.rawData) return null;
 
         // 속초 리프트 위치 확인 (C203~C245가 1이면 해당 층에 리프트 있음)
-        for (let floor = 1; floor <= 43; floor++) {
-            const liftAddress = siteConfig.liftPositions.floor1 + (floor - 1); // C203~C245
+        for (let floor = 1; floor <= siteConfig.parkingMonitor.maxFloor; floor++) {
+            const liftAddress = siteConfig.liftPositions.floor1 + (floor - 1);
             if (liftAddress < sensorData.rawData.length) {
                 const liftValue = sensorData.rawData[liftAddress];
                 if (liftValue === 1) {
@@ -378,7 +377,7 @@ const ParkingMonitor = ({ sensorData, isPLCConnected, onVehicleEdit, theme }) =>
                     className={`h-[95%] overflow-y-auto p-1 sm:p-2 md:p-3 space-y-1 sm:space-y-2 md:space-y-3 ${theme === 'space' ? 'space-scrollbar' : ''}`}
                 >
                     {/* 38층부터 2층까지 역순, 그 다음 진입층(1층) */}
-                    {[...Array.from({ length: 37 }, (_, i) => 38 - i), 1].map((level) => {
+                    {[...Array.from({ length: siteConfig.parkingMonitor.maxFloor - 1 }, (_, i) => siteConfig.parkingMonitor.maxFloor - i), 1].map((level) => {
                         const levelText = level === 1 ? "진입층" : `${level}층`;
 
                         return (

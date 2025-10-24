@@ -30,7 +30,7 @@ if (!fs.existsSync(certFilePath) || !fs.existsSync(keyFilePath)) {
     }
 }
 
-const target = 'http://localhost:5123';
+const target = 'http://localhost:5124';
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -50,6 +50,11 @@ export default defineConfig({
             },
 
             '^/weatherforecast': {
+                target,
+                secure: false
+            },
+
+            '^/thumbnails': {
                 target,
                 secure: false
             }

@@ -6,7 +6,7 @@ using Parking24web.Server.Services;
 var builder = WebApplication.CreateBuilder(args);
 
 // 환경변수에서 현장명 가져오기
-var siteName = args.Length > 0 ? args[0] : "Sokcho1";
+var siteName = args.Length > 0 ? args[0] : "Sokcho2";
 Console.WriteLine($"현장 설정: {siteName}");
 
 // 사이트별 설정 파일 로드

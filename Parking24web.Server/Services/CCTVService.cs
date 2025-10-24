@@ -308,19 +308,22 @@ namespace Parking24web.Server.Services
                 }
                 finally
                 {
-                    // HLS 폴더도 삭제
+                    // HLS 파일만 삭제 (폴더는 유지)
                     try
                     {
                         var hlsDir = Path.Combine(_dataRoot, "hls", $"ch{channelNumber}");
                         if (Directory.Exists(hlsDir))
                         {
-                            Directory.Delete(hlsDir, true);
-                            _logger.LogInformation("HLS 폴더 삭제: {Dir}", hlsDir);
+                            foreach (var file in Directory.GetFiles(hlsDir))
+                            {
+                                try { File.Delete(file); } catch { }
+                            }
+                            _logger.LogInformation("HLS 파일 정리: {Dir}", hlsDir);
                         }
                     }
                     catch (Exception cleanupEx)
                     {
-                        _logger.LogWarning(cleanupEx, "HLS 폴더 삭제 실패: 채널 {Channel}", channelNumber);
+                        _logger.LogWarning(cleanupEx, "HLS 파일 정리 실패: 채널 {Channel}", channelNumber);
                     }
                 }
             }

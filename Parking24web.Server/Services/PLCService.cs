@@ -157,7 +157,7 @@ namespace Parking24web.Server.Services
                 data = GetSensorData(); // 한번 더 읽기
                 ushort authCode = data[4]; // C4 값
 
-                return authCode == 62; // 유효한 인증 코드
+                return authCode == 81; // 유효한 인증 코드
             }
             catch (Exception ex)
             {

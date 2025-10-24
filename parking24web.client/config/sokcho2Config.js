@@ -4,6 +4,7 @@ export const sokcho2Config = {
     siteInfo: {
         name: "속초",
         unitNumber: "2,3호기",
+        siteId: "sokcho2",
         location: "속초 주차타워",
         description: "속초 현장 2,3호기 주차타워"
     },
@@ -416,11 +417,34 @@ export const sokcho2Config = {
         }
     },
 
+    // CCTV 설정
+    cctvConfig: {
+        channels: [
+            { number: 2, name: 'Channel 2 (D2)' },
+            { number: 3, name: 'Channel 3 (D3)' },
+            { number: 4, name: 'Channel 4 (D4)' },
+            { number: 5, name: 'Channel 5 (D5)' },
+            { number: 6, name: 'Channel 6 (D6)' },
+            { number: 7, name: 'Channel 7 (D7)' },
+            { number: 8, name: 'Channel 8 (D8)' },
+            { number: 9, name: 'Channel 9 (D9)' }
+        ],
+        defaultConnection: {
+            ipAddress: '222.113.92.40',
+            port: 8081,
+            rtspPort: 8889,
+            username: 'admin',
+            password: '!yanry4880'
+        }
+    },
+
+
     // 주차장 모니터링 설정 (2,3호기 전용)
     parkingMonitor: {
         vehicleAddressStart: 101,               // C101
         vehicleAddressEnd: 180,                 // C180
         totalSlots: 80,
+        maxFloor: 39,
         hasPlateStatus: false,
         liftPositionStart: 200,                 // C200
         entranceLevel: 201,                     // C201: 승입장

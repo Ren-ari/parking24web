@@ -4,6 +4,7 @@ export const sokcho1Config = {
     siteInfo: {
         name: "속초",
         unitNumber: "1호기",
+        siteId: "sokcho1",
         location: "속초 주차타워",
         description: "속초 현장 1호기 주차타워"
     },
@@ -14,7 +15,7 @@ export const sokcho1Config = {
             {
                 unit: 1,
                 name: "1호기",
-                ip: "192.168.1.2",
+                ip: "192.168.0.101",
                 port: 2005
             }
         ]
@@ -116,7 +117,7 @@ export const sokcho1Config = {
         manualMode: 15,     // C015: 수동확인
         errorStatus: 16,    // C016: 에러확인
         emergencyStop: 24,  // C024: 비상스위치
-        heartbeat: 0        // C000 기준 (토로스와 다름)
+        heartbeat: 0        // C000 기준
     },
 
     // PC 제어 명령 주소
@@ -449,6 +450,7 @@ export const sokcho1Config = {
         vehicleAddressEnd: 180,                 // C180
         totalSlots: 80,
         // 속초는 차판상태가 별도로 없고 차량번호만 관리
+        maxFloor: 38,
         hasPlateStatus: false,
         // 리프트 위치 정보
         liftPositionStart: 200,                 // C200
