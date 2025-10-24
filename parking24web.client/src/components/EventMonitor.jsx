@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import siteConfig from '../../config/sokcho1Config.js';
+import siteConfig from '../../config/gapEulMyeongGaConfig';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../hooks/useAuth';
 import signalRService from '../services/SignalRService';

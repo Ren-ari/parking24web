@@ -1,5 +1,5 @@
 ﻿import React from 'react';
-import siteConfig from '../../config/sokcho1Config.js';
+import siteConfig from '../../config/gapEulMyeongGaConfig';
 
 const currentConfig = siteConfig;
 

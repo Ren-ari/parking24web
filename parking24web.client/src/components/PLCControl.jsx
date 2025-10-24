@@ -10,7 +10,7 @@ import EventMonitor from './EventMonitor';
 import ServiceRecordTab from './ServiceRecordTab';
 const CCTVMonitor = React.lazy(() => import('./CCTVMonitor'));
 // 속초 1호기 config import 추가
-import siteConfig from '../../config/sokcho1Config.js';
+import siteConfig from '../../config/gapEulMyeongGaConfig.js';
 import { ROLE_TABS } from './auth';
 
 const PLCControl = ({ currentUser, onLogout }) => {

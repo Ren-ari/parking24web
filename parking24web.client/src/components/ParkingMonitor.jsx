@@ -1,7 +1,7 @@
 ﻿import React, { useState, useEffect, useRef } from "react";
 import { useAuth } from '../hooks/useAuth';
 import signalRService from '../services/SignalRService';
-import siteConfig from '../../config/sokcho1Config.js';
+import siteConfig from '../../config/gapEulMyeongGaConfig.js';
 
 
 const ParkingMonitor = ({ sensorData, isPLCConnected, onVehicleEdit, theme }) => {
