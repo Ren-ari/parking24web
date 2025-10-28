@@ -172,7 +172,7 @@ namespace Parking24web.Server.Hubs
 
             if (_siteConfig.ControlCommands.TryGetValue(commandName, out int address))
             {
-                _logger.LogDebug($"명령 주소 조회: {commandName} = C{address}");
+                _logger.LogDebug($"명령 주소 조회: {commandName} = P{address}");
                 return address;
             }
 
@@ -195,7 +195,7 @@ namespace Parking24web.Server.Hubs
 
             if (property != null && property.GetValue(_siteConfig.SystemAddresses) is int address)
             {
-                _logger.LogDebug($"시스템 주소 조회: {addressName} = C{address}");
+                _logger.LogDebug($"시스템 주소 조회: {addressName} = P{address}");
                 return address;
             }
 
@@ -257,12 +257,12 @@ namespace Parking24web.Server.Hubs
                 await SendPLCCommand(new PLCCommandRequest
                 {
                     CommandType = "writeword",
-                    DeviceType = "C",
+                    DeviceType = "P",
                     Address = address,
                     Value = value
                 });
 
-                _logger.LogInformation($"Config 명령 전송: {commandName} (C{address}) = {value}");
+                _logger.LogInformation($"Config 명령 전송: {commandName} (P{address}) = {value}");
             }
             catch (Exception ex)
             {
@@ -366,12 +366,12 @@ namespace Parking24web.Server.Hubs
                 await SendPLCCommand(new PLCCommandRequest
                 {
                     CommandType = "writeword",
-                    DeviceType = "C",
+                    DeviceType = "P",
                     Address = address,
                     Value = value
                 });
 
-                _logger.LogInformation($"비상정지 명령 전송: C{address} = {value}");
+                _logger.LogInformation($"비상정지 명령 전송: P{address} = {value}");
             }
             catch (Exception ex)
             {
@@ -500,7 +500,7 @@ namespace Parking24web.Server.Hubs
     public class PLCCommandRequest
     {
         public string CommandType { get; set; } = string.Empty; // writeword, writebit
-        public string DeviceType { get; set; } = "C"; // C, P, D 등
+        public string DeviceType { get; set; } = "P"; // C, P, D 등
         public int Address { get; set; }
         public int BitPosition { get; set; } = 0; // 비트 명령용
         public int Value { get; set; }

@@ -1,6 +1,6 @@
 ﻿import { useState, useEffect, useRef, memo, useCallback } from 'react';
 import Hls from 'hls.js';
-import siteConfig from '../../config/sokcho1Config';
+import siteConfig from '../../config/gapEulMyeongGaConfig';
 import { useTheme } from '../contexts/ThemeContext';
 
 // 위치 이름 매핑 (채널 번호 기준)
@@ -10,7 +10,10 @@ const getLocationName = (channelNumber) => {
         2: 'ch2',
         3: 'ch3',
         4: 'ch4',
-        5: 'ch5'
+        5: 'ch5',
+        6: 'ch6',
+        7: 'ch7',
+        8: 'ch8'
     };
     return locations[channelNumber] || '';
 };

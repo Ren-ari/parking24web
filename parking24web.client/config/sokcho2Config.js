@@ -367,44 +367,6 @@ export const sokcho2Config = {
         }
     },
 
-    // 수동 제어 탭 구성 (2,3호기 전용)
-    manualControlTabs: {
-        page1: {
-            name: "도어/턴테이블",
-            commands: {
-                doorOpen: "doorOpen",           // C021
-                doorClose: "doorClose",         // C022
-                turnLeft: "turnLeft",           // C011  
-                turnRight: "turnRight"          // C012
-            }
-        },
-        page2: {
-            name: "승강 제어",
-            commands: {
-                liftUp: "liftUp",               // C007
-                liftDown: "liftDown"            // C008
-            }
-        },
-        page3: {
-            name: "횡행/락킹",
-            commands: {
-                moveLeft: "moveLeft",           // C009
-                moveRight: "moveRight",         // C010
-                lockingOn: "lockingOn",         // C013 (비어있음)
-                lockingOff: "lockingOff"        // C014 (비어있음)
-            }
-        }
-    },
-
-    // 공용 명령들
-    commonCommands: {
-        errorReset: "errorReset",               // C017
-        remoteControl: "remoteControl",         // C018
-        homeReturn: "homeReturn",               // C019
-        paletteChange: "paletteChange",         // C020
-        emergencyStop: "emergencyStop"          // C024
-    },
-
     api: {
         baseUrl: '',
         devPort: 5124,

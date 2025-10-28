@@ -28,9 +28,9 @@ const SensorMonitor = ({ sensorData, isPLCConnected }) => {
                 type: 'parsed'
             }));
         } else if (viewMode === 'raw' && sensorData.rawData) {
-            // 원시 데이터 표시 (C0 ~ C255)
+            // 원시 데이터 표시 (P0 ~ P255)
             data = sensorData.rawData.map((value, index) => ({
-                address: `C${index}`,
+                address: `P${index}`,
                 value: value,
                 displayValue: value.toString(),
                 type: 'raw'
@@ -38,7 +38,7 @@ const SensorMonitor = ({ sensorData, isPLCConnected }) => {
         } else if (viewMode === 'hex' && sensorData.rawData) {
             // 16진수로 표시
             data = sensorData.rawData.map((value, index) => ({
-                address: `C${index}`,
+                address: `P${index}`,
                 value: value,
                 displayValue: `0x${value.toString(16).toUpperCase().padStart(4, '0')}`,
                 type: 'hex'
@@ -721,11 +721,11 @@ const SensorMonitor = ({ sensorData, isPLCConnected }) => {
                                     }}
                                 >
                                 <div className="flex items-center h-full overflow-hidden">
-                                    <span className={`text-xs xl:text-sm font-mono font-bold flex-shrink-0 ${theme === 'space' ? 'text-purple-300' : theme === 'dark' ? 'text-blue-400' : theme === 'ocean' ? 'text-blue-300' : 'text-blue-600'}`}>
-                                        {item.name.substring(0, 4)}
+                                    <span className={`text-xs xl:text-sm font-mono font-bold flex-shrink-0 mr-2 ${theme === 'space' ? 'text-purple-300' : theme === 'dark' ? 'text-blue-400' : theme === 'ocean' ? 'text-blue-300' : 'text-blue-600'}`}>
+                                        {item.name.substring(0, item.name.indexOf('_'))}
                                     </span>
-                                    <span className={`text-xs xl:text-sm truncate ml-2 ${theme === 'space' ? 'text-purple-100' : theme === 'dark' ? 'text-gray-200' : theme === 'ocean' ? 'text-blue-100' : 'text-gray-700'}`}>
-                                        {item.name.substring(5)}
+                                    <span className={`text-xs xl:text-sm truncate ${theme === 'space' ? 'text-purple-100' : theme === 'dark' ? 'text-gray-200' : theme === 'ocean' ? 'text-blue-100' : 'text-gray-700'}`}>
+                                        {item.name.substring(item.name.indexOf('_') + 1)}
                                     </span>
                                 </div>
                                 </div>
@@ -756,7 +756,7 @@ const SensorMonitor = ({ sensorData, isPLCConnected }) => {
                             <div className="mb-6 flex items-center space-x-3">
                                 <div className={`animate-pulse w-4 h-4 rounded-full ${theme === 'space' ? 'bg-purple-500' : theme === 'dark' ? 'bg-green-500' : theme === 'ocean' ? 'bg-blue-500' : 'bg-green-500'}`}></div>
                                 <div className={`font-mono text-lg font-semibold ${theme === 'space' ? 'text-purple-400' : theme === 'dark' ? 'text-green-400' : theme === 'ocean' ? 'text-blue-400' : 'text-green-400'}`}>
-                                    속초 1호기 센서 상태 모니터링 (C060~C072)
+                                    속초 1호기 센서 상태 모니터링 (P060~P072)
                                 </div>
                                 <div className="flex space-x-1">
                                     <div className={`w-2 h-2 rounded-full animate-ping ${theme === 'space' ? 'bg-purple-400' : theme === 'dark' ? 'bg-cyan-400' : theme === 'ocean' ? 'bg-blue-400' : 'bg-cyan-400'}`}></div>
@@ -793,10 +793,10 @@ const SensorMonitor = ({ sensorData, isPLCConnected }) => {
                                             >
                                                 <div className="text-center space-y-1">
                                                     <div className="text-xs font-mono font-bold">
-                                                        {item.address}
+                                                        {item.name.substring(0, item.name.indexOf('_'))}
                                                     </div>
                                                     <div className="text-xs font-medium">
-                                                        {item.name.substring(5)}
+                                                        {item.name.substring(item.name.indexOf('_') + 1)}
                                                     </div>
                                                     <div className="text-xs opacity-75">
                                                         {item.description}

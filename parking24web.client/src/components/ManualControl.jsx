@@ -34,16 +34,17 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
                 // 화면 크기에 따라 스크롤 감도와 기본 위치 조정
                 const width = window.innerWidth;
                 let scrollSensitivity = 1.0;
-                let basePosition = 35; // PC 기본
+                // 리프트 탭(page1)일 때만 35%, 나머지는 30%
+                let basePosition = activeTab === 'page1' ? 40 : 30;
                 
                 if (width >= 768 && width < 1200) {
                     // 작은 태블릿
                     scrollSensitivity = 0.5;
-                    basePosition = 50;
+                    basePosition = activeTab === 'page1' ? 45 : 53;
                 } else if (width >= 1200 && width <= 1400) {
                     // 큰 태블릿
                     scrollSensitivity = 0.5;
-                    basePosition = 40;
+                    basePosition = 43;
                 }
                 
                 const scrollOffset = scrollY * scrollSensitivity;
@@ -80,7 +81,7 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
             document.body.removeEventListener('scroll', handleScroll);
             window.removeEventListener('wheel', handleScroll);
         };
-    }, [showSensors]);
+    }, [showSensors, activeTab]);
 
     // 태블릿 모드에서 햄버거 메뉴가 열리면 센서 패널 숨기기
     useEffect(() => {
@@ -109,7 +110,7 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
 
                     newStates[sensorKey] = {
                         value: bitValue === 1,
-                        address: `C${address}`,
+                        address: `${currentConfig.plcConfig.deviceType}${address}`,
                         bitIndex: parseInt(bitIndex),
                         wordIndex: address,
                         name: sensorInfo.name,
@@ -135,9 +136,9 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
         const transformedKey = sensorKey.replace(/[^a-zA-Z0-9]/g, '_');
         const sensor = sensorStates[transformedKey];
         if (sensor) {
-            return `C${sensor.wordIndex}.${sensor.bitIndex}`;
+            return `${currentConfig.plcConfig.deviceType}${sensor.wordIndex}.${sensor.bitIndex}`;
         }
-        return 'C--.--';
+        return `${currentConfig.plcConfig.deviceType}--.--`;
     };
 
     // config에서 센서 키 추출하는 헬퍼 함수
@@ -165,13 +166,13 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
 
     // 센서 아이템을 동적으로 렌더링하는 함수
     const renderSensorItem = (sensorKey) => {
-        const transformedKey = sensorKey.replace(/[^a-zA-Z0-9]/g, '_');
+        const transformedKey = sensorKey.replace(/[^a-zA-Z0-9.]/g, '_');
         const _sensor = sensorStates[transformedKey];
         const isActive = getSensorValue(sensorKey);
         const sensorCode = getSensorCode(sensorKey);
 
         // 센서 이름을 표시용으로 정리 (P*** 부분 제거)
-        const displayName = sensorKey.replace(/^P\d+_/, '');
+        const displayName = sensorKey.replace(/^P[A-F0-9]+\.[A-F0-9]*_/, '');
 
         return (
             <div
@@ -361,7 +362,7 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
                     font-weight: 600;
                     color: #1e3a8a;
                     text-transform: uppercase;
-                    padding: 14px 20px;
+                    padding: 14px 12px;
                     background: #dbeafe;
                     border: 1px solid #3b82f6;
                     border-radius: 20px;
@@ -387,7 +388,7 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
                 @media (min-width: 768px) and (max-width: 1199px) {
                     .learn-more {
                         min-width: 120px;
-                        padding: 18px 32px;
+                        padding: 18px 20px;
                         font-size: 0.8rem;
                     }
                 }
@@ -395,9 +396,10 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
                 @media (min-width: 1200px) {
                     .learn-more {
                         min-width: 160px;
-                        padding: 24px 48px;
+                        padding: 24px 28px;
                     }
                 }
+
                 
                 .learn-more::before {
                     position: absolute;
@@ -646,7 +648,7 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
                         width: 220px;
                         height: 45vh;
                         padding: 12px;
-                        top: 50%;
+                        top: 45%;
                     }
                 }
                 
@@ -655,7 +657,7 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
                         width: 250px;
                         height: 50vh;
                         padding: 14px;
-                        top: 60%;
+                        top: 43%;
                     }
                 }
                 
@@ -723,7 +725,7 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
                         width: 220px;
                         height: 45vh;
                         padding: 12px;
-                        top: 50%;
+                        top: 45%;
                     }
                 }
                 
@@ -732,7 +734,7 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
                         width: 250px;
                         height: 50vh;
                         padding: 14px;
-                        top: 60%;
+                        top: 43%;
                     }
                 }
                 
@@ -1354,6 +1356,388 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
                         gap: 30px;
                     }
                 }
+
+                @media (min-width: 768px) and (max-width: 1199px) {
+                    .page1-first-row {
+                        display: grid;
+                        grid-template-columns: 1fr 1fr;
+                        gap: 20px;
+                        max-width: 400px;
+                    }
+
+                    .page1-second-row {
+                        display: grid;
+                        grid-template-columns: 1fr 1fr;
+                        gap: 20px;
+                        max-width: 400px;
+                    }
+
+                    .page1-second-row button:first-child {
+                        grid-column: 1 / 3;
+                        grid-row: 1;
+                        justify-self: center;
+                        max-width: 50%;
+                    }
+
+                    .page1-second-row button:nth-child(2) {
+                        grid-column: 1;
+                        grid-row: 2;
+                    }
+
+                    .page1-second-row button:nth-child(3) {
+                        grid-column: 2;
+                        grid-row: 2;
+                    }
+
+                    .page2-first-row {
+                        display: grid;
+                        grid-template-columns: 1fr 1fr;
+                        gap: 20px;
+                        max-width: 400px;
+                        margin: 0 auto;
+                    }
+
+                    .page2-second-row {
+                        display: grid;
+                        grid-template-columns: 1fr 1fr;
+                        gap: 20px;
+                        max-width: 400px;
+                        margin: 0 auto;
+                    }
+
+                    .page2-third-row button {
+                        min-width: 120px !important;
+                        padding: 14px 20px !important;
+                        font-size: 0.8rem !important;
+                    }
+
+                    .page2-fourth-row button {
+                        min-width: 110px !important;
+                        padding: 14px 18px !important;
+                        font-size: 0.8rem !important;
+                    }
+
+                    .page2-fifth-row button {
+                        min-width: 120px !important;
+                        padding: 14px 20px !important;
+                        font-size: 0.8rem !important;
+                    }
+
+                    .page2-slider-init .slider-init-spacer {
+                        display: none;
+                    }
+
+                    .page2-slider-init button {
+                        flex: 0 0 auto !important;
+                    }
+                }
+
+                @media (max-width: 767px) {
+                    .page1-first-row {
+                        display: grid;
+                        grid-template-columns: 1fr 1fr;
+                        gap: 15px;
+                        max-width: 100%;
+                    }
+
+                    .page1-second-row {
+                        display: grid;
+                        grid-template-columns: 1fr 1fr;
+                        gap: 15px;
+                        max-width: 100%;
+                    }
+
+                    .page1-second-row button:first-child {
+                        grid-column: 1 / 3;
+                        grid-row: 1;
+                        justify-self: center;
+                        max-width: 50%;
+                    }
+
+                    .page1-second-row button:nth-child(2) {
+                        grid-column: 1;
+                        grid-row: 2;
+                    }
+
+                    .page1-second-row button:nth-child(3) {
+                        grid-column: 2;
+                        grid-row: 2;
+                    }
+
+                    .page2-first-row {
+                        display: grid;
+                        grid-template-columns: 1fr 1fr;
+                        gap: 15px;
+                        max-width: 100%;
+                    }
+
+                    .page2-second-row {
+                        display: grid;
+                        grid-template-columns: 1fr 1fr;
+                        gap: 15px;
+                        max-width: 100%;
+                    }
+
+                    .page2-slider-init .slider-init-spacer {
+                        display: none;
+                    }
+
+                    .page2-slider-init button {
+                        flex: 0 0 auto !important;
+                    }
+                }
+
+                @media (max-width: 767px) {
+                    .flex.flex-col.items-center.gap-20 {
+                        gap: 45px;
+                    }
+
+                    .page2-cross-layout {
+                        display: grid;
+                        grid-template-columns: 1fr 1fr 1fr;
+                        grid-template-rows: auto auto auto;
+                        gap: 25px;
+                        max-width: 360px;
+                        margin: 0 auto;
+                    }
+
+                    .page2-third-row {
+                        grid-column: 1 / 4;
+                        grid-row: 1;
+                        display: flex;
+                        justify-content: center;
+                    }
+
+                    .page2-fourth-row {
+                        grid-column: 1 / 4;
+                        grid-row: 2;
+                        display: grid;
+                        grid-template-columns: 1fr 1fr 1fr;
+                        gap: 12px;
+                    }
+
+                    .page2-fifth-row {
+                        grid-column: 1 / 4;
+                        grid-row: 3;
+                        display: flex;
+                        justify-content: center;
+                    }
+
+                    .page2-third-row button {
+                        min-width: 100px !important;
+                        padding: 12px 18px !important;
+                        font-size: 0.75rem !important;
+                    }
+
+                    .page2-fourth-row button {
+                        min-width: 0 !important;
+                        padding: 12px 10px !important;
+                        font-size: 0.7rem !important;
+                    }
+
+                    .page2-fourth-row button:first-child,
+                    .page2-fourth-row button:last-child {
+                        padding: 14px 16px !important;
+                        font-size: 0.75rem !important;
+                    }
+
+                    .page2-fifth-row button {
+                        min-width: 100px !important;
+                        padding: 12px 18px !important;
+                        font-size: 0.75rem !important;
+                    }
+
+                    .page1-stopper-row button {
+                        font-size: 0.7rem !important;
+                        padding: 12px 16px !important;
+                    }
+
+                    .page1-fourth-row {
+                        display: grid;
+                        grid-template-columns: 1fr 1fr;
+                        gap: 15px;
+                        max-width: 100%;
+                    }
+
+                    .tab-navigation {
+                        display: grid !important;
+                        grid-template-columns: repeat(3, 1fr);
+                        gap: 10px;
+                        margin-top: 70px !important;
+                    }
+
+                    .tab-navigation button:first-child {
+                        grid-column: 1 / 4;
+                    }
+                }
+
+                /* LED 상태 표시 카드 스타일 */
+                .led-status-card {
+                    padding: 10px 16px;
+                    border-radius: 4px;
+                    background: #E0F2FE;
+                    border: 1px solid #7DD3FC;
+                    display: flex;
+                    flex-direction: row;
+                    align-items: center;
+                    justify-content: flex-start;
+                    gap: 8px;
+                    position: relative;
+                    min-height: 50px;
+                }
+
+
+                .led-status-card.space-theme {
+                    background: linear-gradient(145deg, #2a2a2a 0%, #1a1a1a 100%);
+                    border: 2px solid #444;
+                    box-shadow: 
+                        inset 0 1px 0 rgba(255, 255, 255, 0.1),
+                        inset 0 -1px 0 rgba(0, 0, 0, 0.8),
+                        0 0 0 1px rgba(0, 0, 0, 0.5);
+                }
+
+                .led-label {
+                    font-size: 0.75rem;
+                    font-weight: 600;
+                    color: #374151;
+                    text-align: center;
+                }
+
+                .led-status-card.space-theme .led-label {
+                    color: #ffffff;
+                    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+                    font-weight: 500;
+                    letter-spacing: 0.5px;
+                    position: relative;
+                    z-index: 1;
+                    font-size: 0.9rem;
+                }
+
+                .led-indicator {
+                    width: 8px;
+                    height: 8px;
+                    border-radius: 0;
+                    transition: all 0.3s ease;
+                    border: 0;
+                    position: relative;
+                    z-index: 1;
+                }
+
+                .led-indicator.on {
+                    background: #3B82F6;
+                    box-shadow: 
+                        0 0 4px rgba(59, 130, 246, 0.8),
+                        0 0 8px rgba(59, 130, 246, 0.5);
+                }
+
+                .led-indicator.off {
+                    background: #4b5563;
+                    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.5);
+                }
+
+                .led-status-card.space-theme .led-indicator.on {
+                    background: #20B8D1;
+                    box-shadow: 
+                        0 0 8px rgba(32, 184, 209, 1),
+                        0 0 16px rgba(32, 184, 209, 0.8),
+                        0 0 24px rgba(32, 184, 209, 0.4);
+                }
+
+                .led-status-card.space-theme .led-indicator.off {
+                    background: #0e4a58;
+                    box-shadow: 
+                        inset 0 1px 2px rgba(0, 0, 0, 0.8);
+                }
+
+
+                .led-address {
+                    font-size: 0.65rem;
+                    font-family: 'Courier New', monospace;
+                    color: #6b7280;
+                    opacity: 0.7;
+                    position: relative;
+                    z-index: 1;
+                }
+
+                .led-status-card.space-theme .led-address {
+                    color: #888;
+                    font-weight: 400;
+                    opacity: 0.8;
+                    text-shadow: 0 1px 1px rgba(0, 0, 0, 0.8);
+                    font-size: 0.7rem;
+                }
+
+                /* 데이터 값 표시 카드 스타일 */
+                .data-value-card {
+                    padding: 10px 16px;
+                    border-radius: 4px;
+                    background: #E0F2FE;
+                    border: 1px solid #7DD3FC;
+                    display: flex;
+                    flex-direction: row;
+                    align-items: center;
+                    justify-content: space-between;
+                    gap: 8px;
+                    position: relative;
+                    min-height: 50px;
+                }
+
+                .data-value-card.space-theme {
+                    background: linear-gradient(145deg, #1a1a1a 0%, #0a0a0a 100%);
+                    border: 2px solid #333;
+                    box-shadow: 
+                        inset 0 1px 0 rgba(255, 255, 255, 0.05),
+                        inset 0 -1px 0 rgba(0, 0, 0, 0.9),
+                        0 0 0 1px rgba(0, 0, 0, 0.6);
+                }
+
+                .data-label {
+                    font-size: 0.75rem;
+                    font-weight: 600;
+                    color: #374151;
+                    text-align: left;
+                    flex-shrink: 0;
+                }
+
+                .data-value-card.space-theme .data-label {
+                    color: #ffffff;
+                    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+                    font-weight: 500;
+                    letter-spacing: 0.5px;
+                    font-size: 0.9rem;
+                }
+
+                .data-value {
+                    font-size: 0.95rem;
+                    font-weight: 700;
+                    font-family: 'Courier New', monospace;
+                    color: #1f2937;
+                    flex: 1;
+                    text-align: center;
+                }
+
+                .data-value-card.space-theme .data-value {
+                    color: #20B8D1;
+                    text-shadow: 0 0 8px rgba(32, 184, 209, 0.6);
+                    font-weight: 600;
+                    font-size: 1rem;
+                }
+
+                .data-address {
+                    font-size: 0.65rem;
+                    font-family: 'Courier New', monospace;
+                    color: #6b7280;
+                    opacity: 0.7;
+                    flex-shrink: 0;
+                }
+
+                .data-value-card.space-theme .data-address {
+                    color: #888;
+                    font-weight: 400;
+                    opacity: 0.8;
+                    text-shadow: 0 1px 1px rgba(0, 0, 0, 0.8);
+                    font-size: 0.7rem;
+                }
             `}</style>
 
             <div className={`rounded-2xl shadow-lg p-3 md:p-4 overflow-hidden border-2 ${theme === 'space' ? 'border-purple-500/30' : theme === 'dark' ? 'border-gray-600/30' : theme === 'ocean' ? 'border-blue-500/30' : 'border-white/20'}`} style={{
@@ -1372,265 +1756,1273 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
                     </div>
                 </div>
 
-                {/* 엔코더값/카운터값 표시 - PC에서는 더 넓게, 모바일/태블릿에서는 작게 */}
-                <div className="mb-6 md:mb-8">
-                    <div className="grid grid-cols-2 gap-4 max-w-md lg:max-w-2xl mx-auto">
-                        <div className={`p-2 sm:p-3 rounded-2xl transition-all duration-700 ease-out transform relative overflow-hidden`}
-                            style={{
-                                backdropFilter: 'blur(25px)',
-                                WebkitBackdropFilter: 'blur(25px)',
-                                ...getCardBackgroundStyle()
-                            }}>
-                            <div className={`absolute inset-0 rounded-2xl ${theme === 'space' ? 'bg-gradient-to-br from-purple-500/8 to-purple-600/8' : theme === 'dark' ? 'bg-gradient-to-br from-gray-500/8 to-gray-600/8' : theme === 'ocean' ? 'bg-gradient-to-br from-blue-500/8 to-cyan-500/8' : 'bg-gradient-to-br from-blue-500/8 to-indigo-500/8'}`}></div>
-                            <label className={`block text-xs font-medium mb-1 relative z-10 ${getCardLabelColorClass()}`}>엔코더값</label>
-                            <div className={`rounded-2xl px-2 sm:px-3 py-3 sm:py-5 text-lg sm:text-2xl md:text-3xl font-bold relative z-10 ${getCardValueColorClass()}`} style={{
-                                background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.8) 100%)',
-                                backdropFilter: 'blur(10px)',
-                                WebkitBackdropFilter: 'blur(10px)',
-                                border: '1px solid rgba(255, 255, 255, 0.3)',
-                                boxShadow: '0 2px 8px 0 rgba(31, 38, 135, 0.15)'
-                            }}>
-                                {sensorData?.rawData?.[currentConfig.dataAddresses.encoderValue] || 0}
-                            </div>
-                        </div>
-
-                        <div className={`p-2 sm:p-3 rounded-2xl transition-all duration-700 ease-out transform relative overflow-hidden`}
-                            style={{
-                                backdropFilter: 'blur(25px)',
-                                WebkitBackdropFilter: 'blur(25px)',
-                                ...getCardBackgroundStyle()
-                            }}>
-                            <div className={`absolute inset-0 rounded-2xl ${theme === 'space' ? 'bg-gradient-to-br from-purple-500/8 to-purple-600/8' : theme === 'dark' ? 'bg-gradient-to-br from-gray-500/8 to-gray-600/8' : theme === 'ocean' ? 'bg-gradient-to-br from-blue-500/8 to-cyan-500/8' : 'bg-gradient-to-br from-blue-500/8 to-indigo-500/8'}`}></div>
-                            <label className={`block text-xs font-medium mb-1 relative z-10 ${getCardLabelColorClass()}`}>카운터값</label>
-                            <div className={`rounded-2xl px-2 sm:px-3 py-3 sm:py-5 text-lg sm:text-2xl md:text-3xl font-bold relative z-10 ${getCardValueColorClass()}`} style={{
-                                background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.8) 100%)',
-                                backdropFilter: 'blur(10px)',
-                                WebkitBackdropFilter: 'blur(10px)',
-                                border: '1px solid rgba(255, 255, 255, 0.3)',
-                                boxShadow: '0 2px 8px 0 rgba(31, 38, 135, 0.15)'
-                            }}>
-                                {sensorData?.rawData?.[currentConfig.liftPositions.counter] || 0}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {/* 공용 버튼들 - 홀드 방식으로 수정 */}
-                <div className="mb-12 md:mb-20">
-                    <div className="flex flex-wrap gap-4 justify-center common-buttons-grid">
-                        <button
-                            onMouseDown={handleErrorReset}
-                            onMouseUp={() => signalRService.errorReset(0)}
-                            onMouseLeave={() => signalRService.errorReset(0)}
-                            onTouchStart={handleErrorReset}
-                            onTouchEnd={() => signalRService.errorReset(0)}
-                            disabled={isDisabled}
-                            className={`learn-more common-button ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                        >
-                            에러 리셋
-                        </button>
-                        <button
-                            onMouseDown={handleRemoteControl}
-                            onMouseUp={() => signalRService.remoteControl(0)}
-                            onMouseLeave={() => signalRService.remoteControl(0)}
-                            onTouchStart={handleRemoteControl}
-                            onTouchEnd={() => signalRService.remoteControl(0)}
-                            disabled={isDisabled}
-                            className={`learn-more common-button ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                        >
-                            원격 제어
-                        </button>
-                        <button
-                            onMouseDown={handleHomeReturn}
-                            onMouseUp={() => signalRService.homeReturn(0)}
-                            onMouseLeave={() => signalRService.homeReturn(0)}
-                            onTouchStart={handleHomeReturn}
-                            onTouchEnd={() => signalRService.homeReturn(0)}
-                            disabled={isDisabled}
-                            className={`learn-more common-button ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                        >
-                            홈 복귀
-                        </button>
-                        <button
-                            onMouseDown={handlePaletteChange}
-                            onMouseUp={() => signalRService.paletteChange(0)}
-                            onMouseLeave={() => signalRService.paletteChange(0)}
-                            onTouchStart={handlePaletteChange}
-                            onTouchEnd={() => signalRService.paletteChange(0)}
-                            disabled={isDisabled}
-                            className={`learn-more common-button ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                        >
-                            파레트 교체
-                        </button>
-                        <button
-                            onMouseDown={handleEmergencyStop}
-                            onMouseUp={() => signalRService.emergencyStop(0)}
-                            onMouseLeave={() => signalRService.emergencyStop(0)}
-                            onTouchStart={handleEmergencyStop}
-                            onTouchEnd={() => signalRService.emergencyStop(0)}
-                            disabled={isDisabled}
-                            className={`learn-more emergency-button ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                        >
-                            비상정지
-                        </button>
-                    </div>
-                </div>
-
                 {/* 탭 컨텐츠 - 간단한 핸들러들로 수정 */}
                 <div className="tab-content">
-                    {/* 1페이지: 도어/턴테이블 */}
+                    {/* 1페이지: 리프트 원격 제어 */}
                     {activeTab === 'page1' && (
-                        <div>
-                            <div className="page1-layout" style={{ gridTemplateRows: '1fr 1fr 1fr' }}>
-                                {/* 턴테이블 제어 */}
-                                <div className="turn-table-section">
-                                    <div className="door-vertical">
-                                        <button
-                                            onMouseDown={handleTurnLeft}
-                                            onMouseUp={() => signalRService.turnLeft(0)}
-                                            onMouseLeave={() => signalRService.turnLeft(0)}
-                                            onTouchStart={handleTurnLeft}
-                                            onTouchEnd={() => signalRService.turnLeft(0)}
-                                            disabled={isDisabled}
-                                            className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                        >
-                                            좌회전
-                                        </button>
-                                        <button
-                                            onMouseDown={handleTurnRight}
-                                            onMouseUp={() => signalRService.turnRight(0)}
-                                            onMouseLeave={() => signalRService.turnRight(0)}
-                                            onTouchStart={handleTurnRight}
-                                            onTouchEnd={() => signalRService.turnRight(0)}
-                                            disabled={isDisabled}
-                                            className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                        >
-                                            우회전
-                                        </button>
-                                    </div>
-                                </div>
-
-                                {/* 도어 제어 */}
-                                <div className="door-section">
-                                    <div className="door-vertical">
-                                        <button
-                                            onMouseDown={handleDoorOpen}
-                                            onMouseUp={() => signalRService.doorOpen(0)}
-                                            onMouseLeave={() => signalRService.doorOpen(0)}
-                                            onTouchStart={handleDoorOpen}
-                                            onTouchEnd={() => signalRService.doorOpen(0)}
-                                            disabled={isDisabled}
-                                            className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                        >
-                                            도어 열림
-                                        </button>
-                                        <button
-                                            onMouseDown={handleDoorClose}
-                                            onMouseUp={() => signalRService.doorClose(0)}
-                                            onMouseLeave={() => signalRService.doorClose(0)}
-                                            onTouchStart={handleDoorClose}
-                                            onTouchEnd={() => signalRService.doorClose(0)}
-                                            disabled={isDisabled}
-                                            className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                        >
-                                            도어 닫힘
-                                        </button>
-                                    </div>
-                                </div>
-
-                                {/* 락킹 제어 */}
-                                <div className="door-section">
-                                    <div className="door-vertical">
+                        <div className="flex flex-col items-center gap-20 px-4" style={{ marginTop: '10%' }}>
+                            {/* 첫 번째 줄: 비상정지, 수동선택, 센터링선택, 리셋버튼 */}
+                            <div className="page1-first-row flex gap-5 justify-center items-center flex-wrap">
                                 <button
-                                    onMouseDown={handleLockingOn}
-                                    onMouseUp={() => signalRService.lockingOn(0)}
-                                    onMouseLeave={() => signalRService.lockingOn(0)}
-                                    onTouchStart={handleLockingOn}
-                                    onTouchEnd={() => signalRService.lockingOn(0)}
+                                    onMouseDown={() => signalRService.sendControlCommand('page1', 'remoteEmergencyStop')}
+                                    onMouseUp={() => signalRService.sendControlCommand('page1', 'remoteEmergencyStop', 0)}
+                                    onMouseLeave={() => signalRService.sendControlCommand('page1', 'remoteEmergencyStop', 0)}
+                                    disabled={isDisabled}
+                                    className={`learn-more emergency-button ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem' }}
+                                >
+                                    비상정지
+                                </button>
+
+                                <button
+                                    onMouseDown={() => signalRService.sendControlCommand('page1', 'remoteManualSelect')}
+                                    onMouseUp={() => signalRService.sendControlCommand('page1', 'remoteManualSelect', 0)}
+                                    onMouseLeave={() => signalRService.sendControlCommand('page1', 'remoteManualSelect', 0)}
                                     disabled={isDisabled}
                                     className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem' }}
                                 >
-                                    락킹 잠김
+                                    수동선택
                                 </button>
+
                                 <button
-                                    onMouseDown={handleLockingOff}
-                                    onMouseUp={() => signalRService.lockingOff(0)}
-                                    onMouseLeave={() => signalRService.lockingOff(0)}
-                                    onTouchStart={handleLockingOff}
-                                    onTouchEnd={() => signalRService.lockingOff(0)}
+                                    onMouseDown={() => signalRService.sendControlCommand('page1', 'remoteCenteringSelect')}
+                                    onMouseUp={() => signalRService.sendControlCommand('page1', 'remoteCenteringSelect', 0)}
+                                    onMouseLeave={() => signalRService.sendControlCommand('page1', 'remoteCenteringSelect', 0)}
                                     disabled={isDisabled}
-                                    className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`} style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem' }}
                                 >
-                                    락킹 해제
+                                    센터링선택
                                 </button>
-                                    </div>
-                                </div>
+
+                                <button
+                                    onMouseDown={() => signalRService.sendControlCommand('page1', 'remoteReset')}
+                                    onMouseUp={() => signalRService.sendControlCommand('page1', 'remoteReset', 0)}
+                                    onMouseLeave={() => signalRService.sendControlCommand('page1', 'remoteReset', 0)}
+                                    disabled={isDisabled}
+                                    className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`} style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem' }}
+                                >
+                                    리셋버튼
+                                </button>
+                            </div>
+
+                            {/* 두 번째 줄: 고속, 상승, 하강 */}
+                            <div className="page1-second-row flex gap-5 justify-center items-center">
+                                <button
+                                    onMouseDown={() => signalRService.sendControlCommand('page1', 'remoteHighSpeed')}
+                                    onMouseUp={() => signalRService.sendControlCommand('page1', 'remoteHighSpeed', 0)}
+                                    onMouseLeave={() => signalRService.sendControlCommand('page1', 'remoteHighSpeed', 0)}
+                                    disabled={isDisabled}
+                                    className={`learn-more common-button ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`} style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem' }}
+                                >
+                                    고속버튼
+                                </button>
+
+                                <button
+                                    onMouseDown={() => signalRService.sendControlCommand('page1', 'remoteLiftUp')}
+                                    onMouseUp={() => signalRService.sendControlCommand('page1', 'remoteLiftUp', 0)}
+                                    onMouseLeave={() => signalRService.sendControlCommand('page1', 'remoteLiftUp', 0)}
+                                    disabled={isDisabled}
+                                    className={`learn-more common-button ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`} style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem' }}
+                                >
+                                    상승버튼
+                                </button>
+
+                                <button
+                                    onMouseDown={() => signalRService.sendControlCommand('page1', 'remoteLiftDown')}
+                                    onMouseUp={() => signalRService.sendControlCommand('page1', 'remoteLiftDown', 0)}
+                                    onMouseLeave={() => signalRService.sendControlCommand('page1', 'remoteLiftDown', 0)}
+                                    disabled={isDisabled}
+                                    className={`learn-more common-button ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`} style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem' }}
+                                >
+                                    하강버튼
+                                </button>
+                            </div>
+
+                            {/* 세 번째 줄: 센터링 정렬/해제 */}
+                            <div className="page1-stopper-row flex gap-5 justify-center items-center">
+                                <button
+                                    onMouseDown={() => signalRService.sendControlCommand('page1', 'remoteCenteringAlignStopperUp')}
+                                    onMouseUp={() => signalRService.sendControlCommand('page1', 'remoteCenteringAlignStopperUp', 0)}
+                                    onMouseLeave={() => signalRService.sendControlCommand('page1', 'remoteCenteringAlignStopperUp', 0)}
+                                    disabled={isDisabled}
+                                    className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`} style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem' }}
+                                >
+                                    센터링정렬 스토퍼상승
+                                </button>
+
+                                <button
+                                    onMouseDown={() => signalRService.sendControlCommand('page1', 'remoteCenteringReleaseStopperDown')}
+                                    onMouseUp={() => signalRService.sendControlCommand('page1', 'remoteCenteringReleaseStopperDown', 0)}
+                                    onMouseLeave={() => signalRService.sendControlCommand('page1', 'remoteCenteringReleaseStopperDown', 0)}
+                                    disabled={isDisabled}
+                                    className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`} style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem' }}
+                                >
+                                    센터링해제 스토퍼하강
+                                </button>
+                            </div>
+
+                            {/* 네 번째 줄: 도어 열림/닫힘, 외장턴 */}
+                            <div className="page1-fourth-row flex gap-5 justify-center items-center">
+                                <button
+                                    onMouseDown={() => signalRService.sendControlCommand('page1', 'remoteDoorOpen')}
+                                    onMouseUp={() => signalRService.sendControlCommand('page1', 'remoteDoorOpen', 0)}
+                                    onMouseLeave={() => signalRService.sendControlCommand('page1', 'remoteDoorOpen', 0)}
+                                    disabled={isDisabled}
+                                    className={`learn-more common-button ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`} style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem' }}
+                                >
+                                    도어열림
+                                </button>
+
+                                <button
+                                    onMouseDown={() => signalRService.sendControlCommand('page1', 'remoteDoorClose')}
+                                    onMouseUp={() => signalRService.sendControlCommand('page1', 'remoteDoorClose', 0)}
+                                    onMouseLeave={() => signalRService.sendControlCommand('page1', 'remoteDoorClose', 0)}
+                                    disabled={isDisabled}
+                                    className={`learn-more common-button ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`} style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem' }}
+                                >
+                                    도어닫힘
+                                </button>
+
+                                <button
+                                    onMouseDown={() => signalRService.sendControlCommand('page1', 'remoteExternalTurnForward')}
+                                    onMouseUp={() => signalRService.sendControlCommand('page1', 'remoteExternalTurnForward', 0)}
+                                    onMouseLeave={() => signalRService.sendControlCommand('page1', 'remoteExternalTurnForward', 0)}
+                                    disabled={isDisabled}
+                                    className={`learn-more common-button ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`} style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem' }}
+                                >
+                                    외장턴정
+                                </button>
+
+                                <button
+                                    onMouseDown={() => signalRService.sendControlCommand('page1', 'remoteExternalTurnReverse')}
+                                    onMouseUp={() => signalRService.sendControlCommand('page1', 'remoteExternalTurnReverse', 0)}
+                                    onMouseLeave={() => signalRService.sendControlCommand('page1', 'remoteExternalTurnReverse', 0)}
+                                    disabled={isDisabled}
+                                    className={`learn-more common-button ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`} style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem' }}
+                                >
+                                    외장턴역
+                                </button>
                             </div>
                         </div>
                     )}
 
-                    {/* 2페이지: 승강/횡행 제어 */}
+                    {/* 2페이지: 1단카트 */}
                     {activeTab === 'page2' && (
-                        <div className="space-y-6">
-                            <div>
-                                <div className="flex flex-col gap-6 md:gap-8 justify-center items-center">
-                                    <button
-                                        onMouseDown={handleLiftUp}
-                                        onMouseUp={() => signalRService.liftUp(0)}
-                                        onMouseLeave={() => signalRService.liftUp(0)}
-                                        onTouchStart={handleLiftUp}
-                                        onTouchEnd={() => signalRService.liftUp(0)}
-                                        disabled={isDisabled}
-                                        className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                    >
-                                        상승
-                                    </button>
+                        <div className="flex flex-col items-center gap-20 px-4">
 
-                                    <div className="flex gap-6 md:gap-8 justify-center items-center">
-                                        <button
-                                            onMouseDown={handleMoveLeft}
-                                            onMouseUp={() => signalRService.moveLeft(0)}
-                                            onMouseLeave={() => signalRService.moveLeft(0)}
-                                            onTouchStart={handleMoveLeft}
-                                            onTouchEnd={() => signalRService.moveLeft(0)}
-                                            disabled={isDisabled}
-                                            className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                        >
-                                            좌행
-                                        </button>
-                                        <button
-                                            onMouseDown={handleMoveRight}
-                                            onMouseUp={() => signalRService.moveRight(0)}
-                                            onMouseLeave={() => signalRService.moveRight(0)}
-                                            onTouchStart={handleMoveRight}
-                                            onTouchEnd={() => signalRService.moveRight(0)}
-                                            disabled={isDisabled}
-                                            className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                        >
-                                            우행
-                                        </button>
-                                    </div>
-
-                                    <button
-                                        onMouseDown={handleLiftDown}
-                                        onMouseUp={() => signalRService.liftDown(0)}
-                                        onMouseLeave={() => signalRService.liftDown(0)}
-                                        onTouchStart={handleLiftDown}
-                                        onTouchEnd={() => signalRService.liftDown(0)}
-                                        disabled={isDisabled}
-                                        className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                    >
-                                        하강
-                                    </button>
+                            {/* 1단 카트 상태 데이터 (P160-P169) */}
+                            <div className={`hidden md:grid grid-cols-4 gap-4 max-w-4xl w-full mb-0 mt-0 -mb-8 ${theme === 'space' ? 'space-theme' : ''}`}>
+                                <div className={`data-value-card ${theme === 'space' ? 'space-theme' : ''}`}>
+                                    <div className="data-label">카트적재파렛번호</div>
+                                    <div className="data-value">{sensorData?.rawData?.[currentConfig.pageDataAddresses.page2.cartLoadPalletNumber] || 0}</div>
+                                    <div className="data-address">P160</div>
                                 </div>
+                                <div className={`data-value-card ${theme === 'space' ? 'space-theme' : ''}`}>
+                                    <div className="data-label">룸측카운터</div>
+                                    <div className="data-value">{sensorData?.rawData?.[currentConfig.pageDataAddresses.page2.roomSideCounter] || 0}</div>
+                                    <div className="data-address">P161</div>
+                                </div>
+                                <div className={`data-value-card ${theme === 'space' ? 'space-theme' : ''}`}>
+                                    <div className="data-label">리프트측카운터</div>
+                                    <div className="data-value">{sensorData?.rawData?.[currentConfig.pageDataAddresses.page2.liftSideCounter] || 0}</div>
+                                    <div className="data-address">P162</div>
+                                </div>
+                                <div className={`data-value-card ${theme === 'space' ? 'space-theme' : ''}`}>
+                                    <div className="data-label">상태메시지 1</div>
+                                    <div className="data-value">{sensorData?.rawData?.[currentConfig.pageDataAddresses.page2.statusMessage1] || 0}</div>
+                                    <div className="data-address">P163</div>
+                                </div>
+                                <div className={`data-value-card ${theme === 'space' ? 'space-theme' : ''}`}>
+                                    <div className="data-label">상태메시지 2</div>
+                                    <div className="data-value">{sensorData?.rawData?.[currentConfig.pageDataAddresses.page2.statusMessage2] || 0}</div>
+                                    <div className="data-address">P164</div>
+                                </div>
+                                <div className={`data-value-card ${theme === 'space' ? 'space-theme' : ''}`}>
+                                    <div className="data-label">상태메시지 3</div>
+                                    <div className="data-value">{sensorData?.rawData?.[currentConfig.pageDataAddresses.page2.statusMessage3] || 0}</div>
+                                    <div className="data-address">P165</div>
+                                </div>
+                                <div className={`data-value-card ${theme === 'space' ? 'space-theme' : ''}`}>
+                                    <div className="data-label">이송파렛번호</div>
+                                    <div className="data-value">{sensorData?.rawData?.[currentConfig.pageDataAddresses.page2.cartToLiftTransferPallet] || 0}</div>
+                                    <div className="data-address">P166</div>
+                                </div>
+                                <div className={`data-value-card ${theme === 'space' ? 'space-theme' : ''}`}>
+                                    <div className="data-label">에러리스트 1</div>
+                                    <div className="data-value">{sensorData?.rawData?.[currentConfig.pageDataAddresses.page2.errorList1] || 0}</div>
+                                    <div className="data-address">P167</div>
+                                </div>
+                                <div className={`data-value-card ${theme === 'space' ? 'space-theme' : ''}`}>
+                                    <div className="data-label">에러리스트 2</div>
+                                    <div className="data-value">{sensorData?.rawData?.[currentConfig.pageDataAddresses.page2.errorList2] || 0}</div>
+                                    <div className="data-address">P168</div>
+                                </div>
+                                <div className={`data-value-card ${theme === 'space' ? 'space-theme' : ''}`}>
+                                    <div className="data-label">에러리스트 3</div>
+                                    <div className="data-value">{sensorData?.rawData?.[currentConfig.pageDataAddresses.page2.errorList3] || 0}</div>
+                                    <div className="data-address">P169</div>
+                                </div>
+                            </div>
+
+                            {/* LED 상태 표시 영역 */}
+                            <div className={`hidden md:grid grid-cols-4 gap-4 max-w-4xl w-full mb-0 -mt-8 ${theme === 'space' ? 'space-theme' : ''}`}>
+                                <div className={`led-status-card ${theme === 'space' ? 'space-theme' : ''}`}>
+                                    <div className={`led-indicator ${sensorData?.rawData?.[currentConfig.pageDataAddresses.page2.remoteManualMode.address] && (sensorData.rawData[currentConfig.pageDataAddresses.page2.remoteManualMode.address] >> currentConfig.pageDataAddresses.page2.remoteManualMode.bit) & 1 ? 'on' : 'off'}`}></div>
+                                    <div className="led-label">수동모드</div>
+                                    <div className="led-address">P129.0</div>
+                                </div>
+                                <div className={`led-status-card ${theme === 'space' ? 'space-theme' : ''}`}>
+                                    <div className={`led-indicator ${sensorData?.rawData?.[currentConfig.pageDataAddresses.page2.remoteSemiAutoMode.address] && (sensorData.rawData[currentConfig.pageDataAddresses.page2.remoteSemiAutoMode.address] >> currentConfig.pageDataAddresses.page2.remoteSemiAutoMode.bit) & 1 ? 'on' : 'off'}`}></div>
+                                    <div className="led-label">반자동모드</div>
+                                    <div className="led-address">P129.1</div>
+                                </div>
+                                <div className={`led-status-card ${theme === 'space' ? 'space-theme' : ''}`}>
+                                    <div className={`led-indicator ${sensorData?.rawData?.[currentConfig.pageDataAddresses.page2.remoteSliderSelect.address] && (sensorData.rawData[currentConfig.pageDataAddresses.page2.remoteSliderSelect.address] >> currentConfig.pageDataAddresses.page2.remoteSliderSelect.bit) & 1 ? 'on' : 'off'}`}></div>
+                                    <div className="led-label">슬라이더선택</div>
+                                    <div className="led-address">P129.2</div>
+                                </div>
+                                <div className={`led-status-card ${theme === 'space' ? 'space-theme' : ''}`}>
+                                    <div className={`led-indicator ${sensorData?.rawData?.[currentConfig.pageDataAddresses.page2.remoteLiftSelect.address] && (sensorData.rawData[currentConfig.pageDataAddresses.page2.remoteLiftSelect.address] >> currentConfig.pageDataAddresses.page2.remoteLiftSelect.bit) & 1 ? 'on' : 'off'}`}></div>
+                                    <div className="led-label">리프트선택</div>
+                                    <div className="led-address">P129.3</div>
+                                </div>
+                                <div className={`led-status-card ${theme === 'space' ? 'space-theme' : ''}`}>
+                                    <div className={`led-indicator ${sensorData?.rawData?.[currentConfig.pageDataAddresses.page2.remoteFrontSliderSelect.address] && (sensorData.rawData[currentConfig.pageDataAddresses.page2.remoteFrontSliderSelect.address] >> currentConfig.pageDataAddresses.page2.remoteFrontSliderSelect.bit) & 1 ? 'on' : 'off'}`}></div>
+                                    <div className="led-label">전면슬라이더선택</div>
+                                    <div className="led-address">P129.4</div>
+                                </div>
+                                <div className={`led-status-card ${theme === 'space' ? 'space-theme' : ''}`}>
+                                    <div className={`led-indicator ${sensorData?.rawData?.[currentConfig.pageDataAddresses.page2.remoteRearSliderSelect.address] && (sensorData.rawData[currentConfig.pageDataAddresses.page2.remoteRearSliderSelect.address] >> currentConfig.pageDataAddresses.page2.remoteRearSliderSelect.bit) & 1 ? 'on' : 'off'}`}></div>
+                                    <div className="led-label">후면슬라이더선택</div>
+                                    <div className="led-address">P129.5</div>
+                                </div>
+                                <div className={`led-status-card ${theme === 'space' ? 'space-theme' : ''}`}>
+                                    <div className={`led-indicator ${sensorData?.rawData?.[currentConfig.pageDataAddresses.page2.remoteSimultaneousSelect.address] && (sensorData.rawData[currentConfig.pageDataAddresses.page2.remoteSimultaneousSelect.address] >> currentConfig.pageDataAddresses.page2.remoteSimultaneousSelect.bit) & 1 ? 'on' : 'off'}`}></div>
+                                    <div className="led-label">동시선택</div>
+                                    <div className="led-address">P129.6</div>
+                                </div>
+                            </div>         
+
+                            {/* 첫 번째 줄: 비상정지, 수동선택, 자동선택, 리셋버튼 */}
+                            <div className="page2-first-row flex gap-5 justify-center items-center flex-wrap">
+                                <button
+                                    onMouseDown={() => signalRService.sendControlCommand('page2', 'remoteEmergencyButton1')}
+                                    onMouseUp={() => signalRService.sendControlCommand('page2', 'remoteEmergencyButton1', 0)}
+                                    onMouseLeave={() => signalRService.sendControlCommand('page2', 'remoteEmergencyButton1', 0)}
+                                    disabled={isDisabled}
+                                    className={`learn-more emergency-button ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem' }}
+                                >
+                                    비상정지
+                                </button>
+
+                                <button
+                                    onMouseDown={() => signalRService.sendControlCommand('page2', 'remoteManual1')}
+                                    onMouseUp={() => signalRService.sendControlCommand('page2', 'remoteManual1', 0)}
+                                    onMouseLeave={() => signalRService.sendControlCommand('page2', 'remoteManual1', 0)}
+                                    disabled={isDisabled}
+                                    className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem' }}
+                                >
+                                    수동선택
+                                </button>
+
+                                <button
+                                    onMouseDown={() => signalRService.sendControlCommand('page2', 'remoteAuto1')}
+                                    onMouseUp={() => signalRService.sendControlCommand('page2', 'remoteAuto1', 0)}
+                                    onMouseLeave={() => signalRService.sendControlCommand('page2', 'remoteAuto1', 0)}
+                                    disabled={isDisabled}
+                                    className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem' }}
+                                >
+                                    자동선택
+                                </button>
+
+                                <button
+                                    onMouseDown={() => signalRService.sendControlCommand('page2', 'remoteResetButton1')}
+                                    onMouseUp={() => signalRService.sendControlCommand('page2', 'remoteResetButton1', 0)}
+                                    onMouseLeave={() => signalRService.sendControlCommand('page2', 'remoteResetButton1', 0)}
+                                    disabled={isDisabled}
+                                    className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem' }}
+                                >
+                                    리셋버튼
+                                </button>
+                            </div>
+
+                            {/* 두 번째 줄: 리프트측선택, 슬라이더선택, 전면선택, 후면선택 */}
+                            <div className="page2-second-row flex gap-5 justify-center items-center flex-wrap">
+                                <button
+                                    onMouseDown={() => signalRService.sendControlCommand('page2', 'remoteSliderSelect1')}
+                                    onMouseUp={() => signalRService.sendControlCommand('page2', 'remoteSliderSelect1', 0)}
+                                    onMouseLeave={() => signalRService.sendControlCommand('page2', 'remoteSliderSelect1', 0)}
+                                    disabled={isDisabled}
+                                    className={`learn-more common-button ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem' }}
+                                >
+                                    리프트측선택
+                                </button>
+
+                                <button
+                                    onMouseDown={() => signalRService.sendControlCommand('page2', 'remoteSliderSelect1')}
+                                    onMouseUp={() => signalRService.sendControlCommand('page2', 'remoteSliderSelect1', 0)}
+                                    onMouseLeave={() => signalRService.sendControlCommand('page2', 'remoteSliderSelect1', 0)}
+                                    disabled={isDisabled}
+                                    className={`learn-more common-button ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem' }}
+                                >
+                                    슬라이더선택
+                                </button>
+
+                                <button
+                                    onMouseDown={() => signalRService.sendControlCommand('page2', 'remoteSliderFrontSelect1')}
+                                    onMouseUp={() => signalRService.sendControlCommand('page2', 'remoteSliderFrontSelect1', 0)}
+                                    onMouseLeave={() => signalRService.sendControlCommand('page2', 'remoteSliderFrontSelect1', 0)}
+                                    disabled={isDisabled}
+                                    className={`learn-more common-button ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem' }}
+                                >
+                                    전면선택
+                                </button>
+
+                                <button
+                                    onMouseDown={() => signalRService.sendControlCommand('page2', 'remoteSliderRearSelect1')}
+                                    onMouseUp={() => signalRService.sendControlCommand('page2', 'remoteSliderRearSelect1', 0)}
+                                    onMouseLeave={() => signalRService.sendControlCommand('page2', 'remoteSliderRearSelect1', 0)}
+                                    disabled={isDisabled}
+                                    className={`learn-more common-button ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem' }}
+                                >
+                                    후면선택
+                                </button>
+                            </div>
+
+                            {/* 3-5번째 줄 (간격 10) */}
+                            <div className="page2-cross-layout flex flex-col gap-10">
+                                {/* 세 번째 줄: 격납_로드 1개 */}
+                                <div className="page2-third-row flex gap-5 justify-center items-center">
+                                <button
+                                    onMouseDown={() => signalRService.sendControlCommand('page2', 'remoteStorageButtonLoad1')}
+                                    onMouseUp={() => signalRService.sendControlCommand('page2', 'remoteStorageButtonLoad1', 0)}
+                                    onMouseLeave={() => signalRService.sendControlCommand('page2', 'remoteStorageButtonLoad1', 0)}
+                                    disabled={isDisabled}
+                                    className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem' }}
+                                >
+                                    격납_로드
+                                </button>
+                            </div>
+
+                            {/* 네 번째 줄: 끝번주행, 고속, 시작주행 3개 */}
+                            <div className="page2-fourth-row flex gap-5 justify-center items-center flex-wrap">
+                                <button
+                                    onMouseDown={() => signalRService.sendControlCommand('page2', 'remoteEndRunButton1')}
+                                    onMouseUp={() => signalRService.sendControlCommand('page2', 'remoteEndRunButton1', 0)}
+                                    onMouseLeave={() => signalRService.sendControlCommand('page2', 'remoteEndRunButton1', 0)}
+                                    disabled={isDisabled}
+                                    className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem' }}
+                                >
+                                    끝번주행
+                                </button>
+
+                                <button
+                                    onMouseDown={() => signalRService.sendControlCommand('page2', 'remoteHighSpeedButton1')}
+                                    onMouseUp={() => signalRService.sendControlCommand('page2', 'remoteHighSpeedButton1', 0)}
+                                    onMouseLeave={() => signalRService.sendControlCommand('page2', 'remoteHighSpeedButton1', 0)}
+                                    disabled={isDisabled}
+                                    className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem' }}
+                                >
+                                    고속
+                                </button>
+
+                                <button
+                                    onMouseDown={() => signalRService.sendControlCommand('page2', 'remoteStartRunButton1')}
+                                    onMouseUp={() => signalRService.sendControlCommand('page2', 'remoteStartRunButton1', 0)}
+                                    onMouseLeave={() => signalRService.sendControlCommand('page2', 'remoteStartRunButton1', 0)}
+                                    disabled={isDisabled}
+                                    className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem' }}
+                                >
+                                    시작주행
+                                </button>
+                            </div>
+
+                            {/* 다섯 번째 줄: 추출_언로드 1개 */}
+                            <div className="page2-fifth-row flex gap-5 justify-center items-center">
+                                <button
+                                    onMouseDown={() => signalRService.sendControlCommand('page2', 'remoteExtractButtonUnload1')}
+                                    onMouseUp={() => signalRService.sendControlCommand('page2', 'remoteExtractButtonUnload1', 0)}
+                                    onMouseLeave={() => signalRService.sendControlCommand('page2', 'remoteExtractButtonUnload1', 0)}
+                                    disabled={isDisabled}
+                                    className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem' }}
+                                >
+                                    추출_언로드
+                                </button>
+                            </div>
+                            </div>
+
+                            {/* 슬라이더초기화 */}
+                            <div className="page2-slider-init flex gap-5 justify-center items-center">
+                                <div className="slider-init-spacer" style={{ flex: '0 0 280%' }}></div>
+                                <button
+                                    onMouseDown={() => signalRService.sendControlCommand('page2', 'remoteSliderInitialize')}
+                                    onMouseUp={() => signalRService.sendControlCommand('page2', 'remoteSliderInitialize', 0)}
+                                    onMouseLeave={() => signalRService.sendControlCommand('page2', 'remoteSliderInitialize', 0)}
+                                    disabled={isDisabled}
+                                    className={`learn-more common-button ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem', flex: '0 0 25%' }}
+                                >
+                                    슬라이더초기화
+                                </button>
                             </div>
                         </div>
                     )}
 
-                    {/* 3페이지: 횡행/락킹 */}
+                    {/* 중복 제거 완료 */}
+
+                    {/* 3페이지: 2단카트 */}
                     {activeTab === 'page3' && (
+                        <div className="flex flex-col items-center gap-20 px-4">
+                            {/* 2단 카트 상태 데이터 (P170-P179) */}
+                            <div className={`hidden md:grid grid-cols-4 gap-4 max-w-4xl w-full mb-0 mt-0 -mb-8 ${theme === 'space' ? 'space-theme' : ''}`}>
+                                <div className={`data-value-card ${theme === 'space' ? 'space-theme' : ''}`}>
+                                    <div className="data-label">카트적재파렛번호</div>
+                                    <div className="data-value">{sensorData?.rawData?.[currentConfig.pageDataAddresses.page3.cartLoadPalletNumber] || 0}</div>
+                                    <div className="data-address">P170</div>
+                                </div>
+                                <div className={`data-value-card ${theme === 'space' ? 'space-theme' : ''}`}>
+                                    <div className="data-label">룸측카운터</div>
+                                    <div className="data-value">{sensorData?.rawData?.[currentConfig.pageDataAddresses.page3.roomSideCounter] || 0}</div>
+                                    <div className="data-address">P171</div>
+                                </div>
+                                <div className={`data-value-card ${theme === 'space' ? 'space-theme' : ''}`}>
+                                    <div className="data-label">리프트측카운터</div>
+                                    <div className="data-value">{sensorData?.rawData?.[currentConfig.pageDataAddresses.page3.liftSideCounter] || 0}</div>
+                                    <div className="data-address">P172</div>
+                                </div>
+                                <div className={`data-value-card ${theme === 'space' ? 'space-theme' : ''}`}>
+                                    <div className="data-label">상태메시지 1</div>
+                                    <div className="data-value">{sensorData?.rawData?.[currentConfig.pageDataAddresses.page3.statusMessage1] || 0}</div>
+                                    <div className="data-address">P173</div>
+                                </div>
+                                <div className={`data-value-card ${theme === 'space' ? 'space-theme' : ''}`}>
+                                    <div className="data-label">상태메시지 2</div>
+                                    <div className="data-value">{sensorData?.rawData?.[currentConfig.pageDataAddresses.page3.statusMessage2] || 0}</div>
+                                    <div className="data-address">P174</div>
+                                </div>
+                                <div className={`data-value-card ${theme === 'space' ? 'space-theme' : ''}`}>
+                                    <div className="data-label">상태메시지 3</div>
+                                    <div className="data-value">{sensorData?.rawData?.[currentConfig.pageDataAddresses.page3.statusMessage3] || 0}</div>
+                                    <div className="data-address">P175</div>
+                                </div>
+                                <div className={`data-value-card ${theme === 'space' ? 'space-theme' : ''}`}>
+                                    <div className="data-label">이송파렛번호</div>
+                                    <div className="data-value">{sensorData?.rawData?.[currentConfig.pageDataAddresses.page3.cartToLiftTransferPallet] || 0}</div>
+                                    <div className="data-address">P176</div>
+                                </div>
+                                <div className={`data-value-card ${theme === 'space' ? 'space-theme' : ''}`}>
+                                    <div className="data-label">에러리스트 1</div>
+                                    <div className="data-value">{sensorData?.rawData?.[currentConfig.pageDataAddresses.page3.errorList1] || 0}</div>
+                                    <div className="data-address">P177</div>
+                                </div>
+                                <div className={`data-value-card ${theme === 'space' ? 'space-theme' : ''}`}>
+                                    <div className="data-label">에러리스트 2</div>
+                                    <div className="data-value">{sensorData?.rawData?.[currentConfig.pageDataAddresses.page3.errorList2] || 0}</div>
+                                    <div className="data-address">P178</div>
+                                </div>
+                                <div className={`data-value-card ${theme === 'space' ? 'space-theme' : ''}`}>
+                                    <div className="data-label">에러리스트 3</div>
+                                    <div className="data-value">{sensorData?.rawData?.[currentConfig.pageDataAddresses.page3.errorList3] || 0}</div>
+                                    <div className="data-address">P179</div>
+                                </div>
+                            </div>
+
+                            {/* LED 상태 표시 영역 */}
+                            <div className={`hidden md:grid grid-cols-4 gap-4 max-w-4xl w-full mb-0 -mt-8 ${theme === 'space' ? 'space-theme' : ''}`}>
+                                <div className={`led-status-card ${theme === 'space' ? 'space-theme' : ''}`}>
+                                    <div className={`led-indicator ${sensorData?.rawData?.[currentConfig.pageDataAddresses.page3.remoteManualMode.address] && (sensorData.rawData[currentConfig.pageDataAddresses.page3.remoteManualMode.address] >> currentConfig.pageDataAddresses.page3.remoteManualMode.bit) & 1 ? 'on' : 'off'}`}></div>
+                                    <div className="led-label">수동모드</div>
+                                    <div className="led-address">P139.0</div>
+                                </div>
+                                <div className={`led-status-card ${theme === 'space' ? 'space-theme' : ''}`}>
+                                    <div className={`led-indicator ${sensorData?.rawData?.[currentConfig.pageDataAddresses.page3.remoteSemiAutoMode.address] && (sensorData.rawData[currentConfig.pageDataAddresses.page3.remoteSemiAutoMode.address] >> currentConfig.pageDataAddresses.page3.remoteSemiAutoMode.bit) & 1 ? 'on' : 'off'}`}></div>
+                                    <div className="led-label">반자동모드</div>
+                                    <div className="led-address">P139.1</div>
+                                </div>
+                                <div className={`led-status-card ${theme === 'space' ? 'space-theme' : ''}`}>
+                                    <div className={`led-indicator ${sensorData?.rawData?.[currentConfig.pageDataAddresses.page3.remoteSliderSelect.address] && (sensorData.rawData[currentConfig.pageDataAddresses.page3.remoteSliderSelect.address] >> currentConfig.pageDataAddresses.page3.remoteSliderSelect.bit) & 1 ? 'on' : 'off'}`}></div>
+                                    <div className="led-label">슬라이더선택</div>
+                                    <div className="led-address">P139.2</div>
+                                </div>
+                                <div className={`led-status-card ${theme === 'space' ? 'space-theme' : ''}`}>
+                                    <div className={`led-indicator ${sensorData?.rawData?.[currentConfig.pageDataAddresses.page3.remoteLiftSelect.address] && (sensorData.rawData[currentConfig.pageDataAddresses.page3.remoteLiftSelect.address] >> currentConfig.pageDataAddresses.page3.remoteLiftSelect.bit) & 1 ? 'on' : 'off'}`}></div>
+                                    <div className="led-label">리프트선택</div>
+                                    <div className="led-address">P139.3</div>
+                                </div>
+                                <div className={`led-status-card ${theme === 'space' ? 'space-theme' : ''}`}>
+                                    <div className={`led-indicator ${sensorData?.rawData?.[currentConfig.pageDataAddresses.page3.remoteFrontSliderSelect.address] && (sensorData.rawData[currentConfig.pageDataAddresses.page3.remoteFrontSliderSelect.address] >> currentConfig.pageDataAddresses.page3.remoteFrontSliderSelect.bit) & 1 ? 'on' : 'off'}`}></div>
+                                    <div className="led-label">전면슬라이더선택</div>
+                                    <div className="led-address">P139.4</div>
+                                </div>
+                                <div className={`led-status-card ${theme === 'space' ? 'space-theme' : ''}`}>
+                                    <div className={`led-indicator ${sensorData?.rawData?.[currentConfig.pageDataAddresses.page3.remoteRearSliderSelect.address] && (sensorData.rawData[currentConfig.pageDataAddresses.page3.remoteRearSliderSelect.address] >> currentConfig.pageDataAddresses.page3.remoteRearSliderSelect.bit) & 1 ? 'on' : 'off'}`}></div>
+                                    <div className="led-label">후면슬라이더선택</div>
+                                    <div className="led-address">P139.5</div>
+                                </div>
+                                <div className={`led-status-card ${theme === 'space' ? 'space-theme' : ''}`}>
+                                    <div className={`led-indicator ${sensorData?.rawData?.[currentConfig.pageDataAddresses.page3.remoteSimultaneousSelect.address] && (sensorData.rawData[currentConfig.pageDataAddresses.page3.remoteSimultaneousSelect.address] >> currentConfig.pageDataAddresses.page3.remoteSimultaneousSelect.bit) & 1 ? 'on' : 'off'}`}></div>
+                                    <div className="led-label">동시선택</div>
+                                    <div className="led-address">P139.6</div>
+                                </div>
+                            </div>
+
+                            {/* 첫 번째 줄: 비상정지, 수동선택, 자동선택, 리셋버튼 */}
+                            <div className="page2-first-row flex gap-5 justify-center items-center flex-wrap">
+                                <button
+                                    onMouseDown={() => signalRService.sendControlCommand('page3', 'remoteEmergencyButton2')}
+                                    onMouseUp={() => signalRService.sendControlCommand('page3', 'remoteEmergencyButton2', 0)}
+                                    onMouseLeave={() => signalRService.sendControlCommand('page3', 'remoteEmergencyButton2', 0)}
+                                    disabled={isDisabled}
+                                    className={`learn-more emergency-button ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem' }}
+                                >
+                                    비상정지
+                                </button>
+
+                                <button
+                                    onMouseDown={() => signalRService.sendControlCommand('page3', 'remoteManual2')}
+                                    onMouseUp={() => signalRService.sendControlCommand('page3', 'remoteManual2', 0)}
+                                    onMouseLeave={() => signalRService.sendControlCommand('page3', 'remoteManual2', 0)}
+                                    disabled={isDisabled}
+                                    className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem' }}
+                                >
+                                    수동선택
+                                </button>
+
+                                <button
+                                    onMouseDown={() => signalRService.sendControlCommand('page3', 'remoteAuto2')}
+                                    onMouseUp={() => signalRService.sendControlCommand('page3', 'remoteAuto2', 0)}
+                                    onMouseLeave={() => signalRService.sendControlCommand('page3', 'remoteAuto2', 0)}
+                                    disabled={isDisabled}
+                                    className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem' }}
+                                >
+                                    자동선택
+                                </button>
+
+                                <button
+                                    onMouseDown={() => signalRService.sendControlCommand('page3', 'remoteResetButton2')}
+                                    onMouseUp={() => signalRService.sendControlCommand('page3', 'remoteResetButton2', 0)}
+                                    onMouseLeave={() => signalRService.sendControlCommand('page3', 'remoteResetButton2', 0)}
+                                    disabled={isDisabled}
+                                    className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem' }}
+                                >
+                                    리셋버튼
+                                </button>
+                            </div>
+
+                            {/* 두 번째 줄: 리프트측선택, 슬라이더선택, 전면선택, 후면선택 */}
+                            <div className="page2-second-row flex gap-5 justify-center items-center flex-wrap">
+                                <button
+                                    onMouseDown={() => signalRService.sendControlCommand('page3', 'remoteSliderSelect2')}
+                                    onMouseUp={() => signalRService.sendControlCommand('page3', 'remoteSliderSelect2', 0)}
+                                    onMouseLeave={() => signalRService.sendControlCommand('page3', 'remoteSliderSelect2', 0)}
+                                    disabled={isDisabled}
+                                    className={`learn-more common-button ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem' }}
+                                >
+                                    리프트측선택
+                                </button>
+
+                                <button
+                                    onMouseDown={() => signalRService.sendControlCommand('page3', 'remoteSliderSelect2')}
+                                    onMouseUp={() => signalRService.sendControlCommand('page3', 'remoteSliderSelect2', 0)}
+                                    onMouseLeave={() => signalRService.sendControlCommand('page3', 'remoteSliderSelect2', 0)}
+                                    disabled={isDisabled}
+                                    className={`learn-more common-button ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem' }}
+                                >
+                                    슬라이더선택
+                                </button>
+
+                                <button
+                                    onMouseDown={() => signalRService.sendControlCommand('page3', 'remoteSliderFrontSelect2')}
+                                    onMouseUp={() => signalRService.sendControlCommand('page3', 'remoteSliderFrontSelect2', 0)}
+                                    onMouseLeave={() => signalRService.sendControlCommand('page3', 'remoteSliderFrontSelect2', 0)}
+                                    disabled={isDisabled}
+                                    className={`learn-more common-button ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem' }}
+                                >
+                                    전면선택
+                                </button>
+
+                                <button
+                                    onMouseDown={() => signalRService.sendControlCommand('page3', 'remoteSliderRearSelect2')}
+                                    onMouseUp={() => signalRService.sendControlCommand('page3', 'remoteSliderRearSelect2', 0)}
+                                    onMouseLeave={() => signalRService.sendControlCommand('page3', 'remoteSliderRearSelect2', 0)}
+                                    disabled={isDisabled}
+                                    className={`learn-more common-button ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem' }}
+                                >
+                                    후면선택
+                                </button>
+                            </div>
+
+                            {/* 3-5번째 줄 (간격 10) */}
+                            <div className="page2-cross-layout flex flex-col gap-10">
+                                {/* 세 번째 줄: 격납_로드 1개 */}
+                                <div className="page2-third-row flex gap-5 justify-center items-center">
+                                <button
+                                    onMouseDown={() => signalRService.sendControlCommand('page3', 'remoteStorageButtonLoad2')}
+                                    onMouseUp={() => signalRService.sendControlCommand('page3', 'remoteStorageButtonLoad2', 0)}
+                                    onMouseLeave={() => signalRService.sendControlCommand('page3', 'remoteStorageButtonLoad2', 0)}
+                                    disabled={isDisabled}
+                                    className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem' }}
+                                >
+                                    격납_로드
+                                </button>
+                            </div>
+
+                            {/* 네 번째 줄: 끝번주행, 고속, 시작주행 3개 */}
+                            <div className="page2-fourth-row flex gap-5 justify-center items-center flex-wrap">
+                                <button
+                                    onMouseDown={() => signalRService.sendControlCommand('page3', 'remoteEndRunButton2')}
+                                    onMouseUp={() => signalRService.sendControlCommand('page3', 'remoteEndRunButton2', 0)}
+                                    onMouseLeave={() => signalRService.sendControlCommand('page3', 'remoteEndRunButton2', 0)}
+                                    disabled={isDisabled}
+                                    className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem' }}
+                                >
+                                    끝번주행
+                                </button>
+
+                                <button
+                                    onMouseDown={() => signalRService.sendControlCommand('page3', 'remoteHighSpeedButton2')}
+                                    onMouseUp={() => signalRService.sendControlCommand('page3', 'remoteHighSpeedButton2', 0)}
+                                    onMouseLeave={() => signalRService.sendControlCommand('page3', 'remoteHighSpeedButton2', 0)}
+                                    disabled={isDisabled}
+                                    className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem' }}
+                                >
+                                    고속
+                                </button>
+
+                                <button
+                                    onMouseDown={() => signalRService.sendControlCommand('page3', 'remoteStartRunButton2')}
+                                    onMouseUp={() => signalRService.sendControlCommand('page3', 'remoteStartRunButton2', 0)}
+                                    onMouseLeave={() => signalRService.sendControlCommand('page3', 'remoteStartRunButton2', 0)}
+                                    disabled={isDisabled}
+                                    className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem' }}
+                                >
+                                    시작주행
+                                </button>
+                            </div>
+
+                            {/* 다섯 번째 줄: 추출_언로드 1개 */}
+                            <div className="page2-fifth-row flex gap-5 justify-center items-center">
+                                <button
+                                    onMouseDown={() => signalRService.sendControlCommand('page3', 'remoteExtractButtonUnload2')}
+                                    onMouseUp={() => signalRService.sendControlCommand('page3', 'remoteExtractButtonUnload2', 0)}
+                                    onMouseLeave={() => signalRService.sendControlCommand('page3', 'remoteExtractButtonUnload2', 0)}
+                                    disabled={isDisabled}
+                                    className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem' }}
+                                >
+                                    추출_언로드
+                                </button>
+                            </div>
+                            </div>
+
+                            {/* 슬라이더초기화 */}
+                            <div className="page2-slider-init flex gap-5 justify-center items-center">
+                                <div className="slider-init-spacer" style={{ flex: '0 0 280%' }}></div>
+                                <button
+                                    onMouseDown={() => signalRService.sendControlCommand('page3', 'remoteSliderInitialize2')}
+                                    onMouseUp={() => signalRService.sendControlCommand('page3', 'remoteSliderInitialize2', 0)}
+                                    onMouseLeave={() => signalRService.sendControlCommand('page3', 'remoteSliderInitialize2', 0)}
+                                    disabled={isDisabled}
+                                    className={`learn-more common-button ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem', flex: '0 0 25%' }}
+                                >
+                                    슬라이더초기화
+                                </button>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* 4페이지: 3단카트 */}
+                    {activeTab === 'page4' && (
                         <div className="flex justify-center items-center md:min-h-[200px]">
-                            {/* 락킹 버튼은 도어/턴테이블 탭에 표시 */}
+                            <div className="text-center">
+                                <h3 className="text-lg font-semibold mb-4">3단카트 제어</h3>
+                                <p className="text-gray-600">3단카트 제어 기능이 여기에 표시됩니다.</p>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* 5페이지: 4단카트 */}
+                    {activeTab === 'page5' && (
+                        <div className="flex flex-col items-center gap-20 px-4">
+                            {/* 4단 카트 상태 데이터 (P180-P189) */}
+                            <div className={`hidden md:grid grid-cols-4 gap-4 max-w-4xl w-full mb-0 mt-0 -mb-8 ${theme === 'space' ? 'space-theme' : ''}`}>
+                                <div className={`data-value-card ${theme === 'space' ? 'space-theme' : ''}`}>
+                                    <div className="data-label">카트적재파렛번호</div>
+                                    <div className="data-value">{sensorData?.rawData?.[currentConfig.pageDataAddresses.page5.cartLoadPalletNumber] || 0}</div>
+                                    <div className="data-address">P180</div>
+                                </div>
+                                <div className={`data-value-card ${theme === 'space' ? 'space-theme' : ''}`}>
+                                    <div className="data-label">룸측카운터</div>
+                                    <div className="data-value">{sensorData?.rawData?.[currentConfig.pageDataAddresses.page5.roomSideCounter] || 0}</div>
+                                    <div className="data-address">P181</div>
+                                </div>
+                                <div className={`data-value-card ${theme === 'space' ? 'space-theme' : ''}`}>
+                                    <div className="data-label">리프트측카운터</div>
+                                    <div className="data-value">{sensorData?.rawData?.[currentConfig.pageDataAddresses.page5.liftSideCounter] || 0}</div>
+                                    <div className="data-address">P182</div>
+                                </div>
+                                <div className={`data-value-card ${theme === 'space' ? 'space-theme' : ''}`}>
+                                    <div className="data-label">상태메시지 1</div>
+                                    <div className="data-value">{sensorData?.rawData?.[currentConfig.pageDataAddresses.page5.statusMessage1] || 0}</div>
+                                    <div className="data-address">P183</div>
+                                </div>
+                                <div className={`data-value-card ${theme === 'space' ? 'space-theme' : ''}`}>
+                                    <div className="data-label">상태메시지 2</div>
+                                    <div className="data-value">{sensorData?.rawData?.[currentConfig.pageDataAddresses.page5.statusMessage2] || 0}</div>
+                                    <div className="data-address">P184</div>
+                                </div>
+                                <div className={`data-value-card ${theme === 'space' ? 'space-theme' : ''}`}>
+                                    <div className="data-label">상태메시지 3</div>
+                                    <div className="data-value">{sensorData?.rawData?.[currentConfig.pageDataAddresses.page5.statusMessage3] || 0}</div>
+                                    <div className="data-address">P185</div>
+                                </div>
+                                <div className={`data-value-card ${theme === 'space' ? 'space-theme' : ''}`}>
+                                    <div className="data-label">이송파렛번호</div>
+                                    <div className="data-value">{sensorData?.rawData?.[currentConfig.pageDataAddresses.page5.cartToLiftTransferPallet] || 0}</div>
+                                    <div className="data-address">P186</div>
+                                </div>
+                                <div className={`data-value-card ${theme === 'space' ? 'space-theme' : ''}`}>
+                                    <div className="data-label">에러리스트 1</div>
+                                    <div className="data-value">{sensorData?.rawData?.[currentConfig.pageDataAddresses.page5.errorList1] || 0}</div>
+                                    <div className="data-address">P187</div>
+                                </div>
+                                <div className={`data-value-card ${theme === 'space' ? 'space-theme' : ''}`}>
+                                    <div className="data-label">에러리스트 2</div>
+                                    <div className="data-value">{sensorData?.rawData?.[currentConfig.pageDataAddresses.page5.errorList2] || 0}</div>
+                                    <div className="data-address">P188</div>
+                                </div>
+                                <div className={`data-value-card ${theme === 'space' ? 'space-theme' : ''}`}>
+                                    <div className="data-label">에러리스트 3</div>
+                                    <div className="data-value">{sensorData?.rawData?.[currentConfig.pageDataAddresses.page5.errorList3] || 0}</div>
+                                    <div className="data-address">P189</div>
+                                </div>
+                            </div>
+
+                            {/* LED 상태 표시 영역 */}
+                            <div className={`hidden md:grid grid-cols-4 gap-4 max-w-4xl w-full mb-0 -mt-8 ${theme === 'space' ? 'space-theme' : ''}`}>
+                                <div className={`led-status-card ${theme === 'space' ? 'space-theme' : ''}`}>
+                                    <div className={`led-indicator ${sensorData?.rawData?.[currentConfig.pageDataAddresses.page5.remoteManualMode.address] && (sensorData.rawData[currentConfig.pageDataAddresses.page5.remoteManualMode.address] >> currentConfig.pageDataAddresses.page5.remoteManualMode.bit) & 1 ? 'on' : 'off'}`}></div>
+                                    <div className="led-label">수동모드</div>
+                                    <div className="led-address">P149.0</div>
+                                </div>
+                                <div className={`led-status-card ${theme === 'space' ? 'space-theme' : ''}`}>
+                                    <div className={`led-indicator ${sensorData?.rawData?.[currentConfig.pageDataAddresses.page5.remoteSemiAutoMode.address] && (sensorData.rawData[currentConfig.pageDataAddresses.page5.remoteSemiAutoMode.address] >> currentConfig.pageDataAddresses.page5.remoteSemiAutoMode.bit) & 1 ? 'on' : 'off'}`}></div>
+                                    <div className="led-label">반자동모드</div>
+                                    <div className="led-address">P149.1</div>
+                                </div>
+                                <div className={`led-status-card ${theme === 'space' ? 'space-theme' : ''}`}>
+                                    <div className={`led-indicator ${sensorData?.rawData?.[currentConfig.pageDataAddresses.page5.remoteSliderSelect.address] && (sensorData.rawData[currentConfig.pageDataAddresses.page5.remoteSliderSelect.address] >> currentConfig.pageDataAddresses.page5.remoteSliderSelect.bit) & 1 ? 'on' : 'off'}`}></div>
+                                    <div className="led-label">슬라이더선택</div>
+                                    <div className="led-address">P149.2</div>
+                                </div>
+                                <div className={`led-status-card ${theme === 'space' ? 'space-theme' : ''}`}>
+                                    <div className={`led-indicator ${sensorData?.rawData?.[currentConfig.pageDataAddresses.page5.remoteLiftSelect.address] && (sensorData.rawData[currentConfig.pageDataAddresses.page5.remoteLiftSelect.address] >> currentConfig.pageDataAddresses.page5.remoteLiftSelect.bit) & 1 ? 'on' : 'off'}`}></div>
+                                    <div className="led-label">리프트선택</div>
+                                    <div className="led-address">P149.3</div>
+                                </div>
+                                <div className={`led-status-card ${theme === 'space' ? 'space-theme' : ''}`}>
+                                    <div className={`led-indicator ${sensorData?.rawData?.[currentConfig.pageDataAddresses.page5.remoteFrontSliderSelect.address] && (sensorData.rawData[currentConfig.pageDataAddresses.page5.remoteFrontSliderSelect.address] >> currentConfig.pageDataAddresses.page5.remoteFrontSliderSelect.bit) & 1 ? 'on' : 'off'}`}></div>
+                                    <div className="led-label">전면슬라이더선택</div>
+                                    <div className="led-address">P149.4</div>
+                                </div>
+                                <div className={`led-status-card ${theme === 'space' ? 'space-theme' : ''}`}>
+                                    <div className={`led-indicator ${sensorData?.rawData?.[currentConfig.pageDataAddresses.page5.remoteRearSliderSelect.address] && (sensorData.rawData[currentConfig.pageDataAddresses.page5.remoteRearSliderSelect.address] >> currentConfig.pageDataAddresses.page5.remoteRearSliderSelect.bit) & 1 ? 'on' : 'off'}`}></div>
+                                    <div className="led-label">후면슬라이더선택</div>
+                                    <div className="led-address">P149.5</div>
+                                </div>
+                                <div className={`led-status-card ${theme === 'space' ? 'space-theme' : ''}`}>
+                                    <div className={`led-indicator ${sensorData?.rawData?.[currentConfig.pageDataAddresses.page5.remoteSimultaneousSelect.address] && (sensorData.rawData[currentConfig.pageDataAddresses.page5.remoteSimultaneousSelect.address] >> currentConfig.pageDataAddresses.page5.remoteSimultaneousSelect.bit) & 1 ? 'on' : 'off'}`}></div>
+                                    <div className="led-label">동시선택</div>
+                                    <div className="led-address">P149.6</div>
+                                </div>
+                            </div>
+
+                            {/* 첫 번째 줄: 비상정지, 수동선택, 자동선택, 리셋버튼 */}
+                            <div className="page2-first-row flex gap-5 justify-center items-center flex-wrap">
+                                <button
+                                    onMouseDown={() => signalRService.sendControlCommand('page5', 'remoteEmergencyButton4')}
+                                    onMouseUp={() => signalRService.sendControlCommand('page5', 'remoteEmergencyButton4', 0)}
+                                    onMouseLeave={() => signalRService.sendControlCommand('page5', 'remoteEmergencyButton4', 0)}
+                                    disabled={isDisabled}
+                                    className={`learn-more emergency-button ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem' }}
+                                >
+                                    비상정지
+                                </button>
+
+                                <button
+                                    onMouseDown={() => signalRService.sendControlCommand('page5', 'remoteManual4')}
+                                    onMouseUp={() => signalRService.sendControlCommand('page5', 'remoteManual4', 0)}
+                                    onMouseLeave={() => signalRService.sendControlCommand('page5', 'remoteManual4', 0)}
+                                    disabled={isDisabled}
+                                    className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem' }}
+                                >
+                                    수동선택
+                                </button>
+
+                                <button
+                                    onMouseDown={() => signalRService.sendControlCommand('page5', 'remoteAuto4')}
+                                    onMouseUp={() => signalRService.sendControlCommand('page5', 'remoteAuto4', 0)}
+                                    onMouseLeave={() => signalRService.sendControlCommand('page5', 'remoteAuto4', 0)}
+                                    disabled={isDisabled}
+                                    className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem' }}
+                                >
+                                    자동선택
+                                </button>
+
+                                <button
+                                    onMouseDown={() => signalRService.sendControlCommand('page5', 'remoteResetButton4')}
+                                    onMouseUp={() => signalRService.sendControlCommand('page5', 'remoteResetButton4', 0)}
+                                    onMouseLeave={() => signalRService.sendControlCommand('page5', 'remoteResetButton4', 0)}
+                                    disabled={isDisabled}
+                                    className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem' }}
+                                >
+                                    리셋버튼
+                                </button>
+                            </div>
+
+                            {/* 두 번째 줄: 리프트측선택, 슬라이더선택, 전면선택, 후면선택 */}
+                            <div className="page2-second-row flex gap-5 justify-center items-center flex-wrap">
+                                <button
+                                    onMouseDown={() => signalRService.sendControlCommand('page5', 'remoteSliderSelect4')}
+                                    onMouseUp={() => signalRService.sendControlCommand('page5', 'remoteSliderSelect4', 0)}
+                                    onMouseLeave={() => signalRService.sendControlCommand('page5', 'remoteSliderSelect4', 0)}
+                                    disabled={isDisabled}
+                                    className={`learn-more common-button ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem' }}
+                                >
+                                    리프트측선택
+                                </button>
+
+                                <button
+                                    onMouseDown={() => signalRService.sendControlCommand('page5', 'remoteSliderSelect4')}
+                                    onMouseUp={() => signalRService.sendControlCommand('page5', 'remoteSliderSelect4', 0)}
+                                    onMouseLeave={() => signalRService.sendControlCommand('page5', 'remoteSliderSelect4', 0)}
+                                    disabled={isDisabled}
+                                    className={`learn-more common-button ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem' }}
+                                >
+                                    슬라이더선택
+                                </button>
+
+                                <button
+                                    onMouseDown={() => signalRService.sendControlCommand('page5', 'remoteSliderFrontSelect4')}
+                                    onMouseUp={() => signalRService.sendControlCommand('page5', 'remoteSliderFrontSelect4', 0)}
+                                    onMouseLeave={() => signalRService.sendControlCommand('page5', 'remoteSliderFrontSelect4', 0)}
+                                    disabled={isDisabled}
+                                    className={`learn-more common-button ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem' }}
+                                >
+                                    전면선택
+                                </button>
+
+                                <button
+                                    onMouseDown={() => signalRService.sendControlCommand('page5', 'remoteSliderRearSelect4')}
+                                    onMouseUp={() => signalRService.sendControlCommand('page5', 'remoteSliderRearSelect4', 0)}
+                                    onMouseLeave={() => signalRService.sendControlCommand('page5', 'remoteSliderRearSelect4', 0)}
+                                    disabled={isDisabled}
+                                    className={`learn-more common-button ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem' }}
+                                >
+                                    후면선택
+                                </button>
+                            </div>
+
+                            {/* 3-5번째 줄 (간격 10) */}
+                            <div className="page2-cross-layout flex flex-col gap-10">
+                                {/* 세 번째 줄: 격납_로드 1개 */}
+                                <div className="page2-third-row flex gap-5 justify-center items-center">
+                                <button
+                                    onMouseDown={() => signalRService.sendControlCommand('page5', 'remoteStorageButtonLoad4')}
+                                    onMouseUp={() => signalRService.sendControlCommand('page5', 'remoteStorageButtonLoad4', 0)}
+                                    onMouseLeave={() => signalRService.sendControlCommand('page5', 'remoteStorageButtonLoad4', 0)}
+                                    disabled={isDisabled}
+                                    className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem' }}
+                                >
+                                    격납_로드
+                                </button>
+                            </div>
+
+                            {/* 네 번째 줄: 끝번주행, 고속, 시작주행 3개 */}
+                            <div className="page2-fourth-row flex gap-5 justify-center items-center flex-wrap">
+                                <button
+                                    onMouseDown={() => signalRService.sendControlCommand('page5', 'remoteEndRunButton4')}
+                                    onMouseUp={() => signalRService.sendControlCommand('page5', 'remoteEndRunButton4', 0)}
+                                    onMouseLeave={() => signalRService.sendControlCommand('page5', 'remoteEndRunButton4', 0)}
+                                    disabled={isDisabled}
+                                    className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem' }}
+                                >
+                                    끝번주행
+                                </button>
+
+                                <button
+                                    onMouseDown={() => signalRService.sendControlCommand('page5', 'remoteHighSpeedButton4')}
+                                    onMouseUp={() => signalRService.sendControlCommand('page5', 'remoteHighSpeedButton4', 0)}
+                                    onMouseLeave={() => signalRService.sendControlCommand('page5', 'remoteHighSpeedButton4', 0)}
+                                    disabled={isDisabled}
+                                    className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem' }}
+                                >
+                                    고속
+                                </button>
+
+                                <button
+                                    onMouseDown={() => signalRService.sendControlCommand('page5', 'remoteStartRunButton4')}
+                                    onMouseUp={() => signalRService.sendControlCommand('page5', 'remoteStartRunButton4', 0)}
+                                    onMouseLeave={() => signalRService.sendControlCommand('page5', 'remoteStartRunButton4', 0)}
+                                    disabled={isDisabled}
+                                    className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem' }}
+                                >
+                                    시작주행
+                                </button>
+                            </div>
+
+                            {/* 다섯 번째 줄: 추출_언로드 1개 */}
+                            <div className="page2-fifth-row flex gap-5 justify-center items-center">
+                                <button
+                                    onMouseDown={() => signalRService.sendControlCommand('page5', 'remoteExtractButtonUnload4')}
+                                    onMouseUp={() => signalRService.sendControlCommand('page5', 'remoteExtractButtonUnload4', 0)}
+                                    onMouseLeave={() => signalRService.sendControlCommand('page5', 'remoteExtractButtonUnload4', 0)}
+                                    disabled={isDisabled}
+                                    className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem' }}
+                                >
+                                    추출_언로드
+                                </button>
+                            </div>
+                            </div>
+
+                            {/* 슬라이더초기화 */}
+                            <div className="page2-slider-init flex gap-5 justify-center items-center">
+                                <div className="slider-init-spacer" style={{ flex: '0 0 280%' }}></div>
+                                <button
+                                    onMouseDown={() => signalRService.sendControlCommand('page5', 'remoteSliderInitialize4')}
+                                    onMouseUp={() => signalRService.sendControlCommand('page5', 'remoteSliderInitialize4', 0)}
+                                    onMouseLeave={() => signalRService.sendControlCommand('page5', 'remoteSliderInitialize4', 0)}
+                                    disabled={isDisabled}
+                                    className={`learn-more common-button ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem', flex: '0 0 25%' }}
+                                >
+                                    슬라이더초기화
+                                </button>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* 6페이지: 5단카트 */}
+                    {activeTab === 'page6' && (
+                        <div className="flex flex-col items-center gap-20 px-4">
+                            {/* 5단 카트 상태 데이터 (P190-P199) */}
+                            <div className={`hidden md:grid grid-cols-4 gap-4 max-w-4xl w-full mb-0 mt-0 -mb-8 ${theme === 'space' ? 'space-theme' : ''}`}>
+                                <div className={`data-value-card ${theme === 'space' ? 'space-theme' : ''}`}>
+                                    <div className="data-label">카트적재파렛번호</div>
+                                    <div className="data-value">{sensorData?.rawData?.[currentConfig.pageDataAddresses.page6.cartLoadPalletNumber] || 0}</div>
+                                    <div className="data-address">P190</div>
+                                </div>
+                                <div className={`data-value-card ${theme === 'space' ? 'space-theme' : ''}`}>
+                                    <div className="data-label">룸측카운터</div>
+                                    <div className="data-value">{sensorData?.rawData?.[currentConfig.pageDataAddresses.page6.roomSideCounter] || 0}</div>
+                                    <div className="data-address">P191</div>
+                                </div>
+                                <div className={`data-value-card ${theme === 'space' ? 'space-theme' : ''}`}>
+                                    <div className="data-label">리프트측카운터</div>
+                                    <div className="data-value">{sensorData?.rawData?.[currentConfig.pageDataAddresses.page6.liftSideCounter] || 0}</div>
+                                    <div className="data-address">P192</div>
+                                </div>
+                                <div className={`data-value-card ${theme === 'space' ? 'space-theme' : ''}`}>
+                                    <div className="data-label">상태메시지 1</div>
+                                    <div className="data-value">{sensorData?.rawData?.[currentConfig.pageDataAddresses.page6.statusMessage1] || 0}</div>
+                                    <div className="data-address">P193</div>
+                                </div>
+                                <div className={`data-value-card ${theme === 'space' ? 'space-theme' : ''}`}>
+                                    <div className="data-label">상태메시지 2</div>
+                                    <div className="data-value">{sensorData?.rawData?.[currentConfig.pageDataAddresses.page6.statusMessage2] || 0}</div>
+                                    <div className="data-address">P194</div>
+                                </div>
+                                <div className={`data-value-card ${theme === 'space' ? 'space-theme' : ''}`}>
+                                    <div className="data-label">상태메시지 3</div>
+                                    <div className="data-value">{sensorData?.rawData?.[currentConfig.pageDataAddresses.page6.statusMessage3] || 0}</div>
+                                    <div className="data-address">P195</div>
+                                </div>
+                                <div className={`data-value-card ${theme === 'space' ? 'space-theme' : ''}`}>
+                                    <div className="data-label">이송파렛번호</div>
+                                    <div className="data-value">{sensorData?.rawData?.[currentConfig.pageDataAddresses.page6.cartToLiftTransferPallet] || 0}</div>
+                                    <div className="data-address">P196</div>
+                                </div>
+                                <div className={`data-value-card ${theme === 'space' ? 'space-theme' : ''}`}>
+                                    <div className="data-label">에러리스트 1</div>
+                                    <div className="data-value">{sensorData?.rawData?.[currentConfig.pageDataAddresses.page6.errorList1] || 0}</div>
+                                    <div className="data-address">P197</div>
+                                </div>
+                                <div className={`data-value-card ${theme === 'space' ? 'space-theme' : ''}`}>
+                                    <div className="data-label">에러리스트 2</div>
+                                    <div className="data-value">{sensorData?.rawData?.[currentConfig.pageDataAddresses.page6.errorList2] || 0}</div>
+                                    <div className="data-address">P198</div>
+                                </div>
+                                <div className={`data-value-card ${theme === 'space' ? 'space-theme' : ''}`}>
+                                    <div className="data-label">에러리스트 3</div>
+                                    <div className="data-value">{sensorData?.rawData?.[currentConfig.pageDataAddresses.page6.errorList3] || 0}</div>
+                                    <div className="data-address">P199</div>
+                                </div>
+                            </div>
+
+                            {/* LED 상태 표시 영역 */}
+                            <div className={`hidden md:grid grid-cols-4 gap-4 max-w-4xl w-full mb-0 -mt-8 ${theme === 'space' ? 'space-theme' : ''}`}>
+                                <div className={`led-status-card ${theme === 'space' ? 'space-theme' : ''}`}>
+                                    <div className={`led-indicator ${sensorData?.rawData?.[currentConfig.pageDataAddresses.page6.remoteManualMode.address] && (sensorData.rawData[currentConfig.pageDataAddresses.page6.remoteManualMode.address] >> currentConfig.pageDataAddresses.page6.remoteManualMode.bit) & 1 ? 'on' : 'off'}`}></div>
+                                    <div className="led-label">수동모드</div>
+                                    <div className="led-address">P159.0</div>
+                                </div>
+                                <div className={`led-status-card ${theme === 'space' ? 'space-theme' : ''}`}>
+                                    <div className={`led-indicator ${sensorData?.rawData?.[currentConfig.pageDataAddresses.page6.remoteSemiAutoMode.address] && (sensorData.rawData[currentConfig.pageDataAddresses.page6.remoteSemiAutoMode.address] >> currentConfig.pageDataAddresses.page6.remoteSemiAutoMode.bit) & 1 ? 'on' : 'off'}`}></div>
+                                    <div className="led-label">반자동모드</div>
+                                    <div className="led-address">P159.1</div>
+                                </div>
+                                <div className={`led-status-card ${theme === 'space' ? 'space-theme' : ''}`}>
+                                    <div className={`led-indicator ${sensorData?.rawData?.[currentConfig.pageDataAddresses.page6.remoteSliderSelect.address] && (sensorData.rawData[currentConfig.pageDataAddresses.page6.remoteSliderSelect.address] >> currentConfig.pageDataAddresses.page6.remoteSliderSelect.bit) & 1 ? 'on' : 'off'}`}></div>
+                                    <div className="led-label">슬라이더선택</div>
+                                    <div className="led-address">P159.2</div>
+                                </div>
+                                <div className={`led-status-card ${theme === 'space' ? 'space-theme' : ''}`}>
+                                    <div className={`led-indicator ${sensorData?.rawData?.[currentConfig.pageDataAddresses.page6.remoteLiftSelect.address] && (sensorData.rawData[currentConfig.pageDataAddresses.page6.remoteLiftSelect.address] >> currentConfig.pageDataAddresses.page6.remoteLiftSelect.bit) & 1 ? 'on' : 'off'}`}></div>
+                                    <div className="led-label">리프트선택</div>
+                                    <div className="led-address">P159.3</div>
+                                </div>
+                                <div className={`led-status-card ${theme === 'space' ? 'space-theme' : ''}`}>
+                                    <div className={`led-indicator ${sensorData?.rawData?.[currentConfig.pageDataAddresses.page6.remoteFrontSliderSelect.address] && (sensorData.rawData[currentConfig.pageDataAddresses.page6.remoteFrontSliderSelect.address] >> currentConfig.pageDataAddresses.page6.remoteFrontSliderSelect.bit) & 1 ? 'on' : 'off'}`}></div>
+                                    <div className="led-label">전면슬라이더선택</div>
+                                    <div className="led-address">P159.4</div>
+                                </div>
+                                <div className={`led-status-card ${theme === 'space' ? 'space-theme' : ''}`}>
+                                    <div className={`led-indicator ${sensorData?.rawData?.[currentConfig.pageDataAddresses.page6.remoteRearSliderSelect.address] && (sensorData.rawData[currentConfig.pageDataAddresses.page6.remoteRearSliderSelect.address] >> currentConfig.pageDataAddresses.page6.remoteRearSliderSelect.bit) & 1 ? 'on' : 'off'}`}></div>
+                                    <div className="led-label">후면슬라이더선택</div>
+                                    <div className="led-address">P159.5</div>
+                                </div>
+                                <div className={`led-status-card ${theme === 'space' ? 'space-theme' : ''}`}>
+                                    <div className={`led-indicator ${sensorData?.rawData?.[currentConfig.pageDataAddresses.page6.remoteSimultaneousSelect.address] && (sensorData.rawData[currentConfig.pageDataAddresses.page6.remoteSimultaneousSelect.address] >> currentConfig.pageDataAddresses.page6.remoteSimultaneousSelect.bit) & 1 ? 'on' : 'off'}`}></div>
+                                    <div className="led-label">동시선택</div>
+                                    <div className="led-address">P159.6</div>
+                                </div>
+                            </div>
+
+                            {/* 첫 번째 줄: 비상정지, 수동선택, 자동선택, 리셋버튼 */}
+                            <div className="page2-first-row flex gap-5 justify-center items-center flex-wrap">
+                                <button
+                                    onMouseDown={() => signalRService.sendControlCommand('page6', 'remoteEmergencyButton5')}
+                                    onMouseUp={() => signalRService.sendControlCommand('page6', 'remoteEmergencyButton5', 0)}
+                                    onMouseLeave={() => signalRService.sendControlCommand('page6', 'remoteEmergencyButton5', 0)}
+                                    disabled={isDisabled}
+                                    className={`learn-more emergency-button ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem' }}
+                                >
+                                    비상정지
+                                </button>
+
+                                <button
+                                    onMouseDown={() => signalRService.sendControlCommand('page6', 'remoteManual5')}
+                                    onMouseUp={() => signalRService.sendControlCommand('page6', 'remoteManual5', 0)}
+                                    onMouseLeave={() => signalRService.sendControlCommand('page6', 'remoteManual5', 0)}
+                                    disabled={isDisabled}
+                                    className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem' }}
+                                >
+                                    수동선택
+                                </button>
+
+                                <button
+                                    onMouseDown={() => signalRService.sendControlCommand('page6', 'remoteAuto5')}
+                                    onMouseUp={() => signalRService.sendControlCommand('page6', 'remoteAuto5', 0)}
+                                    onMouseLeave={() => signalRService.sendControlCommand('page6', 'remoteAuto5', 0)}
+                                    disabled={isDisabled}
+                                    className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem' }}
+                                >
+                                    자동선택
+                                </button>
+
+                                <button
+                                    onMouseDown={() => signalRService.sendControlCommand('page6', 'remoteResetButton5')}
+                                    onMouseUp={() => signalRService.sendControlCommand('page6', 'remoteResetButton5', 0)}
+                                    onMouseLeave={() => signalRService.sendControlCommand('page6', 'remoteResetButton5', 0)}
+                                    disabled={isDisabled}
+                                    className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem' }}
+                                >
+                                    리셋버튼
+                                </button>
+                            </div>
+
+                            {/* 두 번째 줄: 리프트측선택, 슬라이더선택, 전면선택, 후면선택 */}
+                            <div className="page2-second-row flex gap-5 justify-center items-center flex-wrap">
+                                <button
+                                    onMouseDown={() => signalRService.sendControlCommand('page6', 'remoteSliderSelect5')}
+                                    onMouseUp={() => signalRService.sendControlCommand('page6', 'remoteSliderSelect5', 0)}
+                                    onMouseLeave={() => signalRService.sendControlCommand('page6', 'remoteSliderSelect5', 0)}
+                                    disabled={isDisabled}
+                                    className={`learn-more common-button ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem' }}
+                                >
+                                    리프트측선택
+                                </button>
+
+                                <button
+                                    onMouseDown={() => signalRService.sendControlCommand('page6', 'remoteSliderSelect5')}
+                                    onMouseUp={() => signalRService.sendControlCommand('page6', 'remoteSliderSelect5', 0)}
+                                    onMouseLeave={() => signalRService.sendControlCommand('page6', 'remoteSliderSelect5', 0)}
+                                    disabled={isDisabled}
+                                    className={`learn-more common-button ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem' }}
+                                >
+                                    슬라이더선택
+                                </button>
+
+                                <button
+                                    onMouseDown={() => signalRService.sendControlCommand('page6', 'remoteSliderFrontSelect5')}
+                                    onMouseUp={() => signalRService.sendControlCommand('page6', 'remoteSliderFrontSelect5', 0)}
+                                    onMouseLeave={() => signalRService.sendControlCommand('page6', 'remoteSliderFrontSelect5', 0)}
+                                    disabled={isDisabled}
+                                    className={`learn-more common-button ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem' }}
+                                >
+                                    전면선택
+                                </button>
+
+                                <button
+                                    onMouseDown={() => signalRService.sendControlCommand('page6', 'remoteSliderRearSelect5')}
+                                    onMouseUp={() => signalRService.sendControlCommand('page6', 'remoteSliderRearSelect5', 0)}
+                                    onMouseLeave={() => signalRService.sendControlCommand('page6', 'remoteSliderRearSelect5', 0)}
+                                    disabled={isDisabled}
+                                    className={`learn-more common-button ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem' }}
+                                >
+                                    후면선택
+                                </button>
+                            </div>
+
+                            {/* 3-5번째 줄 (간격 10) */}
+                            <div className="page2-cross-layout flex flex-col gap-10">
+                                {/* 세 번째 줄: 격납_로드 1개 */}
+                                <div className="page2-third-row flex gap-5 justify-center items-center">
+                                <button
+                                    onMouseDown={() => signalRService.sendControlCommand('page6', 'remoteStorageButtonLoad5')}
+                                    onMouseUp={() => signalRService.sendControlCommand('page6', 'remoteStorageButtonLoad5', 0)}
+                                    onMouseLeave={() => signalRService.sendControlCommand('page6', 'remoteStorageButtonLoad5', 0)}
+                                    disabled={isDisabled}
+                                    className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem' }}
+                                >
+                                    격납_로드
+                                </button>
+                            </div>
+
+                            {/* 네 번째 줄: 끝번주행, 고속, 시작주행 3개 */}
+                            <div className="page2-fourth-row flex gap-5 justify-center items-center flex-wrap">
+                                <button
+                                    onMouseDown={() => signalRService.sendControlCommand('page6', 'remoteEndRunButton5')}
+                                    onMouseUp={() => signalRService.sendControlCommand('page6', 'remoteEndRunButton5', 0)}
+                                    onMouseLeave={() => signalRService.sendControlCommand('page6', 'remoteEndRunButton5', 0)}
+                                    disabled={isDisabled}
+                                    className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem' }}
+                                >
+                                    끝번주행
+                                </button>
+
+                                <button
+                                   onMouseDown={() => signalRService.sendControlCommand('page6', 'remoteHighSpeedButton5')}
+                                    onMouseUp={() => signalRService.sendControlCommand('page6', 'remoteHighSpeedButton5', 0)}
+                                    onMouseLeave={() => signalRService.sendControlCommand('page6', 'remoteHighSpeedButton5', 0)}
+                                    disabled={isDisabled}
+                                    className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem' }}
+                                >
+                                    고속
+                                </button>
+
+                                <button
+                                    onMouseDown={() => signalRService.sendControlCommand('page6', 'remoteStartRunButton5')}
+                                    onMouseUp={() => signalRService.sendControlCommand('page6', 'remoteStartRunButton5', 0)}
+                                    onMouseLeave={() => signalRService.sendControlCommand('page6', 'remoteStartRunButton5', 0)}
+                                    disabled={isDisabled}
+                                    className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem' }}
+                                >
+                                    시작주행
+                                </button>
+                            </div>
+
+                            {/* 다섯 번째 줄: 추출_언로드 1개 */}
+                            <div className="page2-fifth-row flex gap-5 justify-center items-center">
+                                <button
+                                    onMouseDown={() => signalRService.sendControlCommand('page6', 'remoteExtractButtonUnload5')}
+                                    onMouseUp={() => signalRService.sendControlCommand('page6', 'remoteExtractButtonUnload5', 0)}
+                                    onMouseLeave={() => signalRService.sendControlCommand('page6', 'remoteExtractButtonUnload5', 0)}
+                                    disabled={isDisabled}
+                                    className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem' }}
+                                >
+                                    추출_언로드
+                                </button>
+                            </div>
+                            </div>
+
+                            {/* 슬라이더초기화 */}
+                            <div className="page2-slider-init flex gap-5 justify-center items-center">
+                                <div className="slider-init-spacer" style={{ flex: '0 0 280%' }}></div>
+                                <button
+                                    onMouseDown={() => signalRService.sendControlCommand('page6', 'remoteSliderInitialize5')}
+                                    onMouseUp={() => signalRService.sendControlCommand('page6', 'remoteSliderInitialize5', 0)}
+                                    onMouseLeave={() => signalRService.sendControlCommand('page6', 'remoteSliderInitialize5', 0)}
+                                    disabled={isDisabled}
+                                    className={`learn-more common-button ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem', flex: '0 0 25%' }}
+                                >
+                                    슬라이더초기화
+                                </button>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* 7페이지: 6단카트 */}
+                    {activeTab === 'page7' && (
+                        <div className="flex justify-center items-center md:min-h-[200px]">
+                            <div className="text-center">
+                                <h3 className="text-lg font-semibold mb-4">6단카트 제어</h3>
+                                <p className="text-gray-600">6단카트 제어 기능이 여기에 표시됩니다.</p>
+                            </div>
                         </div>
                     )}
                 </div>
@@ -1641,19 +3033,43 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
                         onClick={() => { setActiveTab('page1'); setShowSensors(true); }}
                         className={`tab-button ${theme === 'space' ? 'space-theme' : ''} ${activeTab === 'page1' ? 'active' : ''}`}
                     >
-                        도어/턴테이블
+                        리프트
                     </button>
                     <button
                         onClick={() => { setActiveTab('page2'); setShowSensors(true); }}
                         className={`tab-button ${theme === 'space' ? 'space-theme' : ''} ${activeTab === 'page2' ? 'active' : ''}`}
                     >
-                        승강 제어
+                        1단카트
                     </button>
                     <button
                         onClick={() => { setActiveTab('page3'); setShowSensors(true); }}
                         className={`tab-button ${theme === 'space' ? 'space-theme' : ''} ${activeTab === 'page3' ? 'active' : ''}`}
                     >
-                        횡행/락킹
+                        2단카트
+                    </button>
+                    <button
+                        onClick={() => { setActiveTab('page4'); setShowSensors(true); }}
+                        className={`tab-button ${theme === 'space' ? 'space-theme' : ''} ${activeTab === 'page4' ? 'active' : ''}`}
+                    >
+                        3단카트
+                    </button>
+                    <button
+                        onClick={() => { setActiveTab('page5'); setShowSensors(true); }}
+                        className={`tab-button ${theme === 'space' ? 'space-theme' : ''} ${activeTab === 'page5' ? 'active' : ''}`}
+                    >
+                        4단카트
+                    </button>
+                    <button
+                        onClick={() => { setActiveTab('page6'); setShowSensors(true); }}
+                        className={`tab-button ${theme === 'space' ? 'space-theme' : ''} ${activeTab === 'page6' ? 'active' : ''}`}
+                    >
+                        5단카트
+                    </button>
+                    <button
+                        onClick={() => { setActiveTab('page7'); setShowSensors(true); }}
+                        className={`tab-button ${theme === 'space' ? 'space-theme' : ''} ${activeTab === 'page7' ? 'active' : ''}`}
+                    >
+                        6단카트
                     </button>
                 </div>
             </div>

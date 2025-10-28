@@ -4,7 +4,7 @@ export const gapEulMyeongGaConfig = {
     siteInfo: {
         name: "갑을명가",
         unitNumber: "1호기",
-        location: "갑을명가 주차타워",
+        location: "갑을명가",
         description: "갑을명가 현장 1호기 주차타워"
     },
 
@@ -18,6 +18,214 @@ export const gapEulMyeongGaConfig = {
                 port: 2005
             },
         ]
+    },
+
+    // 수동 제어용 센서 키 매핑
+    manualControlSensors: {
+        page1: {
+            // 입력 센서 (리프트)
+            levelUp: "P101.E_레벨상",
+            levelDown: "P101.F_레벨하",
+            homeDetect: "P101.2_홈감지",
+            floor1Confirm: "P101.3_1단확인",
+            floor2Confirm: "P101.4_2단확인",
+            floor3Confirm: "P101.5_3단확인",
+            floor4Confirm: "P101.6_4단확인",
+            floor5Confirm: "P101.7_5단확인",
+            floor6Confirm: "P101.8_6단확인",
+
+            // 출력 센서 (리프트)
+            doorOpenMC: "P100.E_도어열림",
+            doorCloseMC: "P100.F_도어닫힘",
+        },
+
+        page2: {
+            // 입력 센서 (카트 1단)
+            // 홈/리프트 확인
+            homeConfirm: "P120.E_홈확인",
+            liftConfirm: "P120.F_리프트확인",
+            
+            // 카트 말굽 센서
+            cartHorse1LiftSide: "P120.0_카트말굽1_리프트측",
+            cartHorse2LiftSide: "P120.1_카트말굽2_리프트측",
+            cartHorse1RoomSide: "P120.2_카트말굽1_룸측",
+            cartHorse2RoomSide: "P120.3_카트말굽2_룸측",
+            
+            // 전면/후면 말굽 슬라이더
+            frontHorse1Slider: "P120.4_전면말굽1_슬라이더",
+            frontHorse2Slider: "P120.5_전면말굽2_슬라이더",
+            rearHorse1Slider: "P120.6_후면말굽1_슬라이더",
+            rearHorse2Slider: "P120.7_후면말굽2_슬라이더",
+            
+            // 차량 돌출 감지
+            liftSideVehicleOut: "P120.8_리프트측_차량돌출",
+            roomSideVehicleOut: "P120.9_룸측_차량_돌출",
+            cartVehicleDetect: "P120.A_카트_차량감지",
+            
+            // 감속/비상 센서
+            startDecelEndEmerg: "P120.D_시작감속_끝번비상",
+            endDecelStartEmerg: "P120.C_끝번감속_시작비상",
+            
+            // 전면 슬라이더
+            frontSliderOut: "P121.0_전면_슬라이더_돌출",
+            rearSliderOut: "P121.1_후면_슬라이더_돌출",
+            frontSliderLoaderPos: "P121.2_전면_슬라이더_로더정위치",
+            frontSliderUnloaderPos: "P121.3_전면_슬라이더_언로더정위치",
+            frontSliderLoaderEmergency: "P121.4_로더비상_전면_슬라이더",
+            frontSliderUnloaderEmergency: "P121.5_언로더비상_전면_슬라이더",
+            
+            // 후면 슬라이더
+            rearSliderLoaderPos: "P121.6_후면_슬라이더_로더정위치",
+            rearSliderUnloaderPos: "P121.7_후면_슬라이더_언로더정위치",
+            rearSliderLoaderEmergency: "P121.8_로더비상_후면_슬라이더",
+            rearSliderUnloaderEmergency: "P121.9_언로더비상_후면_슬라이더",
+            rearSliderWheelDetect: "P121.B_후면_슬라이더_바퀴감지",
+            
+            // 차량 감지 (리프트/룸측)
+            liftSideVehicleDetect: "P121.C_리프트측_차량감지",
+            roomSideVehicleDetect: "P121.D_룸측_차량감지",
+        },
+
+        page3: {
+            // 입력 센서 (카트 2단)
+            // 홈/리프트 확인
+            homeConfirm: "P130.E_홈확인",
+            liftConfirm: "P130.F_리프트확인",
+            
+            // 카트 말굽 센서
+            cartHorse1LiftSide: "P130.0_카트말굽1_리프트측",
+            cartHorse2LiftSide: "P130.1_카트말굽2_리프트측",
+            cartHorse1RoomSide: "P130.2_카트말굽1_룸측",
+            cartHorse2RoomSide: "P130.3_카트말굽2_룸측",
+            
+            // 전면/후면 말굽 슬라이더
+            frontHorse1Slider: "P130.4_전면말굽1_슬라이더",
+            frontHorse2Slider: "P130.5_전면말굽2_슬라이더",
+            rearHorse1Slider: "P130.6_후면말굽1_슬라이더",
+            rearHorse2Slider: "P130.7_후면말굽2_슬라이더",
+            
+            // 차량 돌출 감지
+            liftSideVehicleOut: "P130.8_리프트측_차량돌출",
+            roomSideVehicleOut: "P130.9_룸측_차량_돌출",
+            cartVehicleDetect: "P130.A_카트_차량감지",
+            
+            // 감속/비상 센서
+            startDecelEndEmerg: "P130.D_시작감속_끝번비상",
+            endDecelStartEmerg: "P130.C_끝번감속_시작비상",
+            
+            // 전면 슬라이더
+            frontSliderOut: "P131.0_전면_슬라이더_돌출",
+            rearSliderOut: "P131.1_후면_슬라이더_돌출",
+            frontSliderLoaderPos: "P131.2_전면_슬라이더_로더정위치",
+            frontSliderUnloaderPos: "P131.3_전면_슬라이더_언로더정위치",
+            frontSliderLoaderEmergency: "P131.4_로더비상_전면_슬라이더",
+            frontSliderUnloaderEmergency: "P131.5_언로더비상_전면_슬라이더",
+            
+            // 후면 슬라이더
+            rearSliderLoaderPos: "P131.6_후면_슬라이더_로더정위치",
+            rearSliderUnloaderPos: "P131.7_후면_슬라이더_언로더정위치",
+            rearSliderLoaderEmergency: "P131.8_로더비상_후면_슬라이더",
+            rearSliderUnloaderEmergency: "P131.9_언로더비상_후면_슬라이더",
+            rearSliderWheelDetect: "P131.B_후면_슬라이더_바퀴감지",
+            
+            // 차량 감지 (리프트/룸측)
+            liftSideVehicleDetect: "P131.C_리프트측_차량감지",
+            roomSideVehicleDetect: "P131.D_룸측_차량감지",
+        },
+
+        page5: {
+            // 입력 센서 (카트 4단)
+            // 홈/리프트 확인
+            homeConfirm: "P140.E_홈확인",
+            liftConfirm: "P140.F_리프트확인",
+            
+            // 카트 말굽 센서
+            cartHorse1LiftSide: "P140.0_카트말굽1_리프트측",
+            cartHorse2LiftSide: "P140.1_카트말굽2_리프트측",
+            cartHorse1RoomSide: "P140.2_카트말굽1_룸측",
+            cartHorse2RoomSide: "P140.3_카트말굽2_룸측",
+            
+            // 전면/후면 말굽 슬라이더
+            frontHorse1Slider: "P140.4_전면말굽1_슬라이더",
+            frontHorse2Slider: "P140.5_전면말굽2_슬라이더",
+            rearHorse1Slider: "P140.6_후면말굽1_슬라이더",
+            rearHorse2Slider: "P140.7_후면말굽2_슬라이더",
+            
+            // 차량 돌출 감지
+            liftSideVehicleOut: "P140.8_리프트측_차량돌출",
+            roomSideVehicleOut: "P140.9_룸측_차량_돌출",
+            cartVehicleDetect: "P140.A_카트_차량감지",
+            
+            // 감속/비상 센서
+            startDecelEndEmerg: "P140.D_시작감속_끝번비상",
+            endDecelStartEmerg: "P140.C_끝번감속_시작비상",
+            
+            // 전면 슬라이더
+            frontSliderOut: "P141.0_전면_슬라이더_돌출",
+            rearSliderOut: "P141.1_후면_슬라이더_돌출",
+            frontSliderLoaderPos: "P141.2_전면_슬라이더_로더정위치",
+            frontSliderUnloaderPos: "P141.3_전면_슬라이더_언로더정위치",
+            frontSliderLoaderEmergency: "P141.4_로더비상_전면_슬라이더",
+            frontSliderUnloaderEmergency: "P141.5_언로더비상_전면_슬라이더",
+            
+            // 후면 슬라이더
+            rearSliderLoaderPos: "P141.6_후면_슬라이더_로더정위치",
+            rearSliderUnloaderPos: "P141.7_후면_슬라이더_언로더정위치",
+            rearSliderLoaderEmergency: "P141.8_로더비상_후면_슬라이더",
+            rearSliderUnloaderEmergency: "P141.9_언로더비상_후면_슬라이더",
+            rearSliderWheelDetect: "P141.B_후면_슬라이더_바퀴감지",
+            
+            // 차량 감지 (리프트/룸측)
+            liftSideVehicleDetect: "P141.C_리프트측_차량감지",
+            roomSideVehicleDetect: "P141.D_룸측_차량감지",
+        },
+
+        page6: {
+            // 입력 센서 (카트 5단)
+            // 홈/리프트 확인
+            homeConfirm: "P150.E_홈확인",
+            liftConfirm: "P150.F_리프트확인",
+            
+            // 카트 말굽 센서
+            cartHorse1LiftSide: "P150.0_카트말굽1_리프트측",
+            cartHorse2LiftSide: "P150.1_카트말굽2_리프트측",
+            cartHorse1RoomSide: "P150.2_카트말굽1_룸측",
+            cartHorse2RoomSide: "P150.3_카트말굽2_룸측",
+            
+            // 전면/후면 말굽 슬라이더
+            frontHorse1Slider: "P150.4_전면말굽1_슬라이더",
+            frontHorse2Slider: "P150.5_전면말굽2_슬라이더",
+            rearHorse1Slider: "P150.6_후면말굽1_슬라이더",
+            rearHorse2Slider: "P150.7_후면말굽2_슬라이더",
+            
+            // 차량 돌출 감지
+            liftSideVehicleOut: "P150.8_리프트측_차량돌출",
+            roomSideVehicleOut: "P150.9_룸측_차량_돌출",
+            cartVehicleDetect: "P150.A_카트_차량감지",
+            
+            // 감속昏비상 센서
+            startDecelEndEmerg: "P150.D_시작감속_끝번비상",
+            endDecelStartEmerg: "P150.C_끝번감속_시작비상",
+            
+            // 전면 슬라이더
+            frontSliderOut: "P151.0_전면_슬라이더_돌출",
+            rearSliderOut: "P151.1_후면_슬라이더_돌출",
+            frontSliderLoaderPos: "P151.2_전면_슬라이더_로더정위치",
+            frontSliderUnloaderPos: "P151.3_전면_슬라이더_언로더정위치",
+            frontSliderLoaderEmergency: "P151.4_로더비상_전면_슬라이더",
+            frontSliderUnloaderEmergency: "P151.5_언로더비상_전면_슬라이더",
+            
+            // 후면 슬라이더
+            rearSliderLoaderPos: "P151.6_후면_슬라이더_로더정위치",
+            rearSliderUnloaderPos: "P151.7_후면_슬라이더_언로더정위치",
+            rearSliderLoaderEmergency: "P151.8_로더비상_후면_슬라이더",
+            rearSliderUnloaderEmergency: "P151.9_언로더비상_후면_슬라이더",
+            rearSliderWheelDetect: "P151.B_후면_슬라이더_바퀴감지",
+            
+            // 차량 감 Symptoms(리프트/룸측)
+            liftSideVehicleDetect: "P151.C_리프트측_차량감지",
+            roomSideVehicleDetect: "P151.D_룸측_차량감지",
+        }
     },
 
     // PLC 기본 설정
@@ -69,6 +277,152 @@ export const gapEulMyeongGaConfig = {
         k17Error: 93,           // C093: K17에러
         k18Error: 94,           // C094: K18에러
         k19Error: 95            // C095: K19에러
+    },
+
+        // 페이지별 데이터 주소
+        pageDataAddresses: {
+            // 페이지 2: 1단카트
+            page2: {
+                // 1단카트 상태 데이터 (P129)
+                remoteManualMode: { address: 129, bit: 0 },        // P129.0: 원격_수동모드
+                remoteSemiAutoMode: { address: 129, bit: 1 },      // P129.1: 원격_반자동모드
+                remoteSliderSelect: { address: 129, bit: 2 },      // P129.2: 원격_슬라이더선택
+                remoteLiftSelect: { address: 129, bit: 3 },        // P129.3: 원격_리프트선택
+                remoteFrontSliderSelect: { address: 129, bit: 4 }, // P129.4: 원격_전면슬라이더선택
+                remoteRearSliderSelect: { address: 129, bit: 5 },  // P129.5: 원격_후면슬라이더선택
+                remoteSimultaneousSelect: { address: 129, bit: 6 }, // P129.6: 원격_동시선택
+                
+                // 1단 카트 상태 데이터 (P160-P169)
+                cartLoadPalletNumber: 160,         // P160: 1단 d4000카트적재파렛번호
+                roomSideCounter: 161,              // P161: 룸측카운터
+                liftSideCounter: 162,              // P162: 리프트측카운터
+                statusMessage1: 163,               // P163: 상태메시지
+                statusMessage2: 164,               // P164: 상태메시지
+                statusMessage3: 165,               // P165: 상태메시지
+                cartToLiftTransferPallet: 166,     // P166: 카트에서 리프트이송파렛번호
+                errorList1: 167,                   // P167: 에러리스트
+                errorList2: 168,                   // P168: 에러리스트
+                errorList3: 169                    // P169: 에러리스트
+            },
+            // 페이지 3: 2단카트
+            page3: {
+                // 2단카트 상태 데이터 (P139)
+                remoteManualMode: { address: 139, bit: 0 },        // P139.0: 원격_수동모드
+                remoteSemiAutoMode: { address: 139, bit: 1 },      // P139.1: 원격_반자동모드
+                remoteSliderSelect: { address: 139, bit: 2 },      // P139.2: 원격_슬라이더선택
+                remoteLiftSelect: { address: 139, bit: 3 },        // P139.3: 원격_리프트선택
+                remoteFrontSliderSelect: { address: 139, bit: 4 }, // P139.4: 원격_전면슬라이더선택
+                remoteRearSliderSelect: { address: 139, bit: 5 },  // P139.5: 원격_후면슬라이더선택
+                remoteSimultaneousSelect: { address: 139, bit: 6 }, // P139.6: 원격_동시선택
+                
+                // 2단 카트 상태 데이터 (P170-P179)
+                cartLoadPalletNumber: 170,         // P170: 2단 d4000카트적재파렛번호
+                roomSideCounter: 171,              // P171: 룸측카운터
+                liftSideCounter: 172,              // P172: 리프트측카운터
+                statusMessage1: 173,               // P173: 상태메시지
+                statusMessage2: 174,               // P174: 상태메시지
+                statusMessage3: 175,               // P175: 상태메시지
+                cartToLiftTransferPallet: 176,     // P176: 카트에서 리프트이송파렛번호
+                errorList1: 177,                   // P177: 에러리스트
+                errorList2: 178,                   // P178: 에러리스트
+                errorList3: 179                    // P179: 에러리스트
+            },
+            // 페이지 5: 4단카트
+            page5: {
+                // 4단카트 상태 데이터 (P149)
+                remoteManualMode: { address: 149, bit: 0 },        // P149.0: 원격_수동모드
+                remoteSemiAutoMode: { address: 149, bit: 1 },      // P149.1: 원격_반자동모드
+                remoteSliderSelect: { address: 149, bit: 2 },      // P149.2: 원격_슬라이더선택
+                remoteLiftSelect: { address: 149, bit: 3 },        // P149.3: 원격_리프트선택
+                remoteFrontSliderSelect: { address: 149, bit: 4 }, // P149.4: 원격_전면슬라이더선택
+                remoteRearSliderSelect: { address: 149, bit: 5 },  // P149.5: 원격_후면슬라이더선택
+                remoteSimultaneousSelect: { address: 149, bit: 6 }, // P149.6: 원격_동시선택
+                
+                // 4단 카트 상태 데이터 (P180-P189)
+                cartLoadPalletNumber: 180,         // P180: 4단 d4000카트적재파렛번호
+                roomSideCounter: 181,              // P181: 룸측카운터
+                liftSideCounter: 182,              // P182: 리프트측카운터
+                statusMessage1: 183,               // P183: 상태메시지
+                statusMessage2: 184,               // P184: 상태메시지
+                statusMessage3: 185,               // P185: 상태메시지
+                cartToLiftTransferPallet: 186,     // P186: 카트에서 리프트이송파렛번호
+                errorList1: 187,                   // P187: 에러리스트
+                errorList2: 188,                   // P188: 에러리스트
+                errorList3: 189                    // P189: 에러리스트
+            },
+            // 페이지 6: 5단카트
+            page6: {
+                // 5단카트 상태 데이터 (P159)
+                remoteManualMode: { address: 159, bit: 0 },        // P159.0: 원격_수동모드
+                remoteSemiAutoMode: { address: 159, bit: 1 },      // P159.1: 원격_반자동모드
+                remoteSliderSelect: { address: 159, bit: 2 },      // P159.2: 원격_슬라이더선택
+                remoteLiftSelect: { address: 159, bit: 3 },        // P159.3: 원격_리프트선택
+                remoteFrontSliderSelect: { address: 159, bit: 4 }, // P159.4: 원격_전면슬라이더선택
+                remoteRearSliderSelect: { address: 159, bit: 5 },  // P159.5: 원격_후면슬라이더선택
+                remoteSimultaneousSelect: { address: 159, bit: 6 }, // P159.6: 원격_동시선택
+                
+                // 5단 카트 상태 데이터 (P190-P199)
+                cartLoadPalletNumber: 190,         // P190: 5단 d4000카트적재파렛번호
+                roomSideCounter: 191,              // P191: 룸측카운터
+                liftSideCounter: 192,              // P192: 리프트측카운터
+                statusMessage1: 193,               // P193: 상태메시지
+                statusMessage2: 194,               // P194: 상태메시지
+                statusMessage3: 195,               // P195: 상태메시지
+                cartToLiftTransferPallet: 196,     // P196: 카트에서 리프트이송파렛번호
+                errorList1: 197,                   // P197: 에러리스트
+                errorList2: 198,                   // P198: 에러리스트
+                errorList3: 199                    // P199: 에러리스트
+            }
+        },
+
+    // 리프트 위치정보 (C200~C245)
+    liftPositions: {
+        counter: 200,           // C200: 카운터
+        entrancePos: 201,       // C201: 리프트승입장위치
+        floor1: 202,            // C202: 리프트1단위치
+        floor2: 203,            // C203: 리프트2단위치  
+        floor3: 204,            // C204: 리프트3단위치
+        floor4: 205,            // C205: 리프트4단위치
+        floor5: 206,            // C206: 리프트5단위치
+        floor6: 207,            // C207: 리프트6단위치
+        floor7: 208,            // C208: 리프트7단위치
+        floor8: 209,            // C209: 리프트8단위치
+        floor9: 210,            // C210: 리프트9단위치
+        floor10: 211,           // C211: 리프트10단위치
+        floor11: 212,           // C212: 리프트11단위치
+        floor12: 213,           // C213: 리프트12단위치
+        floor13: 214,           // C214: 리프트13단위치
+        floor14: 215,           // C215: 리프트14단위치
+        floor15: 216,           // C216: 리프트15단위치
+        floor16: 217,           // C217: 리프트16단위치
+        floor17: 218,           // C218: 리프트17단위치
+        floor18: 219,           // C219: 리프트18단위치
+        floor19: 220,           // C220: 리프트19단위치
+        floor20: 221,           // C221: 리프트20단위치
+        floor21: 222,           // C222: 리프트21단위치
+        floor22: 223,           // C223: 리프트22단위치
+        floor23: 224,           // C224: 리프트23단위치
+        floor24: 225,           // C225: 리프트24단위치
+        floor25: 226,           // C226: 리프트25단위치
+        floor26: 227,           // C227: 리프트26단위치
+        floor27: 228,           // C228: 리프트27단위치
+        floor28: 229,           // C229: 리프트28단위치
+        floor29: 230,           // C230: 리프트29단위치
+        floor30: 231,           // C231: 리프트30단위치
+        floor31: 232,           // C232: 리프트31단위치
+        floor32: 233,           // C233: 리프트32단위치
+        floor33: 234,           // C234: 리프트33단위치
+        floor34: 235,           // C235: 리프트34단위치
+        floor35: 236,           // C236: 리프트35단위치
+        floor36: 237,           // C237: 리프트36단위치
+        floor37: 238,           // C238: 리프트37단위치
+        floor38: 239,           // C239: 리프트38단위치
+        floor39: 240,           // C240: 리프트39단위치
+        floor40: 241,           // C241: 리프트40단위치
+        floor41: 242,           // C242: 리프트41단위치
+        floor42: 243,           // C243: 리프트42단위치
+        floor43: 244,           // C244: 리프트43단위치
+        floor44: 245            // C245: 리프트44단위치
     },
 
     // 센서 비트 매핑 (PLC 체크리스트용) 
@@ -223,11 +577,11 @@ export const gapEulMyeongGaConfig = {
                 2: { name: "P121.2_전면_슬라이더_로더정위치", description: "전면_슬라이더_로더정위치", category: "1단카트" },
                 3: { name: "P121.3_전면_슬라이더_언로더정위치", description: "전면_슬라이더_언로더정위치", category: "1단카트" },
                 4: { name: "P121.4_로더비상_전면_슬라이더", description: "로더비상_전면_슬라이더", category: "1단카트" },
-                5: { name: "P121.5_언로더비상_후면_슬라이더", description: "언로더비상_후면_슬라이더", category: "1단카트" },
+                5: { name: "P121.5_언로더비상_전면_슬라이더", description: "언로더비상_전면_슬라이더", category: "1단카트" },
                 6: { name: "P121.6_후면_슬라이더_로더정위치", description: "후면_슬라이더_로더정위치", category: "1단카트" },
                 7: { name: "P121.7_후면_슬라이더_언로더정위치", description: "후면_슬라이더_언로더정위치", category: "1단카트" },
-                8: { name: "P121.8_후면_슬라이더_로더비상", description: "후면_슬라이더_로더비상", category: "1단카트" },
-                9: { name: "P121.9_후면_슬라이더_언로더비상", description: "후면_슬라이더_언로더비상", category: "1단카트" },
+                8: { name: "P121.8_로더비상_후면_슬라이더", description: "후면_슬라이더_로더비상", category: "1단카트" },
+                9: { name: "P121.9_언로더비상_후면_슬라이더", description: "후면_슬라이더_언로더비상", category: "1단카트" },
                 11: { name: "P121.B_후면_슬라이더_바퀴감지", description: "후면_슬라이더_바퀴감지", category: "1단카트" },
                 12: { name: "P121.C_리프트측_차량감지", description: "리프트측_차량감지", category: "1단카트" },
                 13: { name: "P121.D_룸측_차량감지", description: "룸측_차량감지", category: "1단카트" },
@@ -614,8 +968,8 @@ export const gapEulMyeongGaConfig = {
             remoteSliderInitialize2: { address: 138, bit: 13 } // P138.D: 원격_슬라이더초기화
         },
 
-        // 페이지 4: 4단카트
-        page4: {
+        // 페이지 5: 4단카트
+        page5: {
             remoteManual4: { address: 148, bit: 0 }, // P148.0: 원격_수동4
             remoteAuto4: { address: 148, bit: 1 }, // P148.1: 원격_자동4
             remoteSliderSelect4: { address: 148, bit: 2 }, // P148.2: 원격_슬라이더선택4
@@ -632,8 +986,8 @@ export const gapEulMyeongGaConfig = {
             remoteSliderInitialize4: { address: 148, bit: 13 } // P148.D: 원격_슬라이더초기화
         },
 
-        // 페이지 5: 5단카트
-        page5: {
+        // 페이지 6: 5단카트
+        page6: {
             remoteManual5: { address: 158, bit: 0 }, // P158.0: 원격_수동5
             remoteAuto5: { address: 158, bit: 1 }, // P158.1: 원격_자동5
             remoteSliderSelect5: { address: 158, bit: 2 }, // P158.2: 원격_슬라이더선택5
@@ -648,76 +1002,6 @@ export const gapEulMyeongGaConfig = {
             remoteResetButton5: { address: 158, bit: 11 }, // P158.B: 원격_리셋버튼5
             remoteEmergencyButton5: { address: 158, bit: 12 }, // P158.C: 원격_비상버튼5
             remoteSliderInitialize5: { address: 158, bit: 13 } // P158.D: 원격_슬라이더초기화
-        }
-    },
-
-    // 수동 제어 탭 구성 (갑을명가 5페이지)
-    manualControlTabs: {
-        page1: {
-            name: "기본 제어",
-            commands: {
-                liftUp: "liftUp",
-                liftDown: "liftDown",
-                moveLeft: "moveLeft",
-                moveRight: "moveRight",
-                turnLeft: "turnLeft",
-                turnRight: "turnRight",
-                doorOpen: "doorOpen",
-                doorClose: "doorClose"
-            }
-        },
-        page2: {
-            name: "센터링/스톱퍼",
-            commands: {
-                centeringAlign: "centeringAlign",
-                centeringRelease: "centeringRelease",
-                stopperUp: "stopperUp",
-                stopperDown: "stopperDown",
-                externalTurnForward: "externalTurnForward",
-                externalTurnReverse: "externalTurnReverse",
-                highSpeed: "highSpeed",
-                normalSpeed: "normalSpeed"
-            }
-        },
-        page3: {
-            name: "시스템 제어",
-            commands: {
-                errorReset: "errorReset",
-                remoteControl: "remoteControl",
-                homeReturn: "homeReturn",
-                manualMode: "manualMode",
-                autoMode: "autoMode",
-                emergencyStop: "emergencyStop",
-                systemReset: "systemReset",
-                maintenanceMode: "maintenanceMode"
-            }
-        },
-        page4: {
-            name: "신호/표시",
-            commands: {
-                guideLight1: "guideLight1",
-                guideLight2: "guideLight2",
-                guideLight4: "guideLight4",
-                guideLight8: "guideLight8",
-                redSignal: "redSignal",
-                greenSignal: "greenSignal",
-                buzzerNormal: "buzzerNormal",
-                buzzerError: "buzzerError"
-            }
-        },
-        page5: {
-            name: "모터 제어",
-            commands: {
-                liftMotorMC: "liftMotorMC",
-                liftMotorBK: "liftMotorBK",
-                doorMotorMC: "doorMotorMC",
-                centeringLockMC: "centeringLockMC",
-                centeringOpenMC: "centeringOpenMC",
-                stopperUpMC: "stopperUpMC",
-                stopperDownMC: "stopperDownMC",
-                externalTurnForwardMC: "externalTurnForwardMC",
-                externalTurnReverseMC: "externalTurnReverseMC"
-            }
         }
     },
 
@@ -746,10 +1030,27 @@ export const gapEulMyeongGaConfig = {
         defaultConnection: {
             ipAddress: 'epscctv03.iptime.org',
             port: 8080,
-            rtspPort: 5000,
+            rtspPort: 8888,
             username: 'admin',
             password: '!yanry4880'
         }
     },
+
+    // 주차장 모니터링 설정
+    parkingMonitor: {
+        // 갑을명가 카트방식 (6단 × 30대 = 180대)
+        vehicleAddressStart: 101,               // P101
+        vehicleAddressEnd: 280,                 // P280
+        totalSlots: 180,
+        cartsCount: 6,                          // 1단~6단 카트
+        slotsPerCart: 30,                       // 각 카트당 30대
+        // 갑을명가는 차판상태가 별도로 없고 차량번호만 관리
+        hasPlateStatus: false,
+        // 리프트 위치 정보
+        liftPositionStart: 300,                 // P300
+        entranceLevel: 301,                     // P301: 승입장
+        turnLevel: 302,                         // P302: 턴회전
+    
+    }
 }
 export default gapEulMyeongGaConfig;

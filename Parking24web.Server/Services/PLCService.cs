@@ -87,7 +87,7 @@ namespace Parking24web.Server.Services
             if (!IsConnected) return new ushort[256];
 
             // 연속 읽기 요청
-            _plc.RegisterReadW("%CB0");
+            _plc.RegisterReadW("%PB0");
             // Sleep 제거 - LSIS_FENet이 내부적으로 처리
 
             return _plc.DataBuff;
@@ -125,7 +125,7 @@ namespace Parking24web.Server.Services
                 if (!IsConnected) return;
 
                 _heartbeatValue = !_heartbeatValue;
-                WriteWord("C", 0, (ushort)(_heartbeatValue ? 1 : 0));
+                WriteWord("P", 0, (ushort)(_heartbeatValue ? 1 : 0));
             }
             catch (Exception ex)
             {
@@ -149,13 +149,13 @@ namespace Parking24web.Server.Services
             {
                 if (!IsConnected) return false;
 
-                // C4 값 읽기 (인증 코드 확인)
+                // P4 값 읽기 (인증 코드 확인)
                 await Task.Delay(200);
 
                 var data = GetSensorData();
                 await Task.Delay(500); // 포트포워딩 지연 대응
                 data = GetSensorData(); // 한번 더 읽기
-                ushort authCode = data[4]; // C4 값
+                ushort authCode = data[4]; // P4 값
 
                 return authCode == 62; // 유효한 인증 코드
             }
@@ -202,7 +202,7 @@ namespace Parking24web.Server.Services
 
         private int GetAddressIndex(string addressType, int startNumber)
         {
-            // C101 -> 배열 인덱스 101
+            // P101 -> 배열 인덱스 101
             // P51 -> 배열 인덱스 51  
             return startNumber;
         }
@@ -228,7 +228,7 @@ namespace Parking24web.Server.Services
     {
         public string Ip { get; set; } = string.Empty;
         public int Port { get; set; } = 2005;
-        public string AddressType { get; set; } = "C";
+        public string AddressType { get; set; } = "P";
         public int StartNumber { get; set; } = 101;
         public Dictionary<string, int> SensorOffsets { get; set; } = new();
         public Dictionary<string, int> ControlOffsets { get; set; } = new();
