@@ -207,18 +207,6 @@ const SensorMonitor = ({ sensorData, isPLCConnected }) => {
                     backdropFilter: 'blur(25px)',
                     WebkitBackdropFilter: 'blur(25px)',
                 };
-            case 'dark':
-                return {
-                    background: 'rgba(20, 20, 20, 0.95)',
-                    backdropFilter: 'blur(25px)',
-                    WebkitBackdropFilter: 'blur(25px)',
-                };
-            case 'ocean':
-                return {
-                    background: 'rgba(0, 20, 40, 0.95)',
-                    backdropFilter: 'blur(25px)',
-                    WebkitBackdropFilter: 'blur(25px)',
-                };
             default:
                 return {
                     background: 'rgba(255, 255, 255, 0.95)',
@@ -231,18 +219,14 @@ const SensorMonitor = ({ sensorData, isPLCConnected }) => {
     const getMainBorderClass = () => {
         switch (theme) {
             case 'space': return 'border-purple-500/30';
-            case 'dark': return 'border-gray-600/30';
-            case 'ocean': return 'border-blue-500/30';
-            default: return 'border-white/20';
+            default: return 'border-white/20'; // light 테마
         }
     };
 
     const getTitleGradient = () => {
         switch (theme) {
             case 'space': return 'bg-gradient-to-r from-purple-400 to-purple-600 bg-clip-text text-transparent';
-            case 'dark': return 'bg-gradient-to-r from-gray-300 to-gray-500 bg-clip-text text-transparent';
-            case 'ocean': return 'bg-gradient-to-r from-blue-400 to-cyan-500 bg-clip-text text-transparent';
-            default: return 'bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent';
+            default: return 'bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent'; // light 테마
         }
     };
 
@@ -250,11 +234,7 @@ const SensorMonitor = ({ sensorData, isPLCConnected }) => {
         switch (theme) {
             case 'space':
                 return 'bg-gradient-to-br from-purple-600/80 via-purple-700/70 to-purple-800/80 border-purple-500/90 shadow-lg shadow-purple-600/30';
-            case 'dark':
-                return 'bg-gradient-to-br from-gray-700/50 via-gray-800/40 to-gray-900/50 border-gray-600/50 shadow-lg shadow-gray-500/20';
-            case 'ocean':
-                return 'bg-gradient-to-br from-blue-800/50 via-blue-900/40 to-cyan-900/50 border-blue-500/50 shadow-lg shadow-blue-500/20';
-            default:
+            default: // light 테마
                 return 'bg-gradient-to-br from-blue-50 to-indigo-100 border-gray-200 shadow-lg shadow-blue-500/10';
         }
     };
@@ -262,18 +242,14 @@ const SensorMonitor = ({ sensorData, isPLCConnected }) => {
     const getButtonActiveStyle = () => {
         switch (theme) {
             case 'space': return 'bg-gradient-to-r from-purple-500 to-purple-600 text-white shadow-lg scale-105 shadow-purple-500/25';
-            case 'dark': return 'bg-gradient-to-r from-gray-600 to-gray-700 text-white shadow-lg scale-105 shadow-gray-500/25';
-            case 'ocean': return 'bg-gradient-to-r from-blue-500 to-cyan-600 text-white shadow-lg scale-105 shadow-blue-500/25';
-            default: return 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg scale-105 shadow-blue-500/25';
+            default: return 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg scale-105 shadow-blue-500/25'; // light 테마
         }
     };
 
     const getButtonInactiveStyle = () => {
         switch (theme) {
             case 'space': return 'text-gray-300 hover:text-gray-200 hover:bg-gray-500/50 hover:scale-102';
-            case 'dark': return 'text-gray-400 hover:text-gray-300 hover:bg-gray-700/30 hover:scale-102';
-            case 'ocean': return 'text-blue-300 hover:text-blue-200 hover:bg-blue-800/30 hover:scale-102';
-            default: return 'text-gray-600 hover:text-purple-600 hover:bg-purple-50 hover:scale-102';
+            default: return 'text-gray-600 hover:text-purple-600 hover:bg-purple-50 hover:scale-102'; // light 테마
         }
     };
 
@@ -281,31 +257,15 @@ const SensorMonitor = ({ sensorData, isPLCConnected }) => {
         switch (theme) {
             case 'space':
                 return {
-                    background: 'linear-gradient(135deg, rgba(196, 181, 253, 0.9) 0%, rgba(167, 139, 250, 0.9) 100%)', // 밝은 보라색
+                    background: 'linear-gradient(135deg, rgba(34, 211, 238, 0.9) 0%, rgba(6, 182, 212, 0.9) 100%)', // CYAN
                     backdropFilter: 'blur(10px)',
                     WebkitBackdropFilter: 'blur(10px)',
                     border: '1px solid rgba(255, 255, 255, 0.2)',
                     minHeight: '4px'
                 };
-            case 'dark':
+            default: // light 테마
                 return {
-                    background: 'linear-gradient(135deg, rgba(196, 181, 253, 0.9) 0%, rgba(167, 139, 250, 0.9) 100%)', // 밝은 보라색
-                    backdropFilter: 'blur(10px)',
-                    WebkitBackdropFilter: 'blur(10px)',
-                    border: '1px solid rgba(255, 255, 255, 0.2)',
-                    minHeight: '4px'
-                };
-            case 'ocean':
-                return {
-                    background: 'linear-gradient(135deg, rgba(196, 181, 253, 0.9) 0%, rgba(167, 139, 250, 0.9) 100%)', // 밝은 보라색
-                    backdropFilter: 'blur(10px)',
-                    WebkitBackdropFilter: 'blur(10px)',
-                    border: '1px solid rgba(255, 255, 255, 0.2)',
-                    minHeight: '4px'
-                };
-            default:
-                return {
-                    background: 'linear-gradient(135deg, rgba(196, 181, 253, 0.9) 0%, rgba(167, 139, 250, 0.9) 100%)', // 밝은 보라색
+                    background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.9) 0%, rgba(37, 99, 235, 0.9) 100%)', // 파란색
                     backdropFilter: 'blur(10px)',
                     WebkitBackdropFilter: 'blur(10px)',
                     border: '1px solid rgba(255, 255, 255, 0.2)',
@@ -324,23 +284,7 @@ const SensorMonitor = ({ sensorData, isPLCConnected }) => {
                     border: '1px solid rgba(255, 255, 255, 0.2)',
                     minHeight: '4px'
                 };
-            case 'dark':
-                return {
-                    background: 'rgba(75, 85, 99, 0.5)', // 더 진한 회색
-                    backdropFilter: 'blur(10px)',
-                    WebkitBackdropFilter: 'blur(10px)',
-                    border: '1px solid rgba(255, 255, 255, 0.2)',
-                    minHeight: '4px'
-                };
-            case 'ocean':
-                return {
-                    background: 'rgba(75, 85, 99, 0.5)', // 더 진한 회색
-                    backdropFilter: 'blur(10px)',
-                    WebkitBackdropFilter: 'blur(10px)',
-                    border: '1px solid rgba(255, 255, 255, 0.2)',
-                    minHeight: '4px'
-                };
-            default:
+            default: // light 테마
                 return {
                     background: 'rgba(107, 114, 128, 0.5)', // 더 진한 회색
                     backdropFilter: 'blur(10px)',
@@ -354,9 +298,7 @@ const SensorMonitor = ({ sensorData, isPLCConnected }) => {
     const getLabelTextColor = () => {
         switch (theme) {
             case 'space': return 'text-purple-200';
-            case 'dark': return 'text-gray-300';
-            case 'ocean': return 'text-blue-200';
-            default: return 'text-gray-700';
+            default: return 'text-gray-700'; // light 테마
         }
     };
 
@@ -364,11 +306,7 @@ const SensorMonitor = ({ sensorData, isPLCConnected }) => {
         switch (theme) {
             case 'space':
                 return 'w-full pl-4 pr-10 py-3 rounded-xl text-sm focus:outline-none transition-all duration-300 text-white';
-            case 'dark':
-                return 'w-full pl-4 pr-10 py-3 border border-gray-600/30 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-transparent transition-all duration-300 hover:border-gray-500 bg-gradient-to-br from-gray-800/50 to-gray-900/50 focus:bg-gradient-to-br from-gray-700/50 to-gray-800/50 text-gray-200';
-            case 'ocean':
-                return 'w-full pl-4 pr-10 py-3 border border-blue-500/30 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 hover:border-blue-400 bg-gradient-to-br from-blue-900/50 to-cyan-900/50 focus:bg-gradient-to-br from-blue-800/50 to-blue-900/50 text-blue-100';
-            default:
+            default: // light 테마
                 return 'w-full pl-4 pr-10 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 hover:border-blue-400 bg-gray-50 focus:bg-white text-gray-900';
         }
     };
@@ -571,7 +509,7 @@ const SensorMonitor = ({ sensorData, isPLCConnected }) => {
                             {searchFilter && (
                                 <button
                                     onClick={() => setSearchFilter('')}
-                                    className={`absolute inset-y-0 right-0 pr-3 flex items-center ${theme === 'space' ? 'text-purple-500 hover:text-purple-600' : theme === 'dark' ? 'text-gray-400 hover:text-gray-300' : theme === 'ocean' ? 'text-blue-400 hover:text-blue-300' : 'text-gray-400 hover:text-gray-600'} transition-colors`}
+                                    className={`absolute inset-y-0 right-0 pr-3 flex items-center ${theme === 'space' ? 'text-purple-500 hover:text-purple-600' : 'text-gray-400 hover:text-gray-600'} transition-colors`}
                                 >
                                     <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -620,7 +558,7 @@ const SensorMonitor = ({ sensorData, isPLCConnected }) => {
 
             {/* PLC 체크리스트 */}
             {showPLCChecklist && (
-                <div className={`mb-6 p-3 md:p-6 rounded-2xl shadow-2xl transform transition-all duration-700 ease-in-out ${theme === 'space' ? 'border-purple-500/30' : theme === 'dark' ? 'bg-gradient-to-br from-gray-800/80 to-gray-900/80 border-gray-600/30' : theme === 'ocean' ? 'bg-gradient-to-br from-blue-900/80 to-cyan-900/80 border-blue-500/30' : 'bg-gradient-to-br from-white to-gray-50 border-gray-200'}`} style={theme === 'space' ? {
+                <div className={`mb-6 p-3 md:p-6 rounded-2xl shadow-2xl transform transition-all duration-700 ease-in-out ${theme === 'space' ? 'border-purple-500/30' : 'bg-gradient-to-br from-white to-gray-50 border-gray-200'}`} style={theme === 'space' ? {
                     background: 'linear-gradient(145deg, #e5e7eb 0%, #d1d5db 40%, #9ca3af 100%)',
                     backdropFilter: 'blur(15px)',
                     WebkitBackdropFilter: 'blur(15px)',
@@ -702,7 +640,7 @@ const SensorMonitor = ({ sensorData, isPLCConnected }) => {
                         </div>
                     </div>
 
-                    <div className={`rounded-xl overflow-hidden shadow-lg border-2 ${theme === 'space' ? 'bg-gradient-to-br from-purple-700/60 via-purple-800/50 to-purple-900/60 border-gray-400 shadow-xl shadow-purple-500/20' : theme === 'dark' ? 'bg-gradient-to-br from-gray-700/60 via-gray-800/50 to-gray-900/60 border-gray-600/50 shadow-xl shadow-gray-500/20' : theme === 'ocean' ? 'bg-gradient-to-br from-blue-700/60 via-blue-800/50 to-blue-900/60 border-blue-500/50 shadow-xl shadow-blue-500/20' : 'bg-gradient-to-br from-blue-50 via-indigo-50 to-indigo-100 border-indigo-300 shadow-xl shadow-indigo-500/20'}`}>
+                    <div className={`rounded-xl overflow-hidden shadow-lg border-2 ${theme === 'space' ? 'bg-gradient-to-br from-purple-700/60 via-purple-800/50 to-purple-900/60 border-gray-400 shadow-xl shadow-purple-500/20' : 'bg-gradient-to-br from-blue-50 via-indigo-50 to-indigo-100 border-indigo-300 shadow-xl shadow-indigo-500/20'}`}>
                         <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-4 p-2">
                             {plcChecklistData.map((item, index) => (
                                 <div
@@ -717,14 +655,14 @@ const SensorMonitor = ({ sensorData, isPLCConnected }) => {
                                             : `${item.status === 'active' ? 'bg-green-400/90' : 'bg-white'}`
                                     }`}
                                     style={{
-                                        border: theme === 'space' ? '1px solid rgba(156, 163, 175, 0.3)' : theme === 'dark' ? '1px solid rgba(156, 163, 175, 0.3)' : theme === 'ocean' ? '1px solid rgba(59, 130, 246, 0.3)' : '1px solid rgba(156, 163, 175, 0.5)'
+                                        border: theme === 'space' ? '1px solid rgba(156, 163, 175, 0.3)' : '1px solid rgba(156, 163, 175, 0.5)'
                                     }}
                                 >
                                 <div className="flex items-center h-full overflow-hidden">
-                                    <span className={`text-xs xl:text-sm font-mono font-bold flex-shrink-0 mr-2 ${theme === 'space' ? 'text-purple-300' : theme === 'dark' ? 'text-blue-400' : theme === 'ocean' ? 'text-blue-300' : 'text-blue-600'}`}>
+                                    <span className={`text-xs xl:text-sm font-mono font-bold flex-shrink-0 mr-2 ${theme === 'space' ? 'text-purple-300' : 'text-blue-600'}`}>
                                         {item.name.substring(0, item.name.indexOf('_'))}
                                     </span>
-                                    <span className={`text-xs xl:text-sm truncate ${theme === 'space' ? 'text-purple-100' : theme === 'dark' ? 'text-gray-200' : theme === 'ocean' ? 'text-blue-100' : 'text-gray-700'}`}>
+                                    <span className={`text-xs xl:text-sm truncate ${theme === 'space' ? 'text-purple-100' : 'text-gray-700'}`}>
                                         {item.name.substring(item.name.indexOf('_') + 1)}
                                     </span>
                                 </div>
@@ -741,26 +679,26 @@ const SensorMonitor = ({ sensorData, isPLCConnected }) => {
 
             {/* 데이터 표시 */}
             {!isPLCConnected ? (
-                <div className={`text-center py-8 ${theme === 'space' ? 'text-purple-400' : theme === 'dark' ? 'text-gray-400' : theme === 'ocean' ? 'text-blue-400' : 'text-gray-500'}`}>
+                <div className={`text-center py-8 ${theme === 'space' ? 'text-purple-400' : 'text-gray-500'}`}>
                     PLC에 연결되지 않았습니다
                 </div>
             ) : filteredData.length === 0 ? (
-                <div className={`text-center py-8 ${theme === 'space' ? 'text-purple-400' : theme === 'dark' ? 'text-gray-400' : theme === 'ocean' ? 'text-blue-400' : 'text-gray-500'}`}>
+                <div className={`text-center py-8 ${theme === 'space' ? 'text-purple-400' : 'text-gray-500'}`}>
                     {searchFilter ? '검색 결과가 없습니다' : '표시할 데이터가 없습니다'}
                 </div>
             ) : (
                 <div className="space-y-4">
                     {/* 속초 비트 모니터 모드 */}
                     {viewMode === 'bits' ? (
-                        <div className={`p-6 rounded-2xl shadow-2xl ${theme === 'space' ? 'bg-purple-950 border-purple-800' : theme === 'dark' ? 'bg-gradient-to-br from-gray-900 via-black to-gray-900 border-gray-700' : theme === 'ocean' ? 'bg-gradient-to-br from-blue-900 via-black to-blue-900 border-blue-700' : 'bg-gradient-to-br from-gray-900 via-black to-gray-900 border-gray-700'}`}>
+                        <div className={`p-6 rounded-2xl shadow-2xl ${theme === 'space' ? 'bg-purple-950 border-purple-800' : 'bg-gradient-to-br from-gray-900 via-black to-gray-900 border-gray-700'}`}>
                             <div className="mb-6 flex items-center space-x-3">
-                                <div className={`animate-pulse w-4 h-4 rounded-full ${theme === 'space' ? 'bg-purple-500' : theme === 'dark' ? 'bg-green-500' : theme === 'ocean' ? 'bg-blue-500' : 'bg-green-500'}`}></div>
-                                <div className={`font-mono text-lg font-semibold ${theme === 'space' ? 'text-purple-400' : theme === 'dark' ? 'text-green-400' : theme === 'ocean' ? 'text-blue-400' : 'text-green-400'}`}>
+                                <div className={`animate-pulse w-4 h-4 rounded-full ${theme === 'space' ? 'bg-purple-500' : 'bg-green-500'}`}></div>
+                                <div className={`font-mono text-lg font-semibold ${theme === 'space' ? 'text-purple-400' : 'text-green-400'}`}>
                                     속초 1호기 센서 상태 모니터링 (P060~P072)
                                 </div>
                                 <div className="flex space-x-1">
-                                    <div className={`w-2 h-2 rounded-full animate-ping ${theme === 'space' ? 'bg-purple-400' : theme === 'dark' ? 'bg-cyan-400' : theme === 'ocean' ? 'bg-blue-400' : 'bg-cyan-400'}`}></div>
-                                    <div className={`w-2 h-2 rounded-full animate-ping ${theme === 'space' ? 'bg-purple-300' : theme === 'dark' ? 'bg-yellow-400' : theme === 'ocean' ? 'bg-cyan-400' : 'bg-yellow-400'}`} style={{ animationDelay: '200ms' }}></div>
+                                    <div className={`w-2 h-2 rounded-full animate-ping ${theme === 'space' ? 'bg-purple-400' : 'bg-cyan-400'}`}></div>
+                                    <div className={`w-2 h-2 rounded-full animate-ping ${theme === 'space' ? 'bg-purple-300' : 'bg-yellow-400'}`} style={{ animationDelay: '200ms' }}></div>
                                 </div>
                             </div>
 
@@ -828,7 +766,7 @@ const SensorMonitor = ({ sensorData, isPLCConnected }) => {
                             {filteredData.slice(0, 50).map((item, index) => (
                                 <div
                                     key={index}
-                                    className={`rounded-xl p-3 md:p-4 transition-all duration-500 ease-in-out transform hover:scale-105 hover:shadow-xl hover:-translate-y-1 group ${theme === 'space' ? 'bg-purple-100/80 border-purple-300/50 hover:border-purple-400' : theme === 'dark' ? 'bg-gray-800/80 border-gray-600/50 hover:border-gray-500' : theme === 'ocean' ? 'bg-blue-100/80 border-blue-300/50 hover:border-blue-400' : 'bg-white border-gray-200 hover:border-blue-300'}`}
+                                    className={`rounded-xl p-3 md:p-4 transition-all duration-500 ease-in-out transform hover:scale-105 hover:shadow-xl hover:-translate-y-1 group ${theme === 'space' ? 'bg-purple-100/80 border-purple-300/50 hover:border-purple-400' : 'bg-white border-gray-200 hover:border-blue-300'}`}
                                     style={{
                                         animationDelay: `${index * 50}ms`,
                                         opacity: 0,
@@ -836,10 +774,10 @@ const SensorMonitor = ({ sensorData, isPLCConnected }) => {
                                     }}
                                 >
                                     <div className="flex flex-col space-y-2">
-                                        <span className={`text-xs md:text-sm font-semibold transition-colors duration-300 ${theme === 'space' ? 'text-purple-700 group-hover:text-purple-600' : theme === 'dark' ? 'text-blue-400 group-hover:text-blue-300' : theme === 'ocean' ? 'text-blue-600 group-hover:text-blue-500' : 'text-blue-600 group-hover:text-purple-600'}`}>
+                                        <span className={`text-xs md:text-sm font-semibold transition-colors duration-300 ${theme === 'space' ? 'text-purple-700 group-hover:text-purple-600' : 'text-blue-600 group-hover:text-purple-600'}`}>
                                             {item.address}
                                         </span>
-                                        <span className={`text-base md:text-xl font-mono break-words rounded-lg px-2 py-1 transition-colors duration-300 ${theme === 'space' ? 'text-purple-900 bg-purple-50 group-hover:bg-purple-100' : theme === 'dark' ? 'text-gray-200 bg-gray-700/50 group-hover:bg-gray-600/50' : theme === 'ocean' ? 'text-blue-900 bg-blue-50 group-hover:bg-blue-100' : 'text-gray-900 bg-gray-50 group-hover:bg-purple-50'}`}>
+                                        <span className={`text-base md:text-xl font-mono break-words rounded-lg px-2 py-1 transition-colors duration-300 ${theme === 'space' ? 'text-purple-900 bg-purple-50 group-hover:bg-purple-100' : 'text-gray-900 bg-gray-50 group-hover:bg-purple-50'}`}>
                                             {item.displayValue}
                                         </span>
                                     </div>
@@ -870,7 +808,7 @@ const SensorMonitor = ({ sensorData, isPLCConnected }) => {
                     {/* 더 많은 데이터가 있을 때 (비트 모니터 제외) */}
                     {viewMode !== 'bits' && filteredData.length > 50 && (
                         <div className="text-center py-4">
-                            <p className={`text-sm ${theme === 'space' ? 'text-purple-400' : theme === 'dark' ? 'text-gray-400' : theme === 'ocean' ? 'text-blue-400' : 'text-gray-500'}`}>
+                            <p className={`text-sm ${theme === 'space' ? 'text-purple-400' : 'text-gray-500'}`}>
                                 {filteredData.length}개 중 50개 표시됨
                             </p>
                         </div>

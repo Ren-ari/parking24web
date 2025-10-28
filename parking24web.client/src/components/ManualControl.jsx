@@ -278,18 +278,6 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
                     border: '1px solid rgba(147, 51, 234, 0.2)',
                     boxShadow: '0 4px 16px 0 rgba(147, 51, 234, 0.1)'
                 };
-            case 'dark':
-                return {
-                    background: 'linear-gradient(135deg, rgba(75, 85, 99, 0.15) 0%, rgba(55, 65, 81, 0.08) 100%)', // 회색 계열
-                    border: '1px solid rgba(75, 85, 99, 0.2)',
-                    boxShadow: '0 4px 16px 0 rgba(75, 85, 99, 0.1)'
-                };
-            case 'ocean':
-                return {
-                    background: 'linear-gradient(135deg, rgba(37, 99, 235, 0.15) 0%, rgba(29, 78, 216, 0.08) 100%)', // 파란색 계열
-                    border: '1px solid rgba(37, 99, 235, 0.2)',
-                    boxShadow: '0 4px 16px 0 rgba(37, 99, 235, 0.1)'
-                };
             default:
                 return {
                     background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.03) 100%)',

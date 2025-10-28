@@ -55,7 +55,7 @@ const ParkingMonitor = ({ sensorData, isPLCConnected }) => {
             <div className="space-y-6">
                 {/* 첫 번째 칸 - 상단 영역 */}
                 <div 
-                    className={`p-6 rounded-2xl border shadow-2xl ${theme === 'space' ? 'border-purple-500/30' : 'border-blue-300/50'}`}
+                    className={`p-6 rounded-2xl border shadow-2xl overflow-x-auto sm:overflow-x-visible scrollbar-hide cart-box-transition ${theme === 'space' ? 'border-purple-500/30' : 'border-blue-300/50'}`}
                     style={{
                         background: theme === 'space' 
                             ? 'linear-gradient(145deg, rgba(30, 30, 30, 0.95) 0%, rgba(20, 20, 20, 0.9) 100%)'
@@ -64,13 +64,9 @@ const ParkingMonitor = ({ sensorData, isPLCConnected }) => {
                 WebkitBackdropFilter: 'blur(25px)',
                     }}
                 >
-                    <h3 className={`text-lg font-bold mb-4 ${theme === 'space' ? 'text-purple-300' : 'text-blue-600'}`}>
-                        상단 영역
-                    </h3>
-                    
                     {/* 상단 큰 슬롯 4개 + 리프트 */}
                     <div className="mb-6">
-                        <div className="flex justify-center items-center gap-2">
+                        <div className="flex justify-center items-center gap-1 md:gap-1 lg:gap-2 min-w-max sm:min-w-0">
                             {/* 큰 슬롯 4개 (30, 29, 28, 27) */}
                             {Array.from({ length: 4 }, (_, i) => {
                                 const slotNumber = 30 - i;
@@ -81,14 +77,14 @@ const ParkingMonitor = ({ sensorData, isPLCConnected }) => {
                         return (
                             <div
                                         key={`upper-${i}`} 
-                                        className={`w-24 h-32 flex flex-col items-center justify-center rounded-lg border-2 ${colorClass} text-xs font-bold transition-all duration-300 hover:scale-105 relative`}
+                                        className={`w-20 h-28 md:w-16 md:h-24 lg:w-24 lg:h-32 flex flex-col items-center justify-center rounded-lg border-2 ${colorClass} text-xs font-bold transition-all duration-300 hover:scale-105 relative`}
                                 style={{
                                             backdropFilter: 'blur(15px)',
                                             WebkitBackdropFilter: 'blur(15px)'
                                         }}
                                     >
                                         <div className="font-bold text-xs absolute top-2">{slotNumber}</div>
-                                        <div className="text-2xl font-bold">
+                                        <div className="text-xl md:text-lg lg:text-2xl font-bold">
                                             {value ? String(value).padStart(4, '0') : ''}
                                         </div>
                                     </div>
@@ -96,7 +92,7 @@ const ParkingMonitor = ({ sensorData, isPLCConnected }) => {
                             })}
                             
                             {/* 리프트 영역 */}
-                            <div className={`w-24 h-32 flex flex-col items-center justify-center rounded-lg border-2 transition-all duration-300 relative ${
+                            <div className={`w-20 h-28 md:w-16 md:h-24 lg:w-24 lg:h-32 flex flex-col items-center justify-center rounded-lg border-2 transition-all duration-300 relative ${
                                 theme === 'space' 
                                     ? 'bg-gradient-to-br from-cyan-400 via-cyan-500 to-cyan-600 border-cyan-500 text-cyan-100'
                                     : 'bg-gradient-to-br from-orange-300 via-orange-400 to-orange-500 border-orange-600 text-orange-900'
@@ -105,14 +101,14 @@ const ParkingMonitor = ({ sensorData, isPLCConnected }) => {
                                 backdropFilter: 'blur(15px)',
                                 WebkitBackdropFilter: 'blur(15px)'
                             }}>
-                                <div className="font-bold text-sm">리프트</div>
+                                <div className="font-bold text-sm md:text-xs lg:text-sm">리프트</div>
                             </div>
                         </div>
                     </div>
                     
                     {/* 중간 작은 슬롯들 (26-16번) */}
                     <div className="mb-4">
-                        <div className="grid grid-cols-11 gap-1 justify-center">
+                        <div className="grid grid-cols-11 gap-1 md:gap-0.5 lg:gap-1 justify-center min-w-max sm:min-w-0">
                             {Array.from({ length: 11 }, (_, i) => {
                                 const slotNumber = 26 - i;
                                 const address = getVehicleAddress(cartIndex, slotNumber - 1);
@@ -122,14 +118,14 @@ const ParkingMonitor = ({ sensorData, isPLCConnected }) => {
                                                 return (
                                                     <div
                                         key={`middle-${i}`} 
-                                        className={`w-20 h-24 flex flex-col items-center justify-center rounded-lg border-2 ${colorClass} text-xs font-bold transition-all duration-300 hover:scale-105 relative`}
+                                        className={`w-16 h-20 md:w-14 md:h-16 lg:w-20 lg:h-24 flex flex-col items-center justify-center rounded-lg border-2 ${colorClass} text-xs font-bold transition-all duration-300 hover:scale-105 relative`}
                                                             style={{
                                                                 backdropFilter: 'blur(15px)',
                                             WebkitBackdropFilter: 'blur(15px)'
                                         }}
                                     >
-                                        <div className="font-bold text-[10px] absolute top-1">{slotNumber}</div>
-                                        <div className="text-xl font-bold">
+                                        <div className="font-bold text-[8px] md:text-[8px] lg:text-[10px] absolute top-1">{slotNumber}</div>
+                                        <div className="text-base md:text-sm lg:text-xl font-bold">
                                             {value ? String(value).padStart(4, '0') : ''}
                                         </div>
                                     </div>
@@ -142,22 +138,19 @@ const ParkingMonitor = ({ sensorData, isPLCConnected }) => {
 
                 {/* 두 번째 칸 - 하단 영역 */}
                 <div 
-                    className={`p-6 rounded-2xl border shadow-2xl ${theme === 'space' ? 'border-purple-500/30' : 'border-blue-300/50'}`}
-                                                                    style={{
+                    className={`p-6 rounded-2xl border shadow-2xl overflow-x-auto sm:overflow-x-visible scrollbar-hide cart-box-transition ${theme === 'space' ? 'border-purple-500/30' : 'border-blue-300/50'}`}
+                    style={{
                         background: theme === 'space' 
                             ? 'linear-gradient(145deg, rgba(30, 30, 30, 0.95) 0%, rgba(20, 20, 20, 0.9) 100%)'
                             : 'rgba(248, 250, 255, 0.5)',
                         backdropFilter: 'blur(25px)',
                         WebkitBackdropFilter: 'blur(25px)',
+                        animationDelay: '0.15s'
                     }}
                 >
-                    <h3 className={`text-lg font-bold mb-4 ${theme === 'space' ? 'text-purple-300' : 'text-blue-600'}`}>
-                        하단 영역
-                    </h3>
-
                     {/* 상단 큰 슬롯 4개 (15, 14, 13, 12) + 리프트 */}
                     <div className="mb-6">
-                        <div className="flex justify-center items-center gap-2">
+                        <div className="flex justify-center items-center gap-1 md:gap-1 lg:gap-2 min-w-max sm:min-w-0">
                             {[15, 14, 13, 12].map((slotNumber, i) => {
                                 const address = getVehicleAddress(cartIndex, slotNumber - 1);
                                 const value = getPLCValue(address);
@@ -166,14 +159,14 @@ const ParkingMonitor = ({ sensorData, isPLCConnected }) => {
                                 return (
                                     <div 
                                         key={`second-upper-${i}`} 
-                                        className={`w-24 h-32 flex flex-col items-center justify-center rounded-lg border-2 ${colorClass} text-xs font-bold transition-all duration-300 hover:scale-105 relative`}
+                                        className={`w-20 h-28 md:w-16 md:h-24 lg:w-24 lg:h-32 flex flex-col items-center justify-center rounded-lg border-2 ${colorClass} text-xs font-bold transition-all duration-300 hover:scale-105 relative`}
                                         style={{
                                             backdropFilter: 'blur(15px)',
                                             WebkitBackdropFilter: 'blur(15px)'
                                         }}
                                     >
                                         <div className="font-bold text-xs absolute top-2">{slotNumber}</div>
-                                        <div className="text-2xl font-bold">
+                                        <div className="text-xl md:text-lg lg:text-2xl font-bold">
                                             {value ? String(value).padStart(4, '0') : ''}
                                         </div>
                                     </div>
@@ -181,7 +174,7 @@ const ParkingMonitor = ({ sensorData, isPLCConnected }) => {
                             })}
                             
                             {/* 리프트 영역 */}
-                            <div className={`w-24 h-32 flex flex-col items-center justify-center rounded-lg border-2 transition-all duration-300 relative ${
+                            <div className={`w-20 h-28 md:w-16 md:h-24 lg:w-24 lg:h-32 flex flex-col items-center justify-center rounded-lg border-2 transition-all duration-300 relative ${
                                 theme === 'space' 
                                     ? 'bg-gradient-to-br from-cyan-400 via-cyan-500 to-cyan-600 border-cyan-500 text-cyan-100'
                                     : 'bg-gradient-to-br from-orange-300 via-orange-400 to-orange-500 border-orange-600 text-orange-900'
@@ -190,14 +183,14 @@ const ParkingMonitor = ({ sensorData, isPLCConnected }) => {
                                 backdropFilter: 'blur(15px)',
                                 WebkitBackdropFilter: 'blur(15px)'
                             }}>
-                                <div className="font-bold text-sm">리프트</div>
+                                <div className="font-bold text-sm md:text-xs lg:text-sm">리프트</div>
                             </div>
                                                                 </div>
                                                         </div>
 
                     {/* 하단 작은 슬롯들 (11-1번) */}
                     <div>
-                        <div className="grid grid-cols-11 gap-1 justify-center">
+                        <div className="grid grid-cols-11 gap-1 md:gap-0.5 lg:gap-1 justify-center min-w-max sm:min-w-0">
                             {Array.from({ length: 11 }, (_, i) => {
                                 const slotNumber = 11 - i;
                                 const address = getVehicleAddress(cartIndex, slotNumber - 1);
@@ -207,14 +200,14 @@ const ParkingMonitor = ({ sensorData, isPLCConnected }) => {
                                 return (
                                     <div 
                                         key={`second-lower-${i}`} 
-                                        className={`w-20 h-24 flex flex-col items-center justify-center rounded-lg border-2 ${colorClass} text-xs font-bold transition-all duration-300 hover:scale-105 relative`}
+                                        className={`w-16 h-20 md:w-14 md:h-16 lg:w-20 lg:h-24 flex flex-col items-center justify-center rounded-lg border-2 ${colorClass} text-xs font-bold transition-all duration-300 hover:scale-105 relative`}
                                         style={{
                                             backdropFilter: 'blur(15px)',
                                             WebkitBackdropFilter: 'blur(15px)'
                                         }}
                                     >
-                                        <div className="font-bold text-[10px] absolute top-1">{slotNumber}</div>
-                                        <div className="text-lg font-bold">
+                                        <div className="font-bold text-[8px] md:text-[8px] lg:text-[10px] absolute top-1">{slotNumber}</div>
+                                        <div className="text-base md:text-sm lg:text-lg font-bold">
                                             {value || ''}
                                                             </div>
                                                     </div>
@@ -245,6 +238,30 @@ const ParkingMonitor = ({ sensorData, isPLCConnected }) => {
                     }
                     .hover\\:scale-102:hover { 
                         transform: scale(1.02); 
+                    }
+                    @keyframes slideInSmoothly {
+                        0% { 
+                            opacity: 0; 
+                            transform: translateY(30px) scale(0.95);
+                        }
+                        50% { 
+                            opacity: 0.7; 
+                            transform: translateY(-5px) scale(1.02);
+                        }
+                        100% { 
+                            opacity: 1; 
+                            transform: translateY(0px) scale(1);
+                        }
+                    }
+                    .cart-box-transition {
+                        animation: slideInSmoothly 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+                    }
+                    .scrollbar-hide {
+                        -ms-overflow-style: none;
+                        scrollbar-width: none;
+                    }
+                    .scrollbar-hide::-webkit-scrollbar {
+                        display: none;
                     }
                     .slot-pattern {
                         position: relative;
@@ -285,49 +302,55 @@ const ParkingMonitor = ({ sensorData, isPLCConnected }) => {
             {/* 헤더 */}
             <div className="mb-10">          
                 
-                {/* 탭 네비게이션 */}
-                <div className="flex flex-wrap gap-3 mb-4">
-                    {[1, 2, 3, 4, 5, 6].map(cartNumber => (
-                        <button
-                            key={cartNumber}
-                            onClick={() => setActiveTab(`cart${cartNumber}`)}
-                            className={`px-4 py-2 rounded-full font-bold hover:scale-105 transition-all duration-200 ${
-                                activeTab === `cart${cartNumber}` 
-                                    ? theme === 'space' ? 'text-white' : 'text-white'
-                                    : 'text-gray-800'
-                            }`}
-                            style={activeTab === `cart${cartNumber}`
-                                ? theme === 'space'
-                                    ? {
-                                        background: 'linear-gradient(145deg, #8b5cf6 0%, #7c3aed 100%)',
-                                        border: '1px solid rgba(139, 92, 246, 0.8)',
-                                        boxShadow: 'inset 0 1px 2px rgba(255,255,255,0.3), 0 6px 16px rgba(124,58,237,0.4)',
-                                        fontSize: '0.875rem'
-                                    }
-                                    : {
-                                        background: 'linear-gradient(145deg, #3b82f6 0%, #2563eb 100%)',
-                                        border: '1px solid rgba(59, 130, 246, 0.8)',
-                                        boxShadow: 'inset 0 1px 2px rgba(255,255,255,0.3), 0 6px 16px rgba(37,99,235,0.4)',
-                                        fontSize: '0.875rem'
-                                    }
-                                : theme === 'space'
-                                    ? {
-                                        background: 'linear-gradient(145deg, #e5e7eb 0%, #9ca3af 100%)',
-                                        border: '1px solid rgba(156, 163, 175, 0.8)',
-                                        boxShadow: 'inset 0 1px 2px rgba(255,255,255,0.7), 0 6px 16px rgba(0,0,0,0.25)',
-                                        fontSize: '0.875rem'
-                                    }
-                                    : {
-                                        background: 'rgba(255, 255, 255, 0.9)',
-                                        border: '1px solid rgba(255, 255, 255, 0.3)',
-                                        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
-                                        fontSize: '0.875rem'
-                                    }
-                            }
-                        >
-                            {cartNumber}단 카트
-                        </button>
-                    ))}
+                {/* 탭 네비게이션 - 내부 탭 스타일 */}
+                <div className="mb-6">
+                    {/* 모바일: 3x2 내부 탭 */}
+                    <div className="sm:hidden">
+                        <div className={`rounded-xl p-2 ${theme === 'space' ? 'bg-gray-800/50' : 'bg-gray-100/80'}`}>
+                            <div className="grid grid-cols-3 gap-1">
+                                {[1, 2, 3, 4, 5, 6].map(cartNumber => (
+                                    <button
+                                        key={cartNumber}
+                                        onClick={() => setActiveTab(`cart${cartNumber}`)}
+                                        className={`py-2 px-3 rounded-lg text-sm font-medium transition-all duration-200 ${
+                                            activeTab === `cart${cartNumber}` 
+                                                ? theme === 'space' 
+                                                    ? 'bg-purple-600 text-white shadow-md' 
+                                                    : 'bg-blue-600 text-white shadow-md'
+                                                : theme === 'space'
+                                                    ? 'text-gray-300 hover:text-white hover:bg-gray-700/50'
+                                                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-200/50'
+                                        }`}
+                                    >
+                                        {cartNumber}단
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    {/* 태블릿/데스크톱: 가로 내부 탭 */}
+                    <div className="hidden sm:block">
+                        <div className={`inline-flex rounded-xl p-1 ${theme === 'space' ? 'bg-gray-800/50' : 'bg-gray-100/80'}`}>
+                            {[1, 2, 3, 4, 5, 6].map(cartNumber => (
+                                <button
+                                    key={cartNumber}
+                                    onClick={() => setActiveTab(`cart${cartNumber}`)}
+                                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                                        activeTab === `cart${cartNumber}` 
+                                            ? theme === 'space' 
+                                                ? 'bg-purple-600 text-white shadow-md' 
+                                                : 'bg-blue-600 text-white shadow-md'
+                                            : theme === 'space'
+                                                ? 'text-gray-300 hover:text-white hover:bg-gray-700/50'
+                                                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-200/50'
+                                    }`}
+                                >
+                                    {cartNumber}단 카트
+                                </button>
+                            ))}
+                        </div>
+                    </div>
                 </div>
             </div>
 

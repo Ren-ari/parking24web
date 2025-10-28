@@ -72,7 +72,7 @@ class SignalRService {
 
         // 센서 데이터 업데이트
         this.connection.on("SensorDataUpdate", (data) => {
-            console.log("센서 데이터 업데이트:", data);
+            // 센서 데이터 로그는 제거 (너무 빈번함)
             if (this.onSensorDataUpdate) {
                 this.onSensorDataUpdate(data);
             }
@@ -88,7 +88,7 @@ class SignalRService {
 
         // 명령 실행 완료
         this.connection.on("CommandExecuted", (command) => {
-            console.log("명령 실행 완료:", command);
+            // 명령 실행 로그 제거 (너무 빈번함)
             if (this.onCommandExecuted) {
                 this.onCommandExecuted(command);
             }
@@ -104,7 +104,7 @@ class SignalRService {
 
         // 현장 설정 정보 수신 (새로 추가)
         this.connection.on("CurrentSiteConfiguration", (config) => {
-            console.log("현장 설정 정보:", config);
+            // 현장 설정 정보 로그 제거 (불필요)
             if (this.onCurrentSiteConfiguration) {
                 this.onCurrentSiteConfiguration(config);
             }
@@ -112,7 +112,7 @@ class SignalRService {
 
         // 현장 설정 로드 완료 (기존)
         this.connection.on("SiteConfigLoaded", (config) => {
-            console.log("현장 설정 로드:", config);
+            // 현장 설정 로드 로그 제거 (불필요)
         });
 
         // 연결 상태 관리
@@ -314,52 +314,52 @@ class SignalRService {
     // 기존 코드가 있을 수 있으니 Deprecated로 유지
 
     async operationMode(value = 1) {
-        console.warn("[Deprecated] operationMode 사용, remoteControl로 변경 권장");
+        // Deprecated 경고 메시지 제거
         await this.connection?.invoke("OperationMode", value);
     }
 
     async recovery(value = 1) {
-        console.warn("[Deprecated] recovery 사용, homeReturn으로 변경 권장");
+        // Deprecated 경고 메시지 제거
         await this.connection?.invoke("Recovery", value);
     }
 
     async turnTableLeft(value = 1) {
-        console.warn("[Deprecated] turnTableLeft 사용, turnLeft로 변경 권장");
+        // Deprecated 경고 메시지 제거
         await this.connection?.invoke("TurnTableLeft", value);
     }
 
     async turnTableRight(value = 1) {
-        console.warn("[Deprecated] turnTableRight 사용, turnRight로 변경 권장");
+        // Deprecated 경고 메시지 제거
         await this.connection?.invoke("TurnTableRight", value);
     }
 
     async turnTableUp(value = 1) {
-        console.warn("[Deprecated] turnTableUp는 더 이상 지원되지 않습니다");
+        // Deprecated 경고 메시지 제거
         await this.connection?.invoke("TurnTableUp", value);
     }
 
     async turnTableDown(value = 1) {
-        console.warn("[Deprecated] turnTableDown는 더 이상 지원되지 않습니다");
+        // Deprecated 경고 메시지 제거
         await this.connection?.invoke("TurnTableDown", value);
     }
 
     async leftLiftLock(value = 1) {
-        console.warn("[Deprecated] leftLiftLock 사용, lockingOn으로 변경 권장");
+        // Deprecated 경고 메시지 제거
         await this.connection?.invoke("LeftLiftLock", value);
     }
 
     async leftLiftUnlock(value = 1) {
-        console.warn("[Deprecated] leftLiftUnlock 사용, lockingOff로 변경 권장");
+        // Deprecated 경고 메시지 제거
         await this.connection?.invoke("LeftLiftUnlock", value);
     }
 
     async rightLiftLock(value = 1) {
-        console.warn("[Deprecated] rightLiftLock 사용, lockingOn으로 변경 권장");
+        // Deprecated 경고 메시지 제거
         await this.connection?.invoke("RightLiftLock", value);
     }
 
     async rightLiftUnlock(value = 1) {
-        console.warn("[Deprecated] rightLiftUnlock 사용, lockingOff로 변경 권장");
+        // Deprecated 경고 메시지 제거
         await this.connection?.invoke("RightLiftUnlock", value);
     }
 

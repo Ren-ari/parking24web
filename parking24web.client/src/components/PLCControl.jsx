@@ -688,7 +688,7 @@ const PLCControl = ({ currentUser, onLogout }) => {
                                 </div>
 
                                 <div className="flex-1 min-w-0 flex flex-col">
-                                    <div className={`text-white text-xs font-medium px-1 py-2 text-center h-10 flex items-center justify-center ${isPLCConnected ? (theme === 'space' ? 'bg-purple-600' : theme === 'dark' ? 'bg-gray-600' : theme === 'ocean' ? 'bg-blue-600' : 'bg-blue-500') : 'bg-gray-400'}`} style={{
+                                    <div className={`text-white text-xs font-medium px-1 py-2 text-center h-10 flex items-center justify-center ${isPLCConnected ? (theme === 'space' ? 'bg-purple-600' : 'bg-blue-500') : 'bg-gray-400'}`} style={{
                                         backdropFilter: 'blur(10px)',
                                         WebkitBackdropFilter: 'blur(10px)',
                                     }}>
@@ -702,19 +702,19 @@ const PLCControl = ({ currentUser, onLogout }) => {
                                 </div>
 
                                 <div className="flex-1 min-w-0 flex flex-col">
-                                    <div className={`text-white text-xs font-medium px-1 py-2 text-center h-10 flex items-center justify-center ${isPLCConnected ? (theme === 'space' ? 'bg-purple-600' : theme === 'dark' ? 'bg-gray-600' : theme === 'ocean' ? 'bg-blue-600' : 'bg-blue-500') : 'bg-gray-400'}`} style={{
+                                    <div className={`text-white text-xs font-medium px-1 py-2 text-center h-10 flex items-center justify-center ${isPLCConnected ? (theme === 'space' ? 'bg-purple-600' : 'bg-blue-500') : 'bg-gray-400'}`} style={{
                                         backdropFilter: 'blur(10px)',
                                         WebkitBackdropFilter: 'blur(10px)',
                                     }}>
                                         호기번호
                                     </div>
-                                    <div className={`text-sm px-2 py-3 text-center border-r h-16 flex items-center justify-center ${isPLCConnected ? (theme === 'space' ? 'bg-purple-50 text-purple-700' : theme === 'dark' ? 'bg-gray-200 text-gray-800' : theme === 'ocean' ? 'bg-blue-100 text-blue-900' : 'bg-blue-50 text-blue-700') : 'bg-gray-100 text-gray-800'}`}>
+                                    <div className={`text-sm px-2 py-3 text-center border-r h-16 flex items-center justify-center ${isPLCConnected ? (theme === 'space' ? 'bg-purple-50 text-purple-700' : 'bg-blue-50 text-blue-700') : 'bg-gray-100 text-gray-800'}`}>
                                         {isPLCConnected ? `${selectedUnit}호기` : '-'}
                                     </div>
                                 </div>
 
                                 <div className="flex-1 min-w-0 flex flex-col">
-                                    <div className={`text-white text-xs font-medium px-1 py-2 text-center h-10 flex items-center justify-center ${isPLCConnected ? (theme === 'space' ? 'bg-purple-600' : theme === 'dark' ? 'bg-gray-600' : theme === 'ocean' ? 'bg-blue-600' : 'bg-blue-500') : 'bg-gray-400'}`} style={{
+                                    <div className={`text-white text-xs font-medium px-1 py-2 text-center h-10 flex items-center justify-center ${isPLCConnected ? (theme === 'space' ? 'bg-purple-600' : 'bg-blue-500') : 'bg-gray-400'}`} style={{
                                         backdropFilter: 'blur(10px)',
                                         WebkitBackdropFilter: 'blur(10px)',
                                     }}>
@@ -773,7 +773,7 @@ const PLCControl = ({ currentUser, onLogout }) => {
                                     className="absolute top-0 left-[-150%] h-full w-[50%] bg-gradient-to-r from-transparent via-white/30 to-transparent transition-all duration-700 ease-in-out group-hover:left-[150%]"
                                 />
 
-                                <h3 className={`text-lg font-bold relative z-10 ${theme === 'space' ? 'bg-gradient-to-r from-purple-400 to-purple-600 bg-clip-text text-transparent' : theme === 'dark' ? 'bg-gradient-to-r from-gray-300 to-gray-500 bg-clip-text text-transparent' : theme === 'ocean' ? 'bg-gradient-to-r from-blue-400 to-cyan-500 bg-clip-text text-transparent' : 'bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent'}`}>
+                                <h3 className={`text-lg font-bold relative z-10 ${theme === 'space' ? 'bg-gradient-to-r from-purple-400 to-purple-600 bg-clip-text text-transparent' : 'bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent'}`}>
                                     차량 및 주차 현황 데이터
                                 </h3>
                                 <button
