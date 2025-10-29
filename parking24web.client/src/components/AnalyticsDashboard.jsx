@@ -48,7 +48,26 @@ const AnalyticsDashboard = () => {
 
     const fetchAllAnalytics = async () => {
         try {
-            const baseUrl = siteConfig.api.baseUrl || 'http://localhost:5124';
+            // ============================================
+            // 동적 baseURL 구성 (포트포워딩 대응)
+            // ============================================
+            const getBaseUrl = () => {
+                const currentHost = window.location.host;  // 예: "222.113.92.40:5124" or "localhost:5173"
+                const currentProtocol = window.location.protocol;  // "http:" or "https:"
+
+                // 개발 환경 감지 (Vite dev server는 5173 포트 사용)
+                if (currentHost.includes(':5173')) {
+                    return `http://localhost:${siteConfig.api.devPort}`;
+                }
+
+                // 운영 환경 (외부 접속)
+                // 접속한 호스트명 + API 포트로 요청
+                const hostname = window.location.hostname;  // IP 또는 도메인만 추출
+                return `${currentProtocol}//${hostname}:${siteConfig.api.devPort}`;
+            };
+
+            const baseUrl = getBaseUrl();
+            console.log('📊 대시보드 API 베이스 URL:', baseUrl);
             
             // 월별 데이터
             const monthlyResponse = await fetch(`${baseUrl}/api/analytics/monthly`);

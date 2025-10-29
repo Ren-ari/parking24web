@@ -36,7 +36,7 @@ const ParkingMonitor = ({ sensorData, isPLCConnected, onVehicleEdit, theme }) =>
     useEffect(() => {
         const defaultMapping = {};
 
-        for (let level = 0; level <= 38; level++) {
+        for (let level = 0; level <= siteConfig.parkingMonitor.maxFloor; level++) {
             for (let box = 0; box < 5; box++) {
                 if (shouldShowBox(level, box)) {
                     const key = `${level}_${box}`;

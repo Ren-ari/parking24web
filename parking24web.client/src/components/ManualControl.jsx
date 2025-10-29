@@ -8,33 +8,226 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
 
     const [_activeCommand, setActiveCommand] = useState(null);
     const [_isEmergencyMode, setIsEmergencyMode] = useState(false);
-    const { theme, isSpaceTheme, isDarkTheme, isOceanTheme } = useTheme();
+    const { theme, _isSpaceTheme, _isDarkTheme, _isOceanTheme } = useTheme();
     const [activeTab, setActiveTab] = useState('page1');
     const [showSensors, setShowSensors] = useState(true);
     const [sensorStates, setSensorStates] = useState({});
-    const [scrollY, setScrollY] = useState(0);
+    const [_scrollY, setScrollY] = useState(0);
 
+
+    // 리소스별 마지막 명령 상태 (commandId, sequence 포함)
+    const [lastCommands, setLastCommands] = useState({});
+
+    // 리소스별 전송 중 상태
+    const [pendingResources, setPendingResources] = useState(new Set());
+
+    // 통계 (디버그용)
+    const [commandStats, setCommandStats] = useState({
+        success: 0,
+        failed: 0,
+        timeout: 0
+    });
+
+    // 명령별 중복 제거 윈도우 (ms)
+    const DEDUP_WINDOW = {
+        liftUp: 200,
+        liftDown: 200,
+        moveLeft: 150,
+        moveRight: 150,
+        turnLeft: 300,
+        turnRight: 300,
+        doorOpen: 100,
+        doorClose: 100,
+        lockingOn: 100,
+        lockingOff: 100,
+        errorReset: 0,
+        remoteControl: 0,
+        homeReturn: 0
+    };
 
     const currentConfig = siteConfig;
+
+    // ============================================
+    // 🔥 핵심 로직: 버전 비교 (commandId + sequence)
+    // ============================================
+    const isNewer = (response, resourceKey) => {
+        const prev = lastCommands[resourceKey];
+        if (!prev) return true;
+
+        // 시퀀스 비교
+        if (response.sequence > prev.sequence) return true;
+        if (response.sequence < prev.sequence) return false;
+
+        // 시퀀스 같으면 commandId 비교 (중복 응답 허용)
+        return response.commandId === prev.commandId;
+    };
+
+    // ============================================
+    // 🔥 핵심 로직: 명령 전송 (중복 제거 + 안전성 강화)
+    // ============================================
+    const sendCommand = async (commandName, value) => {
+        const resourceKey = signalRService.getResourceKey(commandName);
+        const lastCmd = lastCommands[resourceKey];
+
+        // ============================================
+        // 1. 해제(0) 명령은 즉시 실행 (pending 무시)
+        // ============================================
+        if (value === 0) {
+            console.log(`[즉시 실행] ${commandName}=0 (해제 명령)`);
+
+            try {
+                const commandId = signalRService.generateCommandId();
+
+                const result = await signalRService.sendConfigCommand(
+                    commandName,
+                    0,
+                    { commandId, resourceKey, immediate: true }
+                );
+
+                // 성공 시 상태 업데이트 (sequence 관계없이 0은 항상 반영)
+                if (result.success) {
+                    setLastCommands(prev => ({
+                        ...prev,
+                        [resourceKey]: {
+                            name: commandName,
+                            value: 0,
+                            timestamp: result.timestamp,
+                            commandId: result.commandId,
+                            sequence: result.sequence
+                        }
+                    }));
+                    setCommandStats(prev => ({ ...prev, success: prev.success + 1 }));
+                }
+
+            } catch (error) {
+                console.error(`[즉시 실행 실패] ${commandName}=0:`, error);
+                setCommandStats(prev => ({ ...prev, failed: prev.failed + 1 }));
+            }
+
+            return; // 여기서 종료
+        }
+
+        // ============================================
+        // 2. 중복 체크 (명령별 윈도우)
+        // ============================================
+        const dedupWindow = DEDUP_WINDOW[commandName] || 100;
+        if (lastCmd?.name === commandName &&
+            lastCmd?.value === value &&
+            Date.now() - lastCmd.timestamp < dedupWindow) {
+            console.log(`[중복 무시] ${commandName}=${value} (${dedupWindow}ms 윈도우)`);
+            return;
+        }
+
+        // ============================================
+        // 3. 리소스 사용 중 체크 (락)
+        // ============================================
+        if (pendingResources.has(resourceKey)) {
+            console.warn(`[락] 리소스 사용 중: ${resourceKey}`);
+            return;
+        }
+
+        // 락 획득
+        setPendingResources(prev => new Set(prev).add(resourceKey));
+
+        const commandId = signalRService.generateCommandId();
+        console.log(`[시작] ${commandName}=${value} [${commandId}]`);
+
+        try {
+            // ============================================
+            // 4. 타임아웃 설정 (3초)
+            // ============================================
+            const timeoutPromise = new Promise((_, reject) =>
+                setTimeout(() => reject(new Error('TIMEOUT')), 3000)
+            );
+
+            // ============================================
+            // 5. Promise.race (타임아웃 vs 실제 요청)
+            // ============================================
+            const result = await Promise.race([
+                signalRService.sendConfigCommand(
+                    commandName,
+                    value,
+                    { commandId, resourceKey }
+                ),
+                timeoutPromise
+            ]);
+
+            // ============================================
+            // 6. 성공 응답 처리 (버전 체크)
+            // ============================================
+            if (!result.success) {
+                throw new Error(result.message || '명령 실패');
+            }
+
+            // 버전(sequence + commandId) 비교
+            if (isNewer(result, resourceKey)) {
+                setLastCommands(prev => ({
+                    ...prev,
+                    [resourceKey]: {
+                        name: commandName,
+                        value: value,
+                        timestamp: result.timestamp,
+                        commandId: result.commandId,
+                        sequence: result.sequence
+                    }
+                }));
+                console.log(`[성공] ${commandName}=${value} [seq:${result.sequence}]`);
+                setCommandStats(prev => ({ ...prev, success: prev.success + 1 }));
+            } else {
+                console.warn(`[구버전] 늦은 응답 무시: ${commandName} [seq:${result.sequence}]`);
+            }
+
+        } catch (error) {
+            // ============================================
+            // 7. 에러 처리
+            // ============================================
+            if (error.message === 'TIMEOUT') {
+                console.error(`[타임아웃] ${commandName}=${value}`);
+                setCommandStats(prev => ({ ...prev, timeout: prev.timeout + 1 }));
+            } else {
+                console.error(`[실패] ${commandName}=${value}:`, error);
+                setCommandStats(prev => ({ ...prev, failed: prev.failed + 1 }));
+            }
+
+        } finally {
+            // ============================================
+            // 8. 락 해제 (무조건 실행)
+            // ============================================
+            setPendingResources(prev => {
+                const next = new Set(prev);
+                next.delete(resourceKey);
+                return next;
+            });
+            console.log(`[종료] ${commandName} 락 해제`);
+        }
+    };
+
+    // ============================================
+    // 리소스 사용 중 여부 체크
+    // ============================================
+    const isResourceBusy = (commandName) => {
+        const resourceKey = signalRService.getResourceKey(commandName);
+        return pendingResources.has(resourceKey);
+    };
 
     // 센서 패널 위치 조정을 위한 useEffect
     useEffect(() => {
         const updatePanelPosition = () => {
             const scrollY = window.scrollY || document.documentElement.scrollTop || document.body.scrollTop || 0;
             setScrollY(scrollY);
-            
+
             console.log('현재 스크롤 위치:', scrollY);
-            
+
             // 센서 패널들의 위치를 스크롤에 따라 조정
             const leftPanel = document.querySelector('.sensor-panel-left');
             const rightPanel = document.querySelector('.sensor-panel-right');
-            
+
             if (leftPanel && rightPanel) {
                 // 화면 크기에 따라 스크롤 감도와 기본 위치 조정
                 const width = window.innerWidth;
                 let scrollSensitivity = 1.0;
                 let basePosition = 35; // PC 기본
-                
+
                 if (width >= 768 && width < 1200) {
                     // 작은 태블릿
                     scrollSensitivity = 0.5;
@@ -44,12 +237,12 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
                     scrollSensitivity = 0.5;
                     basePosition = 40;
                 }
-                
+
                 const scrollOffset = scrollY * scrollSensitivity;
-                
+
                 leftPanel.style.top = `calc(${basePosition}% + ${scrollOffset}px)`;
                 rightPanel.style.top = `calc(${basePosition}% + ${scrollOffset}px)`;
-                
+
                 console.log('패널 위치 조정 완료:', scrollOffset, '감도:', scrollSensitivity, '기본위치:', basePosition);
             } else {
                 console.log('패널을 찾을 수 없음');
@@ -58,7 +251,7 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
 
         // 즉시 실행
         updatePanelPosition();
-        
+
         // 스크롤 이벤트 리스너
         const handleScroll = () => {
             console.log('스크롤 이벤트 감지됨!');
@@ -69,10 +262,10 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
         window.addEventListener('scroll', handleScroll, { passive: true });
         document.addEventListener('scroll', handleScroll, { passive: true });
         document.body.addEventListener('scroll', handleScroll, { passive: true });
-        
+
         // 마우스 휠 이벤트도 추가
         window.addEventListener('wheel', handleScroll, { passive: true });
-        
+
         return () => {
             window.removeEventListener('scroll', handleScroll);
             document.removeEventListener('scroll', handleScroll);
@@ -95,7 +288,7 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
         const newStates = {};
 
         // currentConfig의 센서 매핑을 기반으로 센서 상태 업데이트
-        Object.entries(currentConfig.sensorMapping).forEach(([ , configData]) => {
+        Object.entries(currentConfig.sensorMapping).forEach(([, configData]) => {
             const { address, sensors } = configData;
 
             if (address < sensorData.rawData.length) {
@@ -239,31 +432,23 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
         }
     };
 
-    // 승강 제어
-    const handleLiftUp = () => executeCommand('liftUp', () => signalRService.liftUp());
-    const handleLiftDown = () => executeCommand('liftDown', () => signalRService.liftDown());
-
-    // 횡행 제어  
-    const handleMoveLeft = () => executeCommand('moveLeft', () => signalRService.moveLeft());
-    const handleMoveRight = () => executeCommand('moveRight', () => signalRService.moveRight());
-
-    // 턴테이블 제어
-    const handleTurnLeft = () => executeCommand('turnLeft', () => signalRService.turnLeft());
-    const handleTurnRight = () => executeCommand('turnRight', () => signalRService.turnRight());
-
-    // 도어 제어
-    const handleDoorOpen = () => executeCommand('doorOpen', () => signalRService.doorOpen());
-    const handleDoorClose = () => executeCommand('doorClose', () => signalRService.doorClose());
-
-    // 락킹 제어
-    const handleLockingOn = () => executeCommand('lockingOn', () => signalRService.lockingOn());
-    const handleLockingOff = () => executeCommand('lockingOff', () => signalRService.lockingOff());
-
-    // 시스템 제어
-    const handleErrorReset = () => executeCommand('errorReset', () => signalRService.errorReset());
-    const handleRemoteControl = () => executeCommand('remoteControl', () => signalRService.remoteControl());
-    const handleHomeReturn = () => executeCommand('homeReturn', () => signalRService.homeReturn());
-    const handlePaletteChange = () => executeCommand('paletteChange', () => signalRService.paletteChange());
+    // ============================================
+    // 버튼 핸들러들 (sendCommand 방식)
+    // ============================================
+    const handleLiftUp = () => sendCommand("liftUp", 1);
+    const handleLiftDown = () => sendCommand("liftDown", 1);
+    const handleMoveLeft = () => sendCommand("moveLeft", 1);
+    const handleMoveRight = () => sendCommand("moveRight", 1);
+    const handleTurnLeft = () => sendCommand("turnLeft", 1);
+    const handleTurnRight = () => sendCommand("turnRight", 1);
+    const handleDoorOpen = () => sendCommand("doorOpen", 1);
+    const handleDoorClose = () => sendCommand("doorClose", 1);
+    const handleLockingOn = () => sendCommand("lockingOn", 1);
+    const handleLockingOff = () => sendCommand("lockingOff", 1);
+    const handleErrorReset = () => sendCommand("errorReset", 1);
+    const handleRemoteControl = () => sendCommand("remoteControl", 1);
+    const handleHomeReturn = () => sendCommand("homeReturn", 1);
+    const handlePaletteChange = () => sendCommand("paletteChange", 1);
 
     const isDisabled = !isPLCConnected || !isAuthenticated;
 
@@ -353,6 +538,29 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
 
     return (
         <>
+            {/* ============================================ */}
+            {/* 디버그용 통계 표시 (개발 환경에서만) */}
+            {/* ============================================ */}
+            {process.env.NODE_ENV === 'development' && (
+                <div style={{
+                    position: 'fixed',
+                    top: 10,
+                    right: 10,
+                    background: 'rgba(0,0,0,0.8)',
+                    color: 'white',
+                    padding: '10px',
+                    fontSize: '12px',
+                    borderRadius: '5px',
+                    zIndex: 9999
+                }}>
+                    <div>✅ 성공: {commandStats.success}</div>
+                    <div>❌ 실패: {commandStats.failed}</div>
+                    <div>⏱️ 타임아웃: {commandStats.timeout}</div>
+                    <div>🔒 사용중: {Array.from(pendingResources).join(', ')}</div>
+                </div>
+            )}
+
+
             <style jsx>{`
                 @import url("https://fonts.googleapis.com/css?family=Rubik:700&display=swap");
                 
@@ -1419,47 +1627,47 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
                     <div className="flex flex-wrap gap-4 justify-center common-buttons-grid">
                         <button
                             onMouseDown={handleErrorReset}
-                            onMouseUp={() => signalRService.errorReset(0)}
-                            onMouseLeave={() => signalRService.errorReset(0)}
+                            onMouseUp={() => sendCommand("errorReset", 0)}
+                            onMouseLeave={() => sendCommand("errorReset", 0)}
                             onTouchStart={handleErrorReset}
-                            onTouchEnd={() => signalRService.errorReset(0)}
-                            disabled={isDisabled}
-                            className={`learn-more common-button ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                            onTouchEnd={() => sendCommand("errorReset", 0)}
+                            disabled={isDisabled || isResourceBusy("errorReset")}
+                            className={`learn-more common-button ${theme === 'space' ? 'space-theme' : ''} ${(isDisabled || isResourceBusy("errorReset")) ? 'opacity-50 cursor-not-allowed' : ''}`}
                         >
-                            에러 리셋
+                            에러 리셋 {isResourceBusy("errorReset") && '⏳'}
                         </button>
                         <button
                             onMouseDown={handleRemoteControl}
-                            onMouseUp={() => signalRService.remoteControl(0)}
-                            onMouseLeave={() => signalRService.remoteControl(0)}
+                            onMouseUp={() => sendCommand("remoteControl", 0)}
+                            onMouseLeave={() => sendCommand("remoteControl", 0)}
                             onTouchStart={handleRemoteControl}
-                            onTouchEnd={() => signalRService.remoteControl(0)}
-                            disabled={isDisabled}
-                            className={`learn-more common-button ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                            onTouchEnd={() => sendCommand("remoteControl", 0)}
+                            disabled={isDisabled || isResourceBusy("remoteControl")}
+                            className={`learn-more common-button ${theme === 'space' ? 'space-theme' : ''} ${(isDisabled || isResourceBusy("remoteControl")) ? 'opacity-50 cursor-not-allowed' : ''}`}
                         >
-                            원격 제어
+                            원격 제어 {isResourceBusy("remoteControl") && '⏳'}
                         </button>
                         <button
                             onMouseDown={handleHomeReturn}
-                            onMouseUp={() => signalRService.homeReturn(0)}
-                            onMouseLeave={() => signalRService.homeReturn(0)}
+                            onMouseUp={() => sendCommand("homeReturn", 0)}
+                            onMouseLeave={() => sendCommand("homeReturn", 0)}
                             onTouchStart={handleHomeReturn}
-                            onTouchEnd={() => signalRService.homeReturn(0)}
-                            disabled={isDisabled}
-                            className={`learn-more common-button ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                            onTouchEnd={() => sendCommand("homeReturn", 0)}
+                            disabled={isDisabled || isResourceBusy("homeReturn")}
+                            className={`learn-more common-button ${theme === 'space' ? 'space-theme' : ''} ${(isDisabled || isResourceBusy("homeReturn")) ? 'opacity-50 cursor-not-allowed' : ''}`}
                         >
-                            홈 복귀
+                            홈 복귀 {isResourceBusy("homeReturn") && '⏳'}
                         </button>
                         <button
                             onMouseDown={handlePaletteChange}
-                            onMouseUp={() => signalRService.paletteChange(0)}
-                            onMouseLeave={() => signalRService.paletteChange(0)}
+                            onMouseUp={() => sendCommand("paletteChange", 0)}
+                            onMouseLeave={() => sendCommand("paletteChange", 0)}
                             onTouchStart={handlePaletteChange}
-                            onTouchEnd={() => signalRService.paletteChange(0)}
-                            disabled={isDisabled}
-                            className={`learn-more common-button ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                            onTouchEnd={() => sendCommand("paletteChange", 0)}
+                            disabled={isDisabled || isResourceBusy("paletteChange")}
+                            className={`learn-more common-button ${theme === 'space' ? 'space-theme' : ''} ${(isDisabled || isResourceBusy("paletteChange")) ? 'opacity-50 cursor-not-allowed' : ''}`}
                         >
-                            파레트 교체
+                            파레트 교체 {isResourceBusy("paletteChange") && '⏳'}
                         </button>
                         <button
                             onMouseDown={handleEmergencyStop}
@@ -1486,25 +1694,25 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
                                     <div className="door-vertical">
                                         <button
                                             onMouseDown={handleTurnLeft}
-                                            onMouseUp={() => signalRService.turnLeft(0)}
-                                            onMouseLeave={() => signalRService.turnLeft(0)}
+                                            onMouseUp={() => sendCommand("turnLeft", 0)}
+                                            onMouseLeave={() => sendCommand("turnLeft", 0)}
                                             onTouchStart={handleTurnLeft}
-                                            onTouchEnd={() => signalRService.turnLeft(0)}
-                                            disabled={isDisabled}
-                                            className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                            onTouchEnd={() => sendCommand("turnLeft", 0)}
+                                            disabled={isDisabled || isResourceBusy("turnLeft")}
+                                            className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${(isDisabled || isResourceBusy("turnLeft")) ? 'opacity-50 cursor-not-allowed' : ''}`}
                                         >
-                                            좌회전
+                                            좌회전 {isResourceBusy("turnLeft") && '⏳'}
                                         </button>
                                         <button
                                             onMouseDown={handleTurnRight}
-                                            onMouseUp={() => signalRService.turnRight(0)}
-                                            onMouseLeave={() => signalRService.turnRight(0)}
+                                            onMouseUp={() => sendCommand("turnRight", 0)}
+                                            onMouseLeave={() => sendCommand("turnRight", 0)}
                                             onTouchStart={handleTurnRight}
-                                            onTouchEnd={() => signalRService.turnRight(0)}
-                                            disabled={isDisabled}
-                                            className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                            onTouchEnd={() => sendCommand("turnRight", 0)}
+                                            disabled={isDisabled || isResourceBusy("turnRight")}
+                                            className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${(isDisabled || isResourceBusy("turnRight")) ? 'opacity-50 cursor-not-allowed' : ''}`}
                                         >
-                                            우회전
+                                            우회전 {isResourceBusy("turnRight") && '⏳'}
                                         </button>
                                     </div>
                                 </div>
@@ -1514,25 +1722,25 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
                                     <div className="door-vertical">
                                         <button
                                             onMouseDown={handleDoorOpen}
-                                            onMouseUp={() => signalRService.doorOpen(0)}
-                                            onMouseLeave={() => signalRService.doorOpen(0)}
+                                            onMouseUp={() => sendCommand("doorOpen", 0)}
+                                            onMouseLeave={() => sendCommand("doorOpen", 0)}
                                             onTouchStart={handleDoorOpen}
-                                            onTouchEnd={() => signalRService.doorOpen(0)}
-                                            disabled={isDisabled}
-                                            className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                            onTouchEnd={() => sendCommand("doorOpen", 0)}
+                                            disabled={isDisabled || isResourceBusy("doorOpen")}
+                                            className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${(isDisabled || isResourceBusy("doorOpen")) ? 'opacity-50 cursor-not-allowed' : ''}`}
                                         >
-                                            도어 열림
+                                            도어 열림 {isResourceBusy("doorOpen") && '⏳'}
                                         </button>
                                         <button
                                             onMouseDown={handleDoorClose}
-                                            onMouseUp={() => signalRService.doorClose(0)}
-                                            onMouseLeave={() => signalRService.doorClose(0)}
+                                            onMouseUp={() => sendCommand("doorClose", 0)}
+                                            onMouseLeave={() => sendCommand("doorClose", 0)}
                                             onTouchStart={handleDoorClose}
-                                            onTouchEnd={() => signalRService.doorClose(0)}
-                                            disabled={isDisabled}
-                                            className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                            onTouchEnd={() => sendCommand("doorClose", 0)}
+                                            disabled={isDisabled || isResourceBusy("doorClose")}
+                                            className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${(isDisabled || isResourceBusy("doorClose")) ? 'opacity-50 cursor-not-allowed' : ''}`}
                                         >
-                                            도어 닫힘
+                                            도어 닫힘 {isResourceBusy("doorClose") && '⏳'}
                                         </button>
                                     </div>
                                 </div>
@@ -1540,28 +1748,28 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
                                 {/* 락킹 제어 */}
                                 <div className="door-section">
                                     <div className="door-vertical">
-                                <button
-                                    onMouseDown={handleLockingOn}
-                                    onMouseUp={() => signalRService.lockingOn(0)}
-                                    onMouseLeave={() => signalRService.lockingOn(0)}
-                                    onTouchStart={handleLockingOn}
-                                    onTouchEnd={() => signalRService.lockingOn(0)}
-                                    disabled={isDisabled}
-                                    className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                >
-                                    락킹 잠김
-                                </button>
-                                <button
-                                    onMouseDown={handleLockingOff}
-                                    onMouseUp={() => signalRService.lockingOff(0)}
-                                    onMouseLeave={() => signalRService.lockingOff(0)}
-                                    onTouchStart={handleLockingOff}
-                                    onTouchEnd={() => signalRService.lockingOff(0)}
-                                    disabled={isDisabled}
-                                    className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                >
-                                    락킹 해제
-                                </button>
+                                        <button
+                                            onMouseDown={handleLockingOn}
+                                            onMouseUp={() => sendCommand("lockingOn", 0)}
+                                            onMouseLeave={() => sendCommand("lockingOn", 0)}
+                                            onTouchStart={handleLockingOn}
+                                            onTouchEnd={() => sendCommand("lockingOn", 0)}
+                                            disabled={isDisabled || isResourceBusy("lockingOn")}
+                                            className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${(isDisabled || isResourceBusy("lockingOn")) ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                        >
+                                            락킹 잠김 {isResourceBusy("lockingOn") && '⏳'}
+                                        </button>
+                                        <button
+                                            onMouseDown={handleLockingOff}
+                                            onMouseUp={() => sendCommand("lockingOff", 0)}
+                                            onMouseLeave={() => sendCommand("lockingOff", 0)}
+                                            onTouchStart={handleLockingOff}
+                                            onTouchEnd={() => sendCommand("lockingOff", 0)}
+                                            disabled={isDisabled || isResourceBusy("lockingOff")}
+                                            className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${(isDisabled || isResourceBusy("lockingOff")) ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                        >
+                                            락킹 해제 {isResourceBusy("lockingOff") && '⏳'}
+                                        </button>
                                     </div>
                                 </div>
                             </div>
@@ -1575,51 +1783,51 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
                                 <div className="flex flex-col gap-6 md:gap-8 justify-center items-center">
                                     <button
                                         onMouseDown={handleLiftUp}
-                                        onMouseUp={() => signalRService.liftUp(0)}
-                                        onMouseLeave={() => signalRService.liftUp(0)}
+                                        onMouseUp={() => sendCommand("liftUp", 0)}
+                                        onMouseLeave={() => sendCommand("liftUp", 0)}
                                         onTouchStart={handleLiftUp}
-                                        onTouchEnd={() => signalRService.liftUp(0)}
-                                        disabled={isDisabled}
-                                        className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                        onTouchEnd={() => sendCommand("liftUp", 0)}
+                                        disabled={isDisabled || isResourceBusy("liftUp")}
+                                        className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${(isDisabled || isResourceBusy("liftUp")) ? 'opacity-50 cursor-not-allowed' : ''}`}
                                     >
-                                        상승
+                                        상승 {isResourceBusy("liftUp") && '⏳'}
                                     </button>
 
                                     <div className="flex gap-6 md:gap-8 justify-center items-center">
                                         <button
                                             onMouseDown={handleMoveLeft}
-                                            onMouseUp={() => signalRService.moveLeft(0)}
-                                            onMouseLeave={() => signalRService.moveLeft(0)}
+                                            onMouseUp={() => sendCommand("moveLeft", 0)}
+                                            onMouseLeave={() => sendCommand("moveLeft", 0)}
                                             onTouchStart={handleMoveLeft}
-                                            onTouchEnd={() => signalRService.moveLeft(0)}
-                                            disabled={isDisabled}
-                                            className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                            onTouchEnd={() => sendCommand("moveLeft", 0)}
+                                            disabled={isDisabled || isResourceBusy("moveLeft")}
+                                            className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${(isDisabled || isResourceBusy("moveLeft")) ? 'opacity-50 cursor-not-allowed' : ''}`}
                                         >
-                                            좌행
+                                            좌행 {isResourceBusy("moveLeft") && '⏳'}
                                         </button>
                                         <button
                                             onMouseDown={handleMoveRight}
-                                            onMouseUp={() => signalRService.moveRight(0)}
-                                            onMouseLeave={() => signalRService.moveRight(0)}
+                                            onMouseUp={() => sendCommand("moveRight", 0)}
+                                            onMouseLeave={() => sendCommand("moveRight", 0)}
                                             onTouchStart={handleMoveRight}
-                                            onTouchEnd={() => signalRService.moveRight(0)}
-                                            disabled={isDisabled}
-                                            className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                            onTouchEnd={() => sendCommand("moveRight", 0)}
+                                            disabled={isDisabled || isResourceBusy("moveRight")}
+                                            className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${(isDisabled || isResourceBusy("moveRight")) ? 'opacity-50 cursor-not-allowed' : ''}`}
                                         >
-                                            우행
+                                            우행 {isResourceBusy("moveRight") && '⏳'}
                                         </button>
                                     </div>
 
                                     <button
                                         onMouseDown={handleLiftDown}
-                                        onMouseUp={() => signalRService.liftDown(0)}
-                                        onMouseLeave={() => signalRService.liftDown(0)}
+                                        onMouseUp={() => sendCommand("liftDown", 0)}
+                                        onMouseLeave={() => sendCommand("liftDown", 0)}
                                         onTouchStart={handleLiftDown}
-                                        onTouchEnd={() => signalRService.liftDown(0)}
-                                        disabled={isDisabled}
-                                        className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                        onTouchEnd={() => sendCommand("liftDown", 0)}
+                                        disabled={isDisabled || isResourceBusy("liftDown")}
+                                        className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${(isDisabled || isResourceBusy("liftDown")) ? 'opacity-50 cursor-not-allowed' : ''}`}
                                     >
-                                        하강
+                                        하강 {isResourceBusy("liftDown") && '⏳'}
                                     </button>
                                 </div>
                             </div>
@@ -1662,7 +1870,7 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
 
                 <div className={`sensor-panel-left show ${theme === 'space' ? 'space-theme' : ''}`}>
                     <div className="mb-4 text-center">
-                        
+
                     </div>
                     {renderLeftSensorPanel()}
 
@@ -1674,7 +1882,7 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
 
                 <div className={`sensor-panel-right show ${theme === 'space' ? 'space-theme' : ''}`}>
                     <div className="mb-4 text-center">
-                   
+
                     </div>
                     {renderRightSensorPanel()}
 

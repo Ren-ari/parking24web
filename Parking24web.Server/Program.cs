@@ -215,7 +215,7 @@ public class SiteConfiguration
     public SiteInfo? SiteInfo { get; set; }
     public PlcConfig? PlcConfig { get; set; }
     public SystemAddresses? SystemAddresses { get; set; }
-    public Dictionary<string, int>? ControlCommands { get; set; }
+    public Dictionary<string, CommandConfig>? ControlCommands { get; set; }
     public Dictionary<string, int>? DataAddresses { get; set; }
     public VehicleStorage? VehicleStorage { get; set; }
     public Dictionary<string, int>? LiftPositions { get; set; }
@@ -275,4 +275,12 @@ public class SensorRanges
     public int SensorStartAddress { get; set; }
     public int SensorEndAddress { get; set; }
     public int TotalSensorWords { get; set; }
+}
+
+public class CommandConfig
+{
+    public string DeviceType { get; set; } = "C";
+    public int Address { get; set; }
+    public int? BitPosition { get; set; } = null;
+    public string? Description { get; set; }
 }

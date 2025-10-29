@@ -1,6 +1,9 @@
 ﻿using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Options;
 using Parking24web.Server.Services;
+using Parking24web.Server.Models;
+using System.Collections.Concurrent;
+using System.Diagnostics;
 
 namespace Parking24web.Server.Hubs
 {
@@ -10,6 +13,15 @@ namespace Parking24web.Server.Hubs
         private readonly ILogger<PLCHub> _logger;
         private readonly IHubContext<PLCHub> _hubContext;
         private readonly SiteConfiguration _siteConfig;
+
+        // 리소스별 세마포어 (동시성 제어)
+        private static readonly ConcurrentDictionary<string, SemaphoreSlim> _resourceLocks = new();
+
+        // 리소스별 시퀀스 관리
+        private static readonly ConcurrentDictionary<string, ResourceInfo> _resourceInfo = new();
+
+        // TTL 설정 (5초)
+        private const int COMMAND_TTL_MS = 5000;
 
         public PLCHub(
             PLCService plcService,
@@ -58,7 +70,6 @@ namespace Parking24web.Server.Hubs
             }
         }
 
-        // Config에서 PLC IP/Port 가져와서 연결하는 메서드
         public async Task<bool> ConnectToPLCFromConfig()
         {
             try
@@ -139,7 +150,6 @@ namespace Parking24web.Server.Hubs
 
         #region 현장 설정 관리
 
-        // 현재 로드된 설정 정보 반환
         public async Task GetCurrentSiteConfiguration()
         {
             try
@@ -162,22 +172,26 @@ namespace Parking24web.Server.Hubs
             }
         }
 
-        private int GetCommandAddress(string commandName)
+        private CommandConfig? GetCommandConfig(string commandName)
         {
             if (_siteConfig.ControlCommands == null)
             {
                 _logger.LogWarning($"제어 명령 설정이 로드되지 않았습니다: {commandName}");
-                return -1;
+                return null;
             }
 
-            if (_siteConfig.ControlCommands.TryGetValue(commandName, out int address))
+            var command = _siteConfig.ControlCommands.FirstOrDefault(
+                x => x.Key.Equals(commandName, StringComparison.OrdinalIgnoreCase)
+            );
+
+            if (command.Value != null)
             {
-                _logger.LogDebug($"명령 주소 조회: {commandName} = C{address}");
-                return address;
+                _logger.LogDebug($"명령 설정 조회: {commandName} = {command.Value.DeviceType}{command.Value.Address}");
+                return command.Value;
             }
 
-            _logger.LogWarning($"명령 주소를 찾을 수 없습니다: {commandName}");
-            return -1;
+            _logger.LogWarning($"명령 설정을 찾을 수 없습니다: {commandName}");
+            return null;
         }
 
         private int GetSystemAddress(string addressName)
@@ -201,6 +215,171 @@ namespace Parking24web.Server.Hubs
 
             _logger.LogWarning($"시스템 주소를 찾을 수 없습니다: {addressName}");
             return -1;
+        }
+
+        #endregion
+
+        #region 핵심: Config 기반 명령 전송 (개선 버전)
+
+        /// <summary>
+        /// Config 기반 명령 전송 - 중복 제거, 안전성 강화
+        /// </summary>
+        public async Task<CommandResult> SendConfigCommand(CommandRequest request)
+        {
+            var sw = Stopwatch.StartNew();
+            var resourceKey = request.ResourceKey;
+
+            _logger.LogInformation(
+                "[{CommandId}] 명령 시작: {Command}={Value} [resource:{Resource}, idempotency:{Key}, immediate:{Immediate}]",
+                request.CommandId, request.CommandName, request.Value, resourceKey,
+                request.IdempotencyKey, request.Immediate
+            );
+
+            try
+            {
+                // ============================================
+                // 1. 명령 설정 조회
+                // ============================================
+                var commandConfig = GetCommandConfig(request.CommandName);
+                if (commandConfig == null)
+                {
+                    throw new Exception($"명령 설정을 찾을 수 없음: {request.CommandName}");
+                }
+
+                // ============================================
+                // 2. 리소스별 세마포어 획득
+                // ============================================
+                var resourceLock = _resourceLocks.GetOrAdd(resourceKey, _ => new SemaphoreSlim(1, 1));
+
+                // TTL 체크 (대기 시간이 5초 넘으면 실패)
+                var acquireTask = resourceLock.WaitAsync(COMMAND_TTL_MS);
+                if (!await acquireTask)
+                {
+                    throw new TimeoutException($"리소스 락 대기 시간 초과: {resourceKey}");
+                }
+
+                try
+                {
+                    // ============================================
+                    // 3. PLC 연결 체크
+                    // ============================================
+                    if (!_plcService.IsConnected)
+                    {
+                        throw new Exception("PLC 연결 끊김");
+                    }
+
+                    // ============================================
+                    // 4. 시퀀스 증가 (리소스별)
+                    // ============================================
+                    var resourceInfo = _resourceInfo.GetOrAdd(resourceKey, _ => new ResourceInfo
+                    {
+                        ResourceKey = resourceKey,
+                        Sequence = 0
+                    });
+
+                    resourceInfo.Sequence++;
+                    resourceInfo.LastCommandTime = DateTime.UtcNow;
+                    resourceInfo.LastCommandId = request.CommandId;
+
+                    var currentSequence = resourceInfo.Sequence;
+
+                    // ============================================
+                    // 5. PLC 쓰기
+                    // ============================================
+                    if (commandConfig.BitPosition.HasValue)
+                    {
+                        _plcService.WriteBit(
+                            commandConfig.DeviceType,
+                            commandConfig.Address,
+                            commandConfig.BitPosition.Value,
+                            request.Value > 0
+                        );
+
+                        _logger.LogInformation(
+                            "[{CommandId}] 비트 쓰기: {Command} ({Device}{Address}.{Bit}) = {Value} [seq:{Seq}]",
+                            request.CommandId, request.CommandName, commandConfig.DeviceType,
+                            commandConfig.Address, commandConfig.BitPosition, request.Value, currentSequence
+                        );
+                    }
+                    else
+                    {
+                        _plcService.WriteWord(
+                            commandConfig.DeviceType,
+                            commandConfig.Address,
+                            (ushort)request.Value
+                        );
+
+                        _logger.LogInformation(
+                            "[{CommandId}] 워드 쓰기: {Command} ({Device}{Address}) = {Value} [seq:{Seq}]",
+                            request.CommandId, request.CommandName, commandConfig.DeviceType,
+                            commandConfig.Address, request.Value, currentSequence
+                        );
+                    }
+
+                    sw.Stop();
+
+                    // ============================================
+                    // 6. 성공 응답
+                    // ============================================
+                    return new CommandResult
+                    {
+                        Success = true,
+                        Message = "명령 전송 완료",
+                        Timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
+                        IdempotencyKey = request.IdempotencyKey,
+                        CommandId = request.CommandId,
+                        Sequence = currentSequence,
+                        ResourceKey = resourceKey,
+                        ElapsedMs = sw.ElapsedMilliseconds
+                    };
+                }
+                finally
+                {
+                    // ============================================
+                    // 7. 세마포어 해제 (무조건 실행)
+                    // ============================================
+                    resourceLock.Release();
+                    _logger.LogDebug("[{CommandId}] 리소스 락 해제: {Resource}", request.CommandId, resourceKey);
+                }
+            }
+            catch (Exception ex)
+            {
+                sw.Stop();
+
+                _logger.LogError(ex,
+                    "[{CommandId}] 명령 실패: {Command}={Value} ({Ms}ms) - {Error}",
+                    request.CommandId, request.CommandName, request.Value, sw.ElapsedMilliseconds, ex.Message
+                );
+
+                // ============================================
+                // 8. 실패 응답
+                // ============================================
+                return new CommandResult
+                {
+                    Success = false,
+                    Message = ex.Message,
+                    Timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
+                    IdempotencyKey = request.IdempotencyKey,
+                    CommandId = request.CommandId,
+                    Sequence = 0,
+                    ResourceKey = resourceKey,
+                    ElapsedMs = sw.ElapsedMilliseconds
+                };
+            }
+        }
+
+        /// <summary>
+        /// 명령 이름에서 리소스 키 추출 (간단 버전)
+        /// </summary>
+        private string GetResourceKeyFromCommandName(string commandName)
+        {
+            var cmd = commandName.ToLower();
+            if (cmd.Contains("lift")) return "lift";
+            if (cmd.Contains("door")) return "door";
+            if (cmd.Contains("turn")) return "turn";
+            if (cmd.Contains("move")) return "traverse";
+            if (cmd.Contains("locking")) return "locking";
+            return "system";
         }
 
         #endregion
@@ -242,208 +421,9 @@ namespace Parking24web.Server.Hubs
             }
         }
 
-        // Config 기반 명령 전송
-        public async Task SendConfigCommand(string commandName, int value = 1)
-        {
-            try
-            {
-                int address = GetCommandAddress(commandName);
-                if (address == -1)
-                {
-                    await Clients.Caller.SendAsync("Error", $"명령을 찾을 수 없습니다: {commandName}");
-                    return;
-                }
-
-                await SendPLCCommand(new PLCCommandRequest
-                {
-                    CommandType = "writeword",
-                    DeviceType = "C",
-                    Address = address,
-                    Value = value
-                });
-
-                _logger.LogInformation($"Config 명령 전송: {commandName} (C{address}) = {value}");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"Config 명령 전송 중 오류: {commandName}");
-                await Clients.Caller.SendAsync("Error", $"명령 전송 실패: {ex.Message}");
-            }
-        }
-
         #endregion
 
         #region Config 기반 수동 제어 명령들
-
-        // 승강 제어
-        public async Task LiftUp(int value = 1)
-        {
-            await SendConfigCommand("liftUp", value);
-        }
-
-        public async Task LiftDown(int value = 1)
-        {
-            await SendConfigCommand("liftDown", value);
-        }
-
-        // 횡행 제어
-        public async Task MoveLeft(int value = 1)
-        {
-            await SendConfigCommand("moveLeft", value);
-        }
-
-        public async Task MoveRight(int value = 1)
-        {
-            await SendConfigCommand("moveRight", value);
-        }
-
-        // 턴테이블 제어
-        public async Task TurnLeft(int value = 1)
-        {
-            await SendConfigCommand("turnLeft", value);
-        }
-
-        public async Task TurnRight(int value = 1)
-        {
-            await SendConfigCommand("turnRight", value);
-        }
-
-        // 락킹 제어
-        public async Task LockingOn(int value = 1)
-        {
-            await SendConfigCommand("lockingOn", value);
-        }
-
-        public async Task LockingOff(int value = 1)
-        {
-            await SendConfigCommand("lockingOff", value);
-        }
-
-        // 도어 제어
-        public async Task DoorOpen(int value = 1)
-        {
-            await SendConfigCommand("doorOpen", value);
-        }
-
-        public async Task DoorClose(int value = 1)
-        {
-            await SendConfigCommand("doorClose", value);
-        }
-
-        // 시스템 제어
-        public async Task ErrorReset(int value = 1)
-        {
-            await SendConfigCommand("errorReset", value);
-        }
-
-        public async Task RemoteControl(int value = 1)
-        {
-            await SendConfigCommand("remoteControl", value);
-        }
-
-        public async Task HomeReturn(int value = 1)
-        {
-            await SendConfigCommand("homeReturn", value);
-        }
-
-        public async Task PaletteChange(int value = 1)
-        {
-            await SendConfigCommand("paletteChange", value);
-        }
-
-        // 비상 정지 (시스템 주소 사용)
-        public async Task EmergencyStop(int value = 1)
-        {
-            try
-            {
-                int address = GetSystemAddress("EmergencyStop");
-                if (address == -1)
-                {
-                    await Clients.Caller.SendAsync("Error", "비상정지 주소가 설정되지 않았습니다");
-                    return;
-                }
-
-                await SendPLCCommand(new PLCCommandRequest
-                {
-                    CommandType = "writeword",
-                    DeviceType = "C",
-                    Address = address,
-                    Value = value
-                });
-
-                _logger.LogInformation($"비상정지 명령 전송: C{address} = {value}");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "비상정지 명령 중 오류");
-                await Clients.Caller.SendAsync("Error", $"비상정지 실패: {ex.Message}");
-            }
-        }
-
-        #endregion
-
-        #region 백워드 호환성 (기존 명령들)
-
-        // 기존 코드와의 호환성을 위해 유지
-        [Obsolete("RemoteControl 사용을 권장합니다")]
-        public async Task OperationMode(int value = 1)
-        {
-            await RemoteControl(value);
-        }
-
-        [Obsolete("HomeReturn 사용을 권장합니다")]
-        public async Task Recovery(int value = 1)
-        {
-            await HomeReturn(value);
-        }
-
-        [Obsolete("TurnLeft 사용을 권장합니다")]
-        public async Task TurnTableLeft(int value = 1)
-        {
-            await TurnLeft(value);
-        }
-
-        [Obsolete("TurnRight 사용을 권장합니다")]
-        public async Task TurnTableRight(int value = 1)
-        {
-            await TurnRight(value);
-        }
-
-        [Obsolete("Config에서 정의되지 않은 명령입니다")]
-        public async Task TurnTableUp(int value = 1)
-        {
-            await Clients.Caller.SendAsync("Error", "TurnTableUp 명령은 더 이상 지원되지 않습니다");
-        }
-
-        [Obsolete("Config에서 정의되지 않은 명령입니다")]
-        public async Task TurnTableDown(int value = 1)
-        {
-            await Clients.Caller.SendAsync("Error", "TurnTableDown 명령은 더 이상 지원되지 않습니다");
-        }
-
-        [Obsolete("LockingOn/LockingOff 사용을 권장합니다")]
-        public async Task LeftLiftLock(int value = 1)
-        {
-            await LockingOn(value);
-        }
-
-        [Obsolete("LockingOn/LockingOff 사용을 권장합니다")]
-        public async Task LeftLiftUnlock(int value = 1)
-        {
-            await LockingOff(value);
-        }
-
-        [Obsolete("LockingOn/LockingOff 사용을 권장합니다")]
-        public async Task RightLiftLock(int value = 1)
-        {
-            await LockingOn(value);
-        }
-
-        [Obsolete("LockingOn/LockingOff 사용을 권장합니다")]
-        public async Task RightLiftUnlock(int value = 1)
-        {
-            await LockingOff(value);
-        }
 
         #endregion
 
@@ -457,10 +437,8 @@ namespace Parking24web.Server.Hubs
             await Clients.Caller.SendAsync("PLCConnectionChanged", _plcService.IsConnected);
             _logger.LogInformation($"클라이언트 연결: {Context.ConnectionId}");
 
-            // 현재 로드된 설정 정보 전송
             await GetCurrentSiteConfiguration();
 
-            // 첫 클라이언트 연결시에만 타이머 시작
             if (!_isMonitoring)
             {
                 _isMonitoring = true;
@@ -496,13 +474,13 @@ namespace Parking24web.Server.Hubs
         #endregion
     }
 
-    // PLC 명령 요청 클래스
+    // PLC 명령 요청 클래스 (범용)
     public class PLCCommandRequest
     {
-        public string CommandType { get; set; } = string.Empty; // writeword, writebit
-        public string DeviceType { get; set; } = "C"; // C, P, D 등
+        public string CommandType { get; set; } = string.Empty;
+        public string DeviceType { get; set; } = "C";
         public int Address { get; set; }
-        public int BitPosition { get; set; } = 0; // 비트 명령용
+        public int BitPosition { get; set; } = 0;
         public int Value { get; set; }
     }
 }
