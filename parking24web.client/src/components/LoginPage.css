@@ -194,7 +194,7 @@ body :-ms-input-placeholder {
 
 /* 로고 섹션 */
 .logo-section {
-  margin-bottom: 40px;
+  margin-bottom: 80px;
 }
 
 .logo-container {
@@ -204,10 +204,16 @@ body :-ms-input-placeholder {
   gap: 10px;
 }
 
+.logo-img {
+  max-width: 400px;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+}
+
 .logo-icon {
   width: 80px;
   height: 80px;
-  color: #9333ea;
   animation: logoFloat 3s ease-in-out infinite;
   transition: transform 1.5s ease-in-out;
 }
@@ -245,13 +251,18 @@ body :-ms-input-placeholder {
 /* 폼 스타일 */
 .form {
   padding: 20px 0;
+  padding-top: 40px;
   position: relative;
   z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .input-group {
   margin-bottom: 25px;
-  width: 100%;
+  width: 75%;
+  max-width: 350px;
 }
 
 .input-wrapper {
@@ -390,7 +401,8 @@ body :-ms-input-placeholder {
 
 /* 로그인 버튼 - 제목과 비슷한 색상 */
 .login-button {
-  width: 100%;
+  width: 75%;
+  max-width: 350px;
   padding: 1em 1.5em;
   font-size: 1em;
   font-weight: 400;
@@ -476,6 +488,8 @@ particle {
   -webkit-backdrop-filter: blur(15px);
   box-shadow: 0 4px 15px rgba(220, 53, 69, 0.3);
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  width: 75%;
+  max-width: 350px;
 }
 
 .error-icon {
@@ -561,14 +575,26 @@ particle {
     height: 60px;
   }
 
+  .input-group {
+    width: 85%;
+    max-width: 300px;
+  }
+
   .input-wrapper input {
     padding: 15px 12px;
     font-size: 14px;
   }
 
   .login-button {
+    width: 85%;
+    max-width: 300px;
     padding: 15px 25px;
     font-size: 14px;
+  }
+
+  .error-message {
+    width: 85%;
+    max-width: 300px;
   }
 
   .footer-info {
@@ -595,13 +621,25 @@ particle {
     height: 50px;
   }
 
+  .input-group {
+    width: 90%;
+    max-width: 280px;
+  }
+
   .input-wrapper input {
     padding: 12px 10px;
     font-size: 13px;
   }
 
   .login-button {
+    width: 90%;
+    max-width: 280px;
     padding: 12px 20px;
     font-size: 13px;
+  }
+
+  .error-message {
+    width: 90%;
+    max-width: 280px;
   }
 }

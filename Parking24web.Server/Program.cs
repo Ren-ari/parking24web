@@ -5,68 +5,68 @@ using Parking24web.Server.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// È¯°æº¯¼ö¿¡¼­ ÇöÀå¸í °¡Á®¿À±â
+// í™˜ê²½ë³„ ì„¤ì • íŒŒì¼ ë¡œë“œ
 var siteName = args.Length > 0 ? args[0] : "Sokcho1";
-Console.WriteLine($"ÇöÀå ¼³Á¤: {siteName}");
+Console.WriteLine($"ì‚¬ì´íŠ¸ ì´ë¦„: {siteName}");
 
-// »çÀÌÆ®º° ¼³Á¤ ÆÄÀÏ ·Îµå
+// ì‚¬ì´íŠ¸ë³„ ì„¤ì • íŒŒì¼ ë¡œë“œ
 var siteConfigFile = $"appsettings.{siteName}.json";
 if (File.Exists(siteConfigFile))
 {
     builder.Configuration.AddJsonFile(siteConfigFile, optional: false, reloadOnChange: true);
-    Console.WriteLine($"»çÀÌÆ® ¼³Á¤ ÆÄÀÏ ·ÎµåµÊ: {siteConfigFile}");
+    Console.WriteLine($"ì‚¬ì´íŠ¸ ì„¤ì • íŒŒì¼ ë¡œë“œë¨: {siteConfigFile}");
 }
 else
 {
-    Console.WriteLine($"°æ°í: »çÀÌÆ® ¼³Á¤ ÆÄÀÏÀ» Ã£À» ¼ö ¾ø½À´Ï´Ù: {siteConfigFile}");
-    Console.WriteLine("±âº» ¼³Á¤À» »ç¿ëÇÕ´Ï´Ù.");
+    Console.WriteLine($"ê²½ê³ : ì‚¬ì´íŠ¸ ì„¤ì • íŒŒì¼ì„ ì°¾ì„ ìˆ˜ ì—†ìŠµë‹ˆë‹¤: {siteConfigFile}");
+    Console.WriteLine("ê¸°ë³¸ ì„¤ì •ì„ ì‚¬ìš©í•©ë‹ˆë‹¤.");
 }
 
 var urls = builder.Configuration["Urls"] ?? "http://0.0.0.0:5123";
 builder.WebHost.UseUrls(urls);
 
-// ±âÁ¸ ¼­ºñ½ºµé
+// ê¸°ë³¸ ì„œë¹„ìŠ¤ë“¤
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddControllersWithViews();
 
-// ½ÇÇà ÆÄÀÏ À§Ä¡ ±âÁØÀ¸·Î DB °æ·Î ¼³Á¤
+// í˜„ì¬ ì•±ì´ ìœ„ì¹˜í•œ ë””ë ‰í† ë¦¬ ê¸°ë°˜ìœ¼ë¡œ DB ê²½ë¡œ ì„¤ì •
 var appDirectory = AppContext.BaseDirectory;
 var dbPath = Path.Combine(appDirectory, "Data", "parking.db");
 var dbDirectory = Path.GetDirectoryName(dbPath);
 
-// Data Æú´õ ¾øÀ¸¸é »ı¼º
+// Data í´ë” ì¡´ì¬í•˜ì§€ ì•Šìœ¼ë©´ ìƒì„±
 if (!Directory.Exists(dbDirectory))
 {
     Directory.CreateDirectory(dbDirectory);
 }
 
-// SQLite µ¥ÀÌÅÍº£ÀÌ½º ¿¬°á
+// SQLite ë°ì´í„°ë² ì´ìŠ¤ ì„¤ì •
 builder.Services.AddDbContext<ParkingDbContext>(options =>
     options.UseSqlite($"Data Source={dbPath}"));
 
-// SignalR ¼­ºñ½º Ãß°¡
+// SignalR ì„œë¹„ìŠ¤ ì¶”ê°€
 builder.Services.AddSignalR();
 
-// PLC ¼­ºñ½º ½Ì±ÛÅæÀ¸·Î µî·Ï
+// PLC ì„œë¹„ìŠ¤ ì‹±ê¸€í†¤ìœ¼ë¡œ ë“±ë¡
 builder.Services.AddSingleton<PLCService>();
 
-// CCTV ¼­ºñ½º ½Ì±ÛÅæÀ¸·Î µî·Ï
+// CCTV ì„œë¹„ìŠ¤ ì‹±ê¸€í†¤ìœ¼ë¡œ ë“±ë¡
 builder.Services.AddSingleton<CCTVService>();
 
-// ¹é±×¶ó¿îµå ¼­ºñ½º µî·Ï
+// ë°±ê·¸ë¼ìš´ë“œ ì„œë¹„ìŠ¤ ë“±ë¡
 builder.Services.AddHostedService<ParkingEventService>();
 
-// ConfigurationÀ» °­Å¸ÀÔÀ¸·Î ¹ÙÀÎµù
+// Configurationì„ ë©”íƒ€ë°ì´í„°ë¡œ ë°”ì¸ë”©
 builder.Services.Configure<SiteConfiguration>(
     builder.Configuration.GetSection("SiteConfig")
 );
 
-// CORS ¼³Á¤ (°³¹ß/ÇÁ·Î´ö¼Ç ºĞ¸®)
+// CORS ì„¤ì • (ê°œë°œ/ìš´ì˜í™˜ê²½ ë¶„ë¦¬)
 builder.Services.AddCors(options =>
 {
-    // ÇÁ·Î´ö¼Ç¿ë - µ¶¸³½ÇÇàÆÄÀÏ¿¡¼­ »ç¿ë
+    // ìš´ì˜í™˜ê²½ìš© - ëª¨ë“  ì˜¤ë¦¬ì§„ í—ˆìš©
     options.AddPolicy("AllowAll", policy =>
     {
         policy.AllowAnyOrigin()
@@ -74,26 +74,26 @@ builder.Services.AddCors(options =>
               .AllowAnyHeader();
     });
 
-    // °³¹ß¿ë - React °³¹ß ¼­¹ö¿Í Åë½Å
+    // ê°œë°œìš© - React ê°œë°œ ì„œë²„ë§Œ í—ˆìš©
     options.AddPolicy("AllowReactApp", policy =>
     {
         policy.WithOrigins("https://localhost:5173", "http://localhost:5173",
-                          "https://0.0.0.0:5173", "http://0.0.0.0:5173") // ¿ÜºÎ Á¢¼Ó¿ë Ãß°¡
+                          "https://0.0.0.0:5173", "http://0.0.0.0:5173") // ì™¸ë¶€ ì ‘ê·¼ìš© ì¶”ê°€
               .AllowAnyMethod()
               .AllowAnyHeader()
-              .AllowCredentials(); // SignalR¿ë ÇÊ¼ö
+              .AllowCredentials(); // SignalRì— í•„ìˆ˜
     });
 });
 
 var app = builder.Build();
 
-// µ¥ÀÌÅÍº£ÀÌ½º ÀÚµ¿ »ı¼º
+// ë°ì´í„°ë² ì´ìŠ¤ ìë™ ìƒì„±
 using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<ParkingDbContext>();
     context.Database.EnsureCreated();
 
-    // ServiceRecords Å×ÀÌºí ¼öµ¿ »ı¼º (±âÁ¸ DB È£È¯)
+    // ServiceRecords í…Œì´ë¸” ìƒì„± í™•ì¸ (ê¸°ì¡´ DB í˜¸í™˜)
     var connection = context.Database.GetDbConnection();
     connection.Open();
     using var command = connection.CreateCommand();
@@ -113,54 +113,54 @@ using (var scope = app.Services.CreateScope())
     ";
     command.ExecuteNonQuery();
 }
-// ½ÃÀÛ½Ã »çÀÌÆ® ¼³Á¤ °ËÁõ
+// ì„œë¹„ìŠ¤ ì‹œì‘ì‹œ ì„¤ì • ì •ë³´ ì¶œë ¥
 try
 {
     var siteConfig = app.Services.GetRequiredService<Microsoft.Extensions.Options.IOptions<SiteConfiguration>>().Value;
     var logger = app.Services.GetRequiredService<ILogger<Program>>();
 
-    logger.LogInformation($"ÇöÀå Á¤º¸: {siteConfig.SiteInfo?.Name} {siteConfig.SiteInfo?.UnitNumber}");
-    logger.LogInformation($"PLC ¼³Á¤: {siteConfig.PlcConfig?.Ip}:{siteConfig.PlcConfig?.Port}");
-    logger.LogInformation($"Á¦¾î ¸í·É °³¼ö: {siteConfig.ControlCommands?.Count ?? 0}°³");
+    logger.LogInformation($"ì‚¬ì´íŠ¸ ì •ë³´: {siteConfig.SiteInfo?.Name} {siteConfig.SiteInfo?.UnitNumber}");
+    logger.LogInformation($"PLC ì—°ê²°: {siteConfig.PlcConfig?.Ip}:{siteConfig.PlcConfig?.Port}");
+    logger.LogInformation($"ì œì–´ ëª…ë ¹ ê°œìˆ˜: {siteConfig.ControlCommands?.Count ?? 0}ê°œ");
 
-    // ÇÊ¼ö ¼³Á¤ °ËÁõ
+    // í•„ìˆ˜ ì„¤ì • ê²€ì¦
     if (siteConfig.SiteInfo == null || string.IsNullOrEmpty(siteConfig.SiteInfo.Name))
     {
-        logger.LogWarning("»çÀÌÆ® Á¤º¸°¡ ¿Ã¹Ù¸£°Ô ¼³Á¤µÇÁö ¾Ê¾Ò½À´Ï´Ù.");
+        logger.LogWarning("ì‚¬ì´íŠ¸ ì •ë³´ê°€ ì˜¬ë°”ë¥´ê²Œ ì„¤ì •ë˜ì§€ ì•Šì•˜ìŠµë‹ˆë‹¤.");
     }
 
     if (siteConfig.ControlCommands == null || siteConfig.ControlCommands.Count == 0)
     {
-        logger.LogWarning("Á¦¾î ¸í·ÉÀÌ ¼³Á¤µÇÁö ¾Ê¾Ò½À´Ï´Ù.");
+        logger.LogWarning("ì œì–´ ëª…ë ¹ì´ ì„¤ì •ë˜ì§€ ì•Šì•˜ìŠµë‹ˆë‹¤.");
     }
 }
 catch (Exception ex)
 {
-    Console.WriteLine($"¼³Á¤ °ËÁõ Áß ¿À·ù: {ex.Message}");
+    Console.WriteLine($"ì„¤ì • ë¡œë”© ì¤‘ ì˜¤ë¥˜: {ex.Message}");
 }
 
-// È¯°æº° ¼³Á¤
+// í™˜ê²½ë³„ ì„¤ì •
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
-    // °³¹ßÈ¯°æ¿¡¼­´Â React °³¹ß¼­¹ö¿ë CORS
+    // ê°œë°œí™˜ê²½ì—ì„œëŠ” React ê°œë°œì„œë²„ìš© CORS
     app.UseCors("AllowReactApp");
 }
 else
 {
-    // ÇÁ·Î´ö¼Ç È¯°æ (µ¶¸³½ÇÇàÆÄÀÏ)
+    // ìš´ì˜í™˜ê²½ ì„¤ì • (ë¦¬ë²„ìŠ¤í”„ë¡ì‹œ)
     app.UseExceptionHandler("/Error");
     app.UseHsts();
-    // ÇÁ·Î´ö¼Ç¿¡¼­´Â ¸ğµç origin Çã¿ë
+    // ìš´ì˜í™˜ê²½ì—ì„œëŠ” ëª¨ë“  origin í—ˆìš©
     app.UseCors("AllowAll");
 }
 
-// Á¤Àû ÆÄÀÏ ¼­ºù (React ºôµå ÆÄÀÏµé)
-app.UseDefaultFiles(); // index.htmlÀ» ±âº» ÆÄÀÏ·Î ¼³Á¤
-app.UseStaticFiles();  // wwwroot Æú´õÀÇ Á¤Àû ÆÄÀÏ ¼­ºù
+// ì •ì  íŒŒì¼ ì„¤ì • (React ë¹Œë“œ íŒŒì¼ë“¤)
+app.UseDefaultFiles(); // index.htmlì„ ê¸°ë³¸ íŒŒì¼ë¡œ ì„¤ì •
+app.UseStaticFiles();  // wwwroot í´ë”ì˜ ì •ì  íŒŒì¼ ì œê³µ
 
-// HLS ½ºÆ®¸®¹Ö ÆÄÀÏ ¼­ºù
+// HLS ìŠ¤íŠ¸ë¦¬ë° íŒŒì¼ ì„¤ì •
 var hlsPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "Parking24web", "hls");
 Directory.CreateDirectory(hlsPath);
 app.UseStaticFiles(new StaticFileOptions
@@ -174,42 +174,42 @@ app.UseStaticFiles(new StaticFileOptions
 app.UseRouting();
 app.UseAuthorization();
 
-// API ÄÁÆ®·Ñ·¯ ¸ÅÇÎ
+// API ì»¨íŠ¸ë¡¤ëŸ¬ ë“±ë¡
 app.MapControllers();
 
-// SignalR Hub ¸ÅÇÎ
+// SignalR Hub ë“±ë¡
 app.MapHub<PLCHub>("/plcHub");
 
-// SPA Æú¹é ¶ó¿ìÆÃ (React Router Áö¿ø)
+// SPA ë¼ìš°íŒ… ì§€ì› (React Router ì§€ì›)
 app.MapFallbackToFile("index.html");
 
-// ¾ÖÇÃ¸®ÄÉÀÌ¼Ç ½ÃÀÛ ·Î±×
+// ì• í”Œë¦¬ì¼€ì´ì…˜ ì‹œì‘ ë¡œê·¸
 var appLogger = app.Services.GetRequiredService<ILogger<Program>>();
 var environment = app.Environment;
 
-appLogger.LogInformation($"=== PLC À¥ Á¦¾î ½Ã½ºÅÛ ½ÃÀÛ ===");
-appLogger.LogInformation($"ÇöÀå: {siteName}");
-appLogger.LogInformation($"È¯°æ: {environment.EnvironmentName}");
+appLogger.LogInformation($"=== PLC ë° ì£¼ì°¨ ì‹œìŠ¤í…œ ì‹œì‘ ===");
+appLogger.LogInformation($"ì‚¬ì´íŠ¸: {siteName}");
+appLogger.LogInformation($"í™˜ê²½: {environment.EnvironmentName}");
 appLogger.LogInformation($"URL: {urls}");
-appLogger.LogInformation($"¼³Á¤ ÆÄÀÏ: {(File.Exists(siteConfigFile) ? siteConfigFile : "±âº» ¼³Á¤")}");
-appLogger.LogInformation($"Á¤Àû ÆÄÀÏ: {(environment.IsDevelopment() ? "React °³¹ß¼­¹ö" : "³»ÀåµÈ React ¾Û")}");
+appLogger.LogInformation($"ì„¤ì • íŒŒì¼: {(File.Exists(siteConfigFile) ? siteConfigFile : "ê¸°ë³¸ ì„¤ì •")}");
+appLogger.LogInformation($"ì •ì  íŒŒì¼: {(environment.IsDevelopment() ? "React ê°œë°œì„œë²„" : "ë¹Œë“œëœ React ì•±")}");
 appLogger.LogInformation($"===========================");
 
-// ¼­¹ö Á¾·á½Ã CCTV Á¤¸® µî·Ï (Graceful Shutdown)
+// ì•±ì´ ì¢…ë£Œë  ë•Œ CCTV ì •ë¦¬ ì‘ì—… (Graceful Shutdown)
 var lifetime = app.Services.GetRequiredService<IHostApplicationLifetime>();
 lifetime.ApplicationStopping.Register(() =>
 {
-    appLogger.LogInformation("¼­¹ö Á¾·á Áß - CCTV ¼­ºñ½º Á¤¸® ½ÃÀÛ");
+    appLogger.LogInformation("ì•±ì´ ì¢…ë£Œ ì¤‘ - CCTV ë¦¬ì†ŒìŠ¤ ì •ë¦¬ ì‹œì‘");
 
     var cctvService = app.Services.GetService<CCTVService>();
     cctvService?.Dispose();
 
-    appLogger.LogInformation("CCTV ¼­ºñ½º Á¤¸® ¿Ï·á");
+    appLogger.LogInformation("CCTV ë¦¬ì†ŒìŠ¤ ì •ë¦¬ ì™„ë£Œ");
 });
 
 app.Run();
 
-// »çÀÌÆ® ¼³Á¤ Å¬·¡½ºµé (PLCHub.cs¿Í µ¿ÀÏÇÑ ±¸Á¶)
+// ì‚¬ì´íŠ¸ ì„¤ì • í´ë˜ìŠ¤ë“¤ (PLCHub.csì— í•¨ê»˜ ì •ì˜ ë˜ì–´ìˆìŒ)
 public class SiteConfiguration
 {
     public SiteInfo? SiteInfo { get; set; }

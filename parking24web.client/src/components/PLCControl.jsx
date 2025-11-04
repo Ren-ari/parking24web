@@ -177,16 +177,6 @@ const PLCControl = ({ currentUser, onLogout }) => {
         return {};
     };
 
-    // 테마에 따른 로고 색상 클래스
-    const getLogoColorClass = () => {
-        return theme === 'space' ? 'text-purple-400' : 'text-purple-600';
-    };
-
-    // 테마에 따른 서브타이틀 색상 클래스
-    const getSubtitleColorClass = () => {
-        return theme === 'space' ? 'text-gray-400' : 'text-gray-500';
-    };
-
     // 테마에 따른 상태 텍스트 색상 클래스
     const getStatusTextColorClass = () => {
         return theme === 'space' ? 'text-gray-300' : 'text-gray-700';
@@ -297,23 +287,8 @@ const PLCControl = ({ currentUser, onLogout }) => {
                 <div className="flex items-center justify-between px-2 sm:px-4 py-2 sm:py-3">
                     {/* 로고/제목 (왼쪽) */}
                     <div className="flex items-center space-x-2 sm:space-x-3 flex-shrink-0 cursor-pointer" onClick={rotateTheme} title="테마 전환 (라이트/우주)">
-                        <div className={`w-8 h-8 sm:w-10 sm:h-10 transform hover:scale-105 transition-all duration-300 ${getLogoColorClass()}`}>
-                            <svg viewBox="0 0 100 100" className="w-full h-full">
-                                <circle cx="50" cy="50" r="45" fill="none" stroke="currentColor" strokeWidth="2"/>
-                                <path d="M30 50 L45 35 L70 60 L85 45" stroke="currentColor" strokeWidth="3" fill="none"/>
-                                <circle cx="30" cy="50" r="4" fill="currentColor"/>
-                                <circle cx="45" cy="35" r="4" fill="currentColor"/>
-                                <circle cx="70" cy="60" r="4" fill="currentColor"/>
-                                <circle cx="85" cy="45" r="4" fill="currentColor"/>
-                            </svg>
-                        </div>
-                        <div className="flex flex-col">
-                            <h1 className="text-lg sm:text-2xl font-black bg-gradient-to-r from-purple-600 via-blue-600 to-indigo-700 bg-clip-text text-transparent tracking-wider">
-                                EPSAI
-                            </h1>
-                            <div className={`text-xs font-medium tracking-widest hidden sm:block ${getSubtitleColorClass()}`}>
-                                PARKING SYSTEM
-                            </div>
+                        <div className="w-28 sm:w-44 h-10 transform hover:scale-105 transition-all duration-300">
+                            <img src={theme === 'space' ? "/Primary white.png" : "/Primary black.png"} alt="EPSAI Logo" className="w-full h-full object-contain" />
                         </div>
                     </div>
 
