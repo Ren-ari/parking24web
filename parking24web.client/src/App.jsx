@@ -1,15 +1,9 @@
 ﻿import './index.css';
 import PLCControl from './components/PLCControl';
 import LoginPage from './components/LoginPage';
-import './App.css';
-// eslint-disable-next-line no-unused-vars
 import { motion } from 'framer-motion';
-// 커스텀 인증 훅 import
 import { useAuth } from './hooks/useAuth';
-// 테마 Context import
 import { ThemeProvider } from './contexts/ThemeContext';
-
-document.body.style.fontFamily = "'Noto Sans KR', sans-serif";
 
 function App() {
     // useAuth 훅으로 모든 인증 로직 처리

@@ -1,9 +1,119 @@
-﻿import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { ResponsiveBar } from '@nivo/bar';
 import { ResponsiveLine } from '@nivo/line';
 import { ResponsivePie } from '@nivo/pie';
 import siteConfig from '../../config/sokcho2Config.js';
 import { useTheme } from '../contexts/ThemeContext';
+
+// 반응형 미디어 쿼리 훅
+const useMediaQuery = (query) => {
+    const [matches, setMatches] = useState(false);
+
+    useEffect(() => {
+        const media = window.matchMedia(query);
+        setMatches(media.matches);
+
+        const listener = (e) => setMatches(e.matches);
+        media.addEventListener('change', listener);
+        return () => media.removeEventListener('change', listener);
+    }, [query]);
+
+    return matches;
+};
+
+// 데이터 처리 함수들 (컴포넌트 밖으로 추출)
+const processMonthlyData = (data) => {
+    if (!data || data.length === 0) {
+        return [];
+    }
+
+    // 중복 제거: 같은 year-month-eventType 조합의 최신 데이터만 유지
+    const uniqueData = data.reduce((acc, item) => {
+        const key = `${item.year}-${item.month}-${item.eventType}`;
+        if (!acc[key] || new Date(item.timestamp || item.createdAt || 0) > new Date(acc[key].timestamp || acc[key].createdAt || 0)) {
+            acc[key] = item;
+        }
+        return acc;
+    }, {});
+
+    const grouped = {};
+    Object.values(uniqueData).forEach(item => {
+        const key = `${item.year}-${item.month}`;
+        if (!grouped[key]) {
+            grouped[key] = { month: `${item.month}월`, 입차: 0, 출차: 0 };
+        }
+        if (item.eventType === '입차') grouped[key].입차 = item.count;
+        if (item.eventType === '출차') grouped[key].출차 = item.count;
+    });
+    return Object.values(grouped);
+};
+
+const processWeeklyData = (data) => {
+    const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
+    
+    if (!data || data.length === 0) {
+        return [];
+    }
+
+    // 중복 제거: 같은 dayOfWeek-eventType 조합의 최신 데이터만 유지
+    const uniqueData = data.reduce((acc, item) => {
+        const key = `${item.dayOfWeek}-${item.eventType}`;
+        if (!acc[key] || new Date(item.timestamp || item.createdAt || 0) > new Date(acc[key].timestamp || acc[key].createdAt || 0)) {
+            acc[key] = item;
+        }
+        return acc;
+    }, {});
+    
+    const grouped = {};
+    Object.values(uniqueData).forEach(item => {
+        const day = dayNames[item.dayOfWeek];
+        if (!grouped[day]) {
+            grouped[day] = { day, 입차: 0, 출차: 0 };
+        }
+        if (item.eventType === '입차') grouped[day].입차 = item.count;
+        if (item.eventType === '출차') grouped[day].출차 = item.count;
+    });
+    const result = dayNames.map(day => grouped[day] || { day, 입차: 0, 출차: 0 });
+    return result;
+};
+
+const processHourlyData = (data) => {
+    if (!data || data.length === 0) {
+        return [];
+    }
+
+    // 중복 제거: 같은 hour-eventType 조합의 최신 데이터만 유지
+    const uniqueData = data.reduce((acc, item) => {
+        const key = `${item.hour}-${item.eventType}`;
+        if (!acc[key] || new Date(item.timestamp || item.createdAt || 0) > new Date(acc[key].timestamp || acc[key].createdAt || 0)) {
+            acc[key] = item;
+        }
+        return acc;
+    }, {});
+    
+    const 입차Data = [];
+    const 출차Data = [];
+    
+    for (let i = 0; i < 24; i++) {
+        입차Data.push({ x: i, y: 0, size: 0 });
+        출차Data.push({ x: i, y: 0, size: 0 });
+    }
+    
+    Object.values(uniqueData).forEach(item => {
+        if (item.eventType === '입차') {
+            입차Data[item.hour] = { x: item.hour, y: item.count, size: item.count };
+        }
+        if (item.eventType === '출차') {
+            출차Data[item.hour] = { x: item.hour, y: item.count, size: item.count };
+        }
+    });
+    
+    const result = [    
+        { id: '입차', data: 입차Data },
+        { id: '출차', data: 출차Data }
+    ];
+    return result;
+};
 
 const AnalyticsDashboard = () => {
     const { theme } = useTheme();
@@ -13,40 +123,49 @@ const AnalyticsDashboard = () => {
     const [topSlotsData, setTopSlotsData] = useState([]);
     const [topSlotsRawData, setTopSlotsRawData] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+    const isMobile = useMediaQuery('(max-width: 767px)');
 
-    // 테마별 차트 색상 팔레트
-    const isSpace = theme === 'space';
-    const barColors = isSpace
-        ? ['#8b5cf6', '#22d3ee'] // violet → cyan
-        : ['#1e3a8a', '#60a5fa'];
-    const lineColors = isSpace
-        ? ['#a855f7', '#06b6d4'] // purple, cyan
-        : ['#1e40af', '#60a5fa'];
-    const pieColors = isSpace
-        ? ['#a855f7', '#c084fc', '#06b6d4', '#22d3ee', '#f0abfc']
-        : ['#1e40af', '#3b82f6', '#60a5fa', '#93c5fd', '#bfdbfe'];
+    // 테마별 차트 색상 팔레트 메모이제이션
+    const isSpace = useMemo(() => theme === 'space', [theme]);
+    
+    const barColors = useMemo(() => 
+        isSpace
+            ? ['#8b5cf6', '#22d3ee'] // violet → cyan
+            : ['#1e3a8a', '#60a5fa']
+    , [isSpace]);
+    
+    const lineColors = useMemo(() => 
+        isSpace
+            ? ['#a855f7', '#06b6d4'] // purple, cyan
+            : ['#1e40af', '#60a5fa']
+    , [isSpace]);
+    
+    const pieColors = useMemo(() => 
+        isSpace
+            ? ['#a855f7', '#c084fc', '#06b6d4', '#22d3ee', '#f0abfc']
+            : ['#1e40af', '#3b82f6', '#60a5fa', '#93c5fd', '#bfdbfe']
+    , [isSpace]);
 
-    useEffect(() => {
-        fetchAllAnalytics();
-        
-        // 화면 크기 변화 감지
-        const handleResize = () => {
-            setIsMobile(window.innerWidth < 768);
-        };
-        
-        window.addEventListener('resize', handleResize);
-        return () => window.removeEventListener('resize', handleResize);
-    }, []);
-
-    // isMobile이 변경될 때마다 topSlotsData 재처리
-    useEffect(() => {
-        if (topSlotsRawData.length > 0) {
-            setTopSlotsData(processTopSlotsData(topSlotsRawData));
+    // processTopSlotsData는 isMobile 의존성 있으므로 useCallback
+    const processTopSlotsData = useCallback((data) => {
+        if (!data || data.length === 0) {
+            return [];
         }
-    }, [isMobile, topSlotsRawData]);
 
-    const fetchAllAnalytics = async () => {
+        // API 응답: { slotNumber, count }
+        // Nivo Pie 차트 형식: { id, label, value }
+        const result = data
+            .slice(0, 5)
+            .map((item) => ({
+                id: `slot-${item.slotNumber}`,
+                label: isMobile ? `${item.slotNumber}번` : `${item.slotNumber}번 차판`,
+                value: item.count
+            }));
+        
+        return result;
+    }, [isMobile]);
+
+    const fetchAllAnalytics = useCallback(async () => {
         try {
             // ============================================
             // 동적 baseURL 구성 (포트포워딩 대응)
@@ -99,118 +218,34 @@ const AnalyticsDashboard = () => {
             console.error('분석 데이터 로드 실패:', error);
             setLoading(false);
         }
-    };
+    }, [processTopSlotsData]);
 
-    const processMonthlyData = (data) => {
-        if (!data || data.length === 0) {
-            return [];
+    useEffect(() => {
+        fetchAllAnalytics();
+    }, [fetchAllAnalytics]);
+
+    // isMobile이 변경될 때마다 topSlotsData 재처리
+    useEffect(() => {
+        if (topSlotsRawData.length > 0) {
+            setTopSlotsData(processTopSlotsData(topSlotsRawData));
         }
+    }, [isMobile, topSlotsRawData, processTopSlotsData]);
 
-        // 중복 제거: 같은 year-month-eventType 조합의 최신 데이터만 유지
-        const uniqueData = data.reduce((acc, item) => {
-            const key = `${item.year}-${item.month}-${item.eventType}`;
-            if (!acc[key] || new Date(item.timestamp || item.createdAt || 0) > new Date(acc[key].timestamp || acc[key].createdAt || 0)) {
-                acc[key] = item;
-            }
-            return acc;
-        }, {});
+    // 스타일 메모이제이션
+    const chartHeightStyle = useMemo(() => ({
+        height: isMobile ? 250 : 300
+    }), [isMobile]);
 
-        const grouped = {};
-        Object.values(uniqueData).forEach(item => {
-            const key = `${item.year}-${item.month}`;
-            if (!grouped[key]) {
-                grouped[key] = { month: `${item.month}월`, 입차: 0, 출차: 0 };
-            }
-            if (item.eventType === '입차') grouped[key].입차 = item.count;
-            if (item.eventType === '출차') grouped[key].출차 = item.count;
-        });
-        return Object.values(grouped);
-    };
-
-    const processWeeklyData = (data) => {
-        const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
-        
-        if (!data || data.length === 0) {
-            return [];
-        }
-
-        // 중복 제거: 같은 dayOfWeek-eventType 조합의 최신 데이터만 유지
-        const uniqueData = data.reduce((acc, item) => {
-            const key = `${item.dayOfWeek}-${item.eventType}`;
-            if (!acc[key] || new Date(item.timestamp || item.createdAt || 0) > new Date(acc[key].timestamp || acc[key].createdAt || 0)) {
-                acc[key] = item;
-            }
-            return acc;
-        }, {});
-        
-        const grouped = {};
-        Object.values(uniqueData).forEach(item => {
-            const day = dayNames[item.dayOfWeek];
-            if (!grouped[day]) {
-                grouped[day] = { day, 입차: 0, 출차: 0 };
-            }
-            if (item.eventType === '입차') grouped[day].입차 = item.count;
-            if (item.eventType === '출차') grouped[day].출차 = item.count;
-        });
-        const result = dayNames.map(day => grouped[day] || { day, 입차: 0, 출차: 0 });
-        return result;
-    };
-
-    const processHourlyData = (data) => {
-        if (!data || data.length === 0) {
-            return [];
-        }
-
-        // 중복 제거: 같은 hour-eventType 조합의 최신 데이터만 유지
-        const uniqueData = data.reduce((acc, item) => {
-            const key = `${item.hour}-${item.eventType}`;
-            if (!acc[key] || new Date(item.timestamp || item.createdAt || 0) > new Date(acc[key].timestamp || acc[key].createdAt || 0)) {
-                acc[key] = item;
-            }
-            return acc;
-        }, {});
-        
-        const 입차Data = [];
-        const 출차Data = [];
-        
-        for (let i = 0; i < 24; i++) {
-            입차Data.push({ x: i, y: 0, size: 0 });
-            출차Data.push({ x: i, y: 0, size: 0 });
-        }
-        
-        Object.values(uniqueData).forEach(item => {
-            if (item.eventType === '입차') {
-                입차Data[item.hour] = { x: item.hour, y: item.count, size: item.count };
-            }
-            if (item.eventType === '출차') {
-                출차Data[item.hour] = { x: item.hour, y: item.count, size: item.count };
-            }
-        });
-        
-        const result = [    
-            { id: '입차', data: 입차Data },
-            { id: '출차', data: 출차Data }
-        ];
-        return result;
-    };
-
-    const processTopSlotsData = (data) => {
-        if (!data || data.length === 0) {
-            return [];
-        }
-
-        // API 응답: { slotNumber, count }
-        // Nivo Pie 차트 형식: { id, label, value }
-        const result = data
-            .slice(0, 5)
-            .map((item) => ({
-                id: `slot-${item.slotNumber}`,
-                label: isMobile ? `${item.slotNumber}번` : `${item.slotNumber}번 차판`,
-                value: item.count
-            }));
-        
-        return result;
-    };
+    const tooltipStyle = useMemo(() => ({
+        background: theme === 'space' ? '#1a1a1a' : '#fff',
+        color: theme === 'space' ? '#fff' : '#333',
+        fontSize: 12,
+        borderRadius: '8px',
+        boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+        border: `1px solid ${theme === 'space' ? '#444' : '#ddd'}`,
+        padding: '8px 12px',
+        whiteSpace: 'nowrap'
+    }), [theme]);
 
     if (loading) {
         return (
@@ -231,7 +266,7 @@ const AnalyticsDashboard = () => {
                     <h3 className={`${isMobile ? 'text-lg' : 'text-xl'} font-bold mb-6 ${theme === 'space' ? 'text-purple-400' : 'text-blue-600'}`}>
                         월별 입출차 추이 (최근 12개월)
                     </h3>
-                    <div style={{ height: isMobile ? 250 : 300 }}>
+                    <div style={chartHeightStyle}>
                         <ResponsiveBar
                             data={monthlyData}
                             keys={['입차', '출차']}
@@ -336,7 +371,7 @@ const AnalyticsDashboard = () => {
                     <h3 className={`${isMobile ? 'text-lg' : 'text-xl'} font-bold mb-6 ${theme === 'space' ? 'text-purple-400' : 'text-blue-600'}`}>
                         요일별 입출차 비교 (최근 3개월)
                     </h3>
-                    <div style={{ height: isMobile ? 250 : 300 }}>
+                    <div style={chartHeightStyle}>
                         <ResponsiveLine
                             data={[
                                 {
@@ -404,16 +439,7 @@ const AnalyticsDashboard = () => {
                             enableCrosshair={true}
                             crosshairType="x"
                             tooltip={({ point }) => (
-                                <div style={{
-                                    background: theme === 'space' ? '#1a1a1a' : '#fff',
-                                    color: theme === 'space' ? '#fff' : '#333',
-                                    fontSize: 12,
-                                    borderRadius: '8px',
-                                    boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-                                    border: `1px solid ${theme === 'space' ? '#444' : '#ddd'}`,
-                                    padding: '8px 12px',
-                                    whiteSpace: 'nowrap'
-                                }}>
+                                <div style={tooltipStyle}>
                                      <strong>{point.data.x}요일 {point.serieId}</strong>: {point.data.y}대
                                 </div>
                             )}
@@ -489,7 +515,7 @@ const AnalyticsDashboard = () => {
                     <h3 className={`${isMobile ? 'text-lg' : 'text-xl'} font-bold mb-6 ${theme === 'space' ? 'text-purple-400' : 'text-blue-600'}`}>
                         시간대별 입출차 패턴 (최근 1개월)
                     </h3>
-                    <div style={{ height: isMobile ? 250 : 300 }}>
+                    <div style={chartHeightStyle}>
                         <ResponsiveLine
                             data={hourlyData}
                             margin={{ 
@@ -529,16 +555,7 @@ const AnalyticsDashboard = () => {
                             enableGridX={false}
                             enableGridY={true}
                             tooltip={({ point }) => (
-                                <div style={{
-                                    background: theme === 'space' ? '#1a1a1a' : '#fff',
-                                    color: theme === 'space' ? '#fff' : '#333',
-                                    fontSize: 12,
-                                    borderRadius: '8px',
-                                    boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-                                    border: `1px solid ${theme === 'space' ? '#444' : '#ddd'}`,
-                                    padding: '8px 12px',
-                                    whiteSpace: 'nowrap'
-                                }}>
+                                <div style={tooltipStyle}>
                                      <strong>{point.data.x}시 {point.serieId}</strong>: {point.data.y}대
                                 </div>
                             )}
@@ -581,7 +598,7 @@ const AnalyticsDashboard = () => {
                     <h3 className={`${isMobile ? 'text-lg' : 'text-xl'} font-bold mb-6 ${theme === 'space' ? 'text-purple-400' : 'text-blue-600'}`}>
                         차판 이용 빈도 TOP 5 (최근 3개월)
                     </h3>
-                    <div style={{ height: isMobile ? 250 : 300 }}>
+                    <div style={chartHeightStyle}>
                         <ResponsivePie
                                 data={topSlotsData}
                             margin={{ 

@@ -1,18 +1,87 @@
-﻿import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import siteConfig from '../../config/sokcho2Config.js';
 // SignalR 서비스 import
 import signalRService from '../services/signalrService.js';
 import { useTheme } from '../contexts/ThemeContext';
+import './ManualControl.css';
+
+// ============================================
+// HoldButton 컴포넌트 (버튼 중복 제거)
+// ============================================
+const HoldButton = ({ commandName, label, onPress, disabled, busy, theme, className = '' }) => {
+    const handleRelease = useCallback(() => {
+        onPress(commandName, 0);
+    }, [commandName, onPress]);
+
+    const handlePress = useCallback(() => {
+        onPress(commandName, 1);
+    }, [commandName, onPress]);
+
+    return (
+        <button
+            onMouseDown={handlePress}
+            onMouseUp={handleRelease}
+            onMouseLeave={handleRelease}
+            onTouchStart={handlePress}
+            onTouchEnd={handleRelease}
+            disabled={disabled || busy}
+            className={`learn-more ${className} ${theme === 'space' ? 'space-theme' : ''} ${(disabled || busy) ? 'opacity-50 cursor-not-allowed' : ''}`}
+        >
+            {label} {busy && '⏳'}
+        </button>
+    );
+};
+
+// ============================================
+// ValueCard 컴포넌트 (엔코더/카운터 카드)
+// ============================================
+const ValueCard = ({ label, value, theme, cardBgStyle, cardValueBgStyle, labelColorClass, valueColorClass }) => (
+    <div className="p-2 sm:p-3 rounded-2xl transition-all duration-700 ease-out transform relative overflow-hidden"
+        style={{
+            backdropFilter: 'blur(25px)',
+            WebkitBackdropFilter: 'blur(25px)',
+            ...cardBgStyle
+        }}>
+        <div className={`absolute inset-0 rounded-2xl ${
+            theme === 'space' 
+                ? 'bg-gradient-to-br from-purple-500/8 to-purple-600/8' 
+                : 'bg-gradient-to-br from-blue-500/8 to-indigo-500/8'
+        }`}></div>
+        <label className={`block text-xs font-medium mb-1 relative z-10 ${labelColorClass}`}>{label}</label>
+        <div className={`rounded-2xl px-2 sm:px-3 py-3 sm:py-5 text-lg sm:text-2xl md:text-3xl font-bold relative z-10 ${valueColorClass}`} 
+            style={cardValueBgStyle}>
+            {value || 0}
+        </div>
+    </div>
+);
+
+// ============================================
+// useMediaQuery 훅
+// ============================================
+const useMediaQuery = (query) => {
+    const [matches, setMatches] = useState(false);
+
+    useEffect(() => {
+        const media = window.matchMedia(query);
+        setMatches(media.matches);
+        
+        const listener = (e) => setMatches(e.matches);
+        media.addEventListener('change', listener);
+        return () => media.removeEventListener('change', listener);
+    }, [query]);
+
+    return matches;
+};
 
 const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMenuOpen }) => {
 
-    const [_activeCommand, setActiveCommand] = useState(null);
     const [_isEmergencyMode, setIsEmergencyMode] = useState(false);
-    const { theme, _isSpaceTheme, _isDarkTheme, _isOceanTheme } = useTheme();
+    const { theme } = useTheme();
     const [activeTab, setActiveTab] = useState('page1');
     const [showSensors, setShowSensors] = useState(true);
     const [sensorStates, setSensorStates] = useState({});
     const [_scrollY, setScrollY] = useState(0);
+    const isMobile = useMediaQuery('(max-width: 768px)');
 
 
     // 리소스별 마지막 명령 상태 (commandId, sequence 포함)
@@ -400,31 +469,13 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
         updateSensorStates();
     }, [sensorData, currentConfig]);
 
-    // 간단한 명령 실행 헬퍼 (UI 피드백용)
-    const executeCommand = async (commandName, signalRMethod) => {
-        if (!isPLCConnected || !isAuthenticated) return;
 
-        try {
-            setActiveCommand(commandName);
-            await signalRMethod();
-            console.log(`명령 실행: ${commandName}`);
-
-            // 명령 실행 후 1초 뒤 활성 상태 해제
-            setTimeout(() => setActiveCommand(null), 1000);
-        } catch (error) {
-            console.error(`명령 실행 실패 (${commandName}):`, error);
-            setActiveCommand(null);
-        }
-    };
-
-    // 비상정지 처리
+    // 비상정지 핸들러 (특별 처리)
     const handleEmergencyStop = async () => {
         try {
             setIsEmergencyMode(true);
-            await signalRService.emergencyStop();
+            // await signalRService.emergencyStop();
             console.log('비상정지 실행');
-
-            // 비상정지는 5초간 활성 표시
             setTimeout(() => setIsEmergencyMode(false), 5000);
         } catch (error) {
             console.error('비상정지 실행 실패:', error);
@@ -432,109 +483,40 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
         }
     };
 
-    // ============================================
-    // 버튼 핸들러들 (sendCommand 방식)
-    // ============================================
-    const handleLiftUp = () => sendCommand("liftUp", 1);
-    const handleLiftDown = () => sendCommand("liftDown", 1);
-    const handleMoveLeft = () => sendCommand("moveLeft", 1);
-    const handleMoveRight = () => sendCommand("moveRight", 1);
-    const handleTurnLeft = () => sendCommand("turnLeft", 1);
-    const handleTurnRight = () => sendCommand("turnRight", 1);
-    const handleDoorOpen = () => sendCommand("doorOpen", 1);
-    const handleDoorClose = () => sendCommand("doorClose", 1);
-    const handleLockingOn = () => sendCommand("lockingOn", 1);
-    const handleLockingOff = () => sendCommand("lockingOff", 1);
-    const handleErrorReset = () => sendCommand("errorReset", 1);
-    const handleRemoteControl = () => sendCommand("remoteControl", 1);
-    const handleHomeReturn = () => sendCommand("homeReturn", 1);
-    const handlePaletteChange = () => sendCommand("paletteChange", 1);
-
     const isDisabled = !isPLCConnected || !isAuthenticated;
 
-    // 테마에 따른 카드 배경 스타일
-    const getCardBackgroundStyle = () => {
-        switch (theme) {
-            case 'space':
-                return {
-                    background: 'linear-gradient(135deg, rgba(147, 51, 234, 0.15) 0%, rgba(124, 58, 237, 0.08) 100%)', // 보라색 계열
-                    border: '1px solid rgba(147, 51, 234, 0.2)',
-                    boxShadow: '0 4px 16px 0 rgba(147, 51, 234, 0.1)'
-                };
-            case 'dark':
-                return {
-                    background: 'linear-gradient(135deg, rgba(75, 85, 99, 0.15) 0%, rgba(55, 65, 81, 0.08) 100%)', // 회색 계열
-                    border: '1px solid rgba(75, 85, 99, 0.2)',
-                    boxShadow: '0 4px 16px 0 rgba(75, 85, 99, 0.1)'
-                };
-            case 'ocean':
-                return {
-                    background: 'linear-gradient(135deg, rgba(37, 99, 235, 0.15) 0%, rgba(29, 78, 216, 0.08) 100%)', // 파란색 계열
-                    border: '1px solid rgba(37, 99, 235, 0.2)',
-                    boxShadow: '0 4px 16px 0 rgba(37, 99, 235, 0.1)'
-                };
-            default:
-                return {
-                    background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.03) 100%)',
-                    border: '1px solid rgba(255, 255, 255, 0.12)',
-                    boxShadow: '0 4px 16px 0 rgba(31, 38, 135, 0.15)'
-                };
-        }
-    };
+    // ============================================
+    // 스타일 메모이제이션 (성능 최적화)
+    // ============================================
+    const cardBgStyle = useMemo(() => {
+        return theme === 'space' ? {
+            background: 'linear-gradient(135deg, rgba(147, 51, 234, 0.15) 0%, rgba(124, 58, 237, 0.08) 100%)',
+            border: '1px solid rgba(147, 51, 234, 0.2)',
+            boxShadow: '0 4px 16px 0 rgba(147, 51, 234, 0.1)'
+        } : {
+            background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.03) 100%)',
+            border: '1px solid rgba(255, 255, 255, 0.12)',
+            boxShadow: '0 4px 16px 0 rgba(31, 38, 135, 0.15)'
+        };
+    }, [theme]);
 
-    // 테마에 따른 카드 값 배경 스타일
-    const getCardValueBackgroundStyle = () => {
-        switch (theme) {
-            case 'space':
-                return {
-                    background: 'linear-gradient(135deg, rgba(147, 51, 234, 0.2) 0%, rgba(124, 58, 237, 0.1) 100%)',
-                    border: '1px solid rgba(147, 51, 234, 0.3)',
-                    boxShadow: '0 2px 8px 0 rgba(147, 51, 234, 0.1)'
-                };
-            case 'dark':
-                return {
-                    background: 'linear-gradient(135deg, rgba(75, 85, 99, 0.2) 0%, rgba(55, 65, 81, 0.1) 100%)',
-                    border: '1px solid rgba(75, 85, 99, 0.3)',
-                    boxShadow: '0 2px 8px 0 rgba(75, 85, 99, 0.1)'
-                };
-            case 'ocean':
-                return {
-                    background: 'linear-gradient(135deg, rgba(37, 99, 235, 0.2) 0%, rgba(29, 78, 216, 0.1) 100%)',
-                    border: '1px solid rgba(37, 99, 235, 0.3)',
-                    boxShadow: '0 2px 8px 0 rgba(37, 99, 235, 0.1)'
-                };
-            default:
-                return {
-                    background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.8) 100%)',
-                    border: '1px solid rgba(255, 255, 255, 0.3)',
-                    boxShadow: '0 2px 8px 0 rgba(31, 38, 135, 0.15)'
-                };
-        }
-    };
+    const cardValueBgStyle = useMemo(() => ({
+        background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.8) 100%)',
+        backdropFilter: 'blur(10px)',
+        WebkitBackdropFilter: 'blur(10px)',
+        border: '1px solid rgba(255, 255, 255, 0.3)',
+        boxShadow: '0 2px 8px 0 rgba(31, 38, 135, 0.15)'
+    }), []);
 
-    // 테마에 따른 카드 라벨 색상 클래스
-    const getCardLabelColorClass = () => {
-        switch (theme) {
-            case 'space':
-            case 'dark':
-            case 'ocean':
-                return 'text-white';
-            default:
-                return 'text-blue-700';
-        }
-    };
+    const labelColorClass = theme === 'space' ? 'text-white' : 'text-blue-700';
+    const valueColorClass = theme === 'space' ? 'text-purple-800' : 'text-purple-900';
+    const mainBorderClass = `border-2 ${theme === 'space' ? 'border-purple-500/30' : 'border-white/20'}`;
 
-    // 테마에 따른 카드 값 색상 클래스
-    const getCardValueColorClass = () => {
-        switch (theme) {
-            case 'space':
-            case 'dark':
-            case 'ocean':
-                return 'text-purple-800';
-            default:
-                return 'text-purple-900';
-        }
-    };
+    const mainBgStyle = useMemo(() => ({
+        background: theme === 'space' ? 'rgba(20, 20, 20, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+        backdropFilter: 'blur(25px)',
+        WebkitBackdropFilter: 'blur(25px)',
+    }), [theme]);
 
     return (
         <>
@@ -561,1120 +543,54 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
             )}
 
 
-            <style jsx>{`
-                @import url("https://fonts.googleapis.com/css?family=Rubik:700&display=swap");
-                
-                .learn-more {
-                    font-weight: 600;
-                    color: #1e3a8a;
-                    text-transform: uppercase;
-                    padding: 14px 20px;
-                    background: #dbeafe;
-                    border: 1px solid #3b82f6;
-                    border-radius: 20px;
-                    transform-style: preserve-3d;
-                    transition: transform 150ms cubic-bezier(0, 0, 0.58, 1), background 150ms cubic-bezier(0, 0, 0.58, 1);
-                    position: relative;
-                    display: inline-block;
-                    cursor: pointer;
-                    outline: none;
-                    vertical-align: middle;
-                    text-decoration: none;
-                    font-size: 0.75rem;
-                    font-family: inherit;
-                    min-width: 90px;
-                }
 
-                .learn-more.space-theme {
-                    color: #f3e8ff;
-                    background: #6b46c1;
-                    border: 1px solid #5b21b6;
-                }
-                
-                @media (min-width: 768px) and (max-width: 1199px) {
-                    .learn-more {
-                        min-width: 120px;
-                        padding: 18px 32px;
-                        font-size: 0.8rem;
-                    }
-                }
-                
-                @media (min-width: 1200px) {
-                    .learn-more {
-                        min-width: 160px;
-                        padding: 24px 48px;
-                    }
-                }
-                
-                .learn-more::before {
-                    position: absolute;
-                    content: "";
-                    width: 100%;
-                    height: 100%;
-                    top: 0;
-                    left: 0;
-                    right: 0;
-                    bottom: 0;
-                    background: #93c5fd;
-                    border-radius: inherit;
-                    box-shadow: 0 0 0 1px #3b82f6, 0 0.625em 0 0 #bfdbfe;
-                    transform: translate3d(0, 0.75em, -1em);
-                    transition: transform 150ms cubic-bezier(0, 0, 0.58, 1), box-shadow 150ms cubic-bezier(0, 0, 0.58, 1);
-                }
-
-                .learn-more.space-theme::before {
-                    background: #2d1b69;
-                    box-shadow: 0 0 0 1px #5b21b6, 0 0.625em 0 0 #2d1b69;
-                }
-                
-                .learn-more:hover {
-                    background: #bfdbfe;
-                    transform: translate(0, 0.25em);
-                }
-                
-                .learn-more:hover::before {
-                    box-shadow: 0 0 0 1px #3b82f6, 0 0.5em 0 0 #bfdbfe;
-                    transform: translate3d(0, 0.5em, -1em);
-                }
-
-                .learn-more.space-theme:hover {
-                    background: #4c1d95;
-                }
-                
-                .learn-more.space-theme:hover::before {
-                    box-shadow: 0 0 0 1px #5b21b6, 0 0.5em 0 0 #6b46c1;
-                    transform: translate3d(0, 0.5em, -1em);
-                }
-                
-                .learn-more:active {
-                    background: #bfdbfe;
-                    transform: translate(0em, 0.75em);
-                }
-                
-                .learn-more:active::before {
-                    box-shadow: 0 0 0 1px #3b82f6, 0 0 #bfdbfe;
-                    transform: translate3d(0, 0, -1em);
-                }
-
-                .learn-more.space-theme:active {
-                    background: #4c1d95;
-                }
-                
-                .learn-more.space-theme:active::before {
-                    box-shadow: 0 0 0 1px #5b21b6, 0 0 #6b46c1;
-                    transform: translate3d(0, 0, -1em);
-                }
-
-                .emergency-button {
-                    color: #7f1d1d;
-                    background: #fecaca;
-                    border: 1px solid #dc2626;
-                    min-width: 120px;
-                    text-align: center;
-                    font-size: 0.875rem;
-                }
-                
-                .emergency-button::before {
-                    background: #fca5a5;
-                    box-shadow: 0 0 0 1px #dc2626, 0 0.625em 0 0 #fecaca;
-                }
-                
-                .emergency-button:hover {
-                    background: #fca5a5;
-                }
-                
-                .emergency-button:hover::before {
-                    box-shadow: 0 0 0 1px #dc2626, 0 0.5em 0 0 #fecaca;
-                }
-                
-                .emergency-button:active {
-                    background: #fca5a5;
-                }
-                
-                .emergency-button:active::before {
-                    box-shadow: 0 0 0 1px #dc2626, 0 0 #fecaca;
-                }
-
-                .common-button {
-                    color: #6b7280;
-                    background: #f3f4f6;
-                    border: 1px solid #9ca3af;
-                    min-width: 120px;
-                    text-align: center;
-                    font-size: 0.75rem;
-                }
-                
-                .common-button::before {
-                    background: #d1d5db;
-                    box-shadow: 0 0 0 1px #9ca3af, 0 0.625em 0 0 #f3f4f6;
-                }
-                
-                .common-button:hover {
-                    background: #e5e7eb;
-                }
-                
-                .common-button:hover::before {
-                    box-shadow: 0 0 0 1px #9ca3af, 0 0.5em 0 0 #f3f4f6;
-                }
-                
-                .common-button:active {
-                    background: #e5e7eb;
-                }
-                
-                .common-button:active::before {
-                    box-shadow: 0 0 0 1px #9ca3af, 0 0 #f3f4f6;
-                }
-
-                .common-button.space-theme {
-                    color: #f9fafb;
-                    background: #374151;
-                    border: 1px solid #1f2937;
-                }
-                
-                .common-button.space-theme::before {
-                    background: #111827;
-                    box-shadow: 0 0 0 1px #1f2937, 0 0.625em 0 0 #111827;
-                }
-                
-                .common-button.space-theme:hover {
-                    background: #1f2937;
-                }
-                
-                .common-button.space-theme:hover::before {
-                    box-shadow: 0 0 0 1px #1f2937, 0 0.5em 0 0 #111827;
-                }
-                
-                .common-button.space-theme:active {
-                    background: #1f2937;
-                }
-                
-                .common-button.space-theme:active::before {
-                    box-shadow: 0 0 0 1px #1f2937, 0 0 #111827;
-                }
-
-                .emergency-button.space-theme {
-                    color: #fef2f2;
-                    background: #991b1b;
-                    border: 1px solid #7f1d1d;
-                }
-                
-                .emergency-button.space-theme::before {
-                    background: #450a0a;
-                    box-shadow: 0 0 0 1px #7f1d1d, 0 0.625em 0 0 #450a0a;
-                }
-                
-                .emergency-button.space-theme:hover {
-                    background: #7f1d1d;
-                }
-                
-                .emergency-button.space-theme:hover::before {
-                    box-shadow: 0 0 0 1px #7f1d1d, 0 0.5em 0 0 #450a0a;
-                }
-                
-                .emergency-button.space-theme:active {
-                    background: #7f1d1d;
-                }
-                
-                .emergency-button.space-theme:active::before {
-                    box-shadow: 0 0 0 1px #7f1d1d, 0 0 #450a0a;
-                }
-
-                .common-buttons-grid {
-                    display: flex;
-                    flex-wrap: wrap;
-                    gap: 20px;
-                    justify-content: center;
-                    max-width: none;
-                }
-
-                @media (min-width: 768px) and (max-width: 1400px) {
-                    .common-buttons-grid {
-                        display: grid;
-                        grid-template-columns: 1fr 1fr;
-                        gap: 20px;
-                        max-width: 320px;
-                        margin: 0 auto;
-                        margin-top: 20px;
-                        margin-bottom: 20px;
-                    }
-                    
-                    .common-buttons-grid .common-button {
-                        min-width: 120px;
-                        padding: 20px 32px;
-                        font-size: 0.875rem;
-                    }
-                    
-                    .common-buttons-grid .emergency-button {
-                        grid-column: 1 / -1;
-                        justify-self: center;
-                        margin-top: 16px;
-                        min-width: 120px;
-                        padding: 20px 32px;
-                        font-size: 0.875rem;
-                    }
-                }
-
-                .tab-navigation {
-                    display: flex;
-                    gap: 8px;
-                    margin: 40px 0 20px 0;
-                    justify-content: center;
-                }
-                
-                .sensor-panel-right {
-                    position: fixed;
-                    top: 35%;
-                    right: -300px;
-                    width: 300px;
-                    height: 70vh;
-                    transform: translateY(-50%);
-                    background: #f8fafc;
-                    border: 1px solid #e2e8f0;
-                    box-shadow: -5px 0 20px rgba(0, 0, 0, 0.1);
-                    transition: right 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55), top 0.3s ease-out;
-                    z-index: 1000;
-                    overflow-y: auto;
-                    padding: 20px;
-                    border-radius: 20px 0 0 20px;
-                    scrollbar-width: none;
-                    -ms-overflow-style: none;
-                }
-                
-                .sensor-panel-right.space-theme {
-                    background: linear-gradient(135deg, rgba(20, 20, 20, 0.95) 0%, rgba(15, 15, 15, 0.9) 100%);
-                    border: 1px solid rgba(40, 40, 40, 0.3);
-                    box-shadow: -5px 0 20px rgba(0, 0, 0, 0.3);
-                    backdrop-filter: blur(25px);
-                    -webkit-backdrop-filter: blur(25px);
-                }
-                
-                @media (min-width: 768px) and (max-width: 1199px) {
-                    .sensor-panel-right {
-                        width: 220px;
-                        height: 45vh;
-                        padding: 12px;
-                        top: 50%;
-                    }
-                }
-                
-                @media (min-width: 1200px) and (max-width: 1400px) {
-                    .sensor-panel-right {
-                        width: 250px;
-                        height: 50vh;
-                        padding: 14px;
-                        top: 60%;
-                    }
-                }
-                
-                @media (max-width: 767px) {
-                    .sensor-panel-right {
-                        display: none;
-                    }
-                }
-                .sensor-panel-right::-webkit-scrollbar {
-                    display: none;
-                }
-                
-                .sensor-panel-right.show {
-                    right: 0;
-                    animation: slideInRight 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-                }
-                
-                @keyframes slideInRight {
-                    0% {
-                        right: -300px;
-                        opacity: 0;
-                        transform: translateY(-50%) scale(0.9) rotateY(15deg);
-                    }
-                    50% {
-                        right: -50px;
-                        opacity: 0.7;
-                        transform: translateY(-50%) scale(1.02) rotateY(5deg);
-                    }
-                    100% {
-                        right: 0;
-                        opacity: 1;
-                        transform: translateY(-50%) scale(1) rotateY(0deg);
-                    }
-                }
-                
-                .sensor-panel-left {
-                    position: fixed;
-                    top: 35%; 
-                    left: -300px;
-                    width: 300px;
-                    height: 70vh;
-                    transform: translateY(-50%);
-                    background: #f8fafc;
-                    border: 1px solid #e2e8f0;
-                    box-shadow: 5px 0 20px rgba(0, 0, 0, 0.1);
-                    transition: left 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55), top 0.3s ease-out;
-                    z-index: 1000;
-                    overflow-y: auto;
-                    padding: 20px;
-                    border-radius: 0 20px 20px 0;
-                    scrollbar-width: none;
-                    -ms-overflow-style: none;
-                }
-                
-                .sensor-panel-left.space-theme {
-                    background: linear-gradient(135deg, rgba(20, 20, 20, 0.95) 0%, rgba(15, 15, 15, 0.9) 100%);
-                    border: 1px solid rgba(40, 40, 40, 0.3);
-                    box-shadow: 5px 0 20px rgba(0, 0, 0, 0.3);
-                    backdrop-filter: blur(25px);
-                    -webkit-backdrop-filter: blur(25px);
-                }
-                
-                @media (min-width: 768px) and (max-width: 1199px) {
-                    .sensor-panel-left {
-                        width: 220px;
-                        height: 45vh;
-                        padding: 12px;
-                        top: 50%;
-                    }
-                }
-                
-                @media (min-width: 1200px) and (max-width: 1400px) {
-                    .sensor-panel-left {
-                        width: 250px;
-                        height: 50vh;
-                        padding: 14px;
-                        top: 60%;
-                    }
-                }
-                
-                @media (max-width: 767px) {
-                    .sensor-panel-left {
-                        display: none;
-                    }
-                }
-                .sensor-panel-left::-webkit-scrollbar {
-                    display: none;
-                }
-                
-                .sensor-panel-left.show {
-                    left: 0;
-                    animation: slideInLeft 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-                }
-                
-                @keyframes slideInLeft {
-                    0% {
-                        left: -300px;
-                        opacity: 0;
-                        transform: translateY(-50%) scale(0.9) rotateY(-15deg);
-                    }
-                    50% {
-                        left: -50px;
-                        opacity: 0.7;
-                        transform: translateY(-50%) scale(1.02) rotateY(-5deg);
-                    }
-                    100% {
-                        left: 0;
-                        opacity: 1;
-                        transform: translateY(-50%) scale(1) rotateY(0deg);
-                    }
-                }
-                
-                .sensor-item {
-                    background: linear-gradient(145deg, 
-                        rgba(255, 255, 255, 0.15) 0%, 
-                        rgba(255, 255, 255, 0.05) 50%, 
-                        rgba(255, 255, 255, 0.1) 100%);
-                    backdrop-filter: blur(15px);
-                    -webkit-backdrop-filter: blur(15px);
-                    border: 1px solid rgba(255, 255, 255, 0.3);
-                    border-radius: 24px;
-                    padding: 20px;
-                    margin-bottom: 20px;
-                    box-shadow: 
-                        0 12px 40px rgba(0, 0, 0, 0.15),
-                        0 4px 12px rgba(0, 0, 0, 0.1),
-                        inset 0 2px 4px rgba(255, 255, 255, 0.3),
-                        inset 0 -1px 2px rgba(0, 0, 0, 0.1),
-                        0 0 0 1px rgba(255, 255, 255, 0.2);
-                    transition: background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease, opacity 0.3s ease;
-                    opacity: 0;
-                    transform: translateX(0) scale(0.95);
-                    animation: slideInFromCenter 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
-                    position: relative;
-                    overflow: hidden;
-                }
-                
-                .sensor-item.space-theme {
-                    background: 
-                        linear-gradient(145deg, 
-                            rgba(120, 120, 120, 0.95) 0%, 
-                            rgba(100, 100, 100, 0.9) 25%,
-                            rgba(80, 80, 80, 0.85) 50%,
-                            rgba(70, 70, 70, 0.9) 75%,
-                            rgba(60, 60, 60, 0.95) 100%),
-                        repeating-linear-gradient(
-                            45deg,
-                            transparent,
-                            transparent 2px,
-                            rgba(255, 255, 255, 0.03) 2px,
-                            rgba(255, 255, 255, 0.03) 4px,
-                            transparent 4px,
-                            transparent 6px,
-                            rgba(0, 0, 0, 0.05) 6px,
-                            rgba(0, 0, 0, 0.05) 8px
-                        ) !important;
-                    border: 1px solid rgba(140, 140, 140, 0.8) !important;
-                    box-shadow: 
-                        0 12px 40px rgba(0, 0, 0, 0.4),
-                        0 4px 12px rgba(0, 0, 0, 0.3),
-                        inset 0 2px 4px rgba(180, 180, 180, 0.3),
-                        inset 0 -1px 2px rgba(40, 40, 40, 0.5),
-                        0 0 0 1px rgba(140, 140, 140, 0.7),
-                        0 0 20px rgba(120, 120, 120, 0.3),
-                        0 0 40px rgba(100, 100, 100, 0.2) !important;
-                }
-                
-                .sensor-item::before {
-                    content: '';
-                    position: absolute;
-                    top: 0;
-                    left: -100%;
-                    width: 100%;
-                    height: 100%;
-                    background: linear-gradient(90deg, 
-                        transparent, 
-                        rgba(255, 255, 255, 0.3), 
-                        transparent);
-                    transition: left 0.6s ease;
-                }
-                
-                .sensor-item:hover::before {
-                    left: 100%;
-                }
-                
-                .sensor-item::after {
-                    content: '';
-                    position: absolute;
-                    top: 50%;
-                    left: 50%;
-                    width: 0;
-                    height: 0;
-                    background: radial-gradient(circle, rgba(102, 126, 234, 0.1) 0%, transparent 70%);
-                    border-radius: 50%;
-                    transform: translate(-50%, -50%);
-                    transition: all 0.4s ease;
-                    pointer-events: none;
-                }
-                
-                .sensor-item:hover::after {
-                    width: 200px;
-                    height: 200px;
-                    animation: ripple 0.6s ease-out;
-                }
-                
-                @keyframes ripple {
-                    0% {
-                        width: 0;
-                        height: 0;
-                        opacity: 1;
-                    }
-                    100% {
-                        width: 200px;
-                        height: 200px;
-                        opacity: 0;
-                    }
-                }
-                
-                .sensor-item:nth-child(1) { animation-delay: 0.1s; }
-                .sensor-item:nth-child(2) { animation-delay: 0.15s; }
-                .sensor-item:nth-child(3) { animation-delay: 0.2s; }
-                .sensor-item:nth-child(4) { animation-delay: 0.25s; }
-                .sensor-item:nth-child(5) { animation-delay: 0.3s; }
-                .sensor-item:nth-child(6) { animation-delay: 0.35s; }
-                .sensor-item:nth-child(7) { animation-delay: 0.4s; }
-                .sensor-item:nth-child(8) { animation-delay: 0.45s; }
-                .sensor-item:nth-child(9) { animation-delay: 0.5s; }
-                .sensor-item:nth-child(10) { animation-delay: 0.55s; }
-                .sensor-item:nth-child(11) { animation-delay: 0.6s; }
-                .sensor-item:nth-child(12) { animation-delay: 0.65s; }
-                .sensor-item:nth-child(13) { animation-delay: 0.7s; }
-                .sensor-item:nth-child(14) { animation-delay: 0.75s; }
-                .sensor-item:nth-child(15) { animation-delay: 0.8s; }
-                
-                @keyframes slideInFromCenter {
-                    0% {
-                        opacity: 0;
-                        transform: translateX(0) scale(0.95) rotateY(-10deg);
-                    }
-                    50% {
-                        opacity: 0.8;
-                        transform: translateX(0) scale(1.02) rotateY(-5deg);
-                    }
-                    100% {
-                        opacity: 1;
-                        transform: translateX(0) scale(1) rotateY(0deg);
-                    }
-                }
-                
-                .sensor-item:hover {
-                    transform: translateY(-4px) scale(1.01);
-                    box-shadow: 
-                        0 20px 45px rgba(0, 0, 0, 0.18),
-                        0 6px 15px rgba(0, 0, 0, 0.12),
-                        inset 0 3px 6px rgba(255, 255, 255, 0.4),
-                        inset 0 -2px 4px rgba(0, 0, 0, 0.1),
-                        0 0 0 1px rgba(255, 255, 255, 0.4);
-                    border-color: rgba(255, 255, 255, 0.5);
-                }
-                
-                .sensor-item.space-theme:hover {
-                    box-shadow: 
-                        0 20px 45px rgba(0, 0, 0, 0.4),
-                        0 6px 15px rgba(0, 0, 0, 0.3),
-                        inset 0 3px 6px rgba(255, 255, 255, 0.9),
-                        inset 0 -2px 4px rgba(100, 100, 100, 0.4),
-                        0 0 0 1px rgba(220, 220, 220, 1),
-                        0 0 40px rgba(220, 220, 220, 0.8),
-                        0 0 60px rgba(200, 200, 200, 0.6);
-                    border-color: rgba(220, 220, 220, 1);
-                }
-                
-                .sensor-item.active {
-                    background: linear-gradient(145deg, 
-                        rgba(16, 185, 129, 0.25) 0%, 
-                        rgba(34, 197, 94, 0.2) 50%, 
-                        rgba(16, 185, 129, 0.25) 100%);
-                    border: 1px solid rgba(16, 185, 129, 0.6);
-                    box-shadow: 
-                        0 8px 25px rgba(0, 0, 0, 0.1),
-                        0 3px 8px rgba(0, 0, 0, 0.08),
-                        inset 0 2px 4px rgba(255, 255, 255, 0.3),
-                        inset 0 -1px 2px rgba(16, 185, 129, 0.1);
-                    opacity: 1 !important;
-                }
-                
-                .sensor-item.active.space-theme {
-                    background: 
-                        linear-gradient(145deg, 
-                            rgba(147, 51, 234, 0.4) 0%, 
-                            rgba(124, 58, 237, 0.35) 25%,
-                            rgba(109, 40, 217, 0.3) 50%,
-                            rgba(91, 33, 182, 0.35) 75%,
-                            rgba(76, 29, 149, 0.4) 100%),
-                        repeating-linear-gradient(
-                            45deg,
-                            transparent,
-                            transparent 2px,
-                            rgba(196, 181, 253, 0.1) 2px,
-                            rgba(196, 181, 253, 0.1) 4px,
-                            transparent 4px,
-                            transparent 6px,
-                            rgba(76, 29, 149, 0.1) 6px,
-                            rgba(76, 29, 149, 0.1) 8px
-                        ) !important;
-                    border: 1px solid rgba(147, 51, 234, 0.8) !important;
-                    box-shadow: 
-                        0 8px 25px rgba(0, 0, 0, 0.4),
-                        0 3px 8px rgba(0, 0, 0, 0.3),
-                        inset 0 2px 4px rgba(196, 181, 253, 0.4),
-                        inset 0 -1px 2px rgba(76, 29, 149, 0.4),
-                        0 0 0 1px rgba(147, 51, 234, 0.9),
-                        0 0 25px rgba(147, 51, 234, 0.6),
-                        0 0 50px rgba(196, 181, 253, 0.4) !important;
-                    animation: purpleGlow 2s ease-in-out infinite alternate;
-                }
-                
-                @keyframes purpleGlow {
-                    0% {
-                        box-shadow: 
-                            0 8px 25px rgba(0, 0, 0, 0.4),
-                            0 3px 8px rgba(0, 0, 0, 0.3),
-                            inset 0 2px 4px rgba(196, 181, 253, 0.4),
-                            inset 0 -1px 2px rgba(76, 29, 149, 0.4),
-                            0 0 0 1px rgba(147, 51, 234, 0.9),
-                            0 0 25px rgba(147, 51, 234, 0.6),
-                            0 0 50px rgba(196, 181, 253, 0.4);
-                    }
-                    100% {
-                        box-shadow: 
-                            0 8px 25px rgba(0, 0, 0, 0.4),
-                            0 3px 8px rgba(0, 0, 0, 0.3),
-                            inset 0 2px 4px rgba(196, 181, 253, 0.6),
-                            inset 0 -1px 2px rgba(76, 29, 149, 0.5),
-                            0 0 0 1px rgba(147, 51, 234, 1),
-                            0 0 35px rgba(147, 51, 234, 0.8),
-                            0 0 70px rgba(196, 181, 253, 0.6);
-                    }
-                }
-                
-                .sensor-item.inactive {
-                    background: 
-                        linear-gradient(145deg, 
-                            rgba(80, 80, 80, 0.3) 0%, 
-                            rgba(70, 70, 70, 0.25) 25%,
-                            rgba(60, 60, 60, 0.2) 50%,
-                            rgba(55, 55, 55, 0.25) 75%,
-                            rgba(50, 50, 50, 0.3) 100%),
-                        repeating-linear-gradient(
-                            45deg,
-                            transparent,
-                            transparent 2px,
-                            rgba(120, 120, 120, 0.02) 2px,
-                            rgba(120, 120, 120, 0.02) 4px,
-                            transparent 4px,
-                            transparent 6px,
-                            rgba(40, 40, 40, 0.03) 6px,
-                            rgba(40, 40, 40, 0.03) 8px
-                        );
-                    border: 1px solid rgba(100, 100, 100, 0.4);
-                    color: #6b7280;
-                    opacity: 0.8;
-                    box-shadow: 
-                        0 8px 25px rgba(0, 0, 0, 0.2),
-                        0 3px 8px rgba(0, 0, 0, 0.15),
-                        inset 0 1px 2px rgba(120, 120, 120, 0.1),
-                        inset 0 -1px 2px rgba(40, 40, 40, 0.2);
-                }
-                
-                .sensor-item.inactive .sensor-code {
-                    color: #6b7280;
-                }
-                
-                .sensor-item.inactive .sensor-name {
-                    color: #6b7280;
-                }
-                
-                .sensor-item.active .sensor-code {
-                    color: #059669;
-                    font-weight: bold;
-                }
-                
-                .sensor-item.active .sensor-name {
-                    color: #047857;
-                    font-weight: 600;
-                }
-                
-                .sensor-item.active.space-theme .sensor-code {
-                    background: linear-gradient(135deg, #c4b5fd 0%, #a78bfa 50%, #8b5cf6 100%);
-                    -webkit-background-clip: text;
-                    -webkit-text-fill-color: transparent;
-                    background-clip: text;
-                    text-shadow: 0 0 15px rgba(196, 181, 253, 0.6);
-                }
-                
-                .sensor-item.active.space-theme .sensor-name {
-                    color: #c4b5fd;
-                    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 0 10px rgba(196, 181, 253, 0.4);
-                }
-                
-                .sensor-item {
-                    display: flex;
-                    align-items: center;
-                    gap: 15px;
-                }
-                
-                .sensor-code {
-                    font-family: 'Courier New', monospace;
-                    font-weight: bold;
-                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                    -webkit-background-clip: text;
-                    -webkit-text-fill-color: transparent;
-                    background-clip: text;
-                    font-size: 1.1rem;
-                    min-width: 50px;
-                    text-shadow: 0 0 10px rgba(102, 126, 234, 0.3);
-                }
-                
-                .sensor-item.space-theme .sensor-code {
-                    background: linear-gradient(135deg, #ffffff 0%, #f3f4f6 50%, #e5e7eb 100%);
-                    -webkit-background-clip: text;
-                    -webkit-text-fill-color: transparent;
-                    background-clip: text;
-                    text-shadow: 0 0 15px rgba(255, 255, 255, 0.7);
-                }
-                
-                .sensor-name {
-                    font-weight: 600;
-                    color: #1f2937;
-                    font-size: 0.9rem;
-                    flex: 1;
-                    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-                    transition: all 0.3s ease;
-                }
-                
-                .sensor-item.space-theme .sensor-name {
-                    color: #ffffff;
-                    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 0 8px rgba(255, 255, 255, 0.5);
-                }
-                
-                .sensor-item:hover .sensor-name {
-                    color: #1f2937;
-                    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
-                }
-                
-                .sensor-item.space-theme:hover .sensor-name {
-                    color: #ffffff;
-                    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 0 8px rgba(255, 255, 255, 0.5);
-                }
-
-                @media (max-width: 768px) {
-                    .tab-navigation {
-                        margin: 20px 0 20px 0;
-                    }
-                }
-
-                @media (min-width: 768px) and (max-width: 1199px) {
-                    .sensor-item {
-                        padding: 12px;
-                        margin-bottom: 12px;
-                        border-radius: 16px;
-                        height: 48px;
-                        min-height: 48px;
-                        max-height: 48px;
-                    }
-                    
-                    .sensor-code {
-                        font-size: 0.85rem;
-                        min-width: 42px;
-                    }
-                    
-                    .sensor-name {
-                        font-size: 0.7rem;
-                        line-height: 1.2;
-                    }
-                }
-                
-                @media (min-width: 1200px) and (max-width: 1400px) {
-                    .sensor-item {
-                        padding: 16px;
-                        margin-bottom: 16px;
-                        border-radius: 20px;
-                        height: 56px;
-                        min-height: 56px;
-                        max-height: 56px;
-                    }
-                    
-                    .sensor-code {
-                        font-size: 1rem;
-                        min-width: 50px;
-                    }
-                    
-                    .sensor-name {
-                        font-size: 0.85rem;
-                        line-height: 1.3;
-                    }
-                }
-
-                .tab-button {
-                    padding: 12px 24px;
-                    border-radius: 12px;
-                    font-weight: 600;
-                    transition: all 0.3s ease;
-                    border: 2px solid transparent;
-                    background: #f3f4f6;
-                    color: #6b7280;
-                    cursor: pointer;
-                    font-size: 14px;
-                }
-
-                .tab-button.active {
-                    background: #3b82f6;
-                    color: white;
-                    border-color: #2563eb;
-                    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-                }
-
-                .tab-button:hover:not(.active) {
-                    background: #e5e7eb;
-                    color: #374151;
-                }
-
-                .tab-button.space-theme {
-                    background: linear-gradient(145deg, 
-                        rgba(80, 80, 80, 0.8) 0%, 
-                        rgba(70, 70, 70, 0.7) 25%,
-                        rgba(60, 60, 60, 0.6) 50%,
-                        rgba(55, 55, 55, 0.7) 75%,
-                        rgba(50, 50, 50, 0.8) 100%);
-                    border: 1px solid rgba(100, 100, 100, 0.6);
-                    color: #c4b5fd;
-                    box-shadow: 
-                        0 4px 12px rgba(0, 0, 0, 0.3),
-                        inset 0 1px 2px rgba(120, 120, 120, 0.2),
-                        inset 0 -1px 2px rgba(40, 40, 40, 0.3);
-                }
-
-                .tab-button.space-theme.active {
-                    background: linear-gradient(145deg, 
-                        rgba(147, 51, 234, 0.8) 0%, 
-                        rgba(124, 58, 237, 0.7) 25%,
-                        rgba(109, 40, 217, 0.6) 50%,
-                        rgba(91, 33, 182, 0.7) 75%,
-                        rgba(76, 29, 149, 0.8) 100%);
-                    border: 1px solid rgba(147, 51, 234, 0.8);
-                    color: #ffffff;
-                    box-shadow: 
-                        0 4px 12px rgba(0, 0, 0, 0.4),
-                        0 0 20px rgba(147, 51, 234, 0.3),
-                        inset 0 1px 2px rgba(196, 181, 253, 0.3),
-                        inset 0 -1px 2px rgba(76, 29, 149, 0.4);
-                }
-
-                .tab-button.space-theme:hover:not(.active) {
-                    background: linear-gradient(145deg, 
-                        rgba(100, 100, 100, 0.9) 0%, 
-                        rgba(90, 90, 90, 0.8) 25%,
-                        rgba(80, 80, 80, 0.7) 50%,
-                        rgba(75, 75, 75, 0.8) 75%,
-                        rgba(70, 70, 70, 0.9) 100%);
-                    color: #e0e7ff;
-                    box-shadow: 
-                        0 4px 12px rgba(0, 0, 0, 0.4),
-                        inset 0 1px 2px rgba(140, 140, 140, 0.3),
-                        inset 0 -1px 2px rgba(50, 50, 50, 0.4);
-                }
-
-                .tab-content {
-                    animation: fadeIn 0.3s ease-in-out;
-                }
-
-                @keyframes fadeIn {
-                    from { opacity: 0; transform: translateY(10px); }
-                    to { opacity: 1; transform: translateY(0); }
-                }
-
-                .turn-table-grid {
-                    display: grid;
-                    grid-template-columns: 1fr 1fr 1fr;
-                    grid-template-rows: 1fr 1fr 1fr;
-                    gap: 20px;
-                    max-width: 300px;
-                    margin: 0 auto;
-                }
-
-                @media (max-width: 768px) {
-                    .turn-table-grid {
-                        gap: 10px;
-                        max-width: 250px;
-                    }
-                }
-
-                .turn-table-btn {
-                    min-width: 80px;
-                    padding: 1em 1.5em;
-                    font-size: 0.75rem;
-                }
-
-                @media (min-width: 768px) {
-                    .turn-table-btn {
-                        min-width: 100px;
-                        padding: 1.25em 2em;
-                        font-size: 0.875rem;
-                    }
-                }
-
-                .turn-table-btn.up {
-                    grid-column: 2;
-                    grid-row: 1;
-                }
-
-                .turn-table-btn.down {
-                    grid-column: 2;
-                    grid-row: 3;
-                }
-
-                .turn-table-btn.left {
-                    grid-column: 1;
-                    grid-row: 2;
-                }
-
-                .turn-table-btn.right {
-                    grid-column: 3;
-                    grid-row: 2;
-                }
-
-                .page1-layout {
-                    display: grid;
-                    grid-template-rows: 1fr 1fr;
-                    gap: 40px;
-                    justify-content: center;
-                    align-items: center;
-                    max-width: 600px;
-                    margin: 0 auto;
-                }
-
-                @media (min-width: 768px) {
-                    .page1-layout {
-                        gap: 50px;
-                    }
-                }
-
-                @media (max-width: 768px) {
-                    .page1-layout {
-                        display: flex;
-                        flex-direction: column;
-                        gap: 15px;
-                        max-width: none;
-                    }
-                }
-
-                .turn-table-section {
-                    flex: 0 0 auto;
-                    min-width: 200px;
-                    display: flex;
-                    justify-content: center;
-                }
-
-                .door-section {
-                    flex: 0 0 auto;
-                    min-width: 200px;
-                    display: flex;
-                    justify-content: center;
-                }
-
-                .door-vertical {
-                    display: flex;
-                    flex-direction: row;
-                    gap: 40px;
-                    align-items: center;
-                }
-
-                @media (max-width: 768px) {
-                    .door-vertical {
-                        flex-direction: row;
-                        gap: 20px;
-                    }
-                }
-
-                .door-btn {
-                    min-width: 120px;
-                    padding: 1em 2em;
-                }
-
-                @media (min-width: 768px) {
-                    .door-btn {
-                        min-width: 140px;
-                        padding: 1.25em 2.5em;
-                        font-size: 0.875rem;
-                    }
-                }
-
-                @media (max-width: 768px) {
-                    .page1-layout {
-                        flex-direction: column;
-                        gap: 30px;
-                    }
-                }
-            `}</style>
-
-            <div className={`rounded-2xl shadow-lg p-3 md:p-4 overflow-hidden border-2 ${theme === 'space' ? 'border-purple-500/30' : theme === 'dark' ? 'border-gray-600/30' : theme === 'ocean' ? 'border-blue-500/30' : 'border-white/20'}`} style={{
-                background: theme === 'space' ? 'rgba(20, 20, 20, 0.95)' : theme === 'dark' ? 'rgba(20, 20, 20, 0.95)' : theme === 'ocean' ? 'rgba(0, 20, 40, 0.95)' : 'rgba(255, 255, 255, 0.95)',
-                backdropFilter: 'blur(25px)',
-                WebkitBackdropFilter: 'blur(25px)',
-            }}>
-                <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-6 md:mb-4 space-y-2 md:space-y-0">
-                    <div className="hidden md:block"></div>
-                    <div className="flex items-center flex-wrap gap-3 justify-end">
-                        {isDisabled && (
-                            <div className="bg-red-100 border border-red-300 px-3 py-2 rounded-2xl shadow-md">
-                                <span className="text-red-700 font-semibold text-sm">🚫 제어 불가</span>
-                            </div>
-                        )}
+            <div className={`rounded-2xl shadow-lg p-3 md:p-4 overflow-hidden ${mainBorderClass}`} style={mainBgStyle}>
+                {/* 제어 불가 알림 */}
+                {isDisabled && (
+                    <div className="flex justify-end mb-4">
+                        <div className="bg-red-100 border border-red-300 px-3 py-2 rounded-2xl shadow-md">
+                            <span className="text-red-700 font-semibold text-sm">🚫 제어 불가</span>
+                        </div>
                     </div>
-                </div>
+                )}
 
-                {/* 엔코더값/카운터값 표시 - PC에서는 더 넓게, 모바일/태블릿에서는 작게 */}
+                {/* 엔코더값/카운터값 표시 */}
                 <div className="mb-6 md:mb-8">
                     <div className="grid grid-cols-2 gap-4 max-w-md lg:max-w-2xl mx-auto">
-                        <div className={`p-2 sm:p-3 rounded-2xl transition-all duration-700 ease-out transform relative overflow-hidden`}
-                            style={{
-                                backdropFilter: 'blur(25px)',
-                                WebkitBackdropFilter: 'blur(25px)',
-                                ...getCardBackgroundStyle()
-                            }}>
-                            <div className={`absolute inset-0 rounded-2xl ${theme === 'space' ? 'bg-gradient-to-br from-purple-500/8 to-purple-600/8' : theme === 'dark' ? 'bg-gradient-to-br from-gray-500/8 to-gray-600/8' : theme === 'ocean' ? 'bg-gradient-to-br from-blue-500/8 to-cyan-500/8' : 'bg-gradient-to-br from-blue-500/8 to-indigo-500/8'}`}></div>
-                            <label className={`block text-xs font-medium mb-1 relative z-10 ${getCardLabelColorClass()}`}>엔코더값</label>
-                            <div className={`rounded-2xl px-2 sm:px-3 py-3 sm:py-5 text-lg sm:text-2xl md:text-3xl font-bold relative z-10 ${getCardValueColorClass()}`} style={{
-                                background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.8) 100%)',
-                                backdropFilter: 'blur(10px)',
-                                WebkitBackdropFilter: 'blur(10px)',
-                                border: '1px solid rgba(255, 255, 255, 0.3)',
-                                boxShadow: '0 2px 8px 0 rgba(31, 38, 135, 0.15)'
-                            }}>
-                                {sensorData?.rawData?.[currentConfig.dataAddresses.encoderValue] || 0}
-                            </div>
-                        </div>
-
-                        <div className={`p-2 sm:p-3 rounded-2xl transition-all duration-700 ease-out transform relative overflow-hidden`}
-                            style={{
-                                backdropFilter: 'blur(25px)',
-                                WebkitBackdropFilter: 'blur(25px)',
-                                ...getCardBackgroundStyle()
-                            }}>
-                            <div className={`absolute inset-0 rounded-2xl ${theme === 'space' ? 'bg-gradient-to-br from-purple-500/8 to-purple-600/8' : theme === 'dark' ? 'bg-gradient-to-br from-gray-500/8 to-gray-600/8' : theme === 'ocean' ? 'bg-gradient-to-br from-blue-500/8 to-cyan-500/8' : 'bg-gradient-to-br from-blue-500/8 to-indigo-500/8'}`}></div>
-                            <label className={`block text-xs font-medium mb-1 relative z-10 ${getCardLabelColorClass()}`}>카운터값</label>
-                            <div className={`rounded-2xl px-2 sm:px-3 py-3 sm:py-5 text-lg sm:text-2xl md:text-3xl font-bold relative z-10 ${getCardValueColorClass()}`} style={{
-                                background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.8) 100%)',
-                                backdropFilter: 'blur(10px)',
-                                WebkitBackdropFilter: 'blur(10px)',
-                                border: '1px solid rgba(255, 255, 255, 0.3)',
-                                boxShadow: '0 2px 8px 0 rgba(31, 38, 135, 0.15)'
-                            }}>
-                                {sensorData?.rawData?.[currentConfig.liftPositions.counter] || 0}
-                            </div>
-                        </div>
+                        <ValueCard 
+                            label="엔코더값"
+                            value={sensorData?.rawData?.[currentConfig.dataAddresses.encoderValue]}
+                            theme={theme}
+                            cardBgStyle={cardBgStyle}
+                            cardValueBgStyle={cardValueBgStyle}
+                            labelColorClass={labelColorClass}
+                            valueColorClass={valueColorClass}
+                        />
+                        <ValueCard 
+                            label="카운터값"
+                            value={sensorData?.rawData?.[currentConfig.liftPositions.counter]}
+                            theme={theme}
+                            cardBgStyle={cardBgStyle}
+                            cardValueBgStyle={cardValueBgStyle}
+                            labelColorClass={labelColorClass}
+                            valueColorClass={valueColorClass}
+                        />
                     </div>
                 </div>
 
-                {/* 공용 버튼들 - 홀드 방식으로 수정 */}
+                {/* 공용 버튼들 */}
                 <div className="mb-12 md:mb-20">
                     <div className="flex flex-wrap gap-4 justify-center common-buttons-grid">
-                        <button
-                            onMouseDown={handleErrorReset}
-                            onMouseUp={() => sendCommand("errorReset", 0)}
-                            onMouseLeave={() => sendCommand("errorReset", 0)}
-                            onTouchStart={handleErrorReset}
-                            onTouchEnd={() => sendCommand("errorReset", 0)}
-                            disabled={isDisabled || isResourceBusy("errorReset")}
-                            className={`learn-more common-button ${theme === 'space' ? 'space-theme' : ''} ${(isDisabled || isResourceBusy("errorReset")) ? 'opacity-50 cursor-not-allowed' : ''}`}
-                        >
-                            에러 리셋 {isResourceBusy("errorReset") && '⏳'}
-                        </button>
-                        <button
-                            onMouseDown={handleRemoteControl}
-                            onMouseUp={() => sendCommand("remoteControl", 0)}
-                            onMouseLeave={() => sendCommand("remoteControl", 0)}
-                            onTouchStart={handleRemoteControl}
-                            onTouchEnd={() => sendCommand("remoteControl", 0)}
-                            disabled={isDisabled || isResourceBusy("remoteControl")}
-                            className={`learn-more common-button ${theme === 'space' ? 'space-theme' : ''} ${(isDisabled || isResourceBusy("remoteControl")) ? 'opacity-50 cursor-not-allowed' : ''}`}
-                        >
-                            원격 제어 {isResourceBusy("remoteControl") && '⏳'}
-                        </button>
-                        <button
-                            onMouseDown={handleHomeReturn}
-                            onMouseUp={() => sendCommand("homeReturn", 0)}
-                            onMouseLeave={() => sendCommand("homeReturn", 0)}
-                            onTouchStart={handleHomeReturn}
-                            onTouchEnd={() => sendCommand("homeReturn", 0)}
-                            disabled={isDisabled || isResourceBusy("homeReturn")}
-                            className={`learn-more common-button ${theme === 'space' ? 'space-theme' : ''} ${(isDisabled || isResourceBusy("homeReturn")) ? 'opacity-50 cursor-not-allowed' : ''}`}
-                        >
-                            홈 복귀 {isResourceBusy("homeReturn") && '⏳'}
-                        </button>
-                        <button
-                            onMouseDown={handlePaletteChange}
-                            onMouseUp={() => sendCommand("paletteChange", 0)}
-                            onMouseLeave={() => sendCommand("paletteChange", 0)}
-                            onTouchStart={handlePaletteChange}
-                            onTouchEnd={() => sendCommand("paletteChange", 0)}
-                            disabled={isDisabled || isResourceBusy("paletteChange")}
-                            className={`learn-more common-button ${theme === 'space' ? 'space-theme' : ''} ${(isDisabled || isResourceBusy("paletteChange")) ? 'opacity-50 cursor-not-allowed' : ''}`}
-                        >
-                            파레트 교체 {isResourceBusy("paletteChange") && '⏳'}
-                        </button>
+                        <HoldButton commandName="errorReset" label="에러 리셋" onPress={sendCommand} 
+                            disabled={isDisabled} busy={isResourceBusy("errorReset")} theme={theme} className="common-button" />
+                        <HoldButton commandName="remoteControl" label="원격 제어" onPress={sendCommand} 
+                            disabled={isDisabled} busy={isResourceBusy("remoteControl")} theme={theme} className="common-button" />
+                        <HoldButton commandName="homeReturn" label="홈 복귀" onPress={sendCommand} 
+                            disabled={isDisabled} busy={isResourceBusy("homeReturn")} theme={theme} className="common-button" />
+                        <HoldButton commandName="paletteChange" label="파레트 교체" onPress={sendCommand} 
+                            disabled={isDisabled} busy={isResourceBusy("paletteChange")} theme={theme} className="common-button" />
                         <button
                             onMouseDown={handleEmergencyStop}
-                            onMouseUp={() => signalRService.emergencyStop(0)}
-                            onMouseLeave={() => signalRService.emergencyStop(0)}
-                            onTouchStart={handleEmergencyStop}
-                            onTouchEnd={() => signalRService.emergencyStop(0)}
                             disabled={isDisabled}
                             className={`learn-more emergency-button ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
                         >
@@ -1683,7 +599,7 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
                     </div>
                 </div>
 
-                {/* 탭 컨텐츠 - 간단한 핸들러들로 수정 */}
+                {/* 탭 컨텐츠 */}
                 <div className="tab-content">
                     {/* 1페이지: 도어/턴테이블 */}
                     {activeTab === 'page1' && (
@@ -1692,84 +608,30 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
                                 {/* 턴테이블 제어 */}
                                 <div className="turn-table-section">
                                     <div className="door-vertical">
-                                        <button
-                                            onMouseDown={handleTurnLeft}
-                                            onMouseUp={() => sendCommand("turnLeft", 0)}
-                                            onMouseLeave={() => sendCommand("turnLeft", 0)}
-                                            onTouchStart={handleTurnLeft}
-                                            onTouchEnd={() => sendCommand("turnLeft", 0)}
-                                            disabled={isDisabled || isResourceBusy("turnLeft")}
-                                            className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${(isDisabled || isResourceBusy("turnLeft")) ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                        >
-                                            좌회전 {isResourceBusy("turnLeft") && '⏳'}
-                                        </button>
-                                        <button
-                                            onMouseDown={handleTurnRight}
-                                            onMouseUp={() => sendCommand("turnRight", 0)}
-                                            onMouseLeave={() => sendCommand("turnRight", 0)}
-                                            onTouchStart={handleTurnRight}
-                                            onTouchEnd={() => sendCommand("turnRight", 0)}
-                                            disabled={isDisabled || isResourceBusy("turnRight")}
-                                            className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${(isDisabled || isResourceBusy("turnRight")) ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                        >
-                                            우회전 {isResourceBusy("turnRight") && '⏳'}
-                                        </button>
+                                        <HoldButton commandName="turnLeft" label="좌회전" onPress={sendCommand} 
+                                            disabled={isDisabled} busy={isResourceBusy("turnLeft")} theme={theme} />
+                                        <HoldButton commandName="turnRight" label="우회전" onPress={sendCommand} 
+                                            disabled={isDisabled} busy={isResourceBusy("turnRight")} theme={theme} />
                                     </div>
                                 </div>
 
                                 {/* 도어 제어 */}
                                 <div className="door-section">
                                     <div className="door-vertical">
-                                        <button
-                                            onMouseDown={handleDoorOpen}
-                                            onMouseUp={() => sendCommand("doorOpen", 0)}
-                                            onMouseLeave={() => sendCommand("doorOpen", 0)}
-                                            onTouchStart={handleDoorOpen}
-                                            onTouchEnd={() => sendCommand("doorOpen", 0)}
-                                            disabled={isDisabled || isResourceBusy("doorOpen")}
-                                            className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${(isDisabled || isResourceBusy("doorOpen")) ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                        >
-                                            도어 열림 {isResourceBusy("doorOpen") && '⏳'}
-                                        </button>
-                                        <button
-                                            onMouseDown={handleDoorClose}
-                                            onMouseUp={() => sendCommand("doorClose", 0)}
-                                            onMouseLeave={() => sendCommand("doorClose", 0)}
-                                            onTouchStart={handleDoorClose}
-                                            onTouchEnd={() => sendCommand("doorClose", 0)}
-                                            disabled={isDisabled || isResourceBusy("doorClose")}
-                                            className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${(isDisabled || isResourceBusy("doorClose")) ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                        >
-                                            도어 닫힘 {isResourceBusy("doorClose") && '⏳'}
-                                        </button>
+                                        <HoldButton commandName="doorOpen" label="도어 열림" onPress={sendCommand} 
+                                            disabled={isDisabled} busy={isResourceBusy("doorOpen")} theme={theme} />
+                                        <HoldButton commandName="doorClose" label="도어 닫힘" onPress={sendCommand} 
+                                            disabled={isDisabled} busy={isResourceBusy("doorClose")} theme={theme} />
                                     </div>
                                 </div>
 
                                 {/* 락킹 제어 */}
                                 <div className="door-section">
                                     <div className="door-vertical">
-                                        <button
-                                            onMouseDown={handleLockingOn}
-                                            onMouseUp={() => sendCommand("lockingOn", 0)}
-                                            onMouseLeave={() => sendCommand("lockingOn", 0)}
-                                            onTouchStart={handleLockingOn}
-                                            onTouchEnd={() => sendCommand("lockingOn", 0)}
-                                            disabled={isDisabled || isResourceBusy("lockingOn")}
-                                            className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${(isDisabled || isResourceBusy("lockingOn")) ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                        >
-                                            락킹 잠김 {isResourceBusy("lockingOn") && '⏳'}
-                                        </button>
-                                        <button
-                                            onMouseDown={handleLockingOff}
-                                            onMouseUp={() => sendCommand("lockingOff", 0)}
-                                            onMouseLeave={() => sendCommand("lockingOff", 0)}
-                                            onTouchStart={handleLockingOff}
-                                            onTouchEnd={() => sendCommand("lockingOff", 0)}
-                                            disabled={isDisabled || isResourceBusy("lockingOff")}
-                                            className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${(isDisabled || isResourceBusy("lockingOff")) ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                        >
-                                            락킹 해제 {isResourceBusy("lockingOff") && '⏳'}
-                                        </button>
+                                        <HoldButton commandName="lockingOn" label="락킹 잠김" onPress={sendCommand} 
+                                            disabled={isDisabled} busy={isResourceBusy("lockingOn")} theme={theme} />
+                                        <HoldButton commandName="lockingOff" label="락킹 해제" onPress={sendCommand} 
+                                            disabled={isDisabled} busy={isResourceBusy("lockingOff")} theme={theme} />
                                     </div>
                                 </div>
                             </div>
@@ -1779,57 +641,19 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
                     {/* 2페이지: 승강/횡행 제어 */}
                     {activeTab === 'page2' && (
                         <div className="space-y-6">
-                            <div>
-                                <div className="flex flex-col gap-6 md:gap-8 justify-center items-center">
-                                    <button
-                                        onMouseDown={handleLiftUp}
-                                        onMouseUp={() => sendCommand("liftUp", 0)}
-                                        onMouseLeave={() => sendCommand("liftUp", 0)}
-                                        onTouchStart={handleLiftUp}
-                                        onTouchEnd={() => sendCommand("liftUp", 0)}
-                                        disabled={isDisabled || isResourceBusy("liftUp")}
-                                        className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${(isDisabled || isResourceBusy("liftUp")) ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                    >
-                                        상승 {isResourceBusy("liftUp") && '⏳'}
-                                    </button>
+                            <div className="flex flex-col gap-6 md:gap-8 justify-center items-center">
+                                <HoldButton commandName="liftUp" label="상승" onPress={sendCommand} 
+                                    disabled={isDisabled} busy={isResourceBusy("liftUp")} theme={theme} />
 
-                                    <div className="flex gap-6 md:gap-8 justify-center items-center">
-                                        <button
-                                            onMouseDown={handleMoveLeft}
-                                            onMouseUp={() => sendCommand("moveLeft", 0)}
-                                            onMouseLeave={() => sendCommand("moveLeft", 0)}
-                                            onTouchStart={handleMoveLeft}
-                                            onTouchEnd={() => sendCommand("moveLeft", 0)}
-                                            disabled={isDisabled || isResourceBusy("moveLeft")}
-                                            className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${(isDisabled || isResourceBusy("moveLeft")) ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                        >
-                                            좌행 {isResourceBusy("moveLeft") && '⏳'}
-                                        </button>
-                                        <button
-                                            onMouseDown={handleMoveRight}
-                                            onMouseUp={() => sendCommand("moveRight", 0)}
-                                            onMouseLeave={() => sendCommand("moveRight", 0)}
-                                            onTouchStart={handleMoveRight}
-                                            onTouchEnd={() => sendCommand("moveRight", 0)}
-                                            disabled={isDisabled || isResourceBusy("moveRight")}
-                                            className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${(isDisabled || isResourceBusy("moveRight")) ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                        >
-                                            우행 {isResourceBusy("moveRight") && '⏳'}
-                                        </button>
-                                    </div>
-
-                                    <button
-                                        onMouseDown={handleLiftDown}
-                                        onMouseUp={() => sendCommand("liftDown", 0)}
-                                        onMouseLeave={() => sendCommand("liftDown", 0)}
-                                        onTouchStart={handleLiftDown}
-                                        onTouchEnd={() => sendCommand("liftDown", 0)}
-                                        disabled={isDisabled || isResourceBusy("liftDown")}
-                                        className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${(isDisabled || isResourceBusy("liftDown")) ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                    >
-                                        하강 {isResourceBusy("liftDown") && '⏳'}
-                                    </button>
+                                <div className="flex gap-6 md:gap-8 justify-center items-center">
+                                    <HoldButton commandName="moveLeft" label="좌행" onPress={sendCommand} 
+                                        disabled={isDisabled} busy={isResourceBusy("moveLeft")} theme={theme} />
+                                    <HoldButton commandName="moveRight" label="우행" onPress={sendCommand} 
+                                        disabled={isDisabled} busy={isResourceBusy("moveRight")} theme={theme} />
                                 </div>
+
+                                <HoldButton commandName="liftDown" label="하강" onPress={sendCommand} 
+                                    disabled={isDisabled} busy={isResourceBusy("liftDown")} theme={theme} />
                             </div>
                         </div>
                     )}
@@ -1843,7 +667,7 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
                 </div>
 
                 {/* 탭 네비게이션 */}
-                <div className="tab-navigation" style={{ marginTop: window.innerWidth <= 768 ? '40px' : '120px' }}>
+                <div className="tab-navigation" style={{ marginTop: isMobile ? '40px' : '120px' }}>
                     <button
                         onClick={() => { setActiveTab('page1'); setShowSensors(true); }}
                         className={`tab-button ${theme === 'space' ? 'space-theme' : ''} ${activeTab === 'page1' ? 'active' : ''}`}
@@ -1865,28 +689,17 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
                 </div>
             </div>
 
-            {/* 좌측 센서 패널 - config 기반 동적 렌더링 */}
+            {/* 센서 패널 */}
             {showSensors && (
-
-                <div className={`sensor-panel-left show ${theme === 'space' ? 'space-theme' : ''}`}>
-                    <div className="mb-4 text-center">
-
+                <>
+                    <div className={`sensor-panel-left show ${theme === 'space' ? 'space-theme' : ''}`}>
+                        {renderLeftSensorPanel()}
                     </div>
-                    {renderLeftSensorPanel()}
 
-                </div>
-            )}
-
-            {/* 우측 센서 패널 - config 기반 동적 렌더링 */}
-            {showSensors && (
-
-                <div className={`sensor-panel-right show ${theme === 'space' ? 'space-theme' : ''}`}>
-                    <div className="mb-4 text-center">
-
+                    <div className={`sensor-panel-right show ${theme === 'space' ? 'space-theme' : ''}`}>
+                        {renderRightSensorPanel()}
                     </div>
-                    {renderRightSensorPanel()}
-
-                </div>
+                </>
             )}
         </>
     );

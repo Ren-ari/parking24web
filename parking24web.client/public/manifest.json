@@ -11,25 +11,12 @@
   "lang": "ko",
   "icons": [
     {
-      "src": "/logo.png",
-      "sizes": "192x192",
+      "src": "/Primary black.png",
+      "sizes": "any",
       "type": "image/png",
       "purpose": "any maskable"
-    },
-    {
-      "src": "/logo.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any"
     }
   ],
   "categories": ["productivity", "utilities"],
-  "screenshots": [
-    {
-      "src": "/logo.png",
-      "sizes": "1280x720",
-      "type": "image/png",
-      "form_factor": "wide"
-    }
-  ]
+  "screenshots": []
 }

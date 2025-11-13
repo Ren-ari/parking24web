@@ -9,9 +9,11 @@ import ParkingMonitor from './ParkingMonitor';
 import EventMonitor from './EventMonitor';
 import ServiceRecordTab from './ServiceRecordTab';
 const CCTVMonitor = React.lazy(() => import('./CCTVMonitor'));
+import signalRService from '../services/signalrService';
 // 속초 1호기 config import 추가
 import siteConfig from '../../config/sokcho2Config.js';
 import { ROLE_TABS } from './auth';
+import './PLCControl.css';
 
 const PLCControl = ({ currentUser, onLogout }) => {
     const { isClient } = useAuth();
@@ -39,8 +41,7 @@ const PLCControl = ({ currentUser, onLogout }) => {
         return userTabs.map(tab => ({
             id: TAB_MAPPING[tab.id],
             name: tab.name,
-            originalId: tab.id,
-            icon: tab.icon
+            originalId: tab.id
         })).filter(tab => tab.id); // 매핑되지 않은 탭 제외
     }, [currentUser]);
 
@@ -64,7 +65,6 @@ const PLCControl = ({ currentUser, onLogout }) => {
     const defaultTab = getDefaultTab();
     const [activeTab, setActiveTab] = useState(defaultTab);
 
-    const [_showLogs, _setShowLogs] = useState(false);
     const [isDataPanelExpanded, setIsDataPanelExpanded] = useState(true);
     // 역할 기반 고정 모드: client=요약, 그 외(관리자/서비스 등)=상세
     const isSummaryMode = currentUser?.role === 'client';
@@ -81,14 +81,11 @@ const PLCControl = ({ currentUser, onLogout }) => {
         isAuthenticated,
         error,
         sensorData,
-        _logs,
         plcConfig,
         setPLCConfig,
         connectToPLC,
         disconnectFromPLC,
-        sendCommand,
-        clearError,
-        _clearLogs
+        clearError
     } = usePLCConnection();
 
     // 모바일 메뉴 애니메이션 타이머 관리
@@ -115,11 +112,7 @@ const PLCControl = ({ currentUser, onLogout }) => {
             const deviceType = address.substring(0, 1);
             const addressNum = parseInt(address.substring(1));
 
-            const result = await sendCommand('WriteAddress', {
-                deviceType: deviceType,
-                address: addressNum,
-                value: value
-            });
+            const result = await signalRService.writeAddress(deviceType, addressNum, value);
 
             if (result.success) {
                 console.log(`${description} 편집 완료: ${address} = ${value}`);
@@ -151,22 +144,20 @@ const PLCControl = ({ currentUser, onLogout }) => {
         setActiveTab(tabId);
     };
 
-    // 테마에 따른 메인 배경 클래스
-    const getMainBackgroundClass = () => {
-        return theme === 'space'
+    // 테마에 따른 스타일 메모이제이션
+    const mainBackgroundClass = useMemo(() => 
+        theme === 'space'
             ? 'bg-gradient-to-br from-gray-900 via-purple-900 to-black'
-            : 'bg-gradient-to-br from-blue-50 to-indigo-100';
-    };
+            : 'bg-gradient-to-br from-blue-50 to-indigo-100'
+    , [theme]);
 
-    // 테마에 따른 헤더 클래스
-    const getHeaderClass = () => {
-        return theme === 'space'
+    const headerClass = useMemo(() => 
+        theme === 'space'
             ? 'bg-transparent border-gray-700'
-            : 'bg-white border-gray-200';
-    };
+            : 'bg-white border-gray-200'
+    , [theme]);
 
-    // 테마에 따른 헤더 배경 스타일
-    const getHeaderStyle = () => {
+    const headerStyle = useMemo(() => {
         if (theme === 'space') {
             return {
                 background: 'rgba(20, 20, 20, 0.95)',
@@ -175,84 +166,59 @@ const PLCControl = ({ currentUser, onLogout }) => {
             };
         }
         return {};
-    };
+    }, [theme]);
 
-    // 테마에 따른 상태 텍스트 색상 클래스
-    const getStatusTextColorClass = () => {
-        return theme === 'space' ? 'text-gray-300' : 'text-gray-700';
-    };
+    const statusTextColorClass = useMemo(() => 
+        theme === 'space' ? 'text-gray-300' : 'text-gray-700'
+    , [theme]);
 
-    // 테마에 따른 사용자 정보 테두리 클래스
-    const getUserBorderClass = () => {
-        return theme === 'space' ? 'border-gray-600' : 'border-gray-200';
-    };
+    const userBorderClass = useMemo(() => 
+        theme === 'space' ? 'border-gray-600' : 'border-gray-200'
+    , [theme]);
 
-    // 테마에 따른 사용자 이름 색상 클래스
-    const getUserNameColorClass = () => {
-        return theme === 'space' ? 'text-gray-200' : 'text-gray-800';
-    };
+    const userNameColorClass = useMemo(() => 
+        theme === 'space' ? 'text-gray-200' : 'text-gray-800'
+    , [theme]);
 
-    // 테마에 따른 사용자 설명 색상 클래스
-    const getUserDescColorClass = () => {
-        return theme === 'space' ? 'text-gray-400' : 'text-gray-500';
-    };
+    const userDescColorClass = useMemo(() => 
+        theme === 'space' ? 'text-gray-400' : 'text-gray-500'
+    , [theme]);
 
-    // 테마에 따른 데이터 패널 테두리 클래스
-    const getDataPanelBorderClass = () => {
-        return theme === 'space' ? 'border border-gray-600/30' : 'border border-white/20';
-    };
+    const dataPanelBorderClass = useMemo(() => 
+        theme === 'space' ? 'border border-gray-600/30' : 'border border-white/20'
+    , [theme]);
 
-    // 테마에 따른 데이터 패널 스타일
-    const getDataPanelStyle = () => {
-        return theme === 'space'
+    const dataPanelStyle = useMemo(() => 
+        theme === 'space'
             ? { background: 'rgba(20, 20, 20, 0.95)', backdropFilter: 'blur(25px)', WebkitBackdropFilter: 'blur(25px)' }
-            : { background: 'rgba(255, 255, 255, 0.95)', backdropFilter: 'blur(25px)', WebkitBackdropFilter: 'blur(25px)' };
-    };
+            : { background: 'rgba(255, 255, 255, 0.95)', backdropFilter: 'blur(25px)', WebkitBackdropFilter: 'blur(25px)' }
+    , [theme]);
 
-    // 테마에 따른 카드 배경 스타일
-    const getCardBackgroundStyle = () => {
-        return theme === 'space'
-            ? { background: 'linear-gradient(135deg, rgba(147, 51, 234, 0.15) 0%, rgba(124, 58, 237, 0.08) 100%)', border: '1px solid rgba(147, 51, 234, 0.2)', boxShadow: '0 4px 16px 0 rgba(147, 51, 234, 0.1)' }
-            : { background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.03) 100%)', border: '1px solid rgba(255, 255, 255, 0.12)', boxShadow: '0 4px 16px 0 rgba(31, 38, 135, 0.15)' };
-    };
-
-    // 테마에 따른 카드 값 배경 스타일
-    const getCardValueBackgroundStyle = () => {
-        return theme === 'space'
-            ? { background: 'linear-gradient(135deg, rgba(147, 51, 234, 0.2) 0%, rgba(124, 58, 237, 0.1) 100%)', border: '1px solid rgba(147, 51, 234, 0.3)', boxShadow: '0 2px 8px 0 rgba(147, 51, 234, 0.1)' }
-            : { background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.8) 100%)', border: '1px solid rgba(255, 255, 255, 0.3)', boxShadow: '0 2px 8px 0 rgba(31, 38, 135, 0.15)' };
-    };
-
-    // 테마에 따른 데이터 패널 헤더 스타일
-    const getDataPanelHeaderStyle = () => {
-        return theme === 'space'
+    const dataPanelHeaderStyle = useMemo(() => 
+        theme === 'space'
             ? { background: 'rgba(20, 20, 20, 0.95)', borderBottom: '1px solid rgba(75, 85, 99, 0.3)' }
-            : { background: 'rgba(255, 255, 255, 0.9)', borderBottom: '1px solid rgba(255, 255, 255, 0.3)' };
-    };
+            : { background: 'rgba(255, 255, 255, 0.9)', borderBottom: '1px solid rgba(255, 255, 255, 0.3)' }
+    , [theme]);
 
-    // 테마에 따른 데이터 패널 콘텐츠 스타일
-    const getDataPanelContentStyle = () => {
-        return theme === 'space'
+    const dataPanelContentStyle = useMemo(() => 
+        theme === 'space'
             ? { background: 'rgba(20, 20, 20, 0.9)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)' }
-            : { background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.8) 0%, rgba(255, 255, 255, 0.7) 100%)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)' };
-    };
+            : { background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.8) 0%, rgba(255, 255, 255, 0.7) 100%)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)' }
+    , [theme]);
 
-    // 테마에 따른 글래스모피즘 클래스
-    const getGlassmorphismClass = () => {
-        return theme === 'space'
+    const glassmorphismClass = useMemo(() => 
+        theme === 'space'
             ? 'bg-gradient-to-br from-gray-800/5 via-gray-700/3 to-gray-600/2'
-            : 'bg-gradient-to-br from-white/5 via-white/3 to-white/2';
-    };
+            : 'bg-gradient-to-br from-white/5 via-white/3 to-white/2'
+    , [theme]);
 
-    // 테마에 따른 카드 라벨 색상 클래스
-    const getCardLabelColorClass = () => {
-        return theme === 'space' ? 'text-white' : 'text-blue-700';
-    };
+    const cardLabelColorClass = useMemo(() => 
+        theme === 'space' ? 'text-white' : 'text-blue-700'
+    , [theme]);
 
-    // 테마에 따른 카드 값 색상 클래스
-    const getCardValueColorClass = () => {
-        return theme === 'space' ? 'text-purple-800' : 'text-purple-900';
-    };
+    const cardValueColorClass = useMemo(() => 
+        theme === 'space' ? 'text-purple-800' : 'text-purple-900'
+    , [theme]);
 
     // 탭 스타일 - 화려한 애니메이션 적용
     const getTabStyle = (tabName) => {
@@ -283,7 +249,7 @@ const PLCControl = ({ currentUser, onLogout }) => {
     return (
         <>
             {/* 상단 네비게이션 헤더 - 완전 전체 화면 너비 */}
-            <header className={`shadow-lg border-b fixed top-0 left-0 right-0 w-full z-50 ${getHeaderClass()}`} style={getHeaderStyle()}>
+            <header className={`shadow-lg border-b fixed top-0 left-0 right-0 w-full z-50 ${headerClass}`} style={headerStyle}>
                 <div className="flex items-center justify-between px-2 sm:px-4 py-2 sm:py-3">
                     {/* 로고/제목 (왼쪽) */}
                     <div className="flex items-center space-x-2 sm:space-x-3 flex-shrink-0 cursor-pointer" onClick={rotateTheme} title="테마 전환 (라이트/우주)">
@@ -373,24 +339,24 @@ const PLCControl = ({ currentUser, onLogout }) => {
                         <div className="flex items-center space-x-3">
                             <div className="flex items-center space-x-2">
                                 <div className={`w-3 h-3 rounded-full ${isSignalRConnected ? 'bg-green-500' : 'bg-red-500'}`}></div>
-                                <span className={`text-sm font-medium ${getStatusTextColorClass()}`}>SignalR</span>
+                                <span className={`text-sm font-medium ${statusTextColorClass}`}>SignalR</span>
                             </div>
                             <div className="flex items-center space-x-2">
                                 <div className={`w-3 h-3 rounded-full ${isPLCConnected ? 'bg-green-500' : 'bg-red-500'}`}></div>
-                                <span className={`text-sm font-medium ${getStatusTextColorClass()}`}>PLC</span>
+                                <span className={`text-sm font-medium ${statusTextColorClass}`}>PLC</span>
                             </div>
                             <div className="flex items-center space-x-2">
                                 <div className={`w-3 h-3 rounded-full ${isAuthenticated ? 'bg-green-500' : 'bg-gray-400'}`}></div>
-                                <span className={`text-sm font-medium ${getStatusTextColorClass()}`}>인증</span>
+                                <span className={`text-sm font-medium ${statusTextColorClass}`}>인증</span>
                             </div>
                         </div>
 
                         {/* 사용자 정보 */}
                         {currentUser && (
-                            <div className={`flex items-center space-x-3 border-l pl-4 ${getUserBorderClass()}`}>
+                            <div className={`flex items-center space-x-3 border-l pl-4 ${userBorderClass}`}>
                                 <div className="text-right">
-                                    <div className={`text-sm font-semibold ${getUserNameColorClass()}`}>{currentUser.name}</div>
-                                    <div className={`text-xs ${getUserDescColorClass()}`}>{currentUser.description}</div>
+                                    <div className={`text-sm font-semibold ${userNameColorClass}`}>{currentUser.name}</div>
+                                    <div className={`text-xs ${userDescColorClass}`}>{currentUser.description}</div>
                                 </div>
                                 <button
                                     onClick={onLogout}
@@ -407,7 +373,7 @@ const PLCControl = ({ currentUser, onLogout }) => {
                         {/* 모바일 사용자 정보 */}
                         {currentUser && (
                             <div className="text-right mr-2">
-                                <div className={`text-sm font-semibold ${getUserNameColorClass()}`}>{currentUser.name}</div>
+                                <div className={`text-sm font-semibold ${userNameColorClass}`}>{currentUser.name}</div>
                                 <div className="text-xs text-gray-500">{currentUser.role}</div>
                             </div>
                         )}
@@ -433,12 +399,7 @@ const PLCControl = ({ currentUser, onLogout }) => {
                                 e.currentTarget.style.transform = '';
                                 e.currentTarget.style.backgroundColor = '';
                             }}
-                            className="p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100 relative z-[70] active:scale-90 transition-transform duration-150"
-                            style={{ 
-                                pointerEvents: 'auto',
-                                position: 'relative',
-                                zIndex: 9999
-                            }}
+                            className="p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100 relative z-[70] active:scale-90 transition-transform duration-150 hamburger-button"
                         >
                             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
@@ -451,23 +412,18 @@ const PLCControl = ({ currentUser, onLogout }) => {
 
             {/* 모바일/태블릿 탭 메뉴 - 헤더 밖에서 전체 화면 오버레이로 렌더링 */}
             {isMobileMenuOpen && (
-                <div className={`fixed inset-x-0 bottom-0 top-16 xl:hidden z-[40] overflow-y-auto ${isSpaceTheme ? 'bg-gradient-to-br from-gray-900 via-purple-900 to-black' : 'mobile-menu-bg'} transition-all duration-300 ${isClosing ? 'opacity-0 scale-95' : 'opacity-100 scale-100'}`} style={{
-                    WebkitOverflowScrolling: 'touch',
-                    overscrollBehavior: 'contain'
-                }}>
+                <div className={`fixed inset-x-0 bottom-0 top-16 xl:hidden z-[40] overflow-y-auto mobile-menu-overlay ${isSpaceTheme ? 'bg-gradient-to-br from-gray-900 via-purple-900 to-black' : 'mobile-menu-bg'} transition-all duration-300 ${isClosing ? 'opacity-0 scale-95' : 'opacity-100 scale-100'}`}>
                     {/* 우주 테마 전용 배경 효과들 */}
                     {isSpaceTheme && (
                         <>
                             {/* 어둡기 오버레이 */}
-                            <div className="absolute inset-0 pointer-events-none" style={{
-                                background: 'radial-gradient(circle at 30% 30%, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.4) 25%, rgba(0,0,0,0.2) 50%, rgba(0,0,0,0.1) 75%, rgba(0,0,0,0) 100%)'
-                            }}></div>
+                            <div className="absolute inset-0 pointer-events-none space-dark-overlay"></div>
                             
                             {/* 우주 네뷸라 효과 */}
                             <div className="absolute inset-0 pointer-events-none overflow-hidden">
                                 <div className="absolute top-1/6 left-1/6 w-64 h-64 bg-purple-800/15 rounded-full blur-3xl animate-pulse"></div>
-                                <div className="absolute bottom-1/6 right-1/6 w-48 h-48 bg-indigo-700/12 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }}></div>
-                                <div className="absolute top-1/2 left-1/2 w-32 h-32 bg-blue-600/10 rounded-full blur-2xl animate-pulse" style={{ animationDelay: '4s' }}></div>
+                                <div className="absolute bottom-1/6 right-1/6 w-48 h-48 bg-indigo-700/12 rounded-full blur-3xl animate-pulse space-nebula-delay-2s"></div>
+                                <div className="absolute top-1/2 left-1/2 w-32 h-32 bg-blue-600/10 rounded-full blur-2xl animate-pulse space-nebula-delay-4s"></div>
                             </div>
 
                             {/* 별들 */}
@@ -500,12 +456,8 @@ const PLCControl = ({ currentUser, onLogout }) => {
                             </div>
 
                             {/* 코너 어둡기 */}
-                            <div className="absolute inset-0 pointer-events-none" style={{
-                                background: 'radial-gradient(circle at 85% 15%, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.3) 20%, rgba(0,0,0,0.1) 40%, rgba(0,0,0,0) 60%)'
-                            }}></div>
-                            <div className="absolute inset-0 pointer-events-none" style={{
-                                background: 'radial-gradient(circle at 15% 85%, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.3) 20%, rgba(0,0,0,0.1) 40%, rgba(0,0,0,0) 60%)'
-                            }}></div>
+                            <div className="absolute inset-0 pointer-events-none corner-dark-top-right"></div>
+                            <div className="absolute inset-0 pointer-events-none corner-dark-bottom-left"></div>
                         </>
                     )}
                     <div className="h-full flex items-start justify-center p-4 pt-6 relative z-10">
@@ -522,7 +474,7 @@ const PLCControl = ({ currentUser, onLogout }) => {
                                         onTouchEnd={(e) => {
                                             e.currentTarget.style.transform = '';
                                         }}
-                                        className={`${isSpaceTheme
+                                        className={`tab-button-animated ${isClosing ? 'closing' : ''} ${isSpaceTheme
                                             ? `${activeTab === tab.id
                                                 ? 'bg-purple-700 text-white border-purple-300 ring-1 ring-purple-300/50 shadow-2xl shadow-[0_0_30px_6px_rgba(167,139,250,0.35)]'
                                                 : 'bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-gray-200 border-gray-700 hover:from-gray-800 hover:via-gray-700 hover:to-gray-800'} shadow-lg border-2 rounded-2xl relative px-4 overflow-hidden`
@@ -530,9 +482,7 @@ const PLCControl = ({ currentUser, onLogout }) => {
                                         style={{
                                             animationName: isClosing ? 'slideOutToLeft' : (index % 2 === 0 ? 'slideInFromLeft' : 'slideInFromRight'),
                                             animationDuration: isClosing ? '0.3s' : '0.6s',
-                                            animationTimingFunction: isClosing ? 'ease-in' : 'ease-out',
-                                            animationDelay: isClosing ? '0s' : `${(index + 1) * 0.1}s`,
-                                            animationFillMode: 'both'
+                                            animationDelay: isClosing ? '0s' : `${(index + 1) * 0.1}s`
                                         }}
                                     >
                                         <div className="flex flex-col items-center">
@@ -549,15 +499,13 @@ const PLCControl = ({ currentUser, onLogout }) => {
                                             action: () => onLogout()
                                         });
                                     }}
-                                    className={`${isSpaceTheme
+                                    className={`tab-button-animated ${isClosing ? 'closing' : ''} ${isSpaceTheme
                                         ? 'relative px-8 py-4 font-bold rounded-2xl transition-all duration-300 ease-in-out text-sm transform hover:scale-105 hover:-translate-y-1 shadow-xl border-2 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-gray-200 hover:from-gray-800 hover:via-gray-700 hover:to-gray-800 border-gray-700 w-full h-24 md:h-20 flex items-center justify-center text-center'
                                         : 'relative px-8 py-4 font-bold rounded-2xl transition-all duration-300 ease-in-out text-sm transform hover:scale-105 hover:-translate-y-1 shadow-lg hover:shadow-xl border-2 bg-gradient-to-r from-white to-gray-50 text-gray-600 hover:from-blue-50 hover:to-indigo-50 hover:text-blue-700 border-gray-200 hover:border-blue-300 hover:shadow-lg w-full h-24 md:h-20 flex items-center justify-center text-center'}`}
                                     style={{
                                         animationName: isClosing ? 'slideOutToRight' : (allowedTabs.length % 2 === 0 ? 'slideInFromLeft' : 'slideInFromRight'),
                                         animationDuration: isClosing ? '0.3s' : '0.6s',
-                                        animationTimingFunction: isClosing ? 'ease-in' : 'ease-out',
-                                        animationDelay: isClosing ? '0s' : `${(allowedTabs.length + 1) * 0.1}s`,
-                                        animationFillMode: 'both'
+                                        animationDelay: isClosing ? '0s' : `${(allowedTabs.length + 1) * 0.1}s`
                                     }}
                                 >
                                     <div className="flex flex-col items-center">
@@ -571,27 +519,14 @@ const PLCControl = ({ currentUser, onLogout }) => {
             )}
 
             {/* 메인 컨텐츠 */}
-            <div className={`min-h-screen pt-20 ${getMainBackgroundClass()} bg-render-fix`} style={{ 
-                width: '100vw',
-                WebkitOverflowScrolling: 'touch',
-                overscrollBehavior: 'contain',
-                touchAction: 'pan-x pan-y',
-                transform: 'translateZ(0)',
-                willChange: 'background, transform',
-                backfaceVisibility: 'hidden',
-                WebkitTransform: 'translateZ(0)',
-                WebkitBackfaceVisibility: 'hidden'
-            }}>
+            <div className={`min-h-screen pt-20 ${mainBackgroundClass} bg-render-fix main-content-optimized`}>
                 {/* 우주 테마 효과 */}
                 {isSpaceTheme && (
                     <>
                         {/* 중앙 어둡기 오버레이 (전역, 컨텐츠 아래) */}
-                        <div className="pointer-events-none fixed inset-0" style={{
-                            zIndex: 1,
-                            background: 'radial-gradient(circle at 50% 45%, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.45) 20%, rgba(0,0,0,0.25) 45%, rgba(0,0,0,0.12) 60%, rgba(0,0,0,0) 75%)'
-                        }}></div>
+                        <div className="pointer-events-none fixed inset-0 central-dark-overlay"></div>
                         {/* 별들 - 클릭 방해 방지용 래퍼 */}
-                        <div className="pointer-events-none fixed inset-0" style={{ zIndex: 0 }}>
+                        <div className="pointer-events-none fixed inset-0 stars-layer">
                         {Array.from({ length: 120 }, (_, i) => {
                             // 더 랜덤한 분포를 위한 시드 기반 랜덤
                             const seed = i * 137.5; // 황금각도 비율 사용
@@ -622,21 +557,15 @@ const PLCControl = ({ currentUser, onLogout }) => {
                         </div>
                         
                         {/* 은하수 효과 */}
-                        <div className="absolute inset-0 overflow-hidden pointer-events-none" style={{ zIndex: 0 }}>
+                        <div className="absolute inset-0 overflow-hidden pointer-events-none stars-layer">
                             <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-700/10 rounded-full blur-3xl"></div>
                             <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-purple-700/10 rounded-full blur-3xl"></div>
                             <div className="absolute top-1/2 left-1/2 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl"></div>
                         </div>
 
                         {/* 코너 어둡기 오버레이 (우상단, 좌하단) */}
-                        <div className="pointer-events-none fixed inset-0" style={{
-                            zIndex: 1,
-                            background: 'radial-gradient(circle at 85% 15%, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.28) 18%, rgba(0,0,0,0.14) 35%, rgba(0,0,0,0) 55%)'
-                        }}></div>
-                        <div className="pointer-events-none fixed inset-0" style={{
-                            zIndex: 1,
-                            background: 'radial-gradient(circle at 15% 85%, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.28) 18%, rgba(0,0,0,0.14) 35%, rgba(0,0,0,0) 55%)'
-                        }}></div>
+                        <div className="pointer-events-none fixed inset-0 corner-dark-top-right-light"></div>
+                        <div className="pointer-events-none fixed inset-0 corner-dark-bottom-left-light"></div>
                     </>
                 )}
                 
@@ -644,15 +573,11 @@ const PLCControl = ({ currentUser, onLogout }) => {
                     <div className="w-full">
                         {/* 상단 상태 표시 탭들 - 속초 config 적용 (클라이언트일 때 숨김) */}
                         {!isClient() && (
-                        <div className={`mb-4 rounded-2xl shadow-lg overflow-hidden ${getDataPanelBorderClass()}`} style={getDataPanelStyle()}>
+                        <div className={`mb-4 rounded-2xl shadow-lg overflow-hidden ${dataPanelBorderClass}`} style={dataPanelStyle}>
                             <div className="flex items-stretch">
                                 <div className="flex-1 min-w-0 flex flex-col">
 
-                                        <div className={`text-white text-xs font-medium px-1 py-2 text-center h-10 flex items-center justify-center ${sensorData?.rawData?.[siteConfig.systemAddresses.remoteOp] === 1 ? (theme === 'space' ? 'bg-purple-600' : 'bg-blue-500') : 'bg-gray-400'}`} style={{
-
-                                        backdropFilter: 'blur(10px)',
-                                        WebkitBackdropFilter: 'blur(10px)',
-                                    }}>
+                                        <div className={`text-white text-xs font-medium px-1 py-2 text-center h-10 flex items-center justify-center data-panel-header ${sensorData?.rawData?.[siteConfig.systemAddresses.remoteOp] === 1 ? (theme === 'space' ? 'bg-purple-600' : 'bg-blue-500') : 'bg-gray-400'}`}>
                                         원격조작
                                     </div>
 
@@ -663,10 +588,7 @@ const PLCControl = ({ currentUser, onLogout }) => {
                                 </div>
 
                                 <div className="flex-1 min-w-0 flex flex-col">
-                                    <div className={`text-white text-xs font-medium px-1 py-2 text-center h-10 flex items-center justify-center ${isPLCConnected ? (theme === 'space' ? 'bg-purple-600' : theme === 'dark' ? 'bg-gray-600' : theme === 'ocean' ? 'bg-blue-600' : 'bg-blue-500') : 'bg-gray-400'}`} style={{
-                                        backdropFilter: 'blur(10px)',
-                                        WebkitBackdropFilter: 'blur(10px)',
-                                    }}>
+                                    <div className={`text-white text-xs font-medium px-1 py-2 text-center h-10 flex items-center justify-center data-panel-header ${isPLCConnected ? (theme === 'space' ? 'bg-purple-600' : 'bg-blue-500') : 'bg-gray-400'}`}>
                                         위치정보
                                     </div>
 
@@ -677,22 +599,16 @@ const PLCControl = ({ currentUser, onLogout }) => {
                                 </div>
 
                                 <div className="flex-1 min-w-0 flex flex-col">
-                                    <div className={`text-white text-xs font-medium px-1 py-2 text-center h-10 flex items-center justify-center ${isPLCConnected ? (theme === 'space' ? 'bg-purple-600' : theme === 'dark' ? 'bg-gray-600' : theme === 'ocean' ? 'bg-blue-600' : 'bg-blue-500') : 'bg-gray-400'}`} style={{
-                                        backdropFilter: 'blur(10px)',
-                                        WebkitBackdropFilter: 'blur(10px)',
-                                    }}>
+                                    <div className={`text-white text-xs font-medium px-1 py-2 text-center h-10 flex items-center justify-center data-panel-header ${isPLCConnected ? (theme === 'space' ? 'bg-purple-600' : 'bg-blue-500') : 'bg-gray-400'}`}>
                                         호기번호
                                     </div>
-                                    <div className={`text-sm px-2 py-3 text-center border-r h-16 flex items-center justify-center ${isPLCConnected ? (theme === 'space' ? 'bg-purple-50 text-purple-700' : theme === 'dark' ? 'bg-gray-200 text-gray-800' : theme === 'ocean' ? 'bg-blue-100 text-blue-900' : 'bg-blue-50 text-blue-700') : 'bg-gray-100 text-gray-800'}`}>
+                                    <div className={`text-sm px-2 py-3 text-center border-r h-16 flex items-center justify-center ${isPLCConnected ? (theme === 'space' ? 'bg-purple-50 text-purple-700' : 'bg-blue-50 text-blue-700') : 'bg-gray-100 text-gray-800'}`}>
                                         {isPLCConnected ? `${selectedUnit}호기` : '-'}
                                     </div>
                                 </div>
 
                                 <div className="flex-1 min-w-0 flex flex-col">
-                                    <div className={`text-white text-xs font-medium px-1 py-2 text-center h-10 flex items-center justify-center ${isPLCConnected ? (theme === 'space' ? 'bg-purple-600' : theme === 'dark' ? 'bg-gray-600' : theme === 'ocean' ? 'bg-blue-600' : 'bg-blue-500') : 'bg-gray-400'}`} style={{
-                                        backdropFilter: 'blur(10px)',
-                                        WebkitBackdropFilter: 'blur(10px)',
-                                    }}>
+                                    <div className={`text-white text-xs font-medium px-1 py-2 text-center h-10 flex items-center justify-center data-panel-header ${isPLCConnected ? (theme === 'space' ? 'bg-purple-600' : 'bg-blue-500') : 'bg-gray-400'}`}>
                                         운전모드
                                     </div>
 
@@ -703,10 +619,7 @@ const PLCControl = ({ currentUser, onLogout }) => {
                                 </div>
 
                                 <div className="flex-1 min-w-0 flex flex-col">
-                                        <div className={`text-white text-xs font-medium px-1 py-2 text-center h-10 flex items-center justify-center ${isPLCConnected ? (sensorData.rawData[siteConfig.systemAddresses.errorStatus] === 1 ? 'bg-red-500' : (theme === 'space' ? 'bg-purple-600' : 'bg-green-500')) : 'bg-gray-400'}`} style={{
-                                        backdropFilter: 'blur(10px)',
-                                        WebkitBackdropFilter: 'blur(10px)',
-                                    }}>
+                                        <div className={`text-white text-xs font-medium px-1 py-2 text-center h-10 flex items-center justify-center data-panel-header ${isPLCConnected ? (sensorData.rawData[siteConfig.systemAddresses.errorStatus] === 1 ? 'bg-red-500' : (theme === 'space' ? 'bg-purple-600' : 'bg-green-500')) : 'bg-gray-400'}`}>
                                         에러상태
                                     </div>
                                         <div className={`text-sm px-2 py-3 text-center border-r h-16 flex items-center justify-center ${isPLCConnected ? (sensorData.rawData[siteConfig.systemAddresses.errorStatus] === 1 ? 'bg-red-50 text-red-700' : (theme === 'space' ? 'bg-purple-50 text-purple-700' : 'bg-green-50 text-green-700')) : 'bg-gray-100 text-gray-800'}`}>
@@ -715,12 +628,7 @@ const PLCControl = ({ currentUser, onLogout }) => {
                                 </div>
 
                                 <div className="flex-1 min-w-0 flex flex-col">
-
-                                        <div className={`text-white text-xs font-medium px-1 py-2 text-center h-10 flex items-center justify-center ${sensorData.rawData[siteConfig.systemAddresses.plcComm] === 1 ? (theme === 'space' ? 'bg-purple-600' : 'bg-blue-500') : 'bg-red-500'}`} style={{
-
-                                        backdropFilter: 'blur(10px)',
-                                        WebkitBackdropFilter: 'blur(10px)',
-                                    }}>
+                                        <div className={`text-white text-xs font-medium px-1 py-2 text-center h-10 flex items-center justify-center data-panel-header ${sensorData.rawData[siteConfig.systemAddresses.plcComm] === 1 ? (theme === 'space' ? 'bg-purple-600' : 'bg-blue-500') : 'bg-red-500'}`}>
                                         PLC통신
                                     </div>
 
@@ -735,20 +643,20 @@ const PLCControl = ({ currentUser, onLogout }) => {
 
                         {/* 차량 및 주차 현황 데이터 - 속초 config 적용 */}
                         <div
-                            className={`mb-6 rounded-2xl relative overflow-hidden shadow-xl shadow-black/20 ${getDataPanelBorderClass()}`}
-                            style={getDataPanelStyle()}
+                            className={`mb-6 rounded-2xl relative overflow-hidden shadow-xl shadow-black/20 ${dataPanelBorderClass}`}
+                            style={dataPanelStyle}
                         >
                             {/* 헤더 */}
                             <div
                                 className="group p-4 sm:p-6 flex justify-between items-center cursor-pointer rounded-t-2xl transition-all duration-300 relative overflow-hidden"
                                 onClick={() => setIsDataPanelExpanded(!isDataPanelExpanded)}
-                                style={getDataPanelHeaderStyle()}
+                                style={dataPanelHeaderStyle}
                             >
                                 <div
                                     className="absolute top-0 left-[-150%] h-full w-[50%] bg-gradient-to-r from-transparent via-white/30 to-transparent transition-all duration-700 ease-in-out group-hover:left-[150%]"
                                 />
 
-                                <h3 className={`text-lg font-bold relative z-10 ${theme === 'space' ? 'bg-gradient-to-r from-purple-400 to-purple-600 bg-clip-text text-transparent' : theme === 'dark' ? 'bg-gradient-to-r from-gray-300 to-gray-500 bg-clip-text text-transparent' : theme === 'ocean' ? 'bg-gradient-to-r from-blue-400 to-cyan-500 bg-clip-text text-transparent' : 'bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent'}`}>
+                                <h3 className={`text-lg font-bold relative z-10 ${theme === 'space' ? 'bg-gradient-to-r from-purple-400 to-purple-600 bg-clip-text text-transparent' : 'bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent'}`}>
                                     차량 및 주차 현황 데이터
                                 </h3>
                                 <button
@@ -785,9 +693,9 @@ const PLCControl = ({ currentUser, onLogout }) => {
                                 ? 'max-h-screen opacity-100 transform translate-y-0'
                                 : 'max-h-0 opacity-0 transform -translate-y-4'
                                 }`}>
-                                <div className="px-4 sm:px-6 pt-4 pb-4 sm:pb-6 relative" style={getDataPanelContentStyle()}>
+                                <div className="px-4 sm:px-6 pt-4 pb-4 sm:pb-6 relative" style={dataPanelContentStyle}>
                                     {/* 글래스모피즘 배경 그라데이션 */}
-                                    <div className={`absolute inset-0 rounded-b-2xl ${getGlassmorphismClass()}`}></div>
+                                    <div className={`absolute inset-0 rounded-b-2xl ${glassmorphismClass}`}></div>
                                     {/* 요약 KPI - client 전용 */}
                                     {isSummaryMode && (
                                         <div className="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 mb-2">
@@ -812,9 +720,9 @@ const PLCControl = ({ currentUser, onLogout }) => {
                                                     }}
                                                 >
                                                     <div className="absolute inset-0 bg-gradient-to-br from-blue-500/6 to-indigo-500/6 rounded-2xl"></div>
-                                                    <label className={`block text-xs font-medium mb-1 relative z-10 ${getCardLabelColorClass()}`}>{kpi.label}</label>
+                                                    <label className={`block text-xs font-medium mb-1 relative z-10 ${cardLabelColorClass}`}>{kpi.label}</label>
                                                     <div
-                                                        className={`text-center rounded-2xl px-1 sm:px-2 py-3 sm:py-5 text-xl sm:text-2xl md:text-3xl font-bold relative z-10 ${getCardValueColorClass()}`}
+                                                        className={`text-center rounded-2xl px-1 sm:px-2 py-3 sm:py-5 text-xl sm:text-2xl md:text-3xl font-bold relative z-10 ${cardValueColorClass}`}
                                                         style={{
                                                             background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.75) 100%)',
                                                             backdropFilter: 'blur(8px)',
@@ -850,8 +758,8 @@ const PLCControl = ({ currentUser, onLogout }) => {
                                                     boxShadow: '0 4px 16px 0 rgba(31, 38, 135, 0.15)'
                                                 }}>
                                                 <div className="absolute inset-0 bg-gradient-to-br from-blue-500/8 to-indigo-500/8 rounded-2xl"></div>
-                                                <label className={`block text-xs font-medium mb-1 relative z-10 ${getCardLabelColorClass()}`}>차량번호</label>
-                                                <div className={`rounded-2xl px-2 sm:px-3 py-3 sm:py-5 text-lg sm:text-2xl md:text-3xl font-bold relative z-10 ${getCardValueColorClass()}`} style={{
+                                                <label className={`block text-xs font-medium mb-1 relative z-10 ${cardLabelColorClass}`}>차량번호</label>
+                                                <div className={`rounded-2xl px-2 sm:px-3 py-3 sm:py-5 text-lg sm:text-2xl md:text-3xl font-bold relative z-10 ${cardValueColorClass}`} style={{
                                                     background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.8) 100%)',
                                                     backdropFilter: 'blur(10px)',
                                                     WebkitBackdropFilter: 'blur(10px)',
@@ -875,8 +783,8 @@ const PLCControl = ({ currentUser, onLogout }) => {
                                                     boxShadow: '0 4px 16px 0 rgba(31, 38, 135, 0.2)'
                                                 }}>
                                                 <div className="absolute inset-0 bg-gradient-to-br from-blue-500/8 to-indigo-500/8 rounded-2xl"></div>
-                                                <label className={`block text-xs font-medium mb-1 relative z-10 ${getCardLabelColorClass()}`}>적재차판</label>
-                                                <div className={`rounded-2xl px-2 sm:px-3 py-3 sm:py-5 text-lg sm:text-2xl md:text-3xl font-bold relative z-10 ${getCardValueColorClass()}`} style={{
+                                                <label className={`block text-xs font-medium mb-1 relative z-10 ${cardLabelColorClass}`}>적재차판</label>
+                                                <div className={`rounded-2xl px-2 sm:px-3 py-3 sm:py-5 text-lg sm:text-2xl md:text-3xl font-bold relative z-10 ${cardValueColorClass}`} style={{
                                                     background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.8) 100%)',
                                                     backdropFilter: 'blur(10px)',
                                                     WebkitBackdropFilter: 'blur(10px)',
@@ -900,8 +808,8 @@ const PLCControl = ({ currentUser, onLogout }) => {
                                                     boxShadow: '0 4px 16px 0 rgba(31, 38, 135, 0.2)'
                                                 }}>
                                                 <div className="absolute inset-0 bg-gradient-to-br from-blue-500/8 to-indigo-500/8 rounded-2xl"></div>
-                                                <label className={`block text-xs font-medium mb-1 relative z-10 ${getCardLabelColorClass()}`}>출고차판</label>
-                                                <div className={`rounded-2xl px-2 sm:px-3 py-3 sm:py-5 text-lg sm:text-2xl md:text-3xl font-bold relative z-10 ${getCardValueColorClass()}`} style={{
+                                                <label className={`block text-xs font-medium mb-1 relative z-10 ${cardLabelColorClass}`}>출고차판</label>
+                                                <div className={`rounded-2xl px-2 sm:px-3 py-3 sm:py-5 text-lg sm:text-2xl md:text-3xl font-bold relative z-10 ${cardValueColorClass}`} style={{
                                                     background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.8) 100%)',
                                                     backdropFilter: 'blur(10px)',
                                                     WebkitBackdropFilter: 'blur(10px)',
@@ -929,8 +837,8 @@ const PLCControl = ({ currentUser, onLogout }) => {
                                                 boxShadow: '0 3px 12px 0 rgba(31, 38, 135, 0.18)'
                                             }}>
                                             <div className="absolute inset-0 bg-gradient-to-br from-purple-500/6 to-pink-500/6 rounded-2xl"></div>
-                                            <label className={`block text-xs font-medium mb-1 relative z-10 ${getCardLabelColorClass()}`}>전체주차</label>
-                                            <div className={`text-center rounded-2xl px-1 sm:px-2 py-3 sm:py-5 text-lg sm:text-2xl md:text-3xl font-bold relative z-10 ${getCardValueColorClass()}`} style={{
+                                            <label className={`block text-xs font-medium mb-1 relative z-10 ${cardLabelColorClass}`}>전체주차</label>
+                                            <div className={`text-center rounded-2xl px-1 sm:px-2 py-3 sm:py-5 text-lg sm:text-2xl md:text-3xl font-bold relative z-10 ${cardValueColorClass}`} style={{
                                                 background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.75) 100%)',
                                                 backdropFilter: 'blur(8px)',
                                                 WebkitBackdropFilter: 'blur(8px)',
@@ -954,8 +862,8 @@ const PLCControl = ({ currentUser, onLogout }) => {
                                                 boxShadow: '0 3px 12px 0 rgba(31, 38, 135, 0.18)'
                                             }}>
                                             <div className="absolute inset-0 bg-gradient-to-br from-purple-500/6 to-pink-500/6 rounded-2xl"></div>
-                                            <label className={`block text-xs font-medium mb-1 relative z-10 ${getCardLabelColorClass()}`}>전체공차</label>
-                                            <div className={`text-center rounded-2xl px-1 sm:px-2 py-3 sm:py-5 text-lg sm:text-2xl md:text-3xl font-bold relative z-10 ${getCardValueColorClass()}`} style={{
+                                            <label className={`block text-xs font-medium mb-1 relative z-10 ${cardLabelColorClass}`}>전체공차</label>
+                                            <div className={`text-center rounded-2xl px-1 sm:px-2 py-3 sm:py-5 text-lg sm:text-2xl md:text-3xl font-bold relative z-10 ${cardValueColorClass}`} style={{
                                                 background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.75) 100%)',
                                                 backdropFilter: 'blur(8px)',
                                                 WebkitBackdropFilter: 'blur(8px)',
@@ -979,8 +887,8 @@ const PLCControl = ({ currentUser, onLogout }) => {
                                                 boxShadow: '0 3px 12px 0 rgba(31, 38, 135, 0.18)'
                                             }}>
                                             <div className="absolute inset-0 bg-gradient-to-br from-purple-500/6 to-pink-500/6 rounded-2xl"></div>
-                                            <label className={`block text-xs font-medium mb-1 relative z-10 ${getCardLabelColorClass()}`}>일반입고</label>
-                                            <div className={`text-center rounded-2xl px-1 sm:px-2 py-3 sm:py-5 text-lg sm:text-2xl md:text-3xl font-bold relative z-10 ${getCardValueColorClass()}`} style={{
+                                            <label className={`block text-xs font-medium mb-1 relative z-10 ${cardLabelColorClass}`}>일반입고</label>
+                                            <div className={`text-center rounded-2xl px-1 sm:px-2 py-3 sm:py-5 text-lg sm:text-2xl md:text-3xl font-bold relative z-10 ${cardValueColorClass}`} style={{
                                                 background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.75) 100%)',
                                                 backdropFilter: 'blur(8px)',
                                                 WebkitBackdropFilter: 'blur(8px)',
@@ -1004,8 +912,8 @@ const PLCControl = ({ currentUser, onLogout }) => {
                                                 boxShadow: '0 3px 12px 0 rgba(31, 38, 135, 0.18)'
                                             }}>
                                             <div className="absolute inset-0 bg-gradient-to-br from-purple-500/6 to-pink-500/6 rounded-2xl"></div>
-                                            <label className={`block text-xs font-medium mb-1 relative z-10 ${getCardLabelColorClass()}`}>일반출차</label>
-                                            <div className={`text-center rounded-2xl px-1 sm:px-2 py-3 sm:py-5 text-lg sm:text-2xl md:text-3xl font-bold relative z-10 ${getCardValueColorClass()}`} style={{
+                                            <label className={`block text-xs font-medium mb-1 relative z-10 ${cardLabelColorClass}`}>일반출차</label>
+                                            <div className={`text-center rounded-2xl px-1 sm:px-2 py-3 sm:py-5 text-lg sm:text-2xl md:text-3xl font-bold relative z-10 ${cardValueColorClass}`} style={{
                                                 background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.75) 100%)',
                                                 backdropFilter: 'blur(8px)',
                                                 WebkitBackdropFilter: 'blur(8px)',
@@ -1029,8 +937,8 @@ const PLCControl = ({ currentUser, onLogout }) => {
                                                 boxShadow: '0 3px 12px 0 rgba(31, 38, 135, 0.18)'
                                             }}>
                                             <div className="absolute inset-0 bg-gradient-to-br from-purple-500/6 to-pink-500/6 rounded-2xl"></div>
-                                            <label className={`block text-xs font-medium mb-1 relative z-10 ${getCardLabelColorClass()}`}>RV입고</label>
-                                            <div className={`text-center rounded-2xl px-1 sm:px-2 py-3 sm:py-5 text-lg sm:text-2xl md:text-3xl font-bold relative z-10 ${getCardValueColorClass()}`} style={{
+                                            <label className={`block text-xs font-medium mb-1 relative z-10 ${cardLabelColorClass}`}>RV입고</label>
+                                            <div className={`text-center rounded-2xl px-1 sm:px-2 py-3 sm:py-5 text-lg sm:text-2xl md:text-3xl font-bold relative z-10 ${cardValueColorClass}`} style={{
                                                 background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.75) 100%)',
                                                 backdropFilter: 'blur(8px)',
                                                 WebkitBackdropFilter: 'blur(8px)',
@@ -1054,8 +962,8 @@ const PLCControl = ({ currentUser, onLogout }) => {
                                                 boxShadow: '0 3px 12px 0 rgba(31, 38, 135, 0.18)'
                                             }}>
                                             <div className="absolute inset-0 bg-gradient-to-br from-purple-500/6 to-pink-500/6 rounded-2xl"></div>
-                                            <label className={`block text-xs font-medium mb-1 relative z-10 ${getCardLabelColorClass()}`}>RV출차</label>
-                                            <div className={`text-center rounded-2xl px-1 sm:px-2 py-3 sm:py-5 text-lg sm:text-2xl md:text-3xl font-bold relative z-10 ${getCardValueColorClass()}`} style={{
+                                            <label className={`block text-xs font-medium mb-1 relative z-10 ${cardLabelColorClass}`}>RV출차</label>
+                                            <div className={`text-center rounded-2xl px-1 sm:px-2 py-3 sm:py-5 text-lg sm:text-2xl md:text-3xl font-bold relative z-10 ${cardValueColorClass}`} style={{
                                                 background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.75) 100%)',
                                                 backdropFilter: 'blur(8px)',
                                                 WebkitBackdropFilter: 'blur(8px)',
@@ -1102,16 +1010,15 @@ const PLCControl = ({ currentUser, onLogout }) => {
                                 />
                             )}
 
-                            {/* 수동 제어 탭 - manual 권한 필요 */}
-                            {activeTab === 'control' && hasTabAccess('control') && (
-                                <ManualControl
-                                    isPLCConnected={isPLCConnected}
-                                    isAuthenticated={isAuthenticated}
-                                    sendCommand={sendCommand}
-                                    sensorData={sensorData}
-                                    isMobileMenuOpen={isMobileMenuOpen}
-                                />
-                            )}
+                        {/* 수동 제어 탭 - manual 권한 필요 */}
+                        {activeTab === 'control' && hasTabAccess('control') && (
+                            <ManualControl
+                                isPLCConnected={isPLCConnected}
+                                isAuthenticated={isAuthenticated}
+                                sensorData={sensorData}
+                                isMobileMenuOpen={isMobileMenuOpen}
+                            />
+                        )}
 
                             {/* 주차장 모니터 탭 - parking 권한 (모든 사용자) */}
                             {activeTab === 'parking' && hasTabAccess('parking') && (
@@ -1119,7 +1026,6 @@ const PLCControl = ({ currentUser, onLogout }) => {
                                     sensorData={sensorData}
                                     isPLCConnected={isPLCConnected}
                                     onVehicleEdit={handleVehicleEdit}
-                                    theme={theme}
                                 />
                             )}
 
@@ -1148,7 +1054,7 @@ const PLCControl = ({ currentUser, onLogout }) => {
                                 <div className="flex items-center justify-center min-h-96">
                                     <div className="text-center p-8 bg-white/10 backdrop-blur-md rounded-2xl border border-white/20">
                                         <div className="text-6xl mb-4">🔒</div>
-                                        <h3 className={`text-xl font-bold mb-2 ${getCardValueColorClass()}`}>접근 권한이 없습니다</h3>
+                                        <h3 className={`text-xl font-bold mb-2 ${cardValueColorClass}`}>접근 권한이 없습니다</h3>
                                         <p className="text-gray-500">
                                             현재 계정({currentUser?.role})으로는 이 기능을 사용할 수 없습니다.
                                         </p>

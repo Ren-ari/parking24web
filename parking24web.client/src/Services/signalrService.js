@@ -196,28 +196,6 @@ class SignalRService {
         }
     }
 
-    // PLC 명령 전송 (저수준 API)
-    async sendPLCCommand(commandType, deviceType, address, value, bitPosition = 0) {
-        try {
-            if (!this.connection || !this.isConnected) {
-                throw new Error("SignalR 연결이 필요합니다");
-            }
-
-            const command = {
-                commandType,
-                deviceType,
-                address,
-                bitPosition,
-                value
-            };
-
-            await this.connection.invoke("SendPLCCommand", command);
-        } catch (error) {
-            console.error("PLC 명령 전송 실패:", error);
-            throw error;
-        }
-    }
-
     /**
      * Config 기반 명령 전송 (개선 버전)
      * @param {string} commandName - 명령 이름
@@ -292,18 +270,6 @@ class SignalRService {
         if (cmd.includes('move')) return 'traverse';
         if (cmd.includes('locking')) return 'locking';
         return 'system';
-    }
-
-    // 현장 설정 로드
-    async loadSiteConfig(config) {
-        try {
-            if (!this.connection || !this.isConnected) return;
-
-            await this.connection.invoke("LoadSiteConfig", config);
-        } catch (error) {
-            console.error("현장 설정 로드 실패:", error);
-            throw error;
-        }
     }
 
     // SignalR 연결 종료

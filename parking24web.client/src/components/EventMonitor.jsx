@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import siteConfig from '../../config/sokcho2Config.js';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../hooks/useAuth';
@@ -291,6 +291,115 @@ const EventMonitor = ({ sensorData, isPLCConnected }) => {
         }
     };
 
+    // 테마별 스타일 메모이제이션
+    const searchInputStyle = useMemo(() => 
+        theme === 'space' 
+            ? {
+                background: 'linear-gradient(145deg, #1a1a1a 0%, #2d2d2d 50%, #1a1a1a 100%)',
+                border: '1px solid rgba(255, 255, 255, 0.2)'
+            }
+            : {}
+    , [theme]);
+
+    const buttonStyle = useMemo(() => 
+        theme === 'space'
+            ? {
+                background: 'linear-gradient(145deg, #e5e7eb 0%, #d1d5db 40%, #9ca3af 100%)',
+                border: '1px solid rgba(156, 163, 175, 0.8)',
+                boxShadow: 'inset 0 1px 2px rgba(255,255,255,0.5), 0 4px 12px rgba(0,0,0,0.2)'
+            }
+            : {}
+    , [theme]);
+
+    const desktopButtonStyle = useMemo(() =>
+        theme === 'space'
+            ? {
+                background: 'linear-gradient(145deg, #e5e7eb 0%, #9ca3af 100%)',
+                border: '1px solid rgba(156, 163, 175, 0.8)',
+                boxShadow: 'inset 0 1px 2px rgba(255,255,255,0.7), 0 6px 16px rgba(0,0,0,0.25)',
+                fontSize: '0.75rem'
+            }
+            : {
+                background: 'rgba(255, 255, 255, 0.9)',
+                border: '1px solid rgba(255, 255, 255, 0.3)',
+                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+                fontSize: '0.75rem'
+            }
+    , [theme]);
+
+    const searchResultContainerStyle = useMemo(() =>
+        theme === 'space'
+            ? {
+                background: 'rgba(20, 20, 20, 0.95)',
+                backdropFilter: 'blur(25px)',
+                border: '1px solid rgba(75, 85, 99, 0.3)'
+            }
+            : {
+                background: 'rgba(255, 255, 255, 0.95)',
+                backdropFilter: 'blur(25px)',
+                border: '1px solid rgba(255, 255, 255, 0.2)'
+            }
+    , [theme]);
+
+    const searchResultHeaderStyle = useMemo(() =>
+        theme === 'space'
+            ? {
+                background: 'rgba(20, 20, 20, 0.95)',
+                borderBottom: '1px solid rgba(75, 85, 99, 0.3)'
+            }
+            : {
+                background: 'rgba(255, 255, 255, 0.9)',
+                borderBottom: '1px solid rgba(255, 255, 255, 0.3)'
+            }
+    , [theme]);
+
+    const statisticsToggleStyle = useMemo(() =>
+        theme === 'space'
+            ? { background: 'transparent' }
+            : {
+                background: 'rgba(255, 255, 255, 0.7)',
+                backdropFilter: 'blur(10px)',
+                border: '1px solid rgba(255, 255, 255, 0.2)'
+            }
+    , [theme]);
+
+    const tabContainerStyle = useMemo(() =>
+        theme === 'space'
+            ? {}
+            : {
+                background: 'rgba(255, 255, 255, 0.3)',
+                backdropFilter: 'blur(10px)',
+                border: '1px solid rgba(255, 255, 255, 0.2)'
+            }
+    , [theme]);
+
+    const getTabButtonStyle = useCallback((isActive) => {
+        if (isActive) {
+            return theme === 'space'
+                ? {
+                    background: 'linear-gradient(135deg, rgba(196, 181, 253, 0.9) 0%, rgba(167, 139, 250, 0.9) 100%)',
+                    backdropFilter: 'blur(10px)',
+                    border: '1px solid rgba(255, 255, 255, 0.2)'
+                }
+                : {
+                    background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.8) 0%, rgba(99, 102, 241, 0.8) 100%)',
+                    backdropFilter: 'blur(10px)',
+                    border: '1px solid rgba(255, 255, 255, 0.2)'
+                };
+        }
+        return { background: 'transparent' };
+    }, [theme]);
+
+    const tableContainerStyle = useMemo(() =>
+        theme === 'space'
+            ? {}
+            : {
+                background: 'rgba(255, 255, 255, 0.7)',
+                backdropFilter: 'blur(15px)',
+                border: '1px solid rgba(255, 255, 255, 0.2)'
+            }
+    , [theme]);
+
     return (
         <>
             <style>
@@ -358,10 +467,7 @@ const EventMonitor = ({ sensorData, isPLCConnected }) => {
                             onChange={(e) => setSearchCarNumber(e.target.value)}
                             onKeyPress={(e) => e.key === 'Enter' && searchCar()}
                             className={`flex-1 min-w-0 px-2 md:px-4 py-3 md:py-2 rounded-lg focus:outline-none text-sm md:text-base ${theme === 'space' ? 'text-white' : 'text-gray-700 border border-gray-300 bg-white focus:ring-2 focus:ring-blue-300'}`}
-                            style={theme === 'space' ? {
-                                background: 'linear-gradient(145deg, #1a1a1a 0%, #2d2d2d 50%, #1a1a1a 100%)',
-                                border: '1px solid rgba(255, 255, 255, 0.2)'
-                            } : {}}
+                            style={searchInputStyle}
                             placeholder=""
                         />
                         <button
@@ -436,18 +542,18 @@ const EventMonitor = ({ sensorData, isPLCConnected }) => {
 
                     {/* 액션 버튼들 - 데스크탑 */}
                     <div className="hidden sm:flex gap-3 mt-4">
-                        <button onClick={downloadExcel} className="px-4 py-2 rounded-full text-gray-800 font-bold hover:scale-105" style={theme === 'space' ? { background: 'linear-gradient(145deg, #e5e7eb 0%, #9ca3af 100%)', border: '1px solid rgba(156, 163, 175, 0.8)', boxShadow: 'inset 0 1px 2px rgba(255,255,255,0.7), 0 6px 16px rgba(0,0,0,0.25)', fontSize: '0.75rem' } : { background: 'rgba(255, 255, 255, 0.9)', border: '1px solid rgba(255, 255, 255, 0.3)', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)', fontSize: '0.75rem' }}>엑셀 다운로드</button>
-                        <button onClick={loadAllData} className="px-4 py-2 rounded-full text-gray-800 font-bold hover:scale-105" style={theme === 'space' ? { background: 'linear-gradient(145deg, #e5e7eb 0%, #9ca3af 100%)', border: '1px solid rgba(156, 163, 175, 0.8)', boxShadow: 'inset 0 1px 2px rgba(255,255,255,0.7), 0 6px 16px rgba(0,0,0,0.25)', fontSize: '0.75rem' } : { background: 'rgba(255, 255, 255, 0.9)', border: '1px solid rgba(255, 255, 255, 0.3)', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)', fontSize: '0.75rem' }}>새로고침</button>
+                        <button onClick={downloadExcel} className="px-4 py-2 rounded-full text-gray-800 font-bold hover:scale-105" style={desktopButtonStyle}>엑셀 다운로드</button>
+                        <button onClick={loadAllData} className="px-4 py-2 rounded-full text-gray-800 font-bold hover:scale-105" style={desktopButtonStyle}>새로고침</button>
                         {!isClient() && (
-                            <button onClick={clearAllData} className="px-4 py-2 rounded-full text-gray-800 font-bold hover:scale-105" style={theme === 'space' ? { background: 'linear-gradient(145deg, #e5e7eb 0%, #9ca3af 100%)', border: '1px solid rgba(156, 163, 175, 0.8)', boxShadow: 'inset 0 1px 2px rgba(255,255,255,0.7), 0 6px 16px rgba(0,0,0,0.25)', fontSize: '0.75rem' } : { background: 'rgba(255, 255, 255, 0.9)', border: '1px solid rgba(255, 255, 255, 0.3)', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)', fontSize: '0.75rem' }}>데이터 초기화</button>
+                            <button onClick={clearAllData} className="px-4 py-2 rounded-full text-gray-800 font-bold hover:scale-105" style={desktopButtonStyle}>데이터 초기화</button>
                         )}
                     </div>
                 </div>
 
                 {/* 검색 결과 섹션 */}
                 {searchResults.length > 0 && (
-                    <div className={`mb-6 rounded-2xl overflow-hidden shadow-xl ${theme === 'space' ? 'border-gray-700' : 'border-gray-200'}`} style={theme === 'space' ? { background: 'rgba(20, 20, 20, 0.95)', backdropFilter: 'blur(25px)', border: '1px solid rgba(75, 85, 99, 0.3)' } : { background: 'rgba(255, 255, 255, 0.95)', backdropFilter: 'blur(25px)', border: '1px solid rgba(255, 255, 255, 0.2)' }}>
-                        <div className="p-4 sm:p-6 flex justify-between items-center cursor-pointer" onClick={() => setIsSearchResultExpanded(!isSearchResultExpanded)} style={theme === 'space' ? { background: 'rgba(20, 20, 20, 0.95)', borderBottom: '1px solid rgba(75, 85, 99, 0.3)' } : { background: 'rgba(255, 255, 255, 0.9)', borderBottom: '1px solid rgba(255, 255, 255, 0.3)' }}>
+                    <div className={`mb-6 rounded-2xl overflow-hidden shadow-xl ${theme === 'space' ? 'border-gray-700' : 'border-gray-200'}`} style={searchResultContainerStyle}>
+                        <div className="p-4 sm:p-6 flex justify-between items-center cursor-pointer" onClick={() => setIsSearchResultExpanded(!isSearchResultExpanded)} style={searchResultHeaderStyle}>
                             <h3 className={`text-lg font-bold ${theme === 'space' ? 'bg-gradient-to-r from-purple-400 to-purple-600 bg-clip-text text-transparent' : 'bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent'}`}>{searchCarNumber}번 차량 검색 결과 ({searchResults.length}건)</h3>
                             <svg className={`w-5 h-5 transition-transform duration-500 ${isSearchResultExpanded ? 'rotate-180' : ''} ${theme === 'space' ? 'text-purple-500' : 'text-blue-500'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
                         </div>
@@ -494,7 +600,7 @@ const EventMonitor = ({ sensorData, isPLCConnected }) => {
                 {/* 통계 섹션 헤더 */}
                 <div className="flex items-center justify-between mb-4">
                     <h2 className={`text-xl font-bold ${theme === 'space' ? 'bg-gradient-to-r from-purple-400 to-purple-600 bg-clip-text text-transparent' : 'bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent'}`}>통계 및 점유율</h2>
-                    <button onClick={handleToggleStatistics} className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${theme === 'space' ? 'text-gray-300 hover:text-gray-200' : 'text-gray-600 hover:text-gray-800'}`} style={theme === 'space' ? { background: 'transparent' } : { background: 'rgba(255, 255, 255, 0.7)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255, 255, 255, 0.2)' }}>
+                    <button onClick={handleToggleStatistics} className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${theme === 'space' ? 'text-gray-300 hover:text-gray-200' : 'text-gray-600 hover:text-gray-800'}`} style={statisticsToggleStyle}>
                         <span className="text-sm font-medium">{isStatisticsExpanded ? '숨기기' : '보기'}</span>
                         <svg className={`w-4 h-4 transition-transform ${isStatisticsExpanded ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
                     </button>
@@ -512,9 +618,9 @@ const EventMonitor = ({ sensorData, isPLCConnected }) => {
                 <div className="space-y-6">
                     {/* 탭 네비게이션 */}
                     <div className="flex justify-center">
-                        <div className={`inline-flex rounded-2xl p-1 gap-1 shadow-lg ${theme === 'space' ? 'bg-gradient-to-br from-purple-600/80 via-purple-700/70 to-purple-800/80' : ''}`} style={theme === 'space' ? {} : { background: 'rgba(255, 255, 255, 0.3)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255, 255, 255, 0.2)' }}>
+                        <div className={`inline-flex rounded-2xl p-1 gap-1 shadow-lg ${theme === 'space' ? 'bg-gradient-to-br from-purple-600/80 via-purple-700/70 to-purple-800/80' : ''}`} style={tabContainerStyle}>
                             {['recent', 'parked', 'exited'].map(tab => (
-                                <button key={tab} onClick={() => setActiveTab(tab)} className={`px-4 sm:px-8 py-2 sm:py-3 rounded-xl text-xs sm:text-sm font-semibold transition-all transform ${activeTab === tab ? 'text-white shadow-lg scale-105' : 'text-gray-300 hover:text-gray-200'}`} style={activeTab === tab ? { background: theme === 'space' ? 'linear-gradient(135deg, rgba(196, 181, 253, 0.9) 0%, rgba(167, 139, 250, 0.9) 100%)' : 'linear-gradient(135deg, rgba(59, 130, 246, 0.8) 0%, rgba(99, 102, 241, 0.8) 100%)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255, 255, 255, 0.2)' } : { background: 'transparent' }}>
+                                <button key={tab} onClick={() => setActiveTab(tab)} className={`px-4 sm:px-8 py-2 sm:py-3 rounded-xl text-xs sm:text-sm font-semibold transition-all transform ${activeTab === tab ? 'text-white shadow-lg scale-105' : 'text-gray-300 hover:text-gray-200'}`} style={getTabButtonStyle(activeTab === tab)}>
                                     {tab === 'recent' && '최근 이벤트'}
                                     {tab === 'parked' && '현재 주차중'}
                                     {tab === 'exited' && '출차된 차량'}
@@ -524,7 +630,7 @@ const EventMonitor = ({ sensorData, isPLCConnected }) => {
                     </div>
 
                     {/* 테이블 */}
-                    <div className={`rounded-xl overflow-hidden shadow-2xl ${theme === 'space' ? 'bg-gradient-to-br from-purple-900/80 to-indigo-900/80' : 'bg-white'}`} style={theme === 'space' ? {} : { background: 'rgba(255, 255, 255, 0.7)', backdropFilter: 'blur(15px)', border: '1px solid rgba(255, 255, 255, 0.2)' }}>
+                    <div className={`rounded-xl overflow-hidden shadow-2xl ${theme === 'space' ? 'bg-gradient-to-br from-purple-900/80 to-indigo-900/80' : 'bg-white'}`} style={tableContainerStyle}>
                         <div className="overflow-x-auto">
                             <table className="w-full">
                                 <thead className={`text-white ${theme === 'space' ? 'bg-gradient-to-br from-purple-500 to-purple-700' : 'bg-gradient-to-br from-blue-500 to-blue-700'}`}>

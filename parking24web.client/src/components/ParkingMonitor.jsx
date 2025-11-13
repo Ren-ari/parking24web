@@ -1,15 +1,17 @@
-﻿import React, { useState, useEffect, useRef } from "react";
+﻿import React, { useState, useEffect, useRef, useMemo } from "react";
 import { useAuth } from '../hooks/useAuth';
-import signalRService from '../services/SignalRService';
+import { useTheme } from '../contexts/ThemeContext';
+import signalRService from '../services/signalrService';
 import siteConfig from '../../config/sokcho2Config.js';
 
 
-const ParkingMonitor = ({ sensorData, isPLCConnected, onVehicleEdit, theme }) => {
+const ParkingMonitor = ({ sensorData, isPLCConnected, onVehicleEdit }) => {
     const [isEditMode, setIsEditMode] = useState(false);
     const [addressMapping, setAddressMapping] = useState({});
     const [isMobile, setIsMobile] = useState(false);
     const scrollContainerRef = useRef(null);
     const { isClient } = useAuth();
+    const { theme } = useTheme();
 
     // 박스 타입 정의 (속초용)
     const _boxTypes = [
@@ -327,6 +329,70 @@ const ParkingMonitor = ({ sensorData, isPLCConnected, onVehicleEdit, theme }) =>
         }));
     };
 
+    // 테마별 스타일 메모이제이션
+    const containerStyle = useMemo(() => 
+        theme === 'space'
+            ? {
+                background: 'rgba(20, 20, 20, 0.95)',
+                backdropFilter: 'blur(25px)',
+                WebkitBackdropFilter: 'blur(25px)'
+            }
+            : {
+                background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 0.9) 100%)'
+            }
+    , [theme]);
+
+    const layoutContainerStyle = useMemo(() =>
+        theme === 'space'
+            ? {
+                background: 'linear-gradient(135deg, rgba(15, 15, 15, 1) 0%, rgba(10, 10, 10, 1) 100%)',
+                backdropFilter: 'blur(15px)',
+                WebkitBackdropFilter: 'blur(15px)'
+            }
+            : {
+                background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.8) 0%, rgba(248, 250, 252, 0.7) 100%)'
+            }
+    , [theme]);
+
+    const getLevelContainerStyle = (level) => ({
+        backdropFilter: 'blur(20px)',
+        WebkitBackdropFilter: 'blur(20px)',
+        ...(level !== 1 && theme === 'space' ? {
+            background: 'linear-gradient(145deg, rgba(76, 29, 149, 0.9) 0%, rgba(91, 33, 182, 0.85) 25%, rgba(109, 40, 217, 0.8) 50%, rgba(124, 58, 237, 0.85) 75%, rgba(147, 51, 234, 0.9) 100%)',
+            border: '1px solid rgba(76, 29, 149, 1)',
+            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.4), inset 0 1px 2px rgba(196, 181, 253, 0.4), inset 0 -1px 2px rgba(76, 29, 149, 0.6)'
+        } : {})
+    });
+
+    const getBoxStyle = (box, value) => ({
+        backdropFilter: 'blur(15px)',
+        WebkitBackdropFilter: 'blur(15px)',
+        ...((box === 1 || box === 3) && value !== 0 && theme !== 'space'
+            ? { backgroundColor: "#F0F8FF" }
+            : {})
+    });
+
+    const plateStatusStyle = useMemo(() => ({
+        backdropFilter: 'blur(10px)',
+        WebkitBackdropFilter: 'blur(10px)'
+    }), []);
+
+    const liftIndicatorStyle = useMemo(() => ({
+        backdropFilter: 'blur(10px)',
+        WebkitBackdropFilter: 'blur(10px)'
+    }), []);
+
+    const valueDisplayStyle = useMemo(() => ({
+        backdropFilter: 'blur(10px)',
+        WebkitBackdropFilter: 'blur(10px)',
+        ...(theme === 'space' ? { backgroundColor: '#000000' } : { backgroundColor: '#ffffff' })
+    }), [theme]);
+
+    const textStyle = useMemo(() => ({
+        fontWeight: 'bold',
+        fontSize: '16px'
+    }), []);
+
     return (
         <>
             <style jsx>{`
@@ -350,27 +416,11 @@ const ParkingMonitor = ({ sensorData, isPLCConnected, onVehicleEdit, theme }) =>
                     background: rgba(20, 20, 20, 0.8);
                 }
             `}</style>
-            <div className={`rounded-2xl p-3 md:p-4 border shadow-xl ${theme === 'space' ? 'border-white/20 shadow-black/20' : 'border-gray-300 shadow-gray-200'}`} style={{
-            ...(theme === 'space' ? {
-                background: 'rgba(20, 20, 20, 0.95)',
-                backdropFilter: 'blur(25px)',
-                WebkitBackdropFilter: 'blur(25px)',
-            } : {
-                background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 0.9) 100%)',
-            })
-        }}>
+            <div className={`rounded-2xl p-3 md:p-4 border shadow-xl ${theme === 'space' ? 'border-white/20 shadow-black/20' : 'border-gray-300 shadow-gray-200'}`} style={containerStyle}>
            
 
             {/* 속초 주차장 레이아웃 (5개 박스 구조 유지) */}
-            <div className={`border rounded-lg h-[60vh] sm:h-[55vh] md:h-[60vh] lg:h-[60vh] ${theme === 'space' ? 'border-gray-600' : 'border-gray-300'}`} style={{
-                ...(theme === 'space' ? {
-                    background: 'linear-gradient(135deg, rgba(15, 15, 15, 1) 0%, rgba(10, 10, 10, 1) 100%)',
-                    backdropFilter: 'blur(15px)',
-                    WebkitBackdropFilter: 'blur(15px)',
-                } : {
-                    background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.8) 0%, rgba(248, 250, 252, 0.7) 100%)',
-                })
-            }}>
+            <div className={`border rounded-lg h-[60vh] sm:h-[55vh] md:h-[60vh] lg:h-[60vh] ${theme === 'space' ? 'border-gray-600' : 'border-gray-300'}`} style={layoutContainerStyle}>
                
                 <div
                     ref={scrollContainerRef}
@@ -391,15 +441,7 @@ const ParkingMonitor = ({ sensorData, isPLCConnected, onVehicleEdit, theme }) =>
                                             ? "bg-gradient-to-br from-purple-800 to-violet-900 border-purple-900"
                                             : "bg-gradient-to-br from-blue-50 to-indigo-100 border-gray-200"
                                     }`}
-                                style={{
-                                    backdropFilter: 'blur(20px)',
-                                    WebkitBackdropFilter: 'blur(20px)',
-                                    ...(level !== 1 && theme === 'space' ? {
-                                        background: 'linear-gradient(145deg, rgba(76, 29, 149, 0.9) 0%, rgba(91, 33, 182, 0.85) 25%, rgba(109, 40, 217, 0.8) 50%, rgba(124, 58, 237, 0.85) 75%, rgba(147, 51, 234, 0.9) 100%)',
-                                        border: '1px solid rgba(76, 29, 149, 1)',
-                                        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.4), inset 0 1px 2px rgba(196, 181, 253, 0.4), inset 0 -1px 2px rgba(76, 29, 149, 0.6)'
-                                    } : {})
-                                }}
+                                style={getLevelContainerStyle(level)}
                             >
                                 <div className="flex items-center space-x-4">
                                     {/* 층 라벨 */}
@@ -448,13 +490,7 @@ const ParkingMonitor = ({ sensorData, isPLCConnected, onVehicleEdit, theme }) =>
                                                                     ? "flex items-center justify-center"
                                                                     : ""
                                                                 }`}
-                                                            style={{
-                                                                backdropFilter: 'blur(15px)',
-                                                                WebkitBackdropFilter: 'blur(15px)',
-                                                                ...((box === 1 || box === 3) && value !== 0 && theme !== 'space'
-                                                                    ? { backgroundColor: "#F0F8FF" }
-                                                                    : {})
-                                                            }}
+                                                            style={getBoxStyle(box, value)}
                                                         >
                                                             {/* 박스 타입 라벨 제거 - 상단 헤더에서 표시 */}
                                                             {/* 주소 입력 (편집 모드) */}
@@ -477,10 +513,7 @@ const ParkingMonitor = ({ sensorData, isPLCConnected, onVehicleEdit, theme }) =>
                                                             {/* 데이터 표시 */}
                                                             {box === 1 || box === 3 ? (
                                                                 // 차판상태는 값에 따라 이미지 표시
-                                                                <div className={`flex items-center justify-center ${theme === 'space' ? (value !== 0 ? 'bg-gray-900 border-gray-900' : 'bg-gray-700 border-gray-600') : 'bg-white border-white/20'} rounded-xl h-[32px] sm:h-[60px] md:h-[65px] lg:h-[70px] w-full shadow-sm`} style={{
-                                                                    backdropFilter: 'blur(10px)',
-                                                                    WebkitBackdropFilter: 'blur(10px)',
-                                                                }}>
+                                                                <div className={`flex items-center justify-center ${theme === 'space' ? (value !== 0 ? 'bg-gray-900 border-gray-900' : 'bg-gray-700 border-gray-600') : 'bg-white border-white/20'} rounded-xl h-[32px] sm:h-[60px] md:h-[65px] lg:h-[70px] w-full shadow-sm`} style={plateStatusStyle}>
                                                                     {getPlateStateImage(value) ? (
                                                                         <img
                                                                             src={getPlateStateImage(value)}
@@ -508,10 +541,7 @@ const ParkingMonitor = ({ sensorData, isPLCConnected, onVehicleEdit, theme }) =>
                                                                 <div className="flex items-center justify-center h-10 sm:h-14 md:h-16 w-full">
                                                                     {getCurrentLiftPosition() === level ? (
                                                                         // 현재 층에 리프트가 있으면 carPlate_mini.png 표시
-                                                                        <div className={`border border-white/20 rounded-xl p-2 w-full h-full flex items-center justify-center ${theme === 'space' ? 'bg-purple-200' : 'bg-white'}`} style={{
-                                                                            backdropFilter: 'blur(10px)',
-                                                                            WebkitBackdropFilter: 'blur(10px)',
-                                                                        }}>
+                                                                        <div className={`border border-white/20 rounded-xl p-2 w-full h-full flex items-center justify-center ${theme === 'space' ? 'bg-purple-200' : 'bg-white'}`} style={liftIndicatorStyle}>
                                                                             <img
                                                                                 src="/images/carPlate_mini.png"
                                                                                 alt="리프트 위치"
@@ -536,11 +566,7 @@ const ParkingMonitor = ({ sensorData, isPLCConnected, onVehicleEdit, theme }) =>
                                                                             ? "py-1 sm:py-3 text-sm sm:text-base md:text-lg"
                                                                             : "py-0.5 text-xs sm:text-sm md:text-base"
                                                                         } flex items-center justify-center`}
-                                                                    style={{
-                                                                        backdropFilter: 'blur(10px)',
-                                                                        WebkitBackdropFilter: 'blur(10px)',
-                                                                        ...(theme === 'space' ? { backgroundColor: '#000000' } : { backgroundColor: '#ffffff' })
-                                                                    }}
+                                                                    style={valueDisplayStyle}
                                                                     onDoubleClick={() =>
                                                                         handleVehicleEdit(level, box)
                                                                     }
@@ -551,7 +577,7 @@ const ParkingMonitor = ({ sensorData, isPLCConnected, onVehicleEdit, theme }) =>
                                                                             : ""
                                                                     }
                                                                 >
-                                                                    <span className={`${theme === 'space' ? 'text-white' : 'text-black'} font-bold text-lg`} style={{ fontWeight: 'bold', fontSize: '16px' }}>{displayValue}</span>
+                                                                    <span className={`${theme === 'space' ? 'text-white' : 'text-black'} font-bold text-lg`} style={textStyle}>{displayValue}</span>
                                                                 </div>
                                                             )}
 
@@ -590,4 +616,4 @@ const ParkingMonitor = ({ sensorData, isPLCConnected, onVehicleEdit, theme }) =>
     );
 };
 
-export default ParkingMonitor;
+export default ParkingMonitor;  

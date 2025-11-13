@@ -1,10 +1,7 @@
 // 서비스 워커 - PWA 오프라인 지원
-const CACHE_NAME = 'epsai-v1';
+const CACHE_NAME = 'epsai-v3';
 const urlsToCache = [
-  '/',
-  '/static/js/bundle.js',
-  '/static/css/main.css',
-  '/logo.svg'
+  '/'
 ];
 
 // 설치 이벤트
@@ -15,6 +12,23 @@ self.addEventListener('install', (event) => {
         return cache.addAll(urlsToCache);
       })
   );
+  self.skipWaiting();
+});
+
+// 활성화 이벤트 - 이전 캐시 삭제
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    caches.keys().then((cacheNames) => {
+      return Promise.all(
+        cacheNames.map((cacheName) => {
+          if (cacheName !== CACHE_NAME) {
+            return caches.delete(cacheName);
+          }
+        })
+      );
+    })
+  );
+  return self.clients.claim();
 });
 
 // 페치 이벤트
