@@ -648,7 +648,7 @@ const PLCControl = ({ currentUser, onLogout }) => {
                         >
                             {/* 헤더 */}
                             <div
-                                className="group p-4 sm:p-6 flex justify-between items-center cursor-pointer rounded-t-2xl transition-all duration-300 relative overflow-hidden"
+                                className="group p-4 sm:p-6 flex justify-center items-center cursor-pointer rounded-t-2xl transition-all duration-300 relative overflow-hidden"
                                 onClick={() => setIsDataPanelExpanded(!isDataPanelExpanded)}
                                 style={dataPanelHeaderStyle}
                             >
@@ -656,12 +656,12 @@ const PLCControl = ({ currentUser, onLogout }) => {
                                     className="absolute top-0 left-[-150%] h-full w-[50%] bg-gradient-to-r from-transparent via-white/30 to-transparent transition-all duration-700 ease-in-out group-hover:left-[150%]"
                                 />
 
-                                <h3 className={`text-lg font-bold relative z-10 ${theme === 'space' ? 'bg-gradient-to-r from-purple-400 to-purple-600 bg-clip-text text-transparent' : 'bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent'}`}>
+                                <h3 className={`text-lg font-bold relative z-10 text-center ${theme === 'space' ? 'bg-gradient-to-r from-purple-400 to-purple-600 bg-clip-text text-transparent' : 'bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent'}`}>
                                     차량 및 주차 현황 데이터
                                 </h3>
                                 <button
 
-                                    className={`p-2 rounded-full transition-all duration-300 ease-in-out transform hover:scale-110 active:scale-95 relative z-10 ${isDataPanelExpanded ? '' : 'hover:bg-white/10 border border-white/10'}`}
+                                    className={`p-2 rounded-full transition-all duration-300 ease-in-out transform hover:scale-110 active:scale-95 absolute right-4 sm:right-6 z-10 ${isDataPanelExpanded ? '' : 'hover:bg-white/10 border border-white/10'}`}
 
                                     style={isDataPanelExpanded ? {
                                         background: theme === 'space' ? 'rgba(20, 20, 20, 0.95)' : 'rgba(255, 255, 255, 0.95)',
@@ -758,8 +758,8 @@ const PLCControl = ({ currentUser, onLogout }) => {
                                                     boxShadow: '0 4px 16px 0 rgba(31, 38, 135, 0.15)'
                                                 }}>
                                                 <div className="absolute inset-0 bg-gradient-to-br from-blue-500/8 to-indigo-500/8 rounded-2xl"></div>
-                                                <label className={`block text-xs font-medium mb-1 relative z-10 ${cardLabelColorClass}`}>차량번호</label>
-                                                <div className={`rounded-2xl px-2 sm:px-3 py-3 sm:py-5 text-lg sm:text-2xl md:text-3xl font-bold relative z-10 ${cardValueColorClass}`} style={{
+                                                <label className={`block text-xs font-medium mb-1 relative z-10 text-center ${cardLabelColorClass}`}>차량번호</label>
+                                                <div className={`rounded-2xl px-2 sm:px-3 py-3 sm:py-5 text-lg sm:text-2xl md:text-3xl font-bold relative z-10 text-center ${cardValueColorClass}`} style={{
                                                     background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.8) 100%)',
                                                     backdropFilter: 'blur(10px)',
                                                     WebkitBackdropFilter: 'blur(10px)',
@@ -783,8 +783,8 @@ const PLCControl = ({ currentUser, onLogout }) => {
                                                     boxShadow: '0 4px 16px 0 rgba(31, 38, 135, 0.2)'
                                                 }}>
                                                 <div className="absolute inset-0 bg-gradient-to-br from-blue-500/8 to-indigo-500/8 rounded-2xl"></div>
-                                                <label className={`block text-xs font-medium mb-1 relative z-10 ${cardLabelColorClass}`}>적재차판</label>
-                                                <div className={`rounded-2xl px-2 sm:px-3 py-3 sm:py-5 text-lg sm:text-2xl md:text-3xl font-bold relative z-10 ${cardValueColorClass}`} style={{
+                                                <label className={`block text-xs font-medium mb-1 relative z-10 text-center ${cardLabelColorClass}`}>적재차판</label>
+                                                <div className={`rounded-2xl px-2 sm:px-3 py-3 sm:py-5 text-lg sm:text-2xl md:text-3xl font-bold relative z-10 text-center ${cardValueColorClass}`} style={{
                                                     background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.8) 100%)',
                                                     backdropFilter: 'blur(10px)',
                                                     WebkitBackdropFilter: 'blur(10px)',
@@ -808,8 +808,8 @@ const PLCControl = ({ currentUser, onLogout }) => {
                                                     boxShadow: '0 4px 16px 0 rgba(31, 38, 135, 0.2)'
                                                 }}>
                                                 <div className="absolute inset-0 bg-gradient-to-br from-blue-500/8 to-indigo-500/8 rounded-2xl"></div>
-                                                <label className={`block text-xs font-medium mb-1 relative z-10 ${cardLabelColorClass}`}>출고차판</label>
-                                                <div className={`rounded-2xl px-2 sm:px-3 py-3 sm:py-5 text-lg sm:text-2xl md:text-3xl font-bold relative z-10 ${cardValueColorClass}`} style={{
+                                                <label className={`block text-xs font-medium mb-1 relative z-10 text-center ${cardLabelColorClass}`}>출고차판</label>
+                                                <div className={`rounded-2xl px-2 sm:px-3 py-3 sm:py-5 text-lg sm:text-2xl md:text-3xl font-bold relative z-10 text-center ${cardValueColorClass}`} style={{
                                                     background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.8) 100%)',
                                                     backdropFilter: 'blur(10px)',
                                                     WebkitBackdropFilter: 'blur(10px)',

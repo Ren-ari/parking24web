@@ -47,8 +47,8 @@ const ValueCard = ({ label, value, theme, cardBgStyle, cardValueBgStyle, labelCo
                 ? 'bg-gradient-to-br from-purple-500/8 to-purple-600/8' 
                 : 'bg-gradient-to-br from-blue-500/8 to-indigo-500/8'
         }`}></div>
-        <label className={`block text-xs font-medium mb-1 relative z-10 ${labelColorClass}`}>{label}</label>
-        <div className={`rounded-2xl px-2 sm:px-3 py-3 sm:py-5 text-lg sm:text-2xl md:text-3xl font-bold relative z-10 ${valueColorClass}`} 
+        <label className={`block text-xs font-medium mb-1 relative z-10 text-center ${labelColorClass}`}>{label}</label>
+        <div className={`rounded-2xl px-2 sm:px-3 py-3 sm:py-5 text-lg sm:text-2xl md:text-3xl font-bold relative z-10 text-center ${valueColorClass}`} 
             style={cardValueBgStyle}>
             {value || 0}
         </div>
