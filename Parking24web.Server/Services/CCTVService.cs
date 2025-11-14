@@ -106,7 +106,22 @@ namespace Parking24web.Server.Services
                 // 모든 HLS 프로세스 종료
                 foreach (var kv in _hlsProcesses.ToList())
                 {
-                    try { if (!kv.Value.HasExited) kv.Value.Kill(true); } catch { }
+                    try 
+                    { 
+                        if (!kv.Value.HasExited) 
+                        {
+                            kv.Value.Kill(true);
+                            // 프로세스 종료 대기 (최대 3초)
+                            if (!kv.Value.WaitForExit(3000))
+                            {
+                                _logger.LogWarning($"프로세스 {kv.Key} 종료 대기 시간 초과");
+                            }
+                        }
+                    } 
+                    catch (Exception ex) 
+                    { 
+                        _logger.LogWarning(ex, $"프로세스 {kv.Key} 종료 중 오류");
+                    }
                     try { kv.Value.Dispose(); } catch { }
                     _hlsProcesses.Remove(kv.Key);
                 }

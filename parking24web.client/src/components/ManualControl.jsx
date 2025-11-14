@@ -1,9 +1,35 @@
-﻿import React, { useState, useEffect } from 'react';
-// config import - 빌드별로 변경 (sokcho1Config 또는 sokcho2Config)
+﻿import React, { useState, useEffect, useCallback } from 'react';
 import siteConfig from '../../config/gapEulMyeongGaConfig.js';
 // SignalR 서비스 import
 import signalRService from '../services/signalrService.js';
 import { useTheme } from '../contexts/ThemeContext';
+
+// ============================================
+// HoldButton 컴포넌트 (버튼 중복 제거)
+// ============================================
+const HoldButton = ({ commandName, label, onPress, disabled, busy, theme, className = '' }) => {
+    const handleRelease = useCallback(() => {
+        onPress(commandName, 0);
+    }, [commandName, onPress]);
+
+    const handlePress = useCallback(() => {
+        onPress(commandName, 1);
+    }, [commandName, onPress]);
+
+    return (
+        <button
+            onMouseDown={handlePress}
+            onMouseUp={handleRelease}
+            onMouseLeave={handleRelease}
+            onTouchStart={handlePress}
+            onTouchEnd={handleRelease}
+            disabled={disabled || busy}
+            className={`learn-more ${className} ${theme === 'space' ? 'space-theme' : ''} ${(disabled || busy) ? 'opacity-50 cursor-not-allowed' : ''}`}
+        >
+            {label} {busy && '⏳'}
+        </button>
+    );
+};
 
 const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMenuOpen }) => {
 
@@ -14,6 +40,12 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
     const [showSensors, setShowSensors] = useState(true);
     const [sensorStates, setSensorStates] = useState({});
     const [scrollY, setScrollY] = useState(0);
+
+    // 리소스별 마지막 명령 상태 (commandId, sequence 포함)
+    const [lastCommands, setLastCommands] = useState({});
+
+    // 리소스별 전송 중 상태
+    const [pendingResources, setPendingResources] = useState(new Set());
 
 
     const currentConfig = siteConfig;
@@ -209,21 +241,155 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
         updateSensorStates();
     }, [sensorData, currentConfig]);
 
-    // 간단한 명령 실행 헬퍼 (UI 피드백용)
-    const executeCommand = async (commandName, signalRMethod) => {
-        if (!isPLCConnected || !isAuthenticated) return;
+    // ============================================
+    // 🔥 핵심 로직: 버전 비교 (commandId + sequence)
+    // ============================================
+    const isNewer = (response, resourceKey) => {
+        const prev = lastCommands[resourceKey];
+        if (!prev) return true;
+
+        // 시퀀스 비교
+        if (response.sequence > prev.sequence) return true;
+        if (response.sequence < prev.sequence) return false;
+
+        // 시퀀스 같으면 commandId 비교 (중복 응답 허용)
+        return response.commandId === prev.commandId;
+    };
+
+    // 명령별 중복 제거 윈도우 (ms)
+    const DEDUP_WINDOW = {
+        liftUp: 200,
+        liftDown: 200,
+        moveLeft: 150,
+        moveRight: 150,
+        turnLeft: 300,
+        turnRight: 300,
+        doorOpen: 100,
+        doorClose: 100,
+        lockingOn: 100,
+        lockingOff: 100,
+        errorReset: 0,
+        remoteControl: 0,
+        homeReturn: 0,
+        paletteChange: 0
+    };
+
+    // ============================================
+    // 🔥 핵심 로직: 명령 전송 (중복 제거 + 안전성 강화)
+    // ============================================
+    const sendCommand = async (commandName, value) => {
+        // 리소스 키 생성 (commandName을 그대로 사용)
+        const resourceKey = commandName;
+        const lastCmd = lastCommands[resourceKey];
+
+        // ============================================
+        // 1. 해제(0) 명령은 즉시 실행 (pending 무시)
+        // ============================================
+        if (value === 0) {
+            console.log(`[즉시 실행] ${commandName}=0 (해제 명령)`);
+            try {
+                const commandId = Date.now().toString();
+                await signalRService.sendConfigCommand(commandName, 0);
+
+                // 성공 시 상태 업데이트
+                setLastCommands(prev => ({
+                    ...prev,
+                    [resourceKey]: {
+                        name: commandName,
+                        value: 0,
+                        timestamp: Date.now(),
+                        commandId: commandId,
+                        sequence: Date.now()
+                    }
+                }));
+            } catch (error) {
+                console.error(`[즉시 실행 실패] ${commandName}=0:`, error);
+            }
+            return; // 여기서 종료
+        }
+
+        // ============================================
+        // 2. 중복 체크 (명령별 윈도우)
+        // ============================================
+        const dedupWindow = DEDUP_WINDOW[commandName] || 100;
+        if (lastCmd?.name === commandName &&
+            lastCmd?.value === value &&
+            Date.now() - lastCmd.timestamp < dedupWindow) {
+            console.log(`[중복 무시] ${commandName}=${value} (${dedupWindow}ms 윈도우)`);
+            return;
+        }
+
+        // ============================================
+        // 3. 리소스 사용 중 체크 (락)
+        // ============================================
+        if (pendingResources.has(resourceKey)) {
+            console.warn(`[락] 리소스 사용 중: ${resourceKey}`);
+            return;
+        }
+
+        // 락 획득
+        setPendingResources(prev => new Set(prev).add(resourceKey));
+        const commandId = Date.now().toString();
+        console.log(`[시작] ${commandName}=${value} [${commandId}]`);
 
         try {
-            setActiveCommand(commandName);
-            await signalRMethod();
-            console.log(`명령 실행: ${commandName}`);
+            // ============================================
+            // 4. 타임아웃 설정 (3초)
+            // ============================================
+            const timeoutPromise = new Promise((_, reject) =>
+                setTimeout(() => reject(new Error('TIMEOUT')), 3000)
+            );
 
-            // 명령 실행 후 1초 뒤 활성 상태 해제
-            setTimeout(() => setActiveCommand(null), 1000);
+            // ============================================
+            // 5. Promise.race (타임아웃 vs 실제 요청)
+            // ============================================
+            await Promise.race([
+                signalRService.sendConfigCommand(commandName, value),
+                timeoutPromise
+            ]);
+
+            // ============================================
+            // 6. 성공 응답 처리
+            // ============================================
+            const timestamp = Date.now();
+            setLastCommands(prev => ({
+                ...prev,
+                [resourceKey]: {
+                    name: commandName,
+                    value: value,
+                    timestamp: timestamp,
+                    commandId: commandId,
+                    sequence: timestamp
+                }
+            }));
+            console.log(`[성공] ${commandName}=${value}`);
         } catch (error) {
-            console.error(`명령 실행 실패 (${commandName}):`, error);
-            setActiveCommand(null);
+            // ============================================
+            // 7. 에러 처리
+            // ============================================
+            if (error.message === 'TIMEOUT') {
+                console.error(`[타임아웃] ${commandName}=${value}`);
+            } else {
+                console.error(`[실패] ${commandName}=${value}:`, error);
+            }
+        } finally {
+            // ============================================
+            // 8. 락 해제 (무조건 실행)
+            // ============================================
+            setPendingResources(prev => {
+                const next = new Set(prev);
+                next.delete(resourceKey);
+                return next;
+            });
+            console.log(`[종료] ${commandName} 락 해제`);
         }
+    };
+
+    // ============================================
+    // 리소스 사용 중 여부 체크
+    // ============================================
+    const isResourceBusy = (commandName) => {
+        return pendingResources.has(commandName);
     };
 
     // 비상정지 처리
@@ -343,7 +509,7 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
 
     return (
         <>
-            <style jsx>{`
+            <style>{`
                 @import url("https://fonts.googleapis.com/css?family=Rubik:700&display=swap");
                 
                 .learn-more {
@@ -1751,146 +1917,139 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
                         <div className="flex flex-col items-center gap-20 px-4" style={{ marginTop: '10%' }}>
                             {/* 첫 번째 줄: 비상정지, 수동선택, 센터링선택, 리셋버튼 */}
                             <div className="page1-first-row flex gap-5 justify-center items-center flex-wrap">
-                                <button
-                                    onMouseDown={() => signalRService.sendControlCommand('page1', 'remoteEmergencyStop')}
-                                    onMouseUp={() => signalRService.sendControlCommand('page1', 'remoteEmergencyStop', 0)}
-                                    onMouseLeave={() => signalRService.sendControlCommand('page1', 'remoteEmergencyStop', 0)}
-                                    disabled={isDisabled}
-                                    className={`learn-more emergency-button ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                    style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem' }}
-                                >
-                                    비상정지
-                                </button>
+                                <HoldButton 
+                                    commandName="remoteEmergencyStop" 
+                                    label="비상정지" 
+                                    onPress={sendCommand} 
+                                    disabled={isDisabled} 
+                                    busy={isResourceBusy("remoteEmergencyStop")} 
+                                    theme={theme} 
+                                    className="emergency-button" 
+                                />
 
-                                <button
-                                    onMouseDown={() => signalRService.sendControlCommand('page1', 'remoteManualSelect')}
-                                    onMouseUp={() => signalRService.sendControlCommand('page1', 'remoteManualSelect', 0)}
-                                    onMouseLeave={() => signalRService.sendControlCommand('page1', 'remoteManualSelect', 0)}
-                                    disabled={isDisabled}
-                                    className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                    style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem' }}
-                                >
-                                    수동선택
-                                </button>
+                                <HoldButton 
+                                    commandName="remoteManualSelect" 
+                                    label="수동선택" 
+                                    onPress={sendCommand} 
+                                    disabled={isDisabled} 
+                                    busy={isResourceBusy("remoteManualSelect")} 
+                                    theme={theme} 
+                                />
 
-                                <button
-                                    onMouseDown={() => signalRService.sendControlCommand('page1', 'remoteCenteringSelect')}
-                                    onMouseUp={() => signalRService.sendControlCommand('page1', 'remoteCenteringSelect', 0)}
-                                    onMouseLeave={() => signalRService.sendControlCommand('page1', 'remoteCenteringSelect', 0)}
-                                    disabled={isDisabled}
-                                    className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`} style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem' }}
-                                >
-                                    센터링선택
-                                </button>
+                                <HoldButton 
+                                    commandName="remoteCenteringSelect" 
+                                    label="센터링선택" 
+                                    onPress={sendCommand} 
+                                    disabled={isDisabled} 
+                                    busy={isResourceBusy("remoteCenteringSelect")} 
+                                    theme={theme} 
+                                />
 
-                                <button
-                                    onMouseDown={() => signalRService.sendControlCommand('page1', 'remoteReset')}
-                                    onMouseUp={() => signalRService.sendControlCommand('page1', 'remoteReset', 0)}
-                                    onMouseLeave={() => signalRService.sendControlCommand('page1', 'remoteReset', 0)}
-                                    disabled={isDisabled}
-                                    className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`} style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem' }}
-                                >
-                                    리셋버튼
-                                </button>
+                                <HoldButton 
+                                    commandName="remoteReset" 
+                                    label="리셋버튼" 
+                                    onPress={sendCommand} 
+                                    disabled={isDisabled} 
+                                    busy={isResourceBusy("remoteReset")} 
+                                    theme={theme} 
+                                />
                             </div>
 
                             {/* 두 번째 줄: 고속, 상승, 하강 */}
                             <div className="page1-second-row flex gap-5 justify-center items-center">
-                                <button
-                                    onMouseDown={() => signalRService.sendControlCommand('page1', 'remoteHighSpeed')}
-                                    onMouseUp={() => signalRService.sendControlCommand('page1', 'remoteHighSpeed', 0)}
-                                    onMouseLeave={() => signalRService.sendControlCommand('page1', 'remoteHighSpeed', 0)}
-                                    disabled={isDisabled}
-                                    className={`learn-more common-button ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`} style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem' }}
-                                >
-                                    고속버튼
-                                </button>
+                                <HoldButton 
+                                    commandName="remoteHighSpeed" 
+                                    label="고속버튼" 
+                                    onPress={sendCommand} 
+                                    disabled={isDisabled} 
+                                    busy={isResourceBusy("remoteHighSpeed")} 
+                                    theme={theme} 
+                                    className="common-button" 
+                                />
 
-                                <button
-                                    onMouseDown={() => signalRService.sendControlCommand('page1', 'remoteLiftUp')}
-                                    onMouseUp={() => signalRService.sendControlCommand('page1', 'remoteLiftUp', 0)}
-                                    onMouseLeave={() => signalRService.sendControlCommand('page1', 'remoteLiftUp', 0)}
-                                    disabled={isDisabled}
-                                    className={`learn-more common-button ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`} style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem' }}
-                                >
-                                    상승버튼
-                                </button>
+                                <HoldButton 
+                                    commandName="liftUp" 
+                                    label="상승버튼" 
+                                    onPress={sendCommand} 
+                                    disabled={isDisabled} 
+                                    busy={isResourceBusy("liftUp")} 
+                                    theme={theme} 
+                                    className="common-button" 
+                                />
 
-                                <button
-                                    onMouseDown={() => signalRService.sendControlCommand('page1', 'remoteLiftDown')}
-                                    onMouseUp={() => signalRService.sendControlCommand('page1', 'remoteLiftDown', 0)}
-                                    onMouseLeave={() => signalRService.sendControlCommand('page1', 'remoteLiftDown', 0)}
-                                    disabled={isDisabled}
-                                    className={`learn-more common-button ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`} style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem' }}
-                                >
-                                    하강버튼
-                                </button>
+                                <HoldButton 
+                                    commandName="liftDown" 
+                                    label="하강버튼" 
+                                    onPress={sendCommand} 
+                                    disabled={isDisabled} 
+                                    busy={isResourceBusy("liftDown")} 
+                                    theme={theme} 
+                                    className="common-button" 
+                                />
                             </div>
 
                             {/* 세 번째 줄: 센터링 정렬/해제 */}
                             <div className="page1-stopper-row flex gap-5 justify-center items-center">
-                                <button
-                                    onMouseDown={() => signalRService.sendControlCommand('page1', 'remoteCenteringAlignStopperUp')}
-                                    onMouseUp={() => signalRService.sendControlCommand('page1', 'remoteCenteringAlignStopperUp', 0)}
-                                    onMouseLeave={() => signalRService.sendControlCommand('page1', 'remoteCenteringAlignStopperUp', 0)}
-                                    disabled={isDisabled}
-                                    className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`} style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem' }}
-                                >
-                                    센터링정렬 스토퍼상승
-                                </button>
+                                <HoldButton 
+                                    commandName="remoteCenteringAlignStopperUp" 
+                                    label="센터링정렬 스토퍼상승" 
+                                    onPress={sendCommand} 
+                                    disabled={isDisabled} 
+                                    busy={isResourceBusy("remoteCenteringAlignStopperUp")} 
+                                    theme={theme} 
+                                />
 
-                                <button
-                                    onMouseDown={() => signalRService.sendControlCommand('page1', 'remoteCenteringReleaseStopperDown')}
-                                    onMouseUp={() => signalRService.sendControlCommand('page1', 'remoteCenteringReleaseStopperDown', 0)}
-                                    onMouseLeave={() => signalRService.sendControlCommand('page1', 'remoteCenteringReleaseStopperDown', 0)}
-                                    disabled={isDisabled}
-                                    className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`} style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem' }}
-                                >
-                                    센터링해제 스토퍼하강
-                                </button>
+                                <HoldButton 
+                                    commandName="remoteCenteringReleaseStopperDown" 
+                                    label="센터링해제 스토퍼하강" 
+                                    onPress={sendCommand} 
+                                    disabled={isDisabled} 
+                                    busy={isResourceBusy("remoteCenteringReleaseStopperDown")} 
+                                    theme={theme} 
+                                />
                             </div>
 
                             {/* 네 번째 줄: 도어 열림/닫힘, 외장턴 */}
                             <div className="page1-fourth-row flex gap-5 justify-center items-center">
-                                <button
-                                    onMouseDown={() => signalRService.sendControlCommand('page1', 'remoteDoorOpen')}
-                                    onMouseUp={() => signalRService.sendControlCommand('page1', 'remoteDoorOpen', 0)}
-                                    onMouseLeave={() => signalRService.sendControlCommand('page1', 'remoteDoorOpen', 0)}
-                                    disabled={isDisabled}
-                                    className={`learn-more common-button ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`} style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem' }}
-                                >
-                                    도어열림
-                                </button>
+                                <HoldButton 
+                                    commandName="doorOpen" 
+                                    label="도어열림" 
+                                    onPress={sendCommand} 
+                                    disabled={isDisabled} 
+                                    busy={isResourceBusy("doorOpen")} 
+                                    theme={theme} 
+                                    className="common-button" 
+                                />
 
-                                <button
-                                    onMouseDown={() => signalRService.sendControlCommand('page1', 'remoteDoorClose')}
-                                    onMouseUp={() => signalRService.sendControlCommand('page1', 'remoteDoorClose', 0)}
-                                    onMouseLeave={() => signalRService.sendControlCommand('page1', 'remoteDoorClose', 0)}
-                                    disabled={isDisabled}
-                                    className={`learn-more common-button ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`} style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem' }}
-                                >
-                                    도어닫힘
-                                </button>
+                                <HoldButton 
+                                    commandName="doorClose" 
+                                    label="도어닫힘" 
+                                    onPress={sendCommand} 
+                                    disabled={isDisabled} 
+                                    busy={isResourceBusy("doorClose")} 
+                                    theme={theme} 
+                                    className="common-button" 
+                                />
 
-                                <button
-                                    onMouseDown={() => signalRService.sendControlCommand('page1', 'remoteExternalTurnForward')}
-                                    onMouseUp={() => signalRService.sendControlCommand('page1', 'remoteExternalTurnForward', 0)}
-                                    onMouseLeave={() => signalRService.sendControlCommand('page1', 'remoteExternalTurnForward', 0)}
-                                    disabled={isDisabled}
-                                    className={`learn-more common-button ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`} style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem' }}
-                                >
-                                    외장턴정
-                                </button>
+                                <HoldButton 
+                                    commandName="remoteExternalTurnForward" 
+                                    label="외장턴정" 
+                                    onPress={sendCommand} 
+                                    disabled={isDisabled} 
+                                    busy={isResourceBusy("remoteExternalTurnForward")} 
+                                    theme={theme} 
+                                    className="common-button" 
+                                />
 
-                                <button
-                                    onMouseDown={() => signalRService.sendControlCommand('page1', 'remoteExternalTurnReverse')}
-                                    onMouseUp={() => signalRService.sendControlCommand('page1', 'remoteExternalTurnReverse', 0)}
-                                    onMouseLeave={() => signalRService.sendControlCommand('page1', 'remoteExternalTurnReverse', 0)}
-                                    disabled={isDisabled}
-                                    className={`learn-more common-button ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`} style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem' }}
-                                >
-                                    외장턴역
-                                </button>
+                                <HoldButton 
+                                    commandName="remoteExternalTurnReverse" 
+                                    label="외장턴역" 
+                                    onPress={sendCommand} 
+                                    disabled={isDisabled} 
+                                    busy={isResourceBusy("remoteExternalTurnReverse")} 
+                                    theme={theme} 
+                                    className="common-button" 
+                                />
                             </div>
                         </div>
                     )}
@@ -1994,178 +2153,156 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
 
                             {/* 첫 번째 줄: 비상정지, 수동선택, 자동선택, 리셋버튼 */}
                             <div className="page2-first-row flex gap-5 justify-center items-center flex-wrap">
-                                <button
-                                    onMouseDown={() => signalRService.sendControlCommand('page2', 'remoteEmergencyButton1')}
-                                    onMouseUp={() => signalRService.sendControlCommand('page2', 'remoteEmergencyButton1', 0)}
-                                    onMouseLeave={() => signalRService.sendControlCommand('page2', 'remoteEmergencyButton1', 0)}
-                                    disabled={isDisabled}
-                                    className={`learn-more emergency-button ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                    style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem' }}
-                                >
-                                    비상정지
-                                </button>
+                                <HoldButton 
+                                    commandName="remoteEmergencyButton1" 
+                                    label="비상정지" 
+                                    onPress={sendCommand} 
+                                    disabled={isDisabled} 
+                                    busy={isResourceBusy("remoteEmergencyButton1")} 
+                                    theme={theme} 
+                                    className="emergency-button" 
+                                />
 
-                                <button
-                                    onMouseDown={() => signalRService.sendControlCommand('page2', 'remoteManual1')}
-                                    onMouseUp={() => signalRService.sendControlCommand('page2', 'remoteManual1', 0)}
-                                    onMouseLeave={() => signalRService.sendControlCommand('page2', 'remoteManual1', 0)}
-                                    disabled={isDisabled}
-                                    className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                    style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem' }}
-                                >
-                                    수동선택
-                                </button>
+                                <HoldButton 
+                                    commandName="remoteManual1" 
+                                    label="수동선택" 
+                                    onPress={sendCommand} 
+                                    disabled={isDisabled} 
+                                    busy={isResourceBusy("remoteManual1")} 
+                                    theme={theme} 
+                                />
 
-                                <button
-                                    onMouseDown={() => signalRService.sendControlCommand('page2', 'remoteAuto1')}
-                                    onMouseUp={() => signalRService.sendControlCommand('page2', 'remoteAuto1', 0)}
-                                    onMouseLeave={() => signalRService.sendControlCommand('page2', 'remoteAuto1', 0)}
-                                    disabled={isDisabled}
-                                    className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                    style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem' }}
-                                >
-                                    자동선택
-                                </button>
+                                <HoldButton 
+                                    commandName="remoteAuto1" 
+                                    label="자동선택" 
+                                    onPress={sendCommand} 
+                                    disabled={isDisabled} 
+                                    busy={isResourceBusy("remoteAuto1")} 
+                                    theme={theme} 
+                                />
 
-                                <button
-                                    onMouseDown={() => signalRService.sendControlCommand('page2', 'remoteResetButton1')}
-                                    onMouseUp={() => signalRService.sendControlCommand('page2', 'remoteResetButton1', 0)}
-                                    onMouseLeave={() => signalRService.sendControlCommand('page2', 'remoteResetButton1', 0)}
-                                    disabled={isDisabled}
-                                    className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                    style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem' }}
-                                >
-                                    리셋버튼
-                                </button>
+                                <HoldButton 
+                                    commandName="remoteResetButton1" 
+                                    label="리셋버튼" 
+                                    onPress={sendCommand} 
+                                    disabled={isDisabled} 
+                                    busy={isResourceBusy("remoteResetButton1")} 
+                                    theme={theme} 
+                                />
                             </div>
 
                             {/* 두 번째 줄: 리프트측선택, 슬라이더선택, 전면선택, 후면선택 */}
                             <div className="page2-second-row flex gap-5 justify-center items-center flex-wrap">
-                                <button
-                                    onMouseDown={() => signalRService.sendControlCommand('page2', 'remoteSliderSelect1')}
-                                    onMouseUp={() => signalRService.sendControlCommand('page2', 'remoteSliderSelect1', 0)}
-                                    onMouseLeave={() => signalRService.sendControlCommand('page2', 'remoteSliderSelect1', 0)}
-                                    disabled={isDisabled}
-                                    className={`learn-more common-button ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                    style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem' }}
-                                >
-                                    리프트측선택
-                                </button>
+                                <HoldButton 
+                                    commandName="remoteSliderSelect1" 
+                                    label="리프트측선택" 
+                                    onPress={sendCommand} 
+                                    disabled={isDisabled} 
+                                    busy={isResourceBusy("remoteSliderSelect1")} 
+                                    theme={theme} 
+                                    className="common-button" 
+                                />
 
-                                <button
-                                    onMouseDown={() => signalRService.sendControlCommand('page2', 'remoteSliderSelect1')}
-                                    onMouseUp={() => signalRService.sendControlCommand('page2', 'remoteSliderSelect1', 0)}
-                                    onMouseLeave={() => signalRService.sendControlCommand('page2', 'remoteSliderSelect1', 0)}
-                                    disabled={isDisabled}
-                                    className={`learn-more common-button ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                    style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem' }}
-                                >
-                                    슬라이더선택
-                                </button>
+                                <HoldButton 
+                                    commandName="remoteSliderSelect1" 
+                                    label="슬라이더선택" 
+                                    onPress={sendCommand} 
+                                    disabled={isDisabled} 
+                                    busy={isResourceBusy("remoteSliderSelect1")} 
+                                    theme={theme} 
+                                    className="common-button" 
+                                />
 
-                                <button
-                                    onMouseDown={() => signalRService.sendControlCommand('page2', 'remoteSliderFrontSelect1')}
-                                    onMouseUp={() => signalRService.sendControlCommand('page2', 'remoteSliderFrontSelect1', 0)}
-                                    onMouseLeave={() => signalRService.sendControlCommand('page2', 'remoteSliderFrontSelect1', 0)}
-                                    disabled={isDisabled}
-                                    className={`learn-more common-button ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                    style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem' }}
-                                >
-                                    전면선택
-                                </button>
+                                <HoldButton 
+                                    commandName="remoteSliderFrontSelect1" 
+                                    label="전면선택" 
+                                    onPress={sendCommand} 
+                                    disabled={isDisabled} 
+                                    busy={isResourceBusy("remoteSliderFrontSelect1")} 
+                                    theme={theme} 
+                                    className="common-button" 
+                                />
 
-                                <button
-                                    onMouseDown={() => signalRService.sendControlCommand('page2', 'remoteSliderRearSelect1')}
-                                    onMouseUp={() => signalRService.sendControlCommand('page2', 'remoteSliderRearSelect1', 0)}
-                                    onMouseLeave={() => signalRService.sendControlCommand('page2', 'remoteSliderRearSelect1', 0)}
-                                    disabled={isDisabled}
-                                    className={`learn-more common-button ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                    style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem' }}
-                                >
-                                    후면선택
-                                </button>
+                                <HoldButton 
+                                    commandName="remoteSliderRearSelect1" 
+                                    label="후면선택" 
+                                    onPress={sendCommand} 
+                                    disabled={isDisabled} 
+                                    busy={isResourceBusy("remoteSliderRearSelect1")} 
+                                    theme={theme} 
+                                    className="common-button" 
+                                />
                             </div>
 
                             {/* 3-5번째 줄 (간격 10) */}
                             <div className="page2-cross-layout flex flex-col gap-10">
                                 {/* 세 번째 줄: 격납_로드 1개 */}
                                 <div className="page2-third-row flex gap-5 justify-center items-center">
-                                <button
-                                    onMouseDown={() => signalRService.sendControlCommand('page2', 'remoteStorageButtonLoad1')}
-                                    onMouseUp={() => signalRService.sendControlCommand('page2', 'remoteStorageButtonLoad1', 0)}
-                                    onMouseLeave={() => signalRService.sendControlCommand('page2', 'remoteStorageButtonLoad1', 0)}
-                                    disabled={isDisabled}
-                                    className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                    style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem' }}
-                                >
-                                    격납_로드
-                                </button>
+                                <HoldButton 
+                                    commandName="remoteStorageButtonLoad1" 
+                                    label="격납_로드" 
+                                    onPress={sendCommand} 
+                                    disabled={isDisabled} 
+                                    busy={isResourceBusy("remoteStorageButtonLoad1")} 
+                                    theme={theme} 
+                                />
                             </div>
 
                             {/* 네 번째 줄: 끝번주행, 고속, 시작주행 3개 */}
                             <div className="page2-fourth-row flex gap-5 justify-center items-center flex-wrap">
-                                <button
-                                    onMouseDown={() => signalRService.sendControlCommand('page2', 'remoteEndRunButton1')}
-                                    onMouseUp={() => signalRService.sendControlCommand('page2', 'remoteEndRunButton1', 0)}
-                                    onMouseLeave={() => signalRService.sendControlCommand('page2', 'remoteEndRunButton1', 0)}
-                                    disabled={isDisabled}
-                                    className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                    style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem' }}
-                                >
-                                    끝번주행
-                                </button>
+                                <HoldButton 
+                                    commandName="remoteEndRunButton1" 
+                                    label="끝번주행" 
+                                    onPress={sendCommand} 
+                                    disabled={isDisabled} 
+                                    busy={isResourceBusy("remoteEndRunButton1")} 
+                                    theme={theme} 
+                                />
 
-                                <button
-                                    onMouseDown={() => signalRService.sendControlCommand('page2', 'remoteHighSpeedButton1')}
-                                    onMouseUp={() => signalRService.sendControlCommand('page2', 'remoteHighSpeedButton1', 0)}
-                                    onMouseLeave={() => signalRService.sendControlCommand('page2', 'remoteHighSpeedButton1', 0)}
-                                    disabled={isDisabled}
-                                    className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                    style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem' }}
-                                >
-                                    고속
-                                </button>
+                                <HoldButton 
+                                    commandName="remoteHighSpeedButton1" 
+                                    label="고속" 
+                                    onPress={sendCommand} 
+                                    disabled={isDisabled} 
+                                    busy={isResourceBusy("remoteHighSpeedButton1")} 
+                                    theme={theme} 
+                                />
 
-                                <button
-                                    onMouseDown={() => signalRService.sendControlCommand('page2', 'remoteStartRunButton1')}
-                                    onMouseUp={() => signalRService.sendControlCommand('page2', 'remoteStartRunButton1', 0)}
-                                    onMouseLeave={() => signalRService.sendControlCommand('page2', 'remoteStartRunButton1', 0)}
-                                    disabled={isDisabled}
-                                    className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                    style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem' }}
-                                >
-                                    시작주행
-                                </button>
+                                <HoldButton 
+                                    commandName="remoteStartRunButton1" 
+                                    label="시작주행" 
+                                    onPress={sendCommand} 
+                                    disabled={isDisabled} 
+                                    busy={isResourceBusy("remoteStartRunButton1")} 
+                                    theme={theme} 
+                                />
                             </div>
 
                             {/* 다섯 번째 줄: 추출_언로드 1개 */}
                             <div className="page2-fifth-row flex gap-5 justify-center items-center">
-                                <button
-                                    onMouseDown={() => signalRService.sendControlCommand('page2', 'remoteExtractButtonUnload1')}
-                                    onMouseUp={() => signalRService.sendControlCommand('page2', 'remoteExtractButtonUnload1', 0)}
-                                    onMouseLeave={() => signalRService.sendControlCommand('page2', 'remoteExtractButtonUnload1', 0)}
-                                    disabled={isDisabled}
-                                    className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                    style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem' }}
-                                >
-                                    추출_언로드
-                                </button>
+                                <HoldButton 
+                                    commandName="remoteExtractButtonUnload1" 
+                                    label="추출_언로드" 
+                                    onPress={sendCommand} 
+                                    disabled={isDisabled} 
+                                    busy={isResourceBusy("remoteExtractButtonUnload1")} 
+                                    theme={theme} 
+                                />
                             </div>
                             </div>
 
                             {/* 슬라이더초기화 */}
                             <div className="page2-slider-init flex gap-5 justify-center items-center">
                                 <div className="slider-init-spacer" style={{ flex: '0 0 280%' }}></div>
-                                <button
-                                    onMouseDown={() => signalRService.sendControlCommand('page2', 'remoteSliderInitialize')}
-                                    onMouseUp={() => signalRService.sendControlCommand('page2', 'remoteSliderInitialize', 0)}
-                                    onMouseLeave={() => signalRService.sendControlCommand('page2', 'remoteSliderInitialize', 0)}
-                                    disabled={isDisabled}
-                                    className={`learn-more common-button ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                    style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem', flex: '0 0 25%' }}
-                                >
-                                    슬라이더초기화
-                                </button>
+                                <HoldButton 
+                                    commandName="remoteSliderInitialize" 
+                                    label="슬라이더초기화" 
+                                    onPress={sendCommand} 
+                                    disabled={isDisabled} 
+                                    busy={isResourceBusy("remoteSliderInitialize")} 
+                                    theme={theme} 
+                                    className="common-button" 
+                                />
                             </div>
                         </div>
                     )}
@@ -2270,178 +2407,156 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
 
                             {/* 첫 번째 줄: 비상정지, 수동선택, 자동선택, 리셋버튼 */}
                             <div className="page2-first-row flex gap-5 justify-center items-center flex-wrap">
-                                <button
-                                    onMouseDown={() => signalRService.sendControlCommand('page3', 'remoteEmergencyButton2')}
-                                    onMouseUp={() => signalRService.sendControlCommand('page3', 'remoteEmergencyButton2', 0)}
-                                    onMouseLeave={() => signalRService.sendControlCommand('page3', 'remoteEmergencyButton2', 0)}
-                                    disabled={isDisabled}
-                                    className={`learn-more emergency-button ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                    style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem' }}
-                                >
-                                    비상정지
-                                </button>
+                                <HoldButton 
+                                    commandName="remoteEmergencyButton2" 
+                                    label="비상정지" 
+                                    onPress={sendCommand} 
+                                    disabled={isDisabled} 
+                                    busy={isResourceBusy("remoteEmergencyButton2")} 
+                                    theme={theme} 
+                                    className="emergency-button" 
+                                />
 
-                                <button
-                                    onMouseDown={() => signalRService.sendControlCommand('page3', 'remoteManual2')}
-                                    onMouseUp={() => signalRService.sendControlCommand('page3', 'remoteManual2', 0)}
-                                    onMouseLeave={() => signalRService.sendControlCommand('page3', 'remoteManual2', 0)}
-                                    disabled={isDisabled}
-                                    className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                    style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem' }}
-                                >
-                                    수동선택
-                                </button>
+                                <HoldButton 
+                                    commandName="remoteManual2" 
+                                    label="수동선택" 
+                                    onPress={sendCommand} 
+                                    disabled={isDisabled} 
+                                    busy={isResourceBusy("remoteManual2")} 
+                                    theme={theme} 
+                                />
 
-                                <button
-                                    onMouseDown={() => signalRService.sendControlCommand('page3', 'remoteAuto2')}
-                                    onMouseUp={() => signalRService.sendControlCommand('page3', 'remoteAuto2', 0)}
-                                    onMouseLeave={() => signalRService.sendControlCommand('page3', 'remoteAuto2', 0)}
-                                    disabled={isDisabled}
-                                    className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                    style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem' }}
-                                >
-                                    자동선택
-                                </button>
+                                <HoldButton 
+                                    commandName="remoteAuto2" 
+                                    label="자동선택" 
+                                    onPress={sendCommand} 
+                                    disabled={isDisabled} 
+                                    busy={isResourceBusy("remoteAuto2")} 
+                                    theme={theme} 
+                                />
 
-                                <button
-                                    onMouseDown={() => signalRService.sendControlCommand('page3', 'remoteResetButton2')}
-                                    onMouseUp={() => signalRService.sendControlCommand('page3', 'remoteResetButton2', 0)}
-                                    onMouseLeave={() => signalRService.sendControlCommand('page3', 'remoteResetButton2', 0)}
-                                    disabled={isDisabled}
-                                    className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                    style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem' }}
-                                >
-                                    리셋버튼
-                                </button>
+                                <HoldButton 
+                                    commandName="remoteResetButton2" 
+                                    label="리셋버튼" 
+                                    onPress={sendCommand} 
+                                    disabled={isDisabled} 
+                                    busy={isResourceBusy("remoteResetButton2")} 
+                                    theme={theme} 
+                                />
                             </div>
 
                             {/* 두 번째 줄: 리프트측선택, 슬라이더선택, 전면선택, 후면선택 */}
                             <div className="page2-second-row flex gap-5 justify-center items-center flex-wrap">
-                                <button
-                                    onMouseDown={() => signalRService.sendControlCommand('page3', 'remoteSliderSelect2')}
-                                    onMouseUp={() => signalRService.sendControlCommand('page3', 'remoteSliderSelect2', 0)}
-                                    onMouseLeave={() => signalRService.sendControlCommand('page3', 'remoteSliderSelect2', 0)}
-                                    disabled={isDisabled}
-                                    className={`learn-more common-button ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                    style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem' }}
-                                >
-                                    리프트측선택
-                                </button>
+                                <HoldButton 
+                                    commandName="remoteSliderSelect2" 
+                                    label="리프트측선택" 
+                                    onPress={sendCommand} 
+                                    disabled={isDisabled} 
+                                    busy={isResourceBusy("remoteSliderSelect2")} 
+                                    theme={theme} 
+                                    className="common-button" 
+                                />
 
-                                <button
-                                    onMouseDown={() => signalRService.sendControlCommand('page3', 'remoteSliderSelect2')}
-                                    onMouseUp={() => signalRService.sendControlCommand('page3', 'remoteSliderSelect2', 0)}
-                                    onMouseLeave={() => signalRService.sendControlCommand('page3', 'remoteSliderSelect2', 0)}
-                                    disabled={isDisabled}
-                                    className={`learn-more common-button ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                    style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem' }}
-                                >
-                                    슬라이더선택
-                                </button>
+                                <HoldButton 
+                                    commandName="remoteSliderSelect2" 
+                                    label="슬라이더선택" 
+                                    onPress={sendCommand} 
+                                    disabled={isDisabled} 
+                                    busy={isResourceBusy("remoteSliderSelect2")} 
+                                    theme={theme} 
+                                    className="common-button" 
+                                />
 
-                                <button
-                                    onMouseDown={() => signalRService.sendControlCommand('page3', 'remoteSliderFrontSelect2')}
-                                    onMouseUp={() => signalRService.sendControlCommand('page3', 'remoteSliderFrontSelect2', 0)}
-                                    onMouseLeave={() => signalRService.sendControlCommand('page3', 'remoteSliderFrontSelect2', 0)}
-                                    disabled={isDisabled}
-                                    className={`learn-more common-button ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                    style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem' }}
-                                >
-                                    전면선택
-                                </button>
+                                <HoldButton 
+                                    commandName="remoteSliderFrontSelect2" 
+                                    label="전면선택" 
+                                    onPress={sendCommand} 
+                                    disabled={isDisabled} 
+                                    busy={isResourceBusy("remoteSliderFrontSelect2")} 
+                                    theme={theme} 
+                                    className="common-button" 
+                                />
 
-                                <button
-                                    onMouseDown={() => signalRService.sendControlCommand('page3', 'remoteSliderRearSelect2')}
-                                    onMouseUp={() => signalRService.sendControlCommand('page3', 'remoteSliderRearSelect2', 0)}
-                                    onMouseLeave={() => signalRService.sendControlCommand('page3', 'remoteSliderRearSelect2', 0)}
-                                    disabled={isDisabled}
-                                    className={`learn-more common-button ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                    style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem' }}
-                                >
-                                    후면선택
-                                </button>
+                                <HoldButton 
+                                    commandName="remoteSliderRearSelect2" 
+                                    label="후면선택" 
+                                    onPress={sendCommand} 
+                                    disabled={isDisabled} 
+                                    busy={isResourceBusy("remoteSliderRearSelect2")} 
+                                    theme={theme} 
+                                    className="common-button" 
+                                />
                             </div>
 
                             {/* 3-5번째 줄 (간격 10) */}
                             <div className="page2-cross-layout flex flex-col gap-10">
                                 {/* 세 번째 줄: 격납_로드 1개 */}
                                 <div className="page2-third-row flex gap-5 justify-center items-center">
-                                <button
-                                    onMouseDown={() => signalRService.sendControlCommand('page3', 'remoteStorageButtonLoad2')}
-                                    onMouseUp={() => signalRService.sendControlCommand('page3', 'remoteStorageButtonLoad2', 0)}
-                                    onMouseLeave={() => signalRService.sendControlCommand('page3', 'remoteStorageButtonLoad2', 0)}
-                                    disabled={isDisabled}
-                                    className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                    style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem' }}
-                                >
-                                    격납_로드
-                                </button>
+                                <HoldButton 
+                                    commandName="remoteStorageButtonLoad2" 
+                                    label="격납_로드" 
+                                    onPress={sendCommand} 
+                                    disabled={isDisabled} 
+                                    busy={isResourceBusy("remoteStorageButtonLoad2")} 
+                                    theme={theme} 
+                                />
                             </div>
 
                             {/* 네 번째 줄: 끝번주행, 고속, 시작주행 3개 */}
                             <div className="page2-fourth-row flex gap-5 justify-center items-center flex-wrap">
-                                <button
-                                    onMouseDown={() => signalRService.sendControlCommand('page3', 'remoteEndRunButton2')}
-                                    onMouseUp={() => signalRService.sendControlCommand('page3', 'remoteEndRunButton2', 0)}
-                                    onMouseLeave={() => signalRService.sendControlCommand('page3', 'remoteEndRunButton2', 0)}
-                                    disabled={isDisabled}
-                                    className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                    style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem' }}
-                                >
-                                    끝번주행
-                                </button>
+                                <HoldButton 
+                                    commandName="remoteEndRunButton2" 
+                                    label="끝번주행" 
+                                    onPress={sendCommand} 
+                                    disabled={isDisabled} 
+                                    busy={isResourceBusy("remoteEndRunButton2")} 
+                                    theme={theme} 
+                                />
 
-                                <button
-                                    onMouseDown={() => signalRService.sendControlCommand('page3', 'remoteHighSpeedButton2')}
-                                    onMouseUp={() => signalRService.sendControlCommand('page3', 'remoteHighSpeedButton2', 0)}
-                                    onMouseLeave={() => signalRService.sendControlCommand('page3', 'remoteHighSpeedButton2', 0)}
-                                    disabled={isDisabled}
-                                    className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                    style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem' }}
-                                >
-                                    고속
-                                </button>
+                                <HoldButton 
+                                    commandName="remoteHighSpeedButton2" 
+                                    label="고속" 
+                                    onPress={sendCommand} 
+                                    disabled={isDisabled} 
+                                    busy={isResourceBusy("remoteHighSpeedButton2")} 
+                                    theme={theme} 
+                                />
 
-                                <button
-                                    onMouseDown={() => signalRService.sendControlCommand('page3', 'remoteStartRunButton2')}
-                                    onMouseUp={() => signalRService.sendControlCommand('page3', 'remoteStartRunButton2', 0)}
-                                    onMouseLeave={() => signalRService.sendControlCommand('page3', 'remoteStartRunButton2', 0)}
-                                    disabled={isDisabled}
-                                    className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                    style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem' }}
-                                >
-                                    시작주행
-                                </button>
+                                <HoldButton 
+                                    commandName="remoteStartRunButton2" 
+                                    label="시작주행" 
+                                    onPress={sendCommand} 
+                                    disabled={isDisabled} 
+                                    busy={isResourceBusy("remoteStartRunButton2")} 
+                                    theme={theme} 
+                                />
                             </div>
 
                             {/* 다섯 번째 줄: 추출_언로드 1개 */}
                             <div className="page2-fifth-row flex gap-5 justify-center items-center">
-                                <button
-                                    onMouseDown={() => signalRService.sendControlCommand('page3', 'remoteExtractButtonUnload2')}
-                                    onMouseUp={() => signalRService.sendControlCommand('page3', 'remoteExtractButtonUnload2', 0)}
-                                    onMouseLeave={() => signalRService.sendControlCommand('page3', 'remoteExtractButtonUnload2', 0)}
-                                    disabled={isDisabled}
-                                    className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                    style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem' }}
-                                >
-                                    추출_언로드
-                                </button>
+                                <HoldButton 
+                                    commandName="remoteExtractButtonUnload2" 
+                                    label="추출_언로드" 
+                                    onPress={sendCommand} 
+                                    disabled={isDisabled} 
+                                    busy={isResourceBusy("remoteExtractButtonUnload2")} 
+                                    theme={theme} 
+                                />
                             </div>
                             </div>
 
                             {/* 슬라이더초기화 */}
                             <div className="page2-slider-init flex gap-5 justify-center items-center">
                                 <div className="slider-init-spacer" style={{ flex: '0 0 280%' }}></div>
-                                <button
-                                    onMouseDown={() => signalRService.sendControlCommand('page3', 'remoteSliderInitialize2')}
-                                    onMouseUp={() => signalRService.sendControlCommand('page3', 'remoteSliderInitialize2', 0)}
-                                    onMouseLeave={() => signalRService.sendControlCommand('page3', 'remoteSliderInitialize2', 0)}
-                                    disabled={isDisabled}
-                                    className={`learn-more common-button ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                    style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem', flex: '0 0 25%' }}
-                                >
-                                    슬라이더초기화
-                                </button>
+                                <HoldButton 
+                                    commandName="remoteSliderInitialize2" 
+                                    label="슬라이더초기화" 
+                                    onPress={sendCommand} 
+                                    disabled={isDisabled} 
+                                    busy={isResourceBusy("remoteSliderInitialize2")} 
+                                    theme={theme} 
+                                    className="common-button" 
+                                />
                             </div>
                         </div>
                     )}
@@ -2554,178 +2669,156 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
 
                             {/* 첫 번째 줄: 비상정지, 수동선택, 자동선택, 리셋버튼 */}
                             <div className="page2-first-row flex gap-5 justify-center items-center flex-wrap">
-                                <button
-                                    onMouseDown={() => signalRService.sendControlCommand('page5', 'remoteEmergencyButton4')}
-                                    onMouseUp={() => signalRService.sendControlCommand('page5', 'remoteEmergencyButton4', 0)}
-                                    onMouseLeave={() => signalRService.sendControlCommand('page5', 'remoteEmergencyButton4', 0)}
-                                    disabled={isDisabled}
-                                    className={`learn-more emergency-button ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                    style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem' }}
-                                >
-                                    비상정지
-                                </button>
+                                <HoldButton 
+                                    commandName="remoteEmergencyButton4" 
+                                    label="비상정지" 
+                                    onPress={sendCommand} 
+                                    disabled={isDisabled} 
+                                    busy={isResourceBusy("remoteEmergencyButton4")} 
+                                    theme={theme} 
+                                    className="emergency-button" 
+                                />
 
-                                <button
-                                    onMouseDown={() => signalRService.sendControlCommand('page5', 'remoteManual4')}
-                                    onMouseUp={() => signalRService.sendControlCommand('page5', 'remoteManual4', 0)}
-                                    onMouseLeave={() => signalRService.sendControlCommand('page5', 'remoteManual4', 0)}
-                                    disabled={isDisabled}
-                                    className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                    style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem' }}
-                                >
-                                    수동선택
-                                </button>
+                                <HoldButton 
+                                    commandName="remoteManual4" 
+                                    label="수동선택" 
+                                    onPress={sendCommand} 
+                                    disabled={isDisabled} 
+                                    busy={isResourceBusy("remoteManual4")} 
+                                    theme={theme} 
+                                />
 
-                                <button
-                                    onMouseDown={() => signalRService.sendControlCommand('page5', 'remoteAuto4')}
-                                    onMouseUp={() => signalRService.sendControlCommand('page5', 'remoteAuto4', 0)}
-                                    onMouseLeave={() => signalRService.sendControlCommand('page5', 'remoteAuto4', 0)}
-                                    disabled={isDisabled}
-                                    className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                    style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem' }}
-                                >
-                                    자동선택
-                                </button>
+                                <HoldButton 
+                                    commandName="remoteAuto4" 
+                                    label="자동선택" 
+                                    onPress={sendCommand} 
+                                    disabled={isDisabled} 
+                                    busy={isResourceBusy("remoteAuto4")} 
+                                    theme={theme} 
+                                />
 
-                                <button
-                                    onMouseDown={() => signalRService.sendControlCommand('page5', 'remoteResetButton4')}
-                                    onMouseUp={() => signalRService.sendControlCommand('page5', 'remoteResetButton4', 0)}
-                                    onMouseLeave={() => signalRService.sendControlCommand('page5', 'remoteResetButton4', 0)}
-                                    disabled={isDisabled}
-                                    className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                    style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem' }}
-                                >
-                                    리셋버튼
-                                </button>
+                                <HoldButton 
+                                    commandName="remoteResetButton4" 
+                                    label="리셋버튼" 
+                                    onPress={sendCommand} 
+                                    disabled={isDisabled} 
+                                    busy={isResourceBusy("remoteResetButton4")} 
+                                    theme={theme} 
+                                />
                             </div>
 
                             {/* 두 번째 줄: 리프트측선택, 슬라이더선택, 전면선택, 후면선택 */}
                             <div className="page2-second-row flex gap-5 justify-center items-center flex-wrap">
-                                <button
-                                    onMouseDown={() => signalRService.sendControlCommand('page5', 'remoteSliderSelect4')}
-                                    onMouseUp={() => signalRService.sendControlCommand('page5', 'remoteSliderSelect4', 0)}
-                                    onMouseLeave={() => signalRService.sendControlCommand('page5', 'remoteSliderSelect4', 0)}
-                                    disabled={isDisabled}
-                                    className={`learn-more common-button ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                    style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem' }}
-                                >
-                                    리프트측선택
-                                </button>
+                                <HoldButton 
+                                    commandName="remoteSliderSelect4" 
+                                    label="리프트측선택" 
+                                    onPress={sendCommand} 
+                                    disabled={isDisabled} 
+                                    busy={isResourceBusy("remoteSliderSelect4")} 
+                                    theme={theme} 
+                                    className="common-button" 
+                                />
 
-                                <button
-                                    onMouseDown={() => signalRService.sendControlCommand('page5', 'remoteSliderSelect4')}
-                                    onMouseUp={() => signalRService.sendControlCommand('page5', 'remoteSliderSelect4', 0)}
-                                    onMouseLeave={() => signalRService.sendControlCommand('page5', 'remoteSliderSelect4', 0)}
-                                    disabled={isDisabled}
-                                    className={`learn-more common-button ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                    style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem' }}
-                                >
-                                    슬라이더선택
-                                </button>
+                                <HoldButton 
+                                    commandName="remoteSliderSelect4" 
+                                    label="슬라이더선택" 
+                                    onPress={sendCommand} 
+                                    disabled={isDisabled} 
+                                    busy={isResourceBusy("remoteSliderSelect4")} 
+                                    theme={theme} 
+                                    className="common-button" 
+                                />
 
-                                <button
-                                    onMouseDown={() => signalRService.sendControlCommand('page5', 'remoteSliderFrontSelect4')}
-                                    onMouseUp={() => signalRService.sendControlCommand('page5', 'remoteSliderFrontSelect4', 0)}
-                                    onMouseLeave={() => signalRService.sendControlCommand('page5', 'remoteSliderFrontSelect4', 0)}
-                                    disabled={isDisabled}
-                                    className={`learn-more common-button ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                    style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem' }}
-                                >
-                                    전면선택
-                                </button>
+                                <HoldButton 
+                                    commandName="remoteSliderFrontSelect4" 
+                                    label="전면선택" 
+                                    onPress={sendCommand} 
+                                    disabled={isDisabled} 
+                                    busy={isResourceBusy("remoteSliderFrontSelect4")} 
+                                    theme={theme} 
+                                    className="common-button" 
+                                />
 
-                                <button
-                                    onMouseDown={() => signalRService.sendControlCommand('page5', 'remoteSliderRearSelect4')}
-                                    onMouseUp={() => signalRService.sendControlCommand('page5', 'remoteSliderRearSelect4', 0)}
-                                    onMouseLeave={() => signalRService.sendControlCommand('page5', 'remoteSliderRearSelect4', 0)}
-                                    disabled={isDisabled}
-                                    className={`learn-more common-button ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                    style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem' }}
-                                >
-                                    후면선택
-                                </button>
+                                <HoldButton 
+                                    commandName="remoteSliderRearSelect4" 
+                                    label="후면선택" 
+                                    onPress={sendCommand} 
+                                    disabled={isDisabled} 
+                                    busy={isResourceBusy("remoteSliderRearSelect4")} 
+                                    theme={theme} 
+                                    className="common-button" 
+                                />
                             </div>
 
                             {/* 3-5번째 줄 (간격 10) */}
                             <div className="page2-cross-layout flex flex-col gap-10">
                                 {/* 세 번째 줄: 격납_로드 1개 */}
                                 <div className="page2-third-row flex gap-5 justify-center items-center">
-                                <button
-                                    onMouseDown={() => signalRService.sendControlCommand('page5', 'remoteStorageButtonLoad4')}
-                                    onMouseUp={() => signalRService.sendControlCommand('page5', 'remoteStorageButtonLoad4', 0)}
-                                    onMouseLeave={() => signalRService.sendControlCommand('page5', 'remoteStorageButtonLoad4', 0)}
-                                    disabled={isDisabled}
-                                    className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                    style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem' }}
-                                >
-                                    격납_로드
-                                </button>
+                                <HoldButton 
+                                    commandName="remoteStorageButtonLoad4" 
+                                    label="격납_로드" 
+                                    onPress={sendCommand} 
+                                    disabled={isDisabled} 
+                                    busy={isResourceBusy("remoteStorageButtonLoad4")} 
+                                    theme={theme} 
+                                />
                             </div>
 
                             {/* 네 번째 줄: 끝번주행, 고속, 시작주행 3개 */}
                             <div className="page2-fourth-row flex gap-5 justify-center items-center flex-wrap">
-                                <button
-                                    onMouseDown={() => signalRService.sendControlCommand('page5', 'remoteEndRunButton4')}
-                                    onMouseUp={() => signalRService.sendControlCommand('page5', 'remoteEndRunButton4', 0)}
-                                    onMouseLeave={() => signalRService.sendControlCommand('page5', 'remoteEndRunButton4', 0)}
-                                    disabled={isDisabled}
-                                    className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                    style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem' }}
-                                >
-                                    끝번주행
-                                </button>
+                                <HoldButton 
+                                    commandName="remoteEndRunButton4" 
+                                    label="끝번주행" 
+                                    onPress={sendCommand} 
+                                    disabled={isDisabled} 
+                                    busy={isResourceBusy("remoteEndRunButton4")} 
+                                    theme={theme} 
+                                />
 
-                                <button
-                                    onMouseDown={() => signalRService.sendControlCommand('page5', 'remoteHighSpeedButton4')}
-                                    onMouseUp={() => signalRService.sendControlCommand('page5', 'remoteHighSpeedButton4', 0)}
-                                    onMouseLeave={() => signalRService.sendControlCommand('page5', 'remoteHighSpeedButton4', 0)}
-                                    disabled={isDisabled}
-                                    className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                    style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem' }}
-                                >
-                                    고속
-                                </button>
+                                <HoldButton 
+                                    commandName="remoteHighSpeedButton4" 
+                                    label="고속" 
+                                    onPress={sendCommand} 
+                                    disabled={isDisabled} 
+                                    busy={isResourceBusy("remoteHighSpeedButton4")} 
+                                    theme={theme} 
+                                />
 
-                                <button
-                                    onMouseDown={() => signalRService.sendControlCommand('page5', 'remoteStartRunButton4')}
-                                    onMouseUp={() => signalRService.sendControlCommand('page5', 'remoteStartRunButton4', 0)}
-                                    onMouseLeave={() => signalRService.sendControlCommand('page5', 'remoteStartRunButton4', 0)}
-                                    disabled={isDisabled}
-                                    className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                    style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem' }}
-                                >
-                                    시작주행
-                                </button>
+                                <HoldButton 
+                                    commandName="remoteStartRunButton4" 
+                                    label="시작주행" 
+                                    onPress={sendCommand} 
+                                    disabled={isDisabled} 
+                                    busy={isResourceBusy("remoteStartRunButton4")} 
+                                    theme={theme} 
+                                />
                             </div>
 
                             {/* 다섯 번째 줄: 추출_언로드 1개 */}
                             <div className="page2-fifth-row flex gap-5 justify-center items-center">
-                                <button
-                                    onMouseDown={() => signalRService.sendControlCommand('page5', 'remoteExtractButtonUnload4')}
-                                    onMouseUp={() => signalRService.sendControlCommand('page5', 'remoteExtractButtonUnload4', 0)}
-                                    onMouseLeave={() => signalRService.sendControlCommand('page5', 'remoteExtractButtonUnload4', 0)}
-                                    disabled={isDisabled}
-                                    className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                    style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem' }}
-                                >
-                                    추출_언로드
-                                </button>
+                                <HoldButton 
+                                    commandName="remoteExtractButtonUnload4" 
+                                    label="추출_언로드" 
+                                    onPress={sendCommand} 
+                                    disabled={isDisabled} 
+                                    busy={isResourceBusy("remoteExtractButtonUnload4")} 
+                                    theme={theme} 
+                                />
                             </div>
                             </div>
 
                             {/* 슬라이더초기화 */}
                             <div className="page2-slider-init flex gap-5 justify-center items-center">
                                 <div className="slider-init-spacer" style={{ flex: '0 0 280%' }}></div>
-                                <button
-                                    onMouseDown={() => signalRService.sendControlCommand('page5', 'remoteSliderInitialize4')}
-                                    onMouseUp={() => signalRService.sendControlCommand('page5', 'remoteSliderInitialize4', 0)}
-                                    onMouseLeave={() => signalRService.sendControlCommand('page5', 'remoteSliderInitialize4', 0)}
-                                    disabled={isDisabled}
-                                    className={`learn-more common-button ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                    style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem', flex: '0 0 25%' }}
-                                >
-                                    슬라이더초기화
-                                </button>
+                                <HoldButton 
+                                    commandName="remoteSliderInitialize4" 
+                                    label="슬라이더초기화" 
+                                    onPress={sendCommand} 
+                                    disabled={isDisabled} 
+                                    busy={isResourceBusy("remoteSliderInitialize4")} 
+                                    theme={theme} 
+                                    className="common-button" 
+                                />
                             </div>
                         </div>
                     )}
@@ -2828,178 +2921,156 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
 
                             {/* 첫 번째 줄: 비상정지, 수동선택, 자동선택, 리셋버튼 */}
                             <div className="page2-first-row flex gap-5 justify-center items-center flex-wrap">
-                                <button
-                                    onMouseDown={() => signalRService.sendControlCommand('page6', 'remoteEmergencyButton5')}
-                                    onMouseUp={() => signalRService.sendControlCommand('page6', 'remoteEmergencyButton5', 0)}
-                                    onMouseLeave={() => signalRService.sendControlCommand('page6', 'remoteEmergencyButton5', 0)}
-                                    disabled={isDisabled}
-                                    className={`learn-more emergency-button ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                    style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem' }}
-                                >
-                                    비상정지
-                                </button>
+                                <HoldButton 
+                                    commandName="remoteEmergencyButton5" 
+                                    label="비상정지" 
+                                    onPress={sendCommand} 
+                                    disabled={isDisabled} 
+                                    busy={isResourceBusy("remoteEmergencyButton5")} 
+                                    theme={theme} 
+                                    className="emergency-button" 
+                                />
 
-                                <button
-                                    onMouseDown={() => signalRService.sendControlCommand('page6', 'remoteManual5')}
-                                    onMouseUp={() => signalRService.sendControlCommand('page6', 'remoteManual5', 0)}
-                                    onMouseLeave={() => signalRService.sendControlCommand('page6', 'remoteManual5', 0)}
-                                    disabled={isDisabled}
-                                    className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                    style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem' }}
-                                >
-                                    수동선택
-                                </button>
+                                <HoldButton 
+                                    commandName="remoteManual5" 
+                                    label="수동선택" 
+                                    onPress={sendCommand} 
+                                    disabled={isDisabled} 
+                                    busy={isResourceBusy("remoteManual5")} 
+                                    theme={theme} 
+                                />
 
-                                <button
-                                    onMouseDown={() => signalRService.sendControlCommand('page6', 'remoteAuto5')}
-                                    onMouseUp={() => signalRService.sendControlCommand('page6', 'remoteAuto5', 0)}
-                                    onMouseLeave={() => signalRService.sendControlCommand('page6', 'remoteAuto5', 0)}
-                                    disabled={isDisabled}
-                                    className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                    style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem' }}
-                                >
-                                    자동선택
-                                </button>
+                                <HoldButton 
+                                    commandName="remoteAuto5" 
+                                    label="자동선택" 
+                                    onPress={sendCommand} 
+                                    disabled={isDisabled} 
+                                    busy={isResourceBusy("remoteAuto5")} 
+                                    theme={theme} 
+                                />
 
-                                <button
-                                    onMouseDown={() => signalRService.sendControlCommand('page6', 'remoteResetButton5')}
-                                    onMouseUp={() => signalRService.sendControlCommand('page6', 'remoteResetButton5', 0)}
-                                    onMouseLeave={() => signalRService.sendControlCommand('page6', 'remoteResetButton5', 0)}
-                                    disabled={isDisabled}
-                                    className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                    style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem' }}
-                                >
-                                    리셋버튼
-                                </button>
+                                <HoldButton 
+                                    commandName="remoteResetButton5" 
+                                    label="리셋버튼" 
+                                    onPress={sendCommand} 
+                                    disabled={isDisabled} 
+                                    busy={isResourceBusy("remoteResetButton5")} 
+                                    theme={theme} 
+                                />
                             </div>
 
                             {/* 두 번째 줄: 리프트측선택, 슬라이더선택, 전면선택, 후면선택 */}
                             <div className="page2-second-row flex gap-5 justify-center items-center flex-wrap">
-                                <button
-                                    onMouseDown={() => signalRService.sendControlCommand('page6', 'remoteSliderSelect5')}
-                                    onMouseUp={() => signalRService.sendControlCommand('page6', 'remoteSliderSelect5', 0)}
-                                    onMouseLeave={() => signalRService.sendControlCommand('page6', 'remoteSliderSelect5', 0)}
-                                    disabled={isDisabled}
-                                    className={`learn-more common-button ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                    style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem' }}
-                                >
-                                    리프트측선택
-                                </button>
+                                <HoldButton 
+                                    commandName="remoteSliderSelect5" 
+                                    label="리프트측선택" 
+                                    onPress={sendCommand} 
+                                    disabled={isDisabled} 
+                                    busy={isResourceBusy("remoteSliderSelect5")} 
+                                    theme={theme} 
+                                    className="common-button" 
+                                />
 
-                                <button
-                                    onMouseDown={() => signalRService.sendControlCommand('page6', 'remoteSliderSelect5')}
-                                    onMouseUp={() => signalRService.sendControlCommand('page6', 'remoteSliderSelect5', 0)}
-                                    onMouseLeave={() => signalRService.sendControlCommand('page6', 'remoteSliderSelect5', 0)}
-                                    disabled={isDisabled}
-                                    className={`learn-more common-button ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                    style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem' }}
-                                >
-                                    슬라이더선택
-                                </button>
+                                <HoldButton 
+                                    commandName="remoteSliderSelect5" 
+                                    label="슬라이더선택" 
+                                    onPress={sendCommand} 
+                                    disabled={isDisabled} 
+                                    busy={isResourceBusy("remoteSliderSelect5")} 
+                                    theme={theme} 
+                                    className="common-button" 
+                                />
 
-                                <button
-                                    onMouseDown={() => signalRService.sendControlCommand('page6', 'remoteSliderFrontSelect5')}
-                                    onMouseUp={() => signalRService.sendControlCommand('page6', 'remoteSliderFrontSelect5', 0)}
-                                    onMouseLeave={() => signalRService.sendControlCommand('page6', 'remoteSliderFrontSelect5', 0)}
-                                    disabled={isDisabled}
-                                    className={`learn-more common-button ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                    style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem' }}
-                                >
-                                    전면선택
-                                </button>
+                                <HoldButton 
+                                    commandName="remoteSliderFrontSelect5" 
+                                    label="전면선택" 
+                                    onPress={sendCommand} 
+                                    disabled={isDisabled} 
+                                    busy={isResourceBusy("remoteSliderFrontSelect5")} 
+                                    theme={theme} 
+                                    className="common-button" 
+                                />
 
-                                <button
-                                    onMouseDown={() => signalRService.sendControlCommand('page6', 'remoteSliderRearSelect5')}
-                                    onMouseUp={() => signalRService.sendControlCommand('page6', 'remoteSliderRearSelect5', 0)}
-                                    onMouseLeave={() => signalRService.sendControlCommand('page6', 'remoteSliderRearSelect5', 0)}
-                                    disabled={isDisabled}
-                                    className={`learn-more common-button ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                    style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem' }}
-                                >
-                                    후면선택
-                                </button>
+                                <HoldButton 
+                                    commandName="remoteSliderRearSelect5" 
+                                    label="후면선택" 
+                                    onPress={sendCommand} 
+                                    disabled={isDisabled} 
+                                    busy={isResourceBusy("remoteSliderRearSelect5")} 
+                                    theme={theme} 
+                                    className="common-button" 
+                                />
                             </div>
 
                             {/* 3-5번째 줄 (간격 10) */}
                             <div className="page2-cross-layout flex flex-col gap-10">
                                 {/* 세 번째 줄: 격납_로드 1개 */}
                                 <div className="page2-third-row flex gap-5 justify-center items-center">
-                                <button
-                                    onMouseDown={() => signalRService.sendControlCommand('page6', 'remoteStorageButtonLoad5')}
-                                    onMouseUp={() => signalRService.sendControlCommand('page6', 'remoteStorageButtonLoad5', 0)}
-                                    onMouseLeave={() => signalRService.sendControlCommand('page6', 'remoteStorageButtonLoad5', 0)}
-                                    disabled={isDisabled}
-                                    className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                    style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem' }}
-                                >
-                                    격납_로드
-                                </button>
+                                <HoldButton 
+                                    commandName="remoteStorageButtonLoad5" 
+                                    label="격납_로드" 
+                                    onPress={sendCommand} 
+                                    disabled={isDisabled} 
+                                    busy={isResourceBusy("remoteStorageButtonLoad5")} 
+                                    theme={theme} 
+                                />
                             </div>
 
                             {/* 네 번째 줄: 끝번주행, 고속, 시작주행 3개 */}
                             <div className="page2-fourth-row flex gap-5 justify-center items-center flex-wrap">
-                                <button
-                                    onMouseDown={() => signalRService.sendControlCommand('page6', 'remoteEndRunButton5')}
-                                    onMouseUp={() => signalRService.sendControlCommand('page6', 'remoteEndRunButton5', 0)}
-                                    onMouseLeave={() => signalRService.sendControlCommand('page6', 'remoteEndRunButton5', 0)}
-                                    disabled={isDisabled}
-                                    className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                    style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem' }}
-                                >
-                                    끝번주행
-                                </button>
+                                <HoldButton 
+                                    commandName="remoteEndRunButton5" 
+                                    label="끝번주행" 
+                                    onPress={sendCommand} 
+                                    disabled={isDisabled} 
+                                    busy={isResourceBusy("remoteEndRunButton5")} 
+                                    theme={theme} 
+                                />
 
-                                <button
-                                   onMouseDown={() => signalRService.sendControlCommand('page6', 'remoteHighSpeedButton5')}
-                                    onMouseUp={() => signalRService.sendControlCommand('page6', 'remoteHighSpeedButton5', 0)}
-                                    onMouseLeave={() => signalRService.sendControlCommand('page6', 'remoteHighSpeedButton5', 0)}
-                                    disabled={isDisabled}
-                                    className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                    style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem' }}
-                                >
-                                    고속
-                                </button>
+                                <HoldButton 
+                                    commandName="remoteHighSpeedButton5" 
+                                    label="고속" 
+                                    onPress={sendCommand} 
+                                    disabled={isDisabled} 
+                                    busy={isResourceBusy("remoteHighSpeedButton5")} 
+                                    theme={theme} 
+                                />
 
-                                <button
-                                    onMouseDown={() => signalRService.sendControlCommand('page6', 'remoteStartRunButton5')}
-                                    onMouseUp={() => signalRService.sendControlCommand('page6', 'remoteStartRunButton5', 0)}
-                                    onMouseLeave={() => signalRService.sendControlCommand('page6', 'remoteStartRunButton5', 0)}
-                                    disabled={isDisabled}
-                                    className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                    style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem' }}
-                                >
-                                    시작주행
-                                </button>
+                                <HoldButton 
+                                    commandName="remoteStartRunButton5" 
+                                    label="시작주행" 
+                                    onPress={sendCommand} 
+                                    disabled={isDisabled} 
+                                    busy={isResourceBusy("remoteStartRunButton5")} 
+                                    theme={theme} 
+                                />
                             </div>
 
                             {/* 다섯 번째 줄: 추출_언로드 1개 */}
                             <div className="page2-fifth-row flex gap-5 justify-center items-center">
-                                <button
-                                    onMouseDown={() => signalRService.sendControlCommand('page6', 'remoteExtractButtonUnload5')}
-                                    onMouseUp={() => signalRService.sendControlCommand('page6', 'remoteExtractButtonUnload5', 0)}
-                                    onMouseLeave={() => signalRService.sendControlCommand('page6', 'remoteExtractButtonUnload5', 0)}
-                                    disabled={isDisabled}
-                                    className={`learn-more ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                    style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem' }}
-                                >
-                                    추출_언로드
-                                </button>
+                                <HoldButton 
+                                    commandName="remoteExtractButtonUnload5" 
+                                    label="추출_언로드" 
+                                    onPress={sendCommand} 
+                                    disabled={isDisabled} 
+                                    busy={isResourceBusy("remoteExtractButtonUnload5")} 
+                                    theme={theme} 
+                                />
                             </div>
                             </div>
 
                             {/* 슬라이더초기화 */}
                             <div className="page2-slider-init flex gap-5 justify-center items-center">
                                 <div className="slider-init-spacer" style={{ flex: '0 0 280%' }}></div>
-                                <button
-                                    onMouseDown={() => signalRService.sendControlCommand('page6', 'remoteSliderInitialize5')}
-                                    onMouseUp={() => signalRService.sendControlCommand('page6', 'remoteSliderInitialize5', 0)}
-                                    onMouseLeave={() => signalRService.sendControlCommand('page6', 'remoteSliderInitialize5', 0)}
-                                    disabled={isDisabled}
-                                    className={`learn-more common-button ${theme === 'space' ? 'space-theme' : ''} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                    style={{ minWidth: '160px', padding: '18px 28px', fontSize: '0.9rem', flex: '0 0 25%' }}
-                                >
-                                    슬라이더초기화
-                                </button>
+                                <HoldButton 
+                                    commandName="remoteSliderInitialize5" 
+                                    label="슬라이더초기화" 
+                                    onPress={sendCommand} 
+                                    disabled={isDisabled} 
+                                    busy={isResourceBusy("remoteSliderInitialize5")} 
+                                    theme={theme} 
+                                    className="common-button" 
+                                />
                             </div>
                         </div>
                     )}

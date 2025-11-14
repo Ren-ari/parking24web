@@ -35,4 +35,14 @@
     <Folder Include="wwwroot\" />
   </ItemGroup>
 
+  <!-- 빌드 후 썸네일 파일 자동 복사 -->
+  <Target Name="CopyThumbnails" AfterTargets="Build" Condition="'$(Configuration)' == 'Release'">
+    <ItemGroup>
+      <ThumbnailFiles Include="..\parking24web.client\public\thumbnails\*.jpg" />
+    </ItemGroup>
+    <MakeDir Directories="$(OutputPath)wwwroot\thumbnails" Condition="!Exists('$(OutputPath)wwwroot\thumbnails')" />
+    <Copy SourceFiles="@(ThumbnailFiles)" DestinationFolder="$(OutputPath)wwwroot\thumbnails" SkipUnchangedFiles="true" />
+    <Message Text="썸네일 파일 복사 완료: @(ThumbnailFiles->Count())개" Importance="high" />
+  </Target>
+
 </Project>

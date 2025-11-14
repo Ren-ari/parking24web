@@ -195,16 +195,30 @@ appLogger.LogInformation($"설정 파일: {(File.Exists(siteConfigFile) ? siteCo
 appLogger.LogInformation($"정적 파일: {(environment.IsDevelopment() ? "React 개발서버" : "빌드된 React 앱")}");
 appLogger.LogInformation($"===========================");
 
-// 앱이 종료될 때 CCTV 정리 작업 (Graceful Shutdown)
+// 앱이 종료될 때 리소스 정리 작업 (Graceful Shutdown)
 var lifetime = app.Services.GetRequiredService<IHostApplicationLifetime>();
 lifetime.ApplicationStopping.Register(() =>
 {
-    appLogger.LogInformation("앱이 종료 중 - CCTV 리소스 정리 시작");
+    appLogger.LogInformation("앱이 종료 중 - 리소스 정리 시작");
 
-    var cctvService = app.Services.GetService<CCTVService>();
-    cctvService?.Dispose();
+    try
+    {
+        // CCTV 서비스 정리
+        var cctvService = app.Services.GetService<CCTVService>();
+        cctvService?.Dispose();
+        appLogger.LogInformation("CCTV 리소스 정리 완료");
 
-    appLogger.LogInformation("CCTV 리소스 정리 완료");
+        // PLC 서비스 정리
+        var plcService = app.Services.GetService<PLCService>();
+        plcService?.Dispose();
+        appLogger.LogInformation("PLC 리소스 정리 완료");
+    }
+    catch (Exception ex)
+    {
+        appLogger.LogError(ex, "리소스 정리 중 오류 발생");
+    }
+
+    appLogger.LogInformation("리소스 정리 완료");
 });
 
 app.Run();

@@ -52,6 +52,15 @@ export default defineConfig({
             '^/weatherforecast': {
                 target,
                 secure: false
+            },
+            '^/thumbnails': {
+                target,
+                secure: false
+            },
+
+            '^/hls': {
+                target,
+                secure: false
             }
         },
         port: 5173,

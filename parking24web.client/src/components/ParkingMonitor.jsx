@@ -330,8 +330,8 @@ const ParkingMonitor = ({ sensorData, isPLCConnected }) => {
                     </div>
                     
                     {/* 태블릿/데스크톱: 가로 내부 탭 */}
-                    <div className="hidden sm:block">
-                        <div className={`inline-flex rounded-xl p-1 ${theme === 'space' ? 'bg-gray-800/50' : 'bg-gray-100/80'}`}>
+                    <div className="hidden sm:flex sm:justify-center">
+                        <div className={`inline-flex rounded-xl p-1  ${theme === 'space' ? 'bg-gray-800/50' : 'bg-gray-100/80'}`}>
                             {[1, 2, 3, 4, 5, 6].map(cartNumber => (
                                 <button
                                     key={cartNumber}

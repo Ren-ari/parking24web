@@ -162,19 +162,15 @@ const CCTVMonitor = () => {
     // 언마운트 시 정리
     useEffect(() => {
         return () => {
-            // HLS 정리
+            // HLS만 정리
             if (hlsRef.current) {
                 hlsRef.current.destroy();
                 hlsRef.current = null;
             }
-            // 연결 해제는 서버에 요청 (비동기 처리는 하지 않음)
-            if (isStreaming) {
-                fetch(`${apiBaseUrl}/api/cctv/hls/stop/${currentChannel}`, {
-                    method: 'POST'
-                }).catch(err => console.error('정리 중 오류:', err));
-            }
+            // 서버 stop은 handleChannelChange와 handleDisconnect에서만 처리
+            // (여기서 stop 호출하면 stale closure 문제 발생)
         };
-    }, [isStreaming, currentChannel]);
+    }, []);
 
     const checkStatus = async () => {
         try {
@@ -235,16 +231,17 @@ const CCTVMonitor = () => {
             return;
         }
 
+        const prevChannel = currentChannel;
         setCurrentChannel(channelNumber);
 
-        // 기존 스트리밍 중지
+        // 기존 스트리밍 중지 (이전 채널 번호 전달)
         if (isStreaming) {
-            await stopStream();
+            await stopStream(prevChannel);
         }
 
         // 새 채널 시작
         await startStream(channelNumber);
-    }, [isConnected, isStreaming]);
+    }, [isConnected, isStreaming, currentChannel]);
 
     const startStream = async (channel = currentChannel) => {
         try {
@@ -267,7 +264,8 @@ const CCTVMonitor = () => {
         }
     };
 
-    const stopStream = async () => {
+    const stopStream = async (channel) => {
+        const targetChannel = channel ?? currentChannel;
         try {
             // HLS 정리
             if (hlsRef.current) {
@@ -276,7 +274,7 @@ const CCTVMonitor = () => {
             }
 
             // 서버에 중지 요청
-            await fetch(`${apiBaseUrl}/api/cctv/hls/stop/${currentChannel}`, {
+            await fetch(`${apiBaseUrl}/api/cctv/hls/stop/${targetChannel}`, {
                 method: 'POST'
             });
 
@@ -315,7 +313,25 @@ const CCTVMonitor = () => {
             });
 
             hls.on(Hls.Events.ERROR, (event, data) => {
-                console.error('HLS 오류:', data);
+                console.error('HLS 오류:', {
+                    type: data.type,
+                    details: data.details,
+                    fatal: data.fatal,
+                    error: data.error,
+                    url: data.url,
+                    response: data.response
+                });
+                
+                // 버퍼 스톨 에러 처리
+                if (data.details === 'bufferStalledError' || data.details === 'bufferSeekOver') {
+                    console.warn('버퍼 부족 감지, 재시도 중...');
+                    // 버퍼가 부족하면 현재 위치에서 다시 로드
+                    if (videoRef.current && !videoRef.current.paused) {
+                        hls.startLoad();
+                    }
+                    return;
+                }
+                
                 if (data.fatal) {
                     switch (data.type) {
                         case Hls.ErrorTypes.NETWORK_ERROR:
@@ -327,9 +343,21 @@ const CCTVMonitor = () => {
                             hls.recoverMediaError();
                             break;
                         default:
-                            console.log('복구 불가능한 오류');
+                            console.log('복구 불가능한 오류:', data.details);
                             hls.destroy();
                             break;
+                    }
+                } else {
+                    // 비치명적 에러 중에서도 버퍼 관련 에러는 처리
+                    if (data.details === 'bufferAppendingError' || data.details === 'bufferNudgeOnStall') {
+                        console.warn('버퍼 문제 감지, 재시도 중...', data.details);
+                        setTimeout(() => {
+                            if (hlsRef.current && videoRef.current && !videoRef.current.paused) {
+                                hls.startLoad();
+                            }
+                        }, 1000);
+                    } else {
+                        console.warn('HLS 경고 (비치명적):', data.details);
                     }
                 }
             });
@@ -346,7 +374,7 @@ const CCTVMonitor = () => {
 
     return (
         <>
-            <style jsx>{`
+            <style>{`
                 .cctv-thumbnail-panel-left {
                     position: fixed;
                     top: 35%;

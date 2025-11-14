@@ -210,28 +210,6 @@ class SignalRService {
         }
     }
 
-    // PLC 명령 전송
-    async sendPLCCommand(commandType, deviceType, address, value, bitPosition = 0) {
-        try {
-            if (!this.connection || !this.isConnected) {
-                throw new Error("SignalR 연결이 필요합니다");
-            }
-
-            const command = {
-                commandType,
-                deviceType,
-                address,
-                bitPosition,
-                value
-            };
-
-            await this.connection.invoke("SendPLCCommand", command);
-        } catch (error) {
-            console.error("PLC 명령 전송 실패:", error);
-            throw error;
-        }
-    }
-
     // Config 기반 명령 전송 (새로 추가)
     async sendConfigCommand(commandName, value = 1) {
         try {
@@ -361,18 +339,6 @@ class SignalRService {
     async rightLiftUnlock(value = 1) {
         // Deprecated 경고 메시지 제거
         await this.connection?.invoke("RightLiftUnlock", value);
-    }
-
-    // 현장 설정 로드 (기존)
-    async loadSiteConfig(config) {
-        try {
-            if (!this.connection || !this.isConnected) return;
-
-            await this.connection.invoke("LoadSiteConfig", config);
-        } catch (error) {
-            console.error("현장 설정 로드 실패:", error);
-            throw error;
-        }
     }
 
     // SignalR 연결 종료

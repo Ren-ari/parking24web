@@ -196,11 +196,15 @@ const ServiceRecordTab = () => {
                 <h2 className="text-lg md:text-2xl font-bold text-white text-center mb-2 md:mb-4">A/S 기록 관리</h2>
 
                 {!isClient() && !showAddForm && (
-                    <button onClick={() => setShowAddForm(true)}
-                        className="px-6 py-3 rounded-lg font-bold transition-all hover:scale-105"
-                        style={{ background: 'linear-gradient(145deg, #1a1a1a 0%, #2d2d2d 50%, #1a1a1a 100%)', border: '1px solid rgba(255, 255, 255, 0.2)', color: 'white' }}>
-                        <span style={{ color: theme === 'space' ? 'white' : '#3b82f6' }}>➕</span> A/S 기록 추가
-                    </button>
+                   <div className="flex justify-center">
+                   <button onClick={() => setShowAddForm(true)}
+                       className="px-6 py-3 rounded-lg font-bold transition-all hover:scale-105"
+                       style={theme === 'space' 
+                           ? { background: 'linear-gradient(145deg, #1a1a1a 0%, #2d2d2d 50%, #1a1a1a 100%)', border: '1px solid rgba(255, 255, 255, 0.2)', color: 'white' }
+                           : { background: 'white', border: '1px solid #3b82f6', color: '#1f2937' }}>
+                       <span style={{ color: '#3b82f6' }}>➕</span> A/S 기록 추가
+                   </button>
+               </div>
                 )}
             </div>
 
