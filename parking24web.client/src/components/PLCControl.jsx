@@ -219,20 +219,6 @@ const PLCControl = ({ currentUser, onLogout }) => {
             : { background: 'rgba(255, 255, 255, 0.95)', backdropFilter: 'blur(25px)', WebkitBackdropFilter: 'blur(25px)' };
     };
 
-    // 테마에 따른 카드 배경 스타일
-    const getCardBackgroundStyle = () => {
-        return theme === 'space'
-            ? { background: 'linear-gradient(135deg, rgba(147, 51, 234, 0.15) 0%, rgba(124, 58, 237, 0.08) 100%)', border: '1px solid rgba(147, 51, 234, 0.2)', boxShadow: '0 4px 16px 0 rgba(147, 51, 234, 0.1)' }
-            : { background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.03) 100%)', border: '1px solid rgba(255, 255, 255, 0.12)', boxShadow: '0 4px 16px 0 rgba(31, 38, 135, 0.15)' };
-    };
-
-    // 테마에 따른 카드 값 배경 스타일
-    const getCardValueBackgroundStyle = () => {
-        return theme === 'space'
-            ? { background: 'linear-gradient(135deg, rgba(147, 51, 234, 0.2) 0%, rgba(124, 58, 237, 0.1) 100%)', border: '1px solid rgba(147, 51, 234, 0.3)', boxShadow: '0 2px 8px 0 rgba(147, 51, 234, 0.1)' }
-            : { background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.8) 100%)', border: '1px solid rgba(255, 255, 255, 0.3)', boxShadow: '0 2px 8px 0 rgba(31, 38, 135, 0.15)' };
-    };
-
     // 테마에 따른 데이터 패널 헤더 스타일
     const getDataPanelHeaderStyle = () => {
         return theme === 'space'
@@ -817,13 +803,13 @@ const PLCControl = ({ currentUser, onLogout }) => {
                                     {isSummaryMode && (
                                         <div className="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 mb-2">
                                             {[
-                                                { label: '전체주차', value: sensorData.rawData?.[77] || 0, delay: '100ms' },
-                                                { label: '전체공차', value: sensorData.rawData?.[78] || 0, delay: '200ms' },
-                                                { label: '일반입고', value: sensorData.rawData?.[79] || 0, delay: '300ms' },
-                                                { label: '일반출차', value: sensorData.rawData?.[80] || 0, delay: '400ms' },
-                                                { label: 'RV입고', value: sensorData.rawData?.[82] || 0, delay: '500ms' },
-                                                { label: 'RV출차', value: sensorData.rawData?.[81] || 0, delay: '600ms' }
-                                            ].map((kpi, idx) => (
+                                                { label: '전체주차', value: sensorData.rawData?.[siteConfig.dataAddresses.totalParked] || 0, delay: '100ms' },
+                                                { label: '전체공차', value: sensorData.rawData?.[siteConfig.dataAddresses.totalEmpty] || 0, delay: '200ms' },
+                                                { label: '일반입고', value: sensorData.rawData?.[siteConfig.dataAddresses.normalIn] || 0, delay: '300ms' },
+                                                { label: '일반공차', value: sensorData.rawData?.[siteConfig.dataAddresses.normalEmpty] || 0, delay: '400ms' },
+                                                { label: 'RV입고', value: sensorData.rawData?.[siteConfig.dataAddresses.rvIn] || 0, delay: '500ms' },
+                                                { label: 'RV공차', value: sensorData.rawData?.[siteConfig.dataAddresses.rvEmpty] || 0, delay: '600ms' }
+                                            ].map((kpi) => (
                                                 <div
                                                     key={kpi.label}
                                                     className={`p-3 rounded-2xl transition-all duration-700 ease-out transform relative overflow-hidden ${isDataPanelExpanded ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'}`}
@@ -908,7 +894,7 @@ const PLCControl = ({ currentUser, onLogout }) => {
                                                     border: '1px solid rgba(255, 255, 255, 0.3)',
                                                     boxShadow: '0 2px 8px 0 rgba(31, 38, 135, 0.15)'
                                                 }}>
-                                                    {sensorData.rawData?.[75] || 0}
+                                                    {sensorData.rawData?.[siteConfig.dataAddresses.loadedPallet] || 0}
                                                 </div>
                                             </div>
 
@@ -933,7 +919,7 @@ const PLCControl = ({ currentUser, onLogout }) => {
                                                     border: '1px solid rgba(255, 255, 255, 0.3)',
                                                     boxShadow: '0 2px 8px 0 rgba(31, 38, 135, 0.15)'
                                                 }}>
-                                                    {sensorData.rawData?.[76] || 0}
+                                                    {sensorData.rawData?.[siteConfig.dataAddresses.unloadPallet] || 0}
                                                 </div>
                                             </div>
                                         </div>
@@ -962,7 +948,7 @@ const PLCControl = ({ currentUser, onLogout }) => {
                                                 border: '1px solid rgba(255, 255, 255, 0.25)',
                                                 boxShadow: '0 1px 6px 0 rgba(31, 38, 135, 0.12)'
                                             }}>
-                                                {sensorData.rawData?.[77] || 0}
+                                                {sensorData.rawData?.[siteConfig.dataAddresses.totalParked] || 0}
                                             </div>
                                         </div>
 
@@ -987,7 +973,7 @@ const PLCControl = ({ currentUser, onLogout }) => {
                                                 border: '1px solid rgba(255, 255, 255, 0.25)',
                                                 boxShadow: '0 1px 6px 0 rgba(31, 38, 135, 0.12)'
                                             }}>
-                                                {sensorData.rawData?.[78] || 0}
+                                                {sensorData.rawData?.[siteConfig.dataAddresses.totalEmpty] || 0}
                                             </div>
                                         </div>
 
@@ -1012,7 +998,7 @@ const PLCControl = ({ currentUser, onLogout }) => {
                                                 border: '1px solid rgba(255, 255, 255, 0.25)',
                                                 boxShadow: '0 1px 6px 0 rgba(31, 38, 135, 0.12)'
                                             }}>
-                                                {sensorData.rawData?.[79] || 0}
+                                                {sensorData.rawData?.[siteConfig.dataAddresses.normalIn] || 0}
                                             </div>
                                         </div>
 
@@ -1029,7 +1015,7 @@ const PLCControl = ({ currentUser, onLogout }) => {
                                                 boxShadow: '0 3px 12px 0 rgba(31, 38, 135, 0.18)'
                                             }}>
                                             <div className="absolute inset-0 bg-gradient-to-br from-purple-500/6 to-pink-500/6 rounded-2xl"></div>
-                                            <label className={`block text-xs font-medium mb-1 relative z-10 ${getCardLabelColorClass()}`}>일반출차</label>
+                                            <label className={`block text-xs font-medium mb-1 relative z-10 ${getCardLabelColorClass()}`}>일반공차</label>
                                             <div className={`text-center rounded-2xl px-1 sm:px-2 py-3 sm:py-5 text-lg sm:text-2xl md:text-3xl font-bold relative z-10 ${getCardValueColorClass()}`} style={{
                                                 background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.75) 100%)',
                                                 backdropFilter: 'blur(8px)',
@@ -1037,7 +1023,7 @@ const PLCControl = ({ currentUser, onLogout }) => {
                                                 border: '1px solid rgba(255, 255, 255, 0.25)',
                                                 boxShadow: '0 1px 6px 0 rgba(31, 38, 135, 0.12)'
                                             }}>
-                                                {sensorData.rawData?.[80] || 0}
+                                                {sensorData.rawData?.[siteConfig.dataAddresses.normalEmpty] || 0}
                                             </div>
                                         </div>
 
@@ -1062,7 +1048,7 @@ const PLCControl = ({ currentUser, onLogout }) => {
                                                 border: '1px solid rgba(255, 255, 255, 0.25)',
                                                 boxShadow: '0 1px 6px 0 rgba(31, 38, 135, 0.12)'
                                             }}>
-                                                {sensorData.rawData?.[82] || 0}
+                                                {sensorData.rawData?.[siteConfig.dataAddresses.rvIn] || 0}
                                             </div>
                                         </div>
 
@@ -1079,7 +1065,7 @@ const PLCControl = ({ currentUser, onLogout }) => {
                                                 boxShadow: '0 3px 12px 0 rgba(31, 38, 135, 0.18)'
                                             }}>
                                             <div className="absolute inset-0 bg-gradient-to-br from-purple-500/6 to-pink-500/6 rounded-2xl"></div>
-                                            <label className={`block text-xs font-medium mb-1 relative z-10 ${getCardLabelColorClass()}`}>RV출차</label>
+                                            <label className={`block text-xs font-medium mb-1 relative z-10 ${getCardLabelColorClass()}`}>RV공차</label>
                                             <div className={`text-center rounded-2xl px-1 sm:px-2 py-3 sm:py-5 text-lg sm:text-2xl md:text-3xl font-bold relative z-10 ${getCardValueColorClass()}`} style={{
                                                 background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.75) 100%)',
                                                 backdropFilter: 'blur(8px)',
@@ -1087,7 +1073,7 @@ const PLCControl = ({ currentUser, onLogout }) => {
                                                 border: '1px solid rgba(255, 255, 255, 0.25)',
                                                 boxShadow: '0 1px 6px 0 rgba(31, 38, 135, 0.12)'
                                             }}>
-                                                {sensorData.rawData?.[81] || 0}
+                                                {sensorData.rawData?.[siteConfig.dataAddresses.rvEmpty] || 0}
                                             </div>
                                         </div>
                                     </div>
