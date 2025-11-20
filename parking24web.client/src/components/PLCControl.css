@@ -1,0 +1,210 @@
+/* ============================================ */
+/* PLCControl 전용 스타일 */
+/* ============================================ */
+
+/* 햄버거 버튼 */
+.hamburger-button {
+    pointer-events: auto;
+    position: relative;
+    z-index: 9999;
+}
+
+/* 모바일 메뉴 오버레이 */
+.mobile-menu-overlay {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+}
+
+/* 우주 테마 배경 효과 */
+.space-dark-overlay {
+    background: radial-gradient(circle at 30% 30%, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.4) 25%, rgba(0,0,0,0.2) 50%, rgba(0,0,0,0.1) 75%, rgba(0,0,0,0) 100%);
+}
+
+.space-nebula-delay-2s {
+    animation-delay: 2s;
+}
+
+.space-nebula-delay-4s {
+    animation-delay: 4s;
+}
+
+/* 코너 어둡기 오버레이 */
+.corner-dark-top-right {
+    background: radial-gradient(circle at 85% 15%, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.3) 20%, rgba(0,0,0,0.1) 40%, rgba(0,0,0,0) 60%);
+}
+
+.corner-dark-bottom-left {
+    background: radial-gradient(circle at 15% 85%, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.3) 20%, rgba(0,0,0,0.1) 40%, rgba(0,0,0,0) 60%);
+}
+
+.corner-dark-top-right-light {
+    background: radial-gradient(circle at 85% 15%, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.28) 18%, rgba(0,0,0,0.14) 35%, rgba(0,0,0,0) 55%);
+}
+
+.corner-dark-bottom-left-light {
+    background: radial-gradient(circle at 15% 85%, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.28) 18%, rgba(0,0,0,0.14) 35%, rgba(0,0,0,0) 55%);
+}
+
+/* 메인 컨텐츠 최적화 */
+.main-content-optimized {
+    width: 100vw;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    touch-action: pan-x pan-y;
+    transform: translateZ(0);
+    will-change: background, transform;
+    backface-visibility: hidden;
+    -webkit-transform: translateZ(0);
+    -webkit-backface-visibility: hidden;
+}
+
+/* 중앙 어둡기 오버레이 */
+.central-dark-overlay {
+    z-index: 1;
+    background: radial-gradient(circle at 50% 45%, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.45) 20%, rgba(0,0,0,0.25) 45%, rgba(0,0,0,0.12) 60%, rgba(0,0,0,0) 75%);
+}
+
+/* 별 레이어 */
+.stars-layer {
+    z-index: 0;
+}
+
+/* 데이터 패널 헤더 공통 스타일 */
+.data-panel-header {
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+/* 슬라이드 인/아웃 애니메이션 */
+@keyframes slideInFromLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-50px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes slideInFromRight {
+    from {
+        opacity: 0;
+        transform: translateX(50px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes slideOutToLeft {
+    from {
+        opacity: 1;
+        transform: translateX(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateX(-50px);
+    }
+}
+
+@keyframes slideOutToRight {
+    from {
+        opacity: 1;
+        transform: translateX(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateX(50px);
+    }
+}
+
+/* 별 애니메이션 */
+.star {
+    position: absolute;
+    background-color: white;
+    border-radius: 50%;
+    animation: twinkle 3s ease-in-out infinite;
+}
+
+@keyframes twinkle {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+}
+
+/* 탭 버튼 애니메이션 적용 유틸리티 */
+.tab-button-animated {
+    animation-timing-function: ease-out;
+    animation-fill-mode: both;
+}
+
+.tab-button-animated.closing {
+    animation-timing-function: ease-in;
+}
+
+/* PC 전용 탭 버튼 */
+.pc-tab-button {
+    position: relative;
+    padding: 0.625rem 1.25rem;
+    font-weight: 700;
+    border-radius: 0.75rem;
+    transition: all 0.3s ease-in-out;
+    font-size: 0.875rem;
+    transform: translateZ(0);
+    min-width: 120px;
+    text-align: center;
+}
+
+.pc-tab-button:hover {
+    transform: scale(1.05) translateY(-2px);
+}
+
+.pc-tab-button:active {
+    transform: scale(0.95) translateY(0);
+}
+
+/* Light 테마 기본 버튼 */
+.pc-tab-button.light-theme {
+    background: linear-gradient(135deg, #ffffff 0%, #f3f4f6 100%);
+    color: #4b5563;
+    border: 2px solid #d1d5db;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.pc-tab-button.light-theme:hover {
+    background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+    color: #1e40af;
+    border-color: #93c5fd;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+.pc-tab-button.light-theme.active {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    color: white;
+    border-color: #1d4ed8;
+    box-shadow: 0 0 20px 4px rgba(59, 130, 246, 0.3), 0 10px 15px -3px rgba(0, 0, 0, 0.2);
+}
+
+/* Space 테마 버튼 */
+.pc-tab-button.space-theme {
+    background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+    color: #d1d5db;
+    border: 2px solid #374151;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
+}
+
+.pc-tab-button.space-theme:hover {
+    background: linear-gradient(135deg, #4c1d95 0%, #5b21b6 100%);
+    color: #e9d5ff;
+    border-color: #7c3aed;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 0 20px rgba(124, 58, 237, 0.3);
+}
+
+.pc-tab-button.space-theme.active {
+    background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+    color: white;
+    border-color: #a78bfa;
+    box-shadow: 0 0 30px 6px rgba(124, 58, 237, 0.4), 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+}
+

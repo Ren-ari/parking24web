@@ -57,6 +57,11 @@ export default defineConfig({
             '^/thumbnails': {
                 target,
                 secure: false
+            },
+
+            '^/hls': {
+                target,
+                secure: false
             }
         },
         port: 5173,

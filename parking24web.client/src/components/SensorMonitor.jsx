@@ -3,7 +3,7 @@ import siteConfig from '../../config/sokcho2Config.js';
 import { useTheme } from '../contexts/ThemeContext';
 
 const SensorMonitor = ({ sensorData, isPLCConnected }) => {
-    const { theme, isSpaceTheme, isDarkTheme, isOceanTheme } = useTheme();
+    const { theme } = useTheme();
     const [viewMode, setViewMode] = useState('parsed'); // 'parsed' or 'raw' or 'hex' or 'bits'
     const [showZeroValues, setShowZeroValues] = useState(false);
     const [searchFilter, setSearchFilter] = useState('');
@@ -197,189 +197,83 @@ const SensorMonitor = ({ sensorData, isPLCConnected }) => {
     };
 
     // 테마별 스타일링 함수들
-    const getMainBackgroundStyle = () => {
-        switch (theme) {
-            case 'space':
-                return {
-                    background: 'rgba(20, 20, 20, 0.95)',
-                    backdropFilter: 'blur(25px)',
-                    WebkitBackdropFilter: 'blur(25px)',
-                };
-            case 'dark':
-                return {
-                    background: 'rgba(20, 20, 20, 0.95)',
-                    backdropFilter: 'blur(25px)',
-                    WebkitBackdropFilter: 'blur(25px)',
-                };
-            case 'ocean':
-                return {
-                    background: 'rgba(0, 20, 40, 0.95)',
-                    backdropFilter: 'blur(25px)',
-                    WebkitBackdropFilter: 'blur(25px)',
-                };
-            default:
-                return {
-                    background: 'rgba(255, 255, 255, 0.95)',
-                    backdropFilter: 'blur(25px)',
-                    WebkitBackdropFilter: 'blur(25px)',
-                };
-        }
-    };
+    // 테마별 스타일 메모이제이션
+    const mainBackgroundStyle = useMemo(() => 
+        theme === 'space'
+            ? {
+                background: 'rgba(20, 20, 20, 0.95)',
+                backdropFilter: 'blur(25px)',
+                WebkitBackdropFilter: 'blur(25px)',
+            }
+            : {
+                background: 'rgba(255, 255, 255, 0.95)',
+                backdropFilter: 'blur(25px)',
+                WebkitBackdropFilter: 'blur(25px)',
+            }
+    , [theme]);
 
-    const getMainBorderClass = () => {
-        switch (theme) {
-            case 'space': return 'border-purple-500/30';
-            case 'dark': return 'border-gray-600/30';
-            case 'ocean': return 'border-blue-500/30';
-            default: return 'border-white/20';
-        }
-    };
+    const mainBorderClass = useMemo(() => 
+        theme === 'space' ? 'border-purple-500/30' : 'border-white/20'
+    , [theme]);
 
-    const getTitleGradient = () => {
-        switch (theme) {
-            case 'space': return 'bg-gradient-to-r from-purple-400 to-purple-600 bg-clip-text text-transparent';
-            case 'dark': return 'bg-gradient-to-r from-gray-300 to-gray-500 bg-clip-text text-transparent';
-            case 'ocean': return 'bg-gradient-to-r from-blue-400 to-cyan-500 bg-clip-text text-transparent';
-            default: return 'bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent';
-        }
-    };
+    const titleGradient = useMemo(() => 
+        theme === 'space' 
+            ? 'bg-gradient-to-r from-purple-400 to-purple-600 bg-clip-text text-transparent'
+            : 'bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent'
+    , [theme]);
 
-    const getControlPanelStyle = () => {
-        switch (theme) {
-            case 'space':
-                return 'bg-gradient-to-br from-purple-600/80 via-purple-700/70 to-purple-800/80 border-purple-500/90 shadow-lg shadow-purple-600/30';
-            case 'dark':
-                return 'bg-gradient-to-br from-gray-700/50 via-gray-800/40 to-gray-900/50 border-gray-600/50 shadow-lg shadow-gray-500/20';
-            case 'ocean':
-                return 'bg-gradient-to-br from-blue-800/50 via-blue-900/40 to-cyan-900/50 border-blue-500/50 shadow-lg shadow-blue-500/20';
-            default:
-                return 'bg-gradient-to-br from-blue-50 to-indigo-100 border-gray-200 shadow-lg shadow-blue-500/10';
-        }
-    };
+    const controlPanelStyle = useMemo(() => 
+        theme === 'space'
+            ? 'bg-gradient-to-br from-purple-600/80 via-purple-700/70 to-purple-800/80 border-purple-500/90 shadow-lg shadow-purple-600/30'
+            : 'bg-gradient-to-br from-blue-50 to-indigo-100 border-gray-200 shadow-lg shadow-blue-500/10'
+    , [theme]);
 
-    const getButtonActiveStyle = () => {
-        switch (theme) {
-            case 'space': return 'bg-gradient-to-r from-purple-500 to-purple-600 text-white shadow-lg scale-105 shadow-purple-500/25';
-            case 'dark': return 'bg-gradient-to-r from-gray-600 to-gray-700 text-white shadow-lg scale-105 shadow-gray-500/25';
-            case 'ocean': return 'bg-gradient-to-r from-blue-500 to-cyan-600 text-white shadow-lg scale-105 shadow-blue-500/25';
-            default: return 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg scale-105 shadow-blue-500/25';
-        }
-    };
+    const buttonActiveStyle = useMemo(() => 
+        theme === 'space' 
+            ? 'bg-gradient-to-r from-purple-500 to-purple-600 text-white shadow-lg scale-105 shadow-purple-500/25'
+            : 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg scale-105 shadow-blue-500/25'
+    , [theme]);
 
-    const getButtonInactiveStyle = () => {
-        switch (theme) {
-            case 'space': return 'text-gray-300 hover:text-gray-200 hover:bg-gray-500/50 hover:scale-102';
-            case 'dark': return 'text-gray-400 hover:text-gray-300 hover:bg-gray-700/30 hover:scale-102';
-            case 'ocean': return 'text-blue-300 hover:text-blue-200 hover:bg-blue-800/30 hover:scale-102';
-            default: return 'text-gray-600 hover:text-purple-600 hover:bg-purple-50 hover:scale-102';
-        }
-    };
+    const buttonInactiveStyle = useMemo(() => 
+        theme === 'space' 
+            ? 'text-gray-300 hover:text-gray-200 hover:bg-gray-500/50 hover:scale-102'
+            : 'text-gray-600 hover:text-purple-600 hover:bg-purple-50 hover:scale-102'
+    , [theme]);
 
-    const getToggleActiveStyle = () => {
-        switch (theme) {
-            case 'space':
-                return {
-                    background: 'linear-gradient(135deg, rgba(196, 181, 253, 0.9) 0%, rgba(167, 139, 250, 0.9) 100%)', // 밝은 보라색
-                    backdropFilter: 'blur(10px)',
-                    WebkitBackdropFilter: 'blur(10px)',
-                    border: '1px solid rgba(255, 255, 255, 0.2)',
-                    minHeight: '4px'
-                };
-            case 'dark':
-                return {
-                    background: 'linear-gradient(135deg, rgba(196, 181, 253, 0.9) 0%, rgba(167, 139, 250, 0.9) 100%)', // 밝은 보라색
-                    backdropFilter: 'blur(10px)',
-                    WebkitBackdropFilter: 'blur(10px)',
-                    border: '1px solid rgba(255, 255, 255, 0.2)',
-                    minHeight: '4px'
-                };
-            case 'ocean':
-                return {
-                    background: 'linear-gradient(135deg, rgba(196, 181, 253, 0.9) 0%, rgba(167, 139, 250, 0.9) 100%)', // 밝은 보라색
-                    backdropFilter: 'blur(10px)',
-                    WebkitBackdropFilter: 'blur(10px)',
-                    border: '1px solid rgba(255, 255, 255, 0.2)',
-                    minHeight: '4px'
-                };
-            default:
-                return {
-                    background: 'linear-gradient(135deg, rgba(196, 181, 253, 0.9) 0%, rgba(167, 139, 250, 0.9) 100%)', // 밝은 보라색
-                    backdropFilter: 'blur(10px)',
-                    WebkitBackdropFilter: 'blur(10px)',
-                    border: '1px solid rgba(255, 255, 255, 0.2)',
-                    minHeight: '4px'
-                };
-        }
-    };
+    const toggleActiveStyle = useMemo(() => ({
+        background: 'linear-gradient(135deg, rgba(196, 181, 253, 0.9) 0%, rgba(167, 139, 250, 0.9) 100%)',
+        backdropFilter: 'blur(10px)',
+        WebkitBackdropFilter: 'blur(10px)',
+        border: '1px solid rgba(255, 255, 255, 0.2)',
+        minHeight: '4px'
+    }), []);
 
-    const getToggleInactiveStyle = () => {
-        switch (theme) {
-            case 'space':
-                return {
-                    background: 'rgba(107, 114, 128, 0.5)', // 더 진한 회색
-                    backdropFilter: 'blur(10px)',
-                    WebkitBackdropFilter: 'blur(10px)',
-                    border: '1px solid rgba(255, 255, 255, 0.2)',
-                    minHeight: '4px'
-                };
-            case 'dark':
-                return {
-                    background: 'rgba(75, 85, 99, 0.5)', // 더 진한 회색
-                    backdropFilter: 'blur(10px)',
-                    WebkitBackdropFilter: 'blur(10px)',
-                    border: '1px solid rgba(255, 255, 255, 0.2)',
-                    minHeight: '4px'
-                };
-            case 'ocean':
-                return {
-                    background: 'rgba(75, 85, 99, 0.5)', // 더 진한 회색
-                    backdropFilter: 'blur(10px)',
-                    WebkitBackdropFilter: 'blur(10px)',
-                    border: '1px solid rgba(255, 255, 255, 0.2)',
-                    minHeight: '4px'
-                };
-            default:
-                return {
-                    background: 'rgba(107, 114, 128, 0.5)', // 더 진한 회색
-                    backdropFilter: 'blur(10px)',
-                    WebkitBackdropFilter: 'blur(10px)',
-                    border: '1px solid rgba(255, 255, 255, 0.2)',
-                    minHeight: '4px'
-                };
-        }
-    };
+    const toggleInactiveStyle = useMemo(() => ({
+        background: 'rgba(107, 114, 128, 0.5)',
+        backdropFilter: 'blur(10px)',
+        WebkitBackdropFilter: 'blur(10px)',
+        border: '1px solid rgba(255, 255, 255, 0.2)',
+        minHeight: '4px'
+    }), []);
 
-    const getLabelTextColor = () => {
-        switch (theme) {
-            case 'space': return 'text-purple-200';
-            case 'dark': return 'text-gray-300';
-            case 'ocean': return 'text-blue-200';
-            default: return 'text-gray-700';
-        }
-    };
+    const labelTextColor = useMemo(() => 
+        theme === 'space' ? 'text-purple-200' : 'text-gray-700'
+    , [theme]);
 
-    const getSearchInputStyle = () => {
-        switch (theme) {
-            case 'space':
-                return 'w-full pl-4 pr-10 py-3 rounded-xl text-sm focus:outline-none transition-all duration-300 text-white';
-            case 'dark':
-                return 'w-full pl-4 pr-10 py-3 border border-gray-600/30 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-transparent transition-all duration-300 hover:border-gray-500 bg-gradient-to-br from-gray-800/50 to-gray-900/50 focus:bg-gradient-to-br from-gray-700/50 to-gray-800/50 text-gray-200';
-            case 'ocean':
-                return 'w-full pl-4 pr-10 py-3 border border-blue-500/30 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 hover:border-blue-400 bg-gradient-to-br from-blue-900/50 to-cyan-900/50 focus:bg-gradient-to-br from-blue-800/50 to-blue-900/50 text-blue-100';
-            default:
-                return 'w-full pl-4 pr-10 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 hover:border-blue-400 bg-gray-50 focus:bg-white text-gray-900';
-        }
-    };
+    const searchInputStyle = useMemo(() => 
+        theme === 'space'
+            ? 'w-full pl-4 pr-10 py-3 rounded-xl text-sm focus:outline-none transition-all duration-300 text-white'
+            : 'w-full pl-4 pr-10 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 hover:border-blue-400 bg-gray-50 focus:bg-white text-gray-900'
+    , [theme]);
 
-    const getSearchInputInlineStyle = () => {
-        if (theme === 'space') {
-            return {
+    const searchInputInlineStyle = useMemo(() => 
+        theme === 'space'
+            ? {
                 background: 'linear-gradient(145deg, #1a1a1a 0%, #2d2d2d 50%, #1a1a1a 100%)',
                 border: '1px solid rgba(255, 255, 255, 0.2)'
-            };
-        }
-        return {};
-    };
+            }
+            : {}
+    , [theme]);
 
     // 카테고리별 색상 정의 (속초용)
     const getCategoryColor = (category) => {
@@ -430,9 +324,9 @@ const SensorMonitor = ({ sensorData, isPLCConnected }) => {
                     background: rgba(168, 85, 247, 0.7);
                 }
             `}</style>
-        <div className={`rounded-2xl p-3 md:p-4 overflow-hidden border shadow-xl shadow-black/20 ${theme === 'space' ? 'border-purple-500/30' : 'border-white/20'}`} style={getMainBackgroundStyle()}>
+        <div className={`rounded-2xl p-3 md:p-4 overflow-hidden border shadow-xl shadow-black/20 ${mainBorderClass}`} style={mainBackgroundStyle}>
             <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-6 md:mb-4 space-y-2 md:space-y-0">
-                <h2 className={`text-base md:text-lg font-bold mb-2 md:mb-0 ${getTitleGradient()}`}>
+                <h2 className={`text-base md:text-lg font-bold mb-2 md:mb-0 ${titleGradient}`}>
                     센서 데이터 모니터 - {siteConfig.siteInfo.name} {siteConfig.siteInfo.unitNumber}
 
                 </h2>
@@ -441,13 +335,13 @@ const SensorMonitor = ({ sensorData, isPLCConnected }) => {
             {/* 컨트롤 패널 */}
             <div className="mb-6 space-y-4">
                 {/* 표시 모드 선택 - 세련된 탭 스타일 */}
-                <div className={`${getControlPanelStyle()} p-1 rounded-2xl shadow-lg`}>
+                <div className={`${controlPanelStyle} p-1 rounded-2xl shadow-lg`}>
                     <div className="grid grid-cols-4 gap-1">
                         <button
                             onClick={() => setViewMode('parsed')}
                             className={`flex-shrink-0 px-4 md:px-6 py-2 md:py-3 rounded-xl text-xs md:text-sm font-semibold transition-all duration-500 ease-in-out transform ${viewMode === 'parsed'
-                                ? getButtonActiveStyle()
-                                : getButtonInactiveStyle()
+                                ? buttonActiveStyle
+                                : buttonInactiveStyle
                                 }`}
                         >
                             파싱된 데이터
@@ -455,8 +349,8 @@ const SensorMonitor = ({ sensorData, isPLCConnected }) => {
                         <button
                             onClick={() => setViewMode('raw')}
                             className={`flex-shrink-0 px-4 md:px-6 py-2 md:py-3 rounded-xl text-xs md:text-sm font-semibold transition-all duration-500 ease-in-out transform ${viewMode === 'raw'
-                                ? getButtonActiveStyle()
-                                : getButtonInactiveStyle()
+                                ? buttonActiveStyle
+                                : buttonInactiveStyle
                                 }`}
                         >
                             원시 데이터
@@ -464,8 +358,8 @@ const SensorMonitor = ({ sensorData, isPLCConnected }) => {
                         <button
                             onClick={() => setViewMode('hex')}
                             className={`flex-shrink-0 px-4 md:px-6 py-2 md:py-3 rounded-xl text-xs md:text-sm font-semibold transition-all duration-500 ease-in-out transform ${viewMode === 'hex'
-                                ? getButtonActiveStyle()
-                                : getButtonInactiveStyle()
+                                ? buttonActiveStyle
+                                : buttonInactiveStyle
                                 }`}
                         >
                             16진수
@@ -473,8 +367,8 @@ const SensorMonitor = ({ sensorData, isPLCConnected }) => {
                         <button
                             onClick={() => setViewMode('bits')}
                             className={`flex-shrink-0 px-4 md:px-6 py-2 md:py-3 rounded-xl text-xs md:text-sm font-semibold transition-all duration-500 ease-in-out transform ${viewMode === 'bits'
-                                ? getButtonActiveStyle()
-                                : getButtonInactiveStyle()
+                                ? buttonActiveStyle
+                                : buttonInactiveStyle
                                 }`}
                         >
                             속초 비트 모니터
@@ -483,19 +377,19 @@ const SensorMonitor = ({ sensorData, isPLCConnected }) => {
                 </div>
 
                 {/* 필터 및 검색 영역 */}
-                <div className={`${getControlPanelStyle()} p-4 rounded-2xl shadow-lg`}>
+                <div className={`${controlPanelStyle} p-4 rounded-2xl shadow-lg`}>
                     <div className="flex flex-col gap-4">
                         {/* 0값 표시 토글, 실시간 스트림 토글, PLC 체크리스트 토글 */}
                         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-8 justify-start sm:justify-center">
                                 <div className="flex items-center justify-between w-full sm:w-auto space-x-2 sm:space-x-4">
-                                <span className={`text-xs sm:text-sm font-semibold ${getLabelTextColor()}`}>0값 표시</span>
+                                <span className={`text-xs sm:text-sm font-semibold ${labelTextColor}`}>0값 표시</span>
                                 <button
                                     onClick={() => setShowZeroValues(!showZeroValues)}
                                     className={`relative inline-flex h-6 w-16 items-center rounded-full transition-all duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:ring-offset-2 ${showZeroValues
                                         ? 'shadow-lg shadow-blue-500/25'
                                         : 'shadow-md shadow-gray-400/20'
                                         }`}
-                                    style={showZeroValues ? getToggleActiveStyle() : getToggleInactiveStyle()}
+                                    style={showZeroValues ? toggleActiveStyle : toggleInactiveStyle}
                                 >
                                     <span
                                         className={`inline-block h-4 w-4 transform rounded-full transition-all duration-300 ease-in-out ${showZeroValues ? 'translate-x-10' : 'translate-x-1'
@@ -511,14 +405,14 @@ const SensorMonitor = ({ sensorData, isPLCConnected }) => {
                             </div>
 
                             <div className="flex items-center justify-between w-full sm:w-auto space-x-2 sm:space-x-4">
-                                <span className={`text-xs sm:text-sm font-semibold ${getLabelTextColor()}`}>실시간 스트림</span>
+                                <span className={`text-xs sm:text-sm font-semibold ${labelTextColor}`}>실시간 스트림</span>
                                 <button
                                     onClick={() => setShowRawStream(!showRawStream)}
                                     className={`relative inline-flex h-6 w-16 items-center rounded-full transition-all duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:ring-offset-2 ${showRawStream
                                         ? 'shadow-lg shadow-blue-500/25'
                                         : 'shadow-md shadow-gray-400/20'
                                         }`}
-                                    style={showRawStream ? getToggleActiveStyle() : getToggleInactiveStyle()}
+                                    style={showRawStream ? toggleActiveStyle : toggleInactiveStyle}
                                 >
                                     <span
                                         className={`inline-block h-4 w-4 transform rounded-full transition-all duration-300 ease-in-out ${showRawStream ? 'translate-x-10' : 'translate-x-1'
@@ -534,14 +428,14 @@ const SensorMonitor = ({ sensorData, isPLCConnected }) => {
                             </div>
 
                             <div className="flex items-center justify-between w-full sm:w-auto space-x-2 sm:space-x-4">
-                                <span className={`text-xs sm:text-sm font-semibold ${getLabelTextColor()}`}>PLC 체크리스트</span>
+                                <span className={`text-xs sm:text-sm font-semibold ${labelTextColor}`}>PLC 체크리스트</span>
                                 <button
                                     onClick={() => setShowPLCChecklist(!showPLCChecklist)}
                                     className={`relative inline-flex h-6 w-16 items-center rounded-full transition-all duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-green-500/50 focus:ring-offset-2 ${showPLCChecklist
                                         ? 'shadow-lg shadow-green-500/25'
                                         : 'shadow-md shadow-gray-400/20'
                                         }`}
-                                    style={showPLCChecklist ? getToggleActiveStyle() : getToggleInactiveStyle()}
+                                    style={showPLCChecklist ? toggleActiveStyle : toggleInactiveStyle}
                                 >
                                     <span
                                         className={`inline-block h-4 w-4 transform rounded-full transition-all duration-300 ease-in-out ${showPLCChecklist ? 'translate-x-10' : 'translate-x-1'
@@ -561,15 +455,15 @@ const SensorMonitor = ({ sensorData, isPLCConnected }) => {
                         <div className="relative">
                             <input
                                 type="text"                      
-                                value={searchFilter}
-                                onChange={(e) => setSearchFilter(e.target.value)}
-                                className={getSearchInputStyle()}
-                                style={getSearchInputInlineStyle()}
-                            />
+                            value={searchFilter}
+                            onChange={(e) => setSearchFilter(e.target.value)}
+                            className={searchInputStyle}
+                            style={searchInputInlineStyle}
+                        />
                             {searchFilter && (
                                 <button
                                     onClick={() => setSearchFilter('')}
-                                    className={`absolute inset-y-0 right-0 pr-3 flex items-center ${theme === 'space' ? 'text-purple-500 hover:text-purple-600' : theme === 'dark' ? 'text-gray-400 hover:text-gray-300' : theme === 'ocean' ? 'text-blue-400 hover:text-blue-300' : 'text-gray-400 hover:text-gray-600'} transition-colors`}
+                                    className={`absolute inset-y-0 right-0 pr-3 flex items-center ${theme === 'space' ? 'text-purple-500 hover:text-purple-600' : 'text-gray-400 hover:text-gray-600'} transition-colors`}
                                 >
                                     <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -618,7 +512,7 @@ const SensorMonitor = ({ sensorData, isPLCConnected }) => {
 
             {/* PLC 체크리스트 */}
             {showPLCChecklist && (
-                <div className={`mb-6 p-3 md:p-6 rounded-2xl shadow-2xl transform transition-all duration-700 ease-in-out ${theme === 'space' ? 'border-purple-500/30' : theme === 'dark' ? 'bg-gradient-to-br from-gray-800/80 to-gray-900/80 border-gray-600/30' : theme === 'ocean' ? 'bg-gradient-to-br from-blue-900/80 to-cyan-900/80 border-blue-500/30' : 'bg-gradient-to-br from-white to-gray-50 border-gray-200'}`} style={theme === 'space' ? {
+                <div className={`mb-6 p-3 md:p-6 rounded-2xl shadow-2xl transform transition-all duration-700 ease-in-out ${theme === 'space' ? 'border-purple-500/30' : 'bg-gradient-to-br from-white to-gray-50 border-gray-200'}`} style={theme === 'space' ? {
                     background: 'linear-gradient(145deg, #e5e7eb 0%, #d1d5db 40%, #9ca3af 100%)',
                     backdropFilter: 'blur(15px)',
                     WebkitBackdropFilter: 'blur(15px)',
@@ -700,7 +594,7 @@ const SensorMonitor = ({ sensorData, isPLCConnected }) => {
                         </div>
                     </div>
 
-                    <div className={`rounded-xl overflow-hidden shadow-lg border-2 ${theme === 'space' ? 'bg-gradient-to-br from-purple-700/60 via-purple-800/50 to-purple-900/60 border-gray-400 shadow-xl shadow-purple-500/20' : theme === 'dark' ? 'bg-gradient-to-br from-gray-700/60 via-gray-800/50 to-gray-900/60 border-gray-600/50 shadow-xl shadow-gray-500/20' : theme === 'ocean' ? 'bg-gradient-to-br from-blue-700/60 via-blue-800/50 to-blue-900/60 border-blue-500/50 shadow-xl shadow-blue-500/20' : 'bg-gradient-to-br from-blue-50 via-indigo-50 to-indigo-100 border-indigo-300 shadow-xl shadow-indigo-500/20'}`}>
+                    <div className={`rounded-xl overflow-hidden shadow-lg border-2 ${theme === 'space' ? 'bg-gradient-to-br from-purple-700/60 via-purple-800/50 to-purple-900/60 border-gray-400 shadow-xl shadow-purple-500/20' : 'bg-gradient-to-br from-blue-50 via-indigo-50 to-indigo-100 border-indigo-300 shadow-xl shadow-indigo-500/20'}`}>
                         <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-4 p-2">
                             {plcChecklistData.map((item, index) => (
                                 <div
@@ -708,21 +602,17 @@ const SensorMonitor = ({ sensorData, isPLCConnected }) => {
                                     className={`px-4 py-3 h-12 xl:h-16 transition-all duration-300 ${
                                         theme === 'space' 
                                             ? `${item.status === 'active' ? 'bg-purple-700/70' : 'bg-gray-900/95'}` 
-                                            : theme === 'dark' 
-                                            ? `${item.status === 'active' ? 'bg-gray-600/70' : 'bg-gray-900/95'}` 
-                                            : theme === 'ocean' 
-                                            ? `${item.status === 'active' ? 'bg-blue-700/70' : 'bg-gray-900/95'}` 
                                             : `${item.status === 'active' ? 'bg-green-400/90' : 'bg-white'}`
                                     }`}
                                     style={{
-                                        border: theme === 'space' ? '1px solid rgba(156, 163, 175, 0.3)' : theme === 'dark' ? '1px solid rgba(156, 163, 175, 0.3)' : theme === 'ocean' ? '1px solid rgba(59, 130, 246, 0.3)' : '1px solid rgba(156, 163, 175, 0.5)'
+                                        border: theme === 'space' ? '1px solid rgba(156, 163, 175, 0.3)' : '1px solid rgba(156, 163, 175, 0.5)'
                                     }}
                                 >
                                 <div className="flex items-center h-full overflow-hidden">
-                                    <span className={`text-xs xl:text-sm font-mono font-bold flex-shrink-0 ${theme === 'space' ? 'text-purple-300' : theme === 'dark' ? 'text-blue-400' : theme === 'ocean' ? 'text-blue-300' : 'text-blue-600'}`}>
+                                    <span className={`text-xs xl:text-sm font-mono font-bold flex-shrink-0 ${theme === 'space' ? 'text-purple-300' : 'text-blue-600'}`}>
                                         {item.name.substring(0, 4)}
                                     </span>
-                                    <span className={`text-xs xl:text-sm truncate ml-2 ${theme === 'space' ? 'text-purple-100' : theme === 'dark' ? 'text-gray-200' : theme === 'ocean' ? 'text-blue-100' : 'text-gray-700'}`}>
+                                    <span className={`text-xs xl:text-sm truncate ml-2 ${theme === 'space' ? 'text-purple-100' : 'text-gray-700'}`}>
                                         {item.name.substring(5)}
                                     </span>
                                 </div>
@@ -739,26 +629,26 @@ const SensorMonitor = ({ sensorData, isPLCConnected }) => {
 
             {/* 데이터 표시 */}
             {!isPLCConnected ? (
-                <div className={`text-center py-8 ${theme === 'space' ? 'text-purple-400' : theme === 'dark' ? 'text-gray-400' : theme === 'ocean' ? 'text-blue-400' : 'text-gray-500'}`}>
+                <div className={`text-center py-8 ${theme === 'space' ? 'text-purple-400' : 'text-gray-500'}`}>
                     PLC에 연결되지 않았습니다
                 </div>
             ) : filteredData.length === 0 ? (
-                <div className={`text-center py-8 ${theme === 'space' ? 'text-purple-400' : theme === 'dark' ? 'text-gray-400' : theme === 'ocean' ? 'text-blue-400' : 'text-gray-500'}`}>
+                <div className={`text-center py-8 ${theme === 'space' ? 'text-purple-400' : 'text-gray-500'}`}>
                     {searchFilter ? '검색 결과가 없습니다' : '표시할 데이터가 없습니다'}
                 </div>
             ) : (
                 <div className="space-y-4">
                     {/* 속초 비트 모니터 모드 */}
                     {viewMode === 'bits' ? (
-                        <div className={`p-6 rounded-2xl shadow-2xl ${theme === 'space' ? 'bg-purple-950 border-purple-800' : theme === 'dark' ? 'bg-gradient-to-br from-gray-900 via-black to-gray-900 border-gray-700' : theme === 'ocean' ? 'bg-gradient-to-br from-blue-900 via-black to-blue-900 border-blue-700' : 'bg-gradient-to-br from-gray-900 via-black to-gray-900 border-gray-700'}`}>
+                        <div className={`p-6 rounded-2xl shadow-2xl ${theme === 'space' ? 'bg-purple-950 border-purple-800' : 'bg-gradient-to-br from-gray-900 via-black to-gray-900 border-gray-700'}`}>
                             <div className="mb-6 flex items-center space-x-3">
-                                <div className={`animate-pulse w-4 h-4 rounded-full ${theme === 'space' ? 'bg-purple-500' : theme === 'dark' ? 'bg-green-500' : theme === 'ocean' ? 'bg-blue-500' : 'bg-green-500'}`}></div>
-                                <div className={`font-mono text-lg font-semibold ${theme === 'space' ? 'text-purple-400' : theme === 'dark' ? 'text-green-400' : theme === 'ocean' ? 'text-blue-400' : 'text-green-400'}`}>
+                                <div className={`animate-pulse w-4 h-4 rounded-full ${theme === 'space' ? 'bg-purple-500' : 'bg-green-500'}`}></div>
+                                <div className={`font-mono text-lg font-semibold ${theme === 'space' ? 'text-purple-400' : 'text-green-400'}`}>
                                     속초 1호기 센서 상태 모니터링 (C060~C072)
                                 </div>
                                 <div className="flex space-x-1">
-                                    <div className={`w-2 h-2 rounded-full animate-ping ${theme === 'space' ? 'bg-purple-400' : theme === 'dark' ? 'bg-cyan-400' : theme === 'ocean' ? 'bg-blue-400' : 'bg-cyan-400'}`}></div>
-                                    <div className={`w-2 h-2 rounded-full animate-ping ${theme === 'space' ? 'bg-purple-300' : theme === 'dark' ? 'bg-yellow-400' : theme === 'ocean' ? 'bg-cyan-400' : 'bg-yellow-400'}`} style={{ animationDelay: '200ms' }}></div>
+                                    <div className={`w-2 h-2 rounded-full animate-ping ${theme === 'space' ? 'bg-purple-400' : 'bg-cyan-400'}`}></div>
+                                    <div className={`w-2 h-2 rounded-full animate-ping ${theme === 'space' ? 'bg-purple-300' : 'bg-yellow-400'}`} style={{ animationDelay: '200ms' }}></div>
                                 </div>
                             </div>
 
@@ -815,7 +705,7 @@ const SensorMonitor = ({ sensorData, isPLCConnected }) => {
                             ))}
 
                             <div className="text-center mt-6">
-                                <p className={`text-sm ${theme === 'space' ? 'text-purple-300' : theme === 'dark' ? 'text-gray-400' : theme === 'ocean' ? 'text-blue-300' : 'text-gray-400'}`}>
+                                <p className={`text-sm ${theme === 'space' ? 'text-purple-300' : 'text-gray-400'}`}>
                                     총 {filteredData.length}개 센서 표시 중 | 속초 1호기 전용 센서 매핑
                                 </p>
                             </div>
@@ -826,7 +716,7 @@ const SensorMonitor = ({ sensorData, isPLCConnected }) => {
                             {filteredData.slice(0, 50).map((item, index) => (
                                 <div
                                     key={index}
-                                    className={`rounded-xl p-3 md:p-4 transition-all duration-500 ease-in-out transform hover:scale-105 hover:shadow-xl hover:-translate-y-1 group ${theme === 'space' ? 'bg-purple-100/80 border-purple-300/50 hover:border-purple-400' : theme === 'dark' ? 'bg-gray-800/80 border-gray-600/50 hover:border-gray-500' : theme === 'ocean' ? 'bg-blue-100/80 border-blue-300/50 hover:border-blue-400' : 'bg-white border-gray-200 hover:border-blue-300'}`}
+                                    className={`rounded-xl p-3 md:p-4 transition-all duration-500 ease-in-out transform hover:scale-105 hover:shadow-xl hover:-translate-y-1 group ${theme === 'space' ? 'bg-purple-100/80 border-purple-300/50 hover:border-purple-400' : 'bg-white border-gray-200 hover:border-blue-300'}`}
                                     style={{
                                         animationDelay: `${index * 50}ms`,
                                         opacity: 0,
@@ -834,10 +724,10 @@ const SensorMonitor = ({ sensorData, isPLCConnected }) => {
                                     }}
                                 >
                                     <div className="flex flex-col space-y-2">
-                                        <span className={`text-xs md:text-sm font-semibold transition-colors duration-300 ${theme === 'space' ? 'text-purple-700 group-hover:text-purple-600' : theme === 'dark' ? 'text-blue-400 group-hover:text-blue-300' : theme === 'ocean' ? 'text-blue-600 group-hover:text-blue-500' : 'text-blue-600 group-hover:text-purple-600'}`}>
+                                        <span className={`text-xs md:text-sm font-semibold transition-colors duration-300 ${theme === 'space' ? 'text-purple-700 group-hover:text-purple-600' : 'text-blue-600 group-hover:text-purple-600'}`}>
                                             {item.address}
                                         </span>
-                                        <span className={`text-base md:text-xl font-mono break-words rounded-lg px-2 py-1 transition-colors duration-300 ${theme === 'space' ? 'text-purple-900 bg-purple-50 group-hover:bg-purple-100' : theme === 'dark' ? 'text-gray-200 bg-gray-700/50 group-hover:bg-gray-600/50' : theme === 'ocean' ? 'text-blue-900 bg-blue-50 group-hover:bg-blue-100' : 'text-gray-900 bg-gray-50 group-hover:bg-purple-50'}`}>
+                                        <span className={`text-base md:text-xl font-mono break-words rounded-lg px-2 py-1 transition-colors duration-300 ${theme === 'space' ? 'text-purple-900 bg-purple-50 group-hover:bg-purple-100' : 'text-gray-900 bg-gray-50 group-hover:bg-purple-50'}`}>
                                             {item.displayValue}
                                         </span>
                                     </div>
@@ -845,12 +735,12 @@ const SensorMonitor = ({ sensorData, isPLCConnected }) => {
                                     {/* 비트 분석 (원시 데이터일 때만) */}
                                     {(viewMode === 'raw' || viewMode === 'hex') && item.value > 0 && (
                                         <div className="mt-2">
-                                            <div className={`text-xs mb-1 ${theme === 'space' ? 'text-purple-600' : theme === 'dark' ? 'text-gray-400' : theme === 'ocean' ? 'text-blue-600' : 'text-gray-500'}`}>비트 분석:</div>
+                                            <div className={`text-xs mb-1 ${theme === 'space' ? 'text-purple-600' : 'text-gray-500'}`}>비트 분석:</div>
                                             <div className="grid grid-cols-16 gap-px">
                                                 {getBitAnalysis(item.value).map((bit, bitIndex) => (
                                                     <div
                                                         key={bitIndex}
-                                                        className={`w-4 h-4 text-xs flex items-center justify-center rounded ${bit ? (theme === 'space' ? 'bg-purple-500 text-white' : theme === 'dark' ? 'bg-green-400 text-white' : theme === 'ocean' ? 'bg-blue-500 text-white' : 'bg-green-400 text-white') : (theme === 'space' ? 'bg-purple-200 text-purple-700' : theme === 'dark' ? 'bg-gray-600 text-gray-300' : theme === 'ocean' ? 'bg-blue-200 text-blue-700' : 'bg-gray-200 text-gray-600')
+                                                        className={`w-4 h-4 text-xs flex items-center justify-center rounded ${bit ? (theme === 'space' ? 'bg-purple-500 text-white' : 'bg-green-400 text-white') : (theme === 'space' ? 'bg-purple-200 text-purple-700' : 'bg-gray-200 text-gray-600')
                                                             }`}
                                                         title={`비트 ${15 - bitIndex}: ${bit}`}
                                                     >
@@ -868,7 +758,7 @@ const SensorMonitor = ({ sensorData, isPLCConnected }) => {
                     {/* 더 많은 데이터가 있을 때 (비트 모니터 제외) */}
                     {viewMode !== 'bits' && filteredData.length > 50 && (
                         <div className="text-center py-4">
-                            <p className={`text-sm ${theme === 'space' ? 'text-purple-400' : theme === 'dark' ? 'text-gray-400' : theme === 'ocean' ? 'text-blue-400' : 'text-gray-500'}`}>
+                            <p className={`text-sm ${theme === 'space' ? 'text-purple-400' : 'text-gray-500'}`}>
                                 {filteredData.length}개 중 50개 표시됨
                             </p>
                         </div>

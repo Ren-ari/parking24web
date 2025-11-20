@@ -299,20 +299,7 @@ const LoginPage = ({ onLogin }) => {
                 {/* 로고 및 타이틀 */}
                 <div className="logo-section">
                     <div className="logo-container">
-                        <div className="logo-icon">
-                            <svg viewBox="0 0 100 100" className="logo-svg">
-                                <circle cx="50" cy="50" r="45" fill="none" stroke="currentColor" strokeWidth="2"/>
-                                <path d="M30 50 L45 35 L70 60 L85 45" stroke="currentColor" strokeWidth="3" fill="none"/>
-                                <circle cx="30" cy="50" r="4" fill="currentColor"/>
-                                <circle cx="45" cy="35" r="4" fill="currentColor"/>
-                                <circle cx="70" cy="60" r="4" fill="currentColor"/>
-                                <circle cx="85" cy="45" r="4" fill="currentColor"/>
-                            </svg>
-                        </div>
-                        <h1 className="main-title">
-                            <span className="title-text">EPSAI</span>
-                            <span className="title-subtitle">Parking Management System</span>
-                        </h1>
+                    <img src="/Primary white.png" alt="EPSAI Logo" className="logo-img" />
                     </div>
                 </div>
 

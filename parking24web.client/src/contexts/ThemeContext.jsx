@@ -14,15 +14,11 @@ export const useTheme = () => {
 export const THEMES = {
     light: {
         id: 'light',
-        name: '라이트',
-        description: '밝고 깔끔한 기본 테마',
-        icon: '☀️'
+        name: '라이트'
     },
     space: {
         id: 'space',
-        name: '우주',
-        description: '우주를 연상시키는 다크 테마',
-        icon: '🌌'
+        name: '우주'
     }
 };
 
