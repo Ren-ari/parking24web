@@ -273,7 +273,7 @@ const AnalyticsDashboard = () => {
                             indexBy="month"
                             margin={{ top: 60, right: 10, bottom: 50, left: 40 }}
                             padding={0.2}
-                            valueScale={{ type: 'linear', min: 0, max: 1000 }}
+                            valueScale={{ type: 'linear', min: 0, max: 1600 }}
                             indexScale={{ type: 'band', round: true }}
                             colors={barColors}
                             borderRadius={0}
@@ -385,7 +385,7 @@ const AnalyticsDashboard = () => {
                             ]}
                             margin={{ top: 60, right: 10, bottom: 50, left: 30 }}
                             xScale={{ type: 'point' }}
-                            yScale={{ type: 'linear', min: 0, max: '100', stacked: false, reverse: false }}
+                            yScale={{ type: 'linear', min: 0, max: '800', stacked: false, reverse: false }}
                             curve="monotoneX"
                             axisTop={null}
                             axisRight={null}
@@ -525,7 +525,7 @@ const AnalyticsDashboard = () => {
                                 left: isMobile ? 20 : 30 
                             }}
                             xScale={{ type: 'linear', min: 0, max: 23 }}
-                            yScale={{ type: 'linear', min: '0', max: '50', stacked: false }}
+                            yScale={{ type: 'linear', min: '0', max: '100', stacked: false }}
                             curve="catmullRom"
                             axisTop={null}
                             axisRight={null}
