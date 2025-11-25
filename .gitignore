@@ -32,8 +32,6 @@ Parking24web.Server/wwwroot/
 # Visual Studio 발행 프로필
 *.pubxml
 
-# Inno Setup
-*.iss
 
 # .NET 도구
 dotnet-tools.json

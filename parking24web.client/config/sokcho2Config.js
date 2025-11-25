@@ -15,7 +15,7 @@ export const sokcho2Config = {
             {
                 unit: 2,
                 name: "2호기",
-                ip: "192.168.0.102",
+                ip: "192.168.1.2",
                 port: 2005
             },
             {

@@ -17,6 +17,11 @@ namespace Parking24web.Server.Models
                 entity.HasIndex(e => e.Timestamp);
                 entity.HasIndex(e => e.CarNumber);
                 entity.HasIndex(e => e.EventType);
+
+                // ✅ 핵심: IdempotencyKey UNIQUE 제약
+                entity.HasIndex(e => e.IdempotencyKey)
+                    .IsUnique()
+                    .HasDatabaseName("IX_ParkingEvents_IdempotencyKey");
             });
 
             modelBuilder.Entity<ServiceRecord>(entity =>

@@ -131,15 +131,73 @@ namespace Parking24web.Server.Services
                 using var scope = _scopeFactory.CreateScope();
                 var context = scope.ServiceProvider.GetRequiredService<ParkingDbContext>();
 
-                context.ParkingEvents.AddRange(events);
-                await context.SaveChangesAsync();
+                int addedCount = 0;
+                int duplicateCount = 0;
 
-                _logger.LogInformation($"{events.Count}개 이벤트 DB 저장 완료");
-                return true;
+                foreach (var evt in events)
+                {
+                    // ✅ Idempotency Key 생성
+                    // 형식: {차량번호}_{이벤트타입}_{분단위타임스탬프}_{슬롯번호}
+                    var minuteTimestamp = new DateTime(
+                        evt.Timestamp.Year,
+                        evt.Timestamp.Month,
+                        evt.Timestamp.Day,
+                        evt.Timestamp.Hour,
+                        evt.Timestamp.Minute,
+                        0 // 초는 0으로 (1분 단위)
+                    );
+
+                    evt.IdempotencyKey =
+                        $"{evt.CarNumber}_{evt.EventType}_" +
+                        $"{minuteTimestamp:yyyyMMddHHmm}_{evt.SlotNumber}";
+
+                    evt.CreatedAt = DateTime.Now;
+
+                    // ✅ 중복 체크 (DB 레벨)
+                    var exists = await context.ParkingEvents
+                        .AnyAsync(e => e.IdempotencyKey == evt.IdempotencyKey);
+
+                    if (!exists)
+                    {
+                        context.ParkingEvents.Add(evt);
+                        addedCount++;
+                    }
+                    else
+                    {
+                        duplicateCount++;
+                        _logger.LogDebug(
+                            $"중복 이벤트 스킵: {evt.EventType} {evt.CarNumber} " +
+                            $"(슬롯 {evt.SlotNumber}) [key: {evt.IdempotencyKey}]"
+                        );
+                    }
+                }
+
+                if (addedCount > 0)
+                {
+                    await context.SaveChangesAsync();
+                    _logger.LogInformation(
+                        $"DB 저장 완료 - 신규: {addedCount}건, 중복: {duplicateCount}건"
+                    );
+                }
+                else if (duplicateCount > 0)
+                {
+                    _logger.LogDebug($"모두 중복: {duplicateCount}건");
+                }
+
+                return true; // 🔥 중복이어도 성공 처리
+            }
+            catch (DbUpdateException ex) when (
+                ex.InnerException?.Message.Contains("UNIQUE constraint") == true)
+            {
+                // Race condition으로 인한 중복 (매우 드묾)
+                _logger.LogWarning(
+                    $"DB UNIQUE 제약 위반 (동시 삽입): {ex.InnerException.Message}"
+                );
+                return true; // 중복이므로 성공으로 처리
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "DB 저장 실패 - 다음 루프에서 재시도");
+                _logger.LogError(ex, "DB 저장 실패");
                 return false;
             }
         }
