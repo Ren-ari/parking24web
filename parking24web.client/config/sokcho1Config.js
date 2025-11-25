@@ -99,44 +99,6 @@ export const sokcho1Config = {
         }
     },
 
-    // PLC 기본 설정 (백엔드 연동)
-    plcConfig: {
-        ip: "192.168.0.101",
-        port: 2005,
-        addressType: "C",           // DeviceType
-        startNumber: 0,             // StartAddress
-
-        // 센서 오프셋 (센서 읽기용 - 필요시 확장)
-        sensorOffsets: {
-            plcComm: 0,
-            remoteOp: 1,
-            pcComm: 3,
-            siteNumber: 4,
-            unitNumber: 5,
-            manualMode: 15,
-            errorStatus: 16,
-            emergencyStop: 24
-        },
-
-        // 제어 명령 오프셋 (백엔드 SendConfigCommand용)
-        controlOffsets: {
-            liftUp: 7,              // C007: PC_상승
-            liftDown: 8,            // C008: PC_하강
-            moveLeft: 9,            // C009: PC_좌행
-            moveRight: 10,          // C010: PC_우행
-            turnLeft: 11,           // C011: PC_턴좌회전
-            turnRight: 12,          // C012: PC_턴우회전
-            lockingOn: 13,          // C013: PC_락킹잠김
-            lockingOff: 14,         // C014: PC_락킹해제
-            errorReset: 17,         // C017: PC_에러해제
-            remoteControl: 18,      // C018: PC_원격제어선택
-            homeReturn: 19,         // C019: PC_홈복귀
-            paletteChange: 20,      // C020: PC_파레트교체
-            doorOpen: 21,           // C021: PC_도어열림
-            doorClose: 22           // C022: PC_도어닫힘
-        }
-    },
-
     // 기본 시스템 상태 주소 (프론트 호환용 유지)
     systemAddresses: {
         plcComm: 0,         // C000: PLC 통신체크
@@ -148,24 +110,6 @@ export const sokcho1Config = {
         errorStatus: 16,    // C016: 에러확인
         emergencyStop: 24,  // C024: 비상스위치
         heartbeat: 0        // C000 기준
-    },
-
-    // PC 제어 명령 주소 (프론트 호환용 유지)
-    controlCommands: {
-        liftUp: 7,           // C007: PC_상승
-        liftDown: 8,         // C008: PC_하강
-        moveLeft: 9,         // C009: PC_좌행
-        moveRight: 10,       // C010: PC_우행
-        turnLeft: 11,        // C011: PC_턴좌회전
-        turnRight: 12,       // C012: PC_턴우회전
-        lockingOn: 13,       // C013: PC_락킹잠김
-        lockingOff: 14,      // C014: PC_락킹해제
-        errorReset: 17,      // C017: PC_에러해제
-        remoteControl: 18,   // C018: PC_원격제어선택
-        homeReturn: 19,      // C019: PC_홈복귀
-        paletteChange: 20,   // C020: PC_파레트교체
-        doorOpen: 21,        // C021: PC_도어열림
-        doorClose: 22        // C022: PC_도어닫힘
     },
 
     // 차량/상태 정보 주소
@@ -189,13 +133,6 @@ export const sokcho1Config = {
         k17Error: 93,           // C093: K17에러
         k18Error: 94,           // C094: K18에러
         k19Error: 95            // C095: K19에러
-    },
-
-    // 격납차량번호 범위 (C101~C180)
-    vehicleStorage: {
-        startAddress: 101,      // C101: 격납차번1
-        endAddress: 180,        // C180: 격납차번80
-        totalSlots: 80
     },
 
     // 리프트 위치정보 (C200~C245)
@@ -397,44 +334,6 @@ export const sokcho1Config = {
         }
     },
 
-    // 수동 제어 탭 구성 (속초 전용)
-    manualControlTabs: {
-        page1: {
-            name: "도어/턴테이블",
-            commands: {
-                doorOpen: "doorOpen",           // C021
-                doorClose: "doorClose",         // C022
-                turnLeft: "turnLeft",           // C011
-                turnRight: "turnRight"          // C012
-            }
-        },
-        page2: {
-            name: "승강 제어",
-            commands: {
-                liftUp: "liftUp",               // C007
-                liftDown: "liftDown"            // C008
-            }
-        },
-        page3: {
-            name: "횡행/락킹",
-            commands: {
-                moveLeft: "moveLeft",           // C009
-                moveRight: "moveRight",         // C010
-                lockingOn: "lockingOn",         // C013
-                lockingOff: "lockingOff"        // C014
-            }
-        }
-    },
-
-    // 공용 명령들
-    commonCommands: {
-        errorReset: "errorReset",               // C017
-        remoteControl: "remoteControl",         // C018
-        homeReturn: "homeReturn",               // C019
-        paletteChange: "paletteChange",         // C020
-        emergencyStop: "emergencyStop"          // 특수 처리
-    },
-
     api: {
         baseUrl: '',
         devPort: 5123,
@@ -456,7 +355,7 @@ export const sokcho1Config = {
             { number: 5, name: 'Camera 01 (D5)' }
         ],
         defaultConnection: {
-            ipAddress: '175.206.165.220',
+            ipAddress: 'epscctv01.iptime.org',
             port: 8080,
             rtspPort: 8888,
             username: 'admin',
