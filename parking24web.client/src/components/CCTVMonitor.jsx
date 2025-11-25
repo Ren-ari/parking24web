@@ -1,6 +1,6 @@
-﻿import { useState, useEffect, useRef, memo, useCallback } from 'react';
+﻿import { useState, useEffect, useRef, memo, useCallback, useMemo } from 'react';
 import Hls from 'hls.js';
-import siteConfig from '../../config/sokcho2Config';
+import siteConfig from '../../config/sokcho2Config.js';
 import { useTheme } from '../contexts/ThemeContext';
 
 // 위치 이름 매핑 (채널 번호 기준)
@@ -339,6 +339,16 @@ const CCTVMonitor = () => {
 
     // 채널 목록 (설정 파일에서 가져오기)
     const channels = siteConfig.cctvConfig?.channels || [];
+    
+    // 썸네일 패널을 동적으로 나누기 (채널 개수에 따라)
+    const { leftChannels, rightChannels } = useMemo(() => {
+        const totalChannels = channels.length;
+        const midPoint = Math.ceil(totalChannels / 2);
+        return {
+            leftChannels: channels.slice(0, midPoint),
+            rightChannels: channels.slice(midPoint)
+        };
+    }, [channels]);
 
     return (
         <>
@@ -549,11 +559,11 @@ const CCTVMonitor = () => {
                 )}
             </div>
 
-            {/* 좌측 썸네일 패널 (1,2,3,4) - PC만 */}
-            {isConnected && showThumbnails && (
+            {/* 좌측 썸네일 패널 - PC만 (채널 개수에 따라 동적 분할) */}
+            {isConnected && showThumbnails && leftChannels.length > 0 && (
                 <div className={`cctv-thumbnail-panel-left show hidden xl:block`}>
                     <div className="flex flex-col gap-7">
-                        {channels.slice(0, 4).map(ch => (
+                        {leftChannels.map(ch => (
                             <ThumbnailCard
                                 key={ch.number}
                                 channel={ch}
@@ -566,11 +576,11 @@ const CCTVMonitor = () => {
                 </div>
             )}
 
-            {/* 우측 썸네일 패널 (5,6,7,8) - PC만 */}
-            {isConnected && showThumbnails && (
+            {/* 우측 썸네일 패널 - PC만 (채널 개수에 따라 동적 분할) */}
+            {isConnected && showThumbnails && rightChannels.length > 0 && (
                 <div className={`cctv-thumbnail-panel-right show hidden xl:block`}>
                     <div className="flex flex-col gap-7">
-                        {channels.slice(4, 8).map(ch => (
+                        {rightChannels.map(ch => (
                             <ThumbnailCard
                                 key={ch.number}
                                 channel={ch}

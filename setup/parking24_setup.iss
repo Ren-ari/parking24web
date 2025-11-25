@@ -1,18 +1,17 @@
 [Setup]
 ; 기본 설정
-AppName=EPSAI Parking24 (속초 2,3호기)
-PrivilegesRequired=admin
+AppName=EPSAI Parking24
 AppVersion=1.0.0
 AppPublisher=EPSAI
 AppPublisherURL=https://epsai.co.kr/
 AppSupportURL=https://epsai.co.kr/
 AppUpdatesURL=https://epsai.co.kr/
-DefaultDirName={autopf}\EPSAI Parking24 Sokcho2
+DefaultDirName={autopf}\EPSAI Parking24
 UninstallDisplayIcon={app}\Parking24web.Server.exe
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 DisableProgramGroupPage=yes
-OutputBaseFilename=Parking24_Sokcho2_Setup
+OutputBaseFilename=Parking24_Setup
 SolidCompression=yes
 WizardStyle=modern
 
@@ -23,8 +22,7 @@ Name: "korean"; MessagesFile: "compiler:Languages\Korean.isl"
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 
 [Files]
-; 전체 publish 폴더 복사 (속초 2호기용 publish 폴더)
-Source: "..\publish_sokcho2\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "..\Parking24web.Server\bin\Release\net8.0\publish\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
 ; 프로그램 메뉴 아이콘 (시작 메뉴의 프로그램 폴더)

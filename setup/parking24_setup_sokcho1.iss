@@ -1,6 +1,6 @@
 [Setup]
-; ±âº» Á¤º¸  
-AppName=EPSAI Parking24 (¼ÓÃÊ 1È£±â)
+; ê¸°ë³¸ ì„¤ì •
+AppName=EPSAI Parking24 (ì†ì´ˆ 1í˜¸ê¸°)
 PrivilegesRequired=admin
 AppVersion=1.0.0
 AppPublisher=EPSAI
@@ -23,21 +23,21 @@ Name: "korean"; MessagesFile: "compiler:Languages\Korean.isl"
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 
 [Files]
-; ÀüÃ¼ publish Æú´õ º¹»ç (»óÀ§ Æú´õÀÇ publish ÂüÁ¶)
+; ì „ì²´ publish í´ë” ë³µì‚¬ (ì†ì´ˆ 1í˜¸ê¸°ìš© publish í´ë”)
 Source: "..\publish_sokcho1\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
-Name: "{autoprograms}\EPSAI Parking24 Server (¼ÓÃÊ1)"; Filename: "{app}\Parking24web.Server.exe"; WorkingDir: "{app}"; IconFilename: "{sys}\shell32.dll"; IconIndex: 174
-Name: "{autoprograms}\Parking24 À¥ Á¢¼Ó (¼ÓÃÊ1)"; Filename: "http://localhost:5123"; IconFilename: "{sys}\shell32.dll"; IconIndex: 106
-Name: "{autodesktop}\EPSAI Parking24 Server (¼ÓÃÊ1)"; Filename: "{app}\Parking24web.Server.exe"; WorkingDir: "{app}"; Tasks: desktopicon; IconFilename: "{sys}\shell32.dll"; IconIndex: 174
-Name: "{autodesktop}\Parking24 À¥ Á¢¼Ó (¼ÓÃÊ1)"; Filename: "http://localhost:5123"; Tasks: desktopicon; IconFilename: "{sys}\shell32.dll"; IconIndex: 106
+Name: "{autoprograms}\EPSAI Parking24 Server (ì†ì´ˆ1)"; Filename: "{app}\Parking24web.Server.exe"; WorkingDir: "{app}"; IconFilename: "{sys}\shell32.dll"; IconIndex: 174
+Name: "{autoprograms}\Parking24 ì›¹ ì—´ê¸° (ì†ì´ˆ1)"; Filename: "http://localhost:5123"; IconFilename: "{sys}\shell32.dll"; IconIndex: 106
+Name: "{autodesktop}\EPSAI Parking24 Server (ì†ì´ˆ1)"; Filename: "{app}\Parking24web.Server.exe"; WorkingDir: "{app}"; Tasks: desktopicon; IconFilename: "{sys}\shell32.dll"; IconIndex: 174
+Name: "{autodesktop}\Parking24 ì›¹ ì—´ê¸° (ì†ì´ˆ1)"; Filename: "http://localhost:5123"; Tasks: desktopicon; IconFilename: "{sys}\shell32.dll"; IconIndex: 106
 
 [Run]
-; ¼³Ä¡ ¿Ï·á ÈÄ ½ÇÇà ¿É¼Ç
-Filename: "{app}\Parking24web.Server.exe"; Description: "EPSAI Parking24 Server ½ÇÇà"; WorkingDir: "{app}"; Flags: nowait postinstall skipifsilent
-Filename: "http://localhost:5123"; Description: "Parking24 À¥ Á¢¼ÓÇÏ±â"; Flags: nowait postinstall skipifsilent shellexec
+; ì„¤ì¹˜ ì™„ë£Œ í›„ ì‹¤í–‰ ì˜µì…˜
+Filename: "{app}\Parking24web.Server.exe"; Description: "EPSAI Parking24 Server ì‹¤í–‰"; WorkingDir: "{app}"; Flags: nowait postinstall skipifsilent
+Filename: "http://localhost:5123"; Description: "Parking24 ì›¹ ì—´ì–´ë³´ê¸°"; Flags: nowait postinstall skipifsilent shellexec
 
 [UninstallDelete]
-; ¾ğÀÎ½ºÅç ½Ã Ãß°¡ »èÁ¦ÇÒ ÆÄÀÏµé
+; ì œê±°ì‹œì— ì¶”ê°€ë¡œ ì •ë¦¬í•  íŒŒì¼ë“¤
 Type: filesandordirs; Name: "{app}\logs"
 Type: filesandordirs; Name: "{app}\temp"

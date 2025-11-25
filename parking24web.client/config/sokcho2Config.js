@@ -15,7 +15,7 @@ export const sokcho2Config = {
             {
                 unit: 2,
                 name: "2호기",
-                ip: "192.168.1.2",
+                ip: "192.168.0.102",
                 port: 2005
             },
             {
@@ -351,7 +351,7 @@ export const sokcho2Config = {
             { number: 9, name: 'Channel 9 (D9)' }
         ],
         defaultConnection: {
-            ipAddress: '222.113.92.40',
+            ipAddress: 'epscctv02.iptime.org',
             port: 8081,
             rtspPort: 8889,
             username: 'admin',
