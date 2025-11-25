@@ -93,6 +93,7 @@ using (var scope = app.Services.CreateScope())
     var context = scope.ServiceProvider.GetRequiredService<ParkingDbContext>();
     context.Database.EnsureCreated();
 
+
     // ✅ IdempotencyKey 컬럼 추가 (기존 DB 대응)
     var connection = context.Database.GetDbConnection();
     connection.Open();

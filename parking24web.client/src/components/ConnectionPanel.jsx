@@ -269,7 +269,7 @@ const ConnectionPanel = ({
                                 <div className="flex-shrink-0">
                                     <div className={`w-8 h-8 rounded-full flex items-center justify-center ${theme === 'space' ? 'bg-purple-100' : theme === 'dark' ? 'bg-gray-200' : theme === 'ocean' ? 'bg-blue-100' : 'bg-yellow-100'}`}>
                                         <svg className={`h-5 w-5 animate-spin ${theme === 'space' ? 'text-purple-600' : theme === 'dark' ? 'text-gray-600' : theme === 'ocean' ? 'text-blue-600' : 'text-yellow-600'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 4v5h-.582m-15.356 2A8.001 8.001 0 0119.418 9m0 0H15M4 20v-5h.581m0 0a8.003 8.003 0 0015.357-2M4.581 15H9" />
                                         </svg>
                                     </div>
                                 </div>
