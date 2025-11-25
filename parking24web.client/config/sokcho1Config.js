@@ -4,6 +4,7 @@ export const sokcho1Config = {
     siteInfo: {
         name: "속초",
         unitNumber: "1호기",
+        siteId: "sokcho1",
         location: "속초 주차타워",
         description: "속초 현장 1호기 주차타워"
     },
@@ -14,7 +15,7 @@ export const sokcho1Config = {
             {
                 unit: 1,
                 name: "1호기",
-                ip: "192.168.1.2",
+                ip: "192.168.0.101",
                 port: 2005
             }
         ]
@@ -98,15 +99,7 @@ export const sokcho1Config = {
         }
     },
 
-    // PLC 기본 설정
-    plcConfig: {
-        ip: "192.168.0.101", // 실제 IP로 변경 필요
-        port: 2005,
-        deviceType: "C",
-        startAddress: 0
-    },
-
-    // 기본 시스템 상태 주소
+    // 기본 시스템 상태 주소 (프론트 호환용 유지)
     systemAddresses: {
         plcComm: 0,         // C000: PLC 통신체크
         remoteOp: 1,        // C001: 원격조작체크
@@ -116,25 +109,7 @@ export const sokcho1Config = {
         manualMode: 15,     // C015: 수동확인
         errorStatus: 16,    // C016: 에러확인
         emergencyStop: 24,  // C024: 비상스위치
-        heartbeat: 0        // C000 기준 (토로스와 다름)
-    },
-
-    // PC 제어 명령 주소
-    controlCommands: {
-        liftUp: 7,           // C007: PC_상승
-        liftDown: 8,         // C008: PC_하강
-        moveLeft: 9,         // C009: PC_좌행
-        moveRight: 10,       // C010: PC_우행
-        turnLeft: 11,        // C011: PC_턴좌회전
-        turnRight: 12,       // C012: PC_턴우회전
-        lockingOn: 13,       // C013: PC_락킹잠김
-        lockingOff: 14,      // C014: PC_락킹해제
-        errorReset: 17,      // C017: PC_에러해제
-        remoteControl: 18,   // C018: PC_원격제어선택
-        homeReturn: 19,      // C019: PC_홈복귀
-        paletteChange: 20,   // C020: PC_파레트교체
-        doorOpen: 21,        // C021: PC_도어열림
-        doorClose: 22        // C022: PC_도어닫힘
+        heartbeat: 0        // C000 기준
     },
 
     // 차량/상태 정보 주소
@@ -158,13 +133,6 @@ export const sokcho1Config = {
         k17Error: 93,           // C093: K17에러
         k18Error: 94,           // C094: K18에러
         k19Error: 95            // C095: K19에러
-    },
-
-    // 격납차량번호 범위 (C101~C180)
-    vehicleStorage: {
-        startAddress: 101,      // C101: 격납차번1
-        endAddress: 180,        // C180: 격납차번80
-        totalSlots: 80
     },
 
     // 리프트 위치정보 (C200~C245)
@@ -213,31 +181,28 @@ export const sokcho1Config = {
         floor40: 241,           // C241: 리프트40단위치
         floor41: 242,           // C242: 리프트41단위치
         floor42: 243,           // C243: 리프트42단위치
-        floor43: 244,           // C244: 리프트43단위치
-        floor44: 245            // C245: 리프트44단위치
+        floor43: 244            // C244: 리프트43단위치
     },
 
-    // 센서 비트 매핑 (C060~C072)
+    // 센서 매핑 정보 (입력 센서)
     sensorMapping: {
-        // C060 (P100~P10F) - 기본 조작/상태
+        // C060 (P100~P10F) - 도어/OP/안전
         c060: {
             address: 60,
             sensors: {
-                0: { name: "P100_OP수동", description: "수동 모드", category: "시스템" },
-                1: { name: "P101_OP자동", description: "자동 모드", category: "시스템" },
-                2: { name: "P102_OP도어열림SW", description: "도어열림 스위치", category: "도어" },
-                3: { name: "P103_OP도어닫힘SW", description: "도어닫힘 스위치", category: "도어" },
-                4: { name: "P104_앞범퍼센서", description: "앞범퍼 센서", category: "안전센서" },
-                5: { name: "P105_뒷범퍼센서", description: "뒷범퍼 센서", category: "안전센서" },
-                6: { name: "P106_차량정위치", description: "차량 정위치", category: "위치센서" },
-                7: { name: "P107_일반높이", description: "일반 높이", category: "위치센서" },
-                8: { name: "P108_RV높이", description: "RV 높이", category: "위치센서" },
-                9: { name: "P109_도어잠센서", description: "도어잠 센서", category: "도어" },
-                10: { name: "P10A_도어열림확인", description: "도어열림 확인", category: "도어" },
-                11: { name: "P10B_도어닫힘확인", description: "도어닫힘 확인", category: "도어" },
-                13: { name: "P10D_보행자문열림", description: "보행자문 열림", category: "도어" },
-                14: { name: "P10E_동작감지", description: "동작 감지", category: "안전센서" },
-                15: { name: "P10F_일반후미", description: "일반 후미", category: "안전센서" }
+                0: { name: "P100_OP전진센서", description: "OP 전진 센서", category: "안전센서" },
+                1: { name: "P101_OP후진센서", description: "OP 후진 센서", category: "안전센서" },
+                2: { name: "P102_OP도어열림SW", description: "OP 도어열림 스위치", category: "도어" },
+                3: { name: "P103_OP도어닫힘SW", description: "OP 도어닫힘 스위치", category: "도어" },
+                4: { name: "P104_1F전진센서", description: "1층 전진 센서", category: "안전센서" },
+                5: { name: "P105_1F후진센서", description: "1층 후진 센서", category: "안전센서" },
+                6: { name: "P106_1F도어열림SW", description: "1층 도어열림 스위치", category: "도어" },
+                7: { name: "P107_1F도어닫힘SW", description: "1층 도어닫힘 스위치", category: "도어" },
+                8: { name: "P108_보행자문열림", description: "보행자문 열림", category: "도어" },
+                9: { name: "P109_도어잠센서", description: "도어 잠금 센서", category: "도어" },
+                10: { name: "P10A_도어열림확인", description: "도어 열림 확인", category: "도어" },
+                11: { name: "P10B_도어닫힘확인", description: "도어 닫힘 확인", category: "도어" },
+                12: { name: "P10C_외부키", description: "외부 키", category: "제어" }
             }
         },
 
@@ -245,30 +210,25 @@ export const sokcho1Config = {
         c061: {
             address: 61,
             sensors: {
-                0: { name: "P110_비상정지", description: "비상정지", category: "안전센서" },
+                0: { name: "P110_L_INV_ALM", description: "리프트 인버터 알람", category: "리프트" },
                 2: { name: "P112_L_INV_RUN", description: "리프트 인버터 RUN", category: "리프트" },
                 3: { name: "P113_L_INV_FLT", description: "리프트 인버터 FLT", category: "리프트" },
                 4: { name: "P114_L_EOCR", description: "리프트 EOCR", category: "리프트" },
                 5: { name: "P115_와이어절단", description: "와이어 절단", category: "안전센서" },
-                6: { name: "P116_피트센서(홀)", description: "피트센서 홀수", category: "위치센서" },
-                7: { name: "P117_피트센서(짝)", description: "피트센서 짝수", category: "위치센서" },
+                6: { name: "P116_피트센서(홀)", description: "피트센서 홀수", category: "안전센서" },
+                7: { name: "P117_피트센서(짝)", description: "피트센서 짝수", category: "안전센서" },
                 8: { name: "P118_상승비상", description: "상승 비상", category: "안전센서" },
-                9: { name: "P119_상승감속2", description: "상승 감속2", category: "리프트" },
                 10: { name: "P11A_상승감속", description: "상승 감속", category: "리프트" },
                 11: { name: "P11B_하강감속", description: "하강 감속", category: "리프트" },
-                12: { name: "P11C_하강감속2", description: "하강 감속2", category: "리프트" },
                 13: { name: "P11D_하강비상", description: "하강 비상", category: "안전센서" },
                 14: { name: "P11E_좌우미러", description: "좌우 미러", category: "안전센서" }
             }
         },
 
-        // C062 (P120~P12F) - 승강/미러/턴
+        // C062 (P120~P12F) - 턴테이블/외장
         c062: {
             address: 62,
             sensors: {
-                0: { name: "P120_승강앞뒤범퍼", description: "승강 앞뒤 범퍼", category: "안전센서" },
-                2: { name: "P122_좌미러(진입)", description: "좌미러 진입", category: "안전센서" },
-                3: { name: "P123_우미러(진입)", description: "우미러 진입", category: "안전센서" },
                 13: { name: "P12D_외장턴정SW", description: "외장턴 정방향 SW", category: "턴테이블" },
                 14: { name: "P12E_외장턴역SW", description: "외장턴 역방향 SW", category: "턴테이블" }
             }
@@ -395,7 +355,7 @@ export const sokcho1Config = {
             { number: 5, name: 'Camera 01 (D5)' }
         ],
         defaultConnection: {
-            ipAddress: '175.206.165.220',
+            ipAddress: 'epscctv01.iptime.org',
             port: 8080,
             rtspPort: 8888,
             username: 'admin',
@@ -411,6 +371,7 @@ export const sokcho1Config = {
         vehicleAddressEnd: 180,                 // C180
         totalSlots: 80,
         // 속초는 차판상태가 별도로 없고 차량번호만 관리
+        maxFloor: 38,
         hasPlateStatus: false,
         // 리프트 위치 정보
         liftPositionStart: 200,                 // C200
