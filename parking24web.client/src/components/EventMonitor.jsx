@@ -576,8 +576,11 @@ const EventMonitor = ({ sensorData, isPLCConnected }) => {
                                                     <td className="px-4 py-3 text-center"><span className={`text-sm ${theme === 'space' ? 'text-purple-300' : 'text-gray-600'}`}>{item.날짜}</span></td>
                                                     <td className="px-4 py-3 text-center"><span className={`text-sm font-mono ${theme === 'space' ? 'text-purple-300' : 'text-gray-600'}`}>{item.시간}</span></td>
                                                     <td className="px-4 py-3 text-center">
-                                                        <span className={`inline-flex px-3 py-1 rounded-full text-xs font-semibold ${theme === 'space'
-                                                                ? 'bg-purple-500 text-white border-2 border-purple-600'
+                                                        <span className={`inline-flex px-3 py-1 rounded-full text-xs font-semibold ${
+                                                            theme === 'space'
+                                                                ? (item.구분 === '입차' ? 'bg-purple-500 text-white border-2 border-purple-600' :
+                                                                    item.구분 === '주차중' ? 'bg-green-500 text-white border-2 border-green-600' :
+                                                                        'bg-cyan-500 text-white border-2 border-cyan-600')
                                                                 : (item.구분 === '입차' ? 'bg-blue-500 text-white border-2 border-blue-600' :
                                                                     item.구분 === '주차중' ? 'bg-green-500 text-white border-2 border-green-600' :
                                                                         'bg-red-500 text-white border-2 border-red-600')
@@ -651,8 +654,11 @@ const EventMonitor = ({ sensorData, isPLCConnected }) => {
                                                 <td className="px-4 py-3 whitespace-nowrap"><span className={`text-sm ${theme === 'space' ? 'text-purple-300' : 'text-gray-600'}`}>{item.날짜}</span></td>
                                                 <td className="px-4 py-3 whitespace-nowrap"><span className={`text-sm font-mono font-semibold ${theme === 'space' ? 'text-purple-300' : 'text-gray-600'}`}>{item.시간}</span></td>
                                                 <td className="px-4 py-3 whitespace-nowrap">
-                                                    <span className={`inline-flex px-3 py-1 rounded-full text-xs font-semibold ${theme === 'space'
-                                                            ? 'bg-purple-500 text-white border-2 border-purple-600'
+                                                    <span className={`inline-flex px-3 py-1 rounded-full text-xs font-semibold ${
+                                                        theme === 'space'
+                                                            ? (item.구분 === '입차' ? 'bg-purple-500 text-white border-2 border-purple-600' :
+                                                                item.구분 === '주차중' ? 'bg-green-500 text-white border-2 border-green-600' :
+                                                                    'bg-cyan-500 text-white border-2 border-cyan-600')
                                                             : (item.구분 === '입차' ? 'bg-blue-500 text-white border-2 border-blue-600' :
                                                                 item.구분 === '주차중' ? 'bg-green-500 text-white border-2 border-green-600' :
                                                                     'bg-red-500 text-white border-2 border-red-600')

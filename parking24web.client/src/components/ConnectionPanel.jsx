@@ -261,7 +261,6 @@ const ConnectionPanel = ({
                                 </div>
                                 <div>
                                     <span className={`text-sm font-semibold ${theme === 'space' ? 'text-purple-700' : theme === 'dark' ? 'text-gray-200' : theme === 'ocean' ? 'text-blue-700' : 'text-green-700'}`}>인증 완료</span>
-                                    <div className={`text-xs ${theme === 'space' ? 'text-purple-600' : theme === 'dark' ? 'text-gray-400' : theme === 'ocean' ? 'text-blue-600' : 'text-green-600'}`}>C4 = 62</div>
                                 </div>
                             </>
                         ) : (
