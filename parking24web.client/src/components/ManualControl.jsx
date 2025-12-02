@@ -1,7 +1,7 @@
 ﻿import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import siteConfig from '../../config/sokcho2Config.js';
 // SignalR 서비스 import
-import signalRService from '../services/signalrService.js';
+import signalRService from '../services/SignalRService.js';
 import { useTheme } from '../contexts/ThemeContext';
 import './ManualControl.css';
 

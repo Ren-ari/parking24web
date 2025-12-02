@@ -1,7 +1,7 @@
 ﻿import React, { useState, useEffect, useRef, useMemo } from "react";
 import { useAuth } from '../hooks/useAuth';
 import { useTheme } from '../contexts/ThemeContext';
-import signalRService from '../services/signalrService';
+import signalRService from '../services/SignalRService';
 import siteConfig from '../../config/sokcho2Config.js';
 
 
