@@ -24,6 +24,37 @@ const ParkingMonitor = ({ sensorData, isPLCConnected }) => {
         return baseAddress + (cartIndex * 30) + slotIndex;
     };
 
+    // 슬롯 번호를 주소 인덱스로 변환 (각 카트 내부 인덱스 0~29)
+    const getSlotIndexFromNumber = (slotNumber, cartNumber, position) => {
+        // 슬롯 번호를 카트 내부 슬롯 번호로 변환 (1~15)
+        const slotInCart = ((slotNumber - 1) % 15) + 1;
+        
+        if (position === 'upper') {
+            // 상단: 슬롯 번호 15~1 → PLC 주소 인덱스 29~15 (역순)
+            return 30 - slotInCart;
+        } else {
+            // 하단: 슬롯 번호 15~1 → PLC 주소 인덱스 14~0 (역순)
+            return 15 - slotInCart;
+        }
+    };
+
+    // 슬롯 번호 계산 (1단: 1~15, 2단: 16~30, ..., 6단: 76~90)
+    const getSlotNumber = (cartNumber, position, index) => {
+        const baseSlot = (cartNumber - 1) * 15 + 1; // 각 단의 시작 슬롯 번호
+        
+        if (position === 'upper') {
+            // 상단: 큰 슬롯 4개 + 중간 작은 슬롯 11개 = 총 15개
+            // 큰 슬롯 4개: baseSlot+14, baseSlot+13, baseSlot+12, baseSlot+11
+            // 중간 작은 슬롯 11개: baseSlot+10 ~ baseSlot+0
+            return baseSlot + 14 - index;
+        } else {
+            // 하단: 큰 슬롯 4개 + 하단 작은 슬롯 11개 = 총 15개
+            // 큰 슬롯 4개: baseSlot+14, baseSlot+13, baseSlot+12, baseSlot+11
+            // 하단 작은 슬롯 11개: baseSlot+10 ~ baseSlot+0
+            return baseSlot + 14 - index;
+        }
+    };
+
     // PLC 값 가져오기
     const getPLCValue = (address) => {
         if (!sensorData?.rawData || address >= sensorData.rawData.length) return 0;
@@ -67,10 +98,11 @@ const ParkingMonitor = ({ sensorData, isPLCConnected }) => {
                     {/* 상단 큰 슬롯 4개 + 리프트 */}
                     <div className="mb-6">
                         <div className="flex justify-center items-center gap-1 md:gap-1 lg:gap-2 min-w-max sm:min-w-0">
-                            {/* 큰 슬롯 4개 (30, 29, 28, 27) */}
+                            {/* 큰 슬롯 4개 */}
                             {Array.from({ length: 4 }, (_, i) => {
-                                const slotNumber = 30 - i;
-                                const address = getVehicleAddress(cartIndex, slotNumber - 1);
+                                const slotNumber = getSlotNumber(cartNumber, 'upper', i);
+                                const slotIndex = getSlotIndexFromNumber(slotNumber, cartNumber, 'upper');
+                                const address = getVehicleAddress(cartIndex, slotIndex);
                                 const value = getPLCValue(address);
                                 const colorClass = getVehicleColor(value);
 
@@ -106,12 +138,13 @@ const ParkingMonitor = ({ sensorData, isPLCConnected }) => {
                         </div>
                     </div>
                     
-                    {/* 중간 작은 슬롯들 (26-16번) */}
+                    {/* 중간 작은 슬롯들 */}
                     <div className="mb-4">
                         <div className="grid grid-cols-11 gap-1 md:gap-0.5 lg:gap-1 justify-center min-w-max sm:min-w-0">
                             {Array.from({ length: 11 }, (_, i) => {
-                                const slotNumber = 26 - i;
-                                const address = getVehicleAddress(cartIndex, slotNumber - 1);
+                                const slotNumber = getSlotNumber(cartNumber, 'upper', i + 4);
+                                const slotIndex = getSlotIndexFromNumber(slotNumber, cartNumber, 'upper');
+                                const address = getVehicleAddress(cartIndex, slotIndex);
                                                 const value = getPLCValue(address);
                                 const colorClass = getVehicleColor(value);
 
@@ -148,11 +181,13 @@ const ParkingMonitor = ({ sensorData, isPLCConnected }) => {
                         animationDelay: '0.15s'
                     }}
                 >
-                    {/* 상단 큰 슬롯 4개 (15, 14, 13, 12) + 리프트 */}
+                    {/* 상단 큰 슬롯 4개 + 리프트 */}
                     <div className="mb-6">
                         <div className="flex justify-center items-center gap-1 md:gap-1 lg:gap-2 min-w-max sm:min-w-0">
-                            {[15, 14, 13, 12].map((slotNumber, i) => {
-                                const address = getVehicleAddress(cartIndex, slotNumber - 1);
+                            {Array.from({ length: 4 }, (_, i) => {
+                                const slotNumber = getSlotNumber(cartNumber, 'lower', i);
+                                const slotIndex = getSlotIndexFromNumber(slotNumber, cartNumber, 'lower');
+                                const address = getVehicleAddress(cartIndex, slotIndex);
                                 const value = getPLCValue(address);
                                 const colorClass = getVehicleColor(value);
                                 
@@ -188,12 +223,13 @@ const ParkingMonitor = ({ sensorData, isPLCConnected }) => {
                                                                 </div>
                                                         </div>
 
-                    {/* 하단 작은 슬롯들 (11-1번) */}
+                    {/* 하단 작은 슬롯들 */}
                     <div>
                         <div className="grid grid-cols-11 gap-1 md:gap-0.5 lg:gap-1 justify-center min-w-max sm:min-w-0">
                             {Array.from({ length: 11 }, (_, i) => {
-                                const slotNumber = 11 - i;
-                                const address = getVehicleAddress(cartIndex, slotNumber - 1);
+                                const slotNumber = getSlotNumber(cartNumber, 'lower', i + 4);
+                                const slotIndex = getSlotIndexFromNumber(slotNumber, cartNumber, 'lower');
+                                const address = getVehicleAddress(cartIndex, slotIndex);
                                 const value = getPLCValue(address);
                                 const colorClass = getVehicleColor(value);
                                 

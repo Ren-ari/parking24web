@@ -896,19 +896,12 @@ export const gapEulMyeongGaConfig = {
 
     // 주차장 모니터링 설정
     parkingMonitor: {
-        // 갑을명가 카트방식 (6단 × 30대 = 180대)
-        vehicleAddressStart: 101,               // P101
-        vehicleAddressEnd: 280,                 // P280
-        totalSlots: 180,
+        // 갑을명가 카트방식 (6단 × 15대 = 90대)
+        vehicleAddressStart: 211,               // P211
+        vehicleAddressEnd: 300,                 // P300
+        totalSlots: 90,
         cartsCount: 6,                          // 1단~6단 카트
-        slotsPerCart: 30,                       // 각 카트당 30대
-        // 갑을명가는 차판상태가 별도로 없고 차량번호만 관리
-        hasPlateStatus: false,
-        // 리프트 위치 정보
-        liftPositionStart: 300,                 // P300
-        entranceLevel: 301,                     // P301: 승입장
-        turnLevel: 302,                         // P302: 턴회전
-    
+        slotsPerCart: 15,                       // 각 카트당 30대
     }
 }
 export default gapEulMyeongGaConfig;

@@ -5,11 +5,28 @@ import { useAuth } from '../hooks/useAuth';
 import signalRService from '../services/signalrService';
 import AnalyticsDashboard from './AnalyticsDashboard';
 
+// 반응형 미디어 쿼리 훅
+const useMediaQuery = (query) => {
+    const [matches, setMatches] = useState(false);
+
+    useEffect(() => {
+        const media = window.matchMedia(query);
+        setMatches(media.matches);
+
+        const listener = (e) => setMatches(e.matches);
+        media.addEventListener('change', listener);
+        return () => media.removeEventListener('change', listener);
+    }, [query]);
+
+    return matches;
+};
+
 const EventMonitor = ({ sensorData, isPLCConnected }) => {
     console.log('EventMonitor 렌더링됨:', { sensorData, isPLCConnected });
 
     const { theme } = useTheme();
     const { isClient } = useAuth();
+    const isMobile = useMediaQuery('(max-width: 767px)');
     const [showConnectionButtons, setShowConnectionButtons] = useState(false);
     const [activeTab, setActiveTab] = useState('recent');
     const [recentEvents, setRecentEvents] = useState([]);
@@ -560,22 +577,22 @@ const EventMonitor = ({ sensorData, isPLCConnected }) => {
                         <div className={`overflow-hidden transition-all duration-700 ${isSearchResultExpanded ? 'max-h-[600px] opacity-100' : 'max-h-0 opacity-0'}`}>
                             <div className="p-4 sm:p-6">
                                 <div className="overflow-x-auto max-h-96 overflow-y-auto">
-                                    <table className="w-full">
+                                <table className={isMobile ? 'min-w-[600px]' : 'w-full'} style={{ tableLayout: isMobile ? 'auto' : 'fixed' }}>
                                         <thead className={`text-white ${theme === 'space' ? 'bg-gradient-to-br from-purple-500 to-purple-700' : 'bg-gradient-to-br from-blue-500 to-blue-700'}`}>
                                             <tr>
-                                                <th className="px-4 py-3 text-center text-xs font-semibold whitespace-nowrap">날짜</th>
-                                                <th className="px-4 py-3 text-center text-xs font-semibold whitespace-nowrap">시간</th>
-                                                <th className="px-4 py-3 text-center text-xs font-semibold whitespace-nowrap">구분</th>
-                                                <th className="px-4 py-3 text-center text-xs font-semibold whitespace-nowrap">차판</th>
-                                                <th className="px-4 py-3 text-center text-xs font-semibold whitespace-nowrap">차량번호</th>
+                                                <th className="px-4 py-3 text-center text-xs font-semibold whitespace-nowrap" style={!isMobile ? { width: '18%' } : {}}>날짜</th>
+                                                <th className="px-4 py-3 text-center text-xs font-semibold whitespace-nowrap" style={!isMobile ? { width: '18%' } : {}}>시간</th>
+                                                <th className="px-4 py-3 text-center text-xs font-semibold whitespace-nowrap" style={!isMobile ? { width: '16%' } : {}}>구분</th>
+                                                <th className="px-4 py-3 text-center text-xs font-semibold whitespace-nowrap" style={!isMobile ? { width: '16%' } : {}}>차판</th>
+                                                <th className="px-4 py-3 text-center text-xs font-semibold whitespace-nowrap" style={!isMobile ? { width: '32%' } : {}}>차량번호</th>
                                             </tr>
                                         </thead>
                                         <tbody className={`divide-y ${theme === 'space' ? 'divide-purple-600/30 bg-gray-900/95' : 'divide-gray-200 bg-white'}`}>
                                             {searchResults.map((item, idx) => (
                                                 <tr key={idx} className={`transition-all ${theme === 'space' ? 'hover:bg-purple-800/50' : 'hover:bg-blue-50/50'}`}>
-                                                    <td className="px-4 py-3 text-center"><span className={`text-sm ${theme === 'space' ? 'text-purple-300' : 'text-gray-600'}`}>{item.날짜}</span></td>
-                                                    <td className="px-4 py-3 text-center"><span className={`text-sm font-mono ${theme === 'space' ? 'text-purple-300' : 'text-gray-600'}`}>{item.시간}</span></td>
-                                                    <td className="px-4 py-3 text-center">
+                                                     <td className="px-4 py-3 text-center whitespace-nowrap"><span className={`text-sm ${theme === 'space' ? 'text-purple-300' : 'text-gray-600'}`}>{item.날짜}</span></td>
+                                                    <td className="px-4 py-3 text-center whitespace-nowrap"><span className={`text-sm font-mono ${theme === 'space' ? 'text-purple-300' : 'text-gray-600'}`}>{item.시간}</span></td>
+                                                    <td className="px-4 py-3 text-center whitespace-nowrap">
                                                         <span className={`inline-flex px-3 py-1 rounded-full text-xs font-semibold ${theme === 'space'
                                                                 ? 'bg-purple-500 text-white border-2 border-purple-600'
                                                                 : (item.구분 === '입차' ? 'bg-blue-500 text-white border-2 border-blue-600' :
@@ -583,10 +600,10 @@ const EventMonitor = ({ sensorData, isPLCConnected }) => {
                                                                         'bg-red-500 text-white border-2 border-red-600')
                                                             }`}>{item.구분}</span>
                                                     </td>
-                                                    <td className="px-4 py-3 text-center">
+                                                    <td className="px-4 py-3 text-center whitespace-nowrap">
                                                         <span className={`text-sm font-bold ${theme === 'space' ? 'text-purple-300' : 'text-gray-600'}`}>{item.차판}</span>
                                                     </td>
-                                                    <td className="px-4 py-3 text-center"><div className={`text-lg font-bold ${theme === 'space' ? 'text-purple-300' : 'text-gray-800'}`}>{item.차번}</div></td>
+                                                    <td className="px-4 py-3 text-center whitespace-nowrap"><div className={`text-lg font-bold ${theme === 'space' ? 'text-purple-300' : 'text-gray-800'}`}>{item.차번}</div></td>
                                                 </tr>
                                             ))}
                                         </tbody>
@@ -632,14 +649,14 @@ const EventMonitor = ({ sensorData, isPLCConnected }) => {
                     {/* 테이블 */}
                     <div className={`rounded-xl overflow-hidden shadow-2xl ${theme === 'space' ? 'bg-gradient-to-br from-purple-900/80 to-indigo-900/80' : 'bg-white'}`} style={tableContainerStyle}>
                         <div className="overflow-x-auto">
-                            <table className="w-full">
+                            <table className={isMobile ? 'min-w-[600px]' : 'w-full'} style={{ tableLayout: isMobile ? 'auto' : 'fixed' }}>
                                 <thead className={`text-white ${theme === 'space' ? 'bg-gradient-to-br from-purple-500 to-purple-700' : 'bg-gradient-to-br from-blue-500 to-blue-700'}`}>
                                     <tr>
-                                        <th className={`px-4 py-3 text-center text-xs font-semibold cursor-pointer whitespace-nowrap ${theme === 'space' ? 'hover:bg-purple-700' : 'hover:bg-blue-700'}`} onClick={() => handleSort('날짜')}><div className="flex items-center justify-center space-x-1"><span>날짜</span>{sortConfig.key === '날짜' && <span className="text-yellow-300">{sortConfig.direction === 'asc' ? '↑' : '↓'}</span>}</div></th>
-                                        <th className={`px-4 py-3 text-center text-xs font-semibold cursor-pointer whitespace-nowrap ${theme === 'space' ? 'hover:bg-purple-700' : 'hover:bg-blue-700'}`} onClick={() => handleSort('시간')}><div className="flex items-center justify-center space-x-1"><span>시간</span>{sortConfig.key === '시간' && <span className="text-yellow-300">{sortConfig.direction === 'asc' ? '↑' : '↓'}</span>}</div></th>
-                                        <th className={`px-4 py-3 text-center text-xs font-semibold cursor-pointer whitespace-nowrap ${theme === 'space' ? 'hover:bg-purple-700' : 'hover:bg-blue-700'}`} onClick={() => handleSort('구분')}><div className="flex items-center justify-center space-x-1"><span>구분</span>{sortConfig.key === '구분' && <span className="text-yellow-300">{sortConfig.direction === 'asc' ? '↑' : '↓'}</span>}</div></th>
-                                        <th className={`px-4 py-3 text-center text-xs font-semibold cursor-pointer whitespace-nowrap ${theme === 'space' ? 'hover:bg-purple-700' : 'hover:bg-blue-700'}`} onClick={() => handleSort('차판')}><div className="flex items-center justify-center space-x-1"><span>차판번호</span>{sortConfig.key === '차판' && <span className="text-yellow-300">{sortConfig.direction === 'asc' ? '↑' : '↓'}</span>}</div></th>
-                                        <th className={`px-4 py-3 text-center text-xs font-semibold cursor-pointer whitespace-nowrap ${theme === 'space' ? 'hover:bg-purple-700' : 'hover:bg-blue-700'}`} onClick={() => handleSort('차번')}><div className="flex items-center justify-center space-x-1"><span>차량번호</span>{sortConfig.key === '차번' && <span className="text-yellow-300">{sortConfig.direction === 'asc' ? '↑' : '↓'}</span>}</div></th>
+                                        <th className={`px-4 py-3 text-center text-xs font-semibold cursor-pointer whitespace-nowrap ${theme === 'space' ? 'hover:bg-purple-700' : 'hover:bg-blue-700'}`} style={!isMobile ? { width: '18%' } : {}} onClick={() => handleSort('날짜')}><div className="flex items-center justify-center space-x-1"><span>날짜</span>{sortConfig.key === '날짜' && <span className="text-yellow-300">{sortConfig.direction === 'asc' ? '↑' : '↓'}</span>}</div></th>
+                                        <th className={`px-4 py-3 text-center text-xs font-semibold cursor-pointer whitespace-nowrap ${theme === 'space' ? 'hover:bg-purple-700' : 'hover:bg-blue-700'}`} style={!isMobile ? { width: '18%' } : {}} onClick={() => handleSort('시간')}><div className="flex items-center justify-center space-x-1"><span>시간</span>{sortConfig.key === '시간' && <span className="text-yellow-300">{sortConfig.direction === 'asc' ? '↑' : '↓'}</span>}</div></th>
+                                        <th className={`px-4 py-3 text-center text-xs font-semibold cursor-pointer whitespace-nowrap ${theme === 'space' ? 'hover:bg-purple-700' : 'hover:bg-blue-700'}`} style={!isMobile ? { width: '16%' } : {}} onClick={() => handleSort('구분')}><div className="flex items-center justify-center space-x-1"><span>구분</span>{sortConfig.key === '구분' && <span className="text-yellow-300">{sortConfig.direction === 'asc' ? '↑' : '↓'}</span>}</div></th>
+                                        <th className={`px-4 py-3 text-center text-xs font-semibold cursor-pointer whitespace-nowrap ${theme === 'space' ? 'hover:bg-purple-700' : 'hover:bg-blue-700'}`} style={!isMobile ? { width: '16%' } : {}} onClick={() => handleSort('차판')}><div className="flex items-center justify-center space-x-1"><span>차판번호</span>{sortConfig.key === '차판' && <span className="text-yellow-300">{sortConfig.direction === 'asc' ? '↑' : '↓'}</span>}</div></th>
+                                        <th className={`px-4 py-3 text-center text-xs font-semibold cursor-pointer whitespace-nowrap ${theme === 'space' ? 'hover:bg-purple-700' : 'hover:bg-blue-700'}`} style={!isMobile ? { width: '32%' } : {}} onClick={() => handleSort('차번')}><div className="flex items-center justify-center space-x-1"><span>차량번호</span>{sortConfig.key === '차번' && <span className="text-yellow-300">{sortConfig.direction === 'asc' ? '↑' : '↓'}</span>}</div></th>
                                     </tr>
                                 </thead>
                                 <tbody className={`divide-y ${theme === 'space' ? 'divide-purple-600/30 bg-gray-900/95' : 'divide-gray-200 bg-white'}`}>
@@ -648,9 +665,9 @@ const EventMonitor = ({ sensorData, isPLCConnected }) => {
                                     ) : (
                                         getTabData().map((item, idx) => (
                                             <tr key={idx} className={`transition-all ${theme === 'space' ? 'hover:bg-purple-800/50' : 'hover:bg-blue-50/50'}`}>
-                                                <td className="px-4 py-3 whitespace-nowrap"><span className={`text-sm ${theme === 'space' ? 'text-purple-300' : 'text-gray-600'}`}>{item.날짜}</span></td>
-                                                <td className="px-4 py-3 whitespace-nowrap"><span className={`text-sm font-mono font-semibold ${theme === 'space' ? 'text-purple-300' : 'text-gray-600'}`}>{item.시간}</span></td>
-                                                <td className="px-4 py-3 whitespace-nowrap">
+                                                <td className="px-4 py-3 text-center whitespace-nowrap"><span className={`text-sm ${theme === 'space' ? 'text-purple-300' : 'text-gray-600'}`}>{item.날짜}</span></td>
+                                                <td className="px-4 py-3 text-center whitespace-nowrap"><span className={`text-sm font-mono font-semibold ${theme === 'space' ? 'text-purple-300' : 'text-gray-600'}`}>{item.시간}</span></td>
+                                                <td className="px-4 py-3 text-center whitespace-nowrap">
                                                     <span className={`inline-flex px-3 py-1 rounded-full text-xs font-semibold ${theme === 'space'
                                                             ? 'bg-purple-500 text-white border-2 border-purple-600'
                                                             : (item.구분 === '입차' ? 'bg-blue-500 text-white border-2 border-blue-600' :
