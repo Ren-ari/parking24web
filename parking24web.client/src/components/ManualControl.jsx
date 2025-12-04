@@ -370,7 +370,7 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
 
                     newStates[sensorKey] = {
                         value: bitValue === 1,
-                        address: `C${address}`,
+                        address: `${currentConfig.plcConfig?.deviceType || 'C'}${address}`,
                         bitIndex: parseInt(bitIndex),
                         wordIndex: address,
                         name: sensorInfo.name,
@@ -396,9 +396,9 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
         const transformedKey = sensorKey.replace(/[^a-zA-Z0-9]/g, '_');
         const sensor = sensorStates[transformedKey];
         if (sensor) {
-            return `C${sensor.wordIndex}.${sensor.bitIndex}`;
+            return `${currentConfig.plcConfig?.deviceType || 'C'}${sensor.wordIndex}.${sensor.bitIndex}`;
         }
-        return 'C--.--';
+        return `${currentConfig.plcConfig?.deviceType || 'C'}--.--`;
     };
 
     // config에서 센서 키 추출하는 헬퍼 함수
