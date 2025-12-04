@@ -1,4 +1,5 @@
 ﻿using System.Collections.Concurrent;
+using Microsoft.Extensions.Options;
 
 namespace Parking24web.Server.Services
 {
@@ -18,11 +19,12 @@ namespace Parking24web.Server.Services
         private const int HEARTBEAT_INTERVAL = 1000; // 1초
 
         // 현장별 설정
-        private SiteConfig? _currentSiteConfig;
+        private readonly SiteConfiguration? _siteConfig;
 
-        public PLCService()
+        public PLCService(IOptions<SiteConfiguration> siteConfig = null)
         {
             _plc = new LSIS_FENet(0);
+            _siteConfig = siteConfig?.Value;
         }
 
         #region 연결 관리
@@ -170,26 +172,28 @@ namespace Parking24web.Server.Services
 
         #region 현장별 설정
 
-        public void LoadSiteConfig(SiteConfig config)
-        {
-            _currentSiteConfig = config;
-        }
-
         public Dictionary<string, object> GetParsedSensorData()
         {
-            if (_currentSiteConfig == null || !IsConnected)
+            if (_siteConfig?.PlcConfig == null || !IsConnected)
                 return new Dictionary<string, object>();
 
             var rawData = GetSensorData();
             var result = new Dictionary<string, object>();
 
             // 현장 설정에 따라 센서값 파싱
-            var config = _currentSiteConfig.PlcConfig;
-            int startAddress = GetAddressIndex(config.AddressType, config.StartNumber);
+            var config = _siteConfig.PlcConfig;
+            
+            // SensorOffsets가 없으면 빈 결과 반환
+            if (config.SensorOffsets == null)
+                return result;
+
+            // StartAddress는 보통 0이므로 센서 주소를 직접 사용
+            int baseAddress = config.StartAddress;
 
             foreach (var sensor in config.SensorOffsets)
             {
-                int actualAddress = startAddress + sensor.Value;
+                // 센서 오프셋이 실제 주소를 나타냄 (예: 60, 61, 62 등)
+                int actualAddress = baseAddress + sensor.Value;
                 if (actualAddress < rawData.Length)
                 {
                     ushort value = rawData[actualAddress];
@@ -200,13 +204,6 @@ namespace Parking24web.Server.Services
             return result;
         }
 
-        private int GetAddressIndex(string addressType, int startNumber)
-        {
-            // C101 -> 배열 인덱스 101
-            // P51 -> 배열 인덱스 51  
-            return startNumber;
-        }
-
         #endregion
 
         public void Dispose()
@@ -215,22 +212,5 @@ namespace Parking24web.Server.Services
             Disconnect();
             _plc?.Dispose();
         }
-    }
-
-    // 현장별 설정 클래스
-    public class SiteConfig
-    {
-        public string SiteName { get; set; } = string.Empty;
-        public PlcConfig PlcConfig { get; set; } = new();
-    }
-
-    public class PlcConfig
-    {
-        public string Ip { get; set; } = string.Empty;
-        public int Port { get; set; } = 2005;
-        public string AddressType { get; set; } = "C";
-        public int StartNumber { get; set; } = 101;
-        public Dictionary<string, int> SensorOffsets { get; set; } = new();
-        public Dictionary<string, int> ControlOffsets { get; set; } = new();
     }
 }

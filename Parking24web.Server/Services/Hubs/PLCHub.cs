@@ -70,30 +70,6 @@ namespace Parking24web.Server.Hubs
             }
         }
 
-        public async Task<bool> ConnectToPLCFromConfig()
-        {
-            try
-            {
-                if (_siteConfig.PlcConfig == null)
-                {
-                    await Clients.Caller.SendAsync("Error", "PLC 설정이 없습니다");
-                    return false;
-                }
-
-                var ip = _siteConfig.PlcConfig.Ip;
-                var port = _siteConfig.PlcConfig.Port;
-
-                _logger.LogInformation($"Config 기반 PLC 연결: {ip}:{port}");
-                return await ConnectToPLC(ip, port);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Config 기반 PLC 연결 중 오류");
-                await Clients.Caller.SendAsync("Error", $"Config 연결 실패: {ex.Message}");
-                return false;
-            }
-        }
-
         public async Task DisconnectFromPLC()
         {
             try
@@ -159,10 +135,7 @@ namespace Parking24web.Server.Hubs
                     siteName = _siteConfig.SiteInfo?.Name ?? "Unknown",
                     unitNumber = _siteConfig.SiteInfo?.UnitNumber ?? "Unknown",
                     location = _siteConfig.SiteInfo?.Location ?? "",
-                    plcIp = _siteConfig.PlcConfig?.Ip ?? "",
-                    plcPort = _siteConfig.PlcConfig?.Port ?? 0,
-                    commandCount = _siteConfig.ControlCommands?.Count ?? 0,
-                    dataAddressCount = _siteConfig.DataAddresses?.Count ?? 0
+                    commandCount = _siteConfig.ControlCommands?.Count ?? 0
                 });
             }
             catch (Exception ex)

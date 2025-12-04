@@ -22,7 +22,7 @@ else
     Console.WriteLine("기본 설정을 사용합니다.");
 }
 
-var urls = builder.Configuration["Urls"] ?? "http://0.0.0.0:5123";
+var urls = builder.Configuration["Urls"] ?? "http://0.0.0.0:5124";
 builder.WebHost.UseUrls(urls);
 
 // 기존 서비스들
@@ -171,7 +171,7 @@ try
     var logger = app.Services.GetRequiredService<ILogger<Program>>();
 
     logger.LogInformation($"현장 정보: {siteConfig.SiteInfo?.Name} {siteConfig.SiteInfo?.UnitNumber}");
-    logger.LogInformation($"PLC 설정: {siteConfig.PlcConfig?.Ip}:{siteConfig.PlcConfig?.Port}");
+    logger.LogInformation($"PLC 설정: StartAddress={siteConfig.PlcConfig?.StartAddress}");
     logger.LogInformation($"제어 명령 개수: {siteConfig.ControlCommands?.Count ?? 0}개");
 
     // 필수 설정 검증
@@ -267,11 +267,8 @@ public class SiteConfiguration
     public PlcConfig? PlcConfig { get; set; }
     public SystemAddresses? SystemAddresses { get; set; }
     public Dictionary<string, CommandConfig>? ControlCommands { get; set; }
-    public Dictionary<string, int>? DataAddresses { get; set; }
     public VehicleStorage? VehicleStorage { get; set; }
     public Dictionary<string, int>? LiftPositions { get; set; }
-    public ParkingMonitor? ParkingMonitor { get; set; }
-    public SensorRanges? SensorRanges { get; set; }
 }
 
 public class SiteInfo
@@ -284,10 +281,8 @@ public class SiteInfo
 
 public class PlcConfig
 {
-    public string Ip { get; set; } = string.Empty;
-    public int Port { get; set; } = 2005;
-    public string DeviceType { get; set; } = "C";
     public int StartAddress { get; set; } = 0;
+    public Dictionary<string, int>? SensorOffsets { get; set; }
 }
 
 public class SystemAddresses
@@ -308,24 +303,6 @@ public class VehicleStorage
     public int StartAddress { get; set; }
     public int EndAddress { get; set; }
     public int TotalSlots { get; set; }
-}
-
-public class ParkingMonitor
-{
-    public int VehicleAddressStart { get; set; }
-    public int VehicleAddressEnd { get; set; }
-    public int TotalSlots { get; set; }
-    public bool HasPlateStatus { get; set; }
-    public int LiftPositionStart { get; set; }
-    public int EntranceLevel { get; set; }
-    public int TurnLevel { get; set; }
-}
-
-public class SensorRanges
-{
-    public int SensorStartAddress { get; set; }
-    public int SensorEndAddress { get; set; }
-    public int TotalSensorWords { get; set; }
 }
 
 public class CommandConfig

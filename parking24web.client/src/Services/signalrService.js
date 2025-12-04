@@ -133,21 +133,6 @@ class SignalRService {
         }
     }
 
-    // Config 기반 PLC 연결
-    async connectToPLCFromConfig() {
-        try {
-            if (!this.connection || !this.isConnected) {
-                throw new Error("SignalR 연결이 필요합니다");
-            }
-
-            const result = await this.connection.invoke("ConnectToPLCFromConfig");
-            return result;
-        } catch (error) {
-            console.error("Config 기반 PLC 연결 실패:", error);
-            throw error;
-        }
-    }
-
     // PLC 연결 해제
     async disconnectFromPLC() {
         try {
