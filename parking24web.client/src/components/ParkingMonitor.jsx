@@ -19,23 +19,20 @@ const ParkingMonitor = ({ sensorData, isPLCConnected }) => {
     }, []);
 
     // 카트별 차량 주소 계산
+    // 하단 제거 후: 각 카트당 15개 슬롯만 사용 (상단만)
     const getVehicleAddress = (cartIndex, slotIndex) => {
         const baseAddress = siteConfig.parkingMonitor.vehicleAddressStart;
-        return baseAddress + (cartIndex * 30) + slotIndex;
+        return baseAddress + (cartIndex * 15) + slotIndex;
     };
 
-    // 슬롯 번호를 주소 인덱스로 변환 (각 카트 내부 인덱스 0~29)
+    // 슬롯 번호를 주소 인덱스로 변환 (각 카트 내부 인덱스 0~14, 하단 제거)
     const getSlotIndexFromNumber = (slotNumber, cartNumber, position) => {
         // 슬롯 번호를 카트 내부 슬롯 번호로 변환 (1~15)
         const slotInCart = ((slotNumber - 1) % 15) + 1;
         
-        if (position === 'upper') {
-            // 상단: 슬롯 번호 15~1 → PLC 주소 인덱스 29~15 (역순)
-            return 30 - slotInCart;
-        } else {
-            // 하단: 슬롯 번호 15~1 → PLC 주소 인덱스 14~0 (역순)
-            return 15 - slotInCart;
-        }
+        // 하단 제거 후: 상단만 사용, 슬롯 1~15 → 인덱스 0~14 (순차)
+        // P211부터 시작하므로: 슬롯 1번 → 인덱스 0 (P211), 슬롯 15번 → 인덱스 14 (P225)
+        return slotInCart - 1;
     };
 
     // 슬롯 번호 계산 (1단: 1~15, 2단: 16~30, ..., 6단: 76~90)
@@ -78,182 +75,104 @@ const ParkingMonitor = ({ sensorData, isPLCConnected }) => {
 
 
 
-    // 카트 렌더링
-    const renderCart = (cartNumber) => {
+    // 카트 영역 렌더링 (상단/하단 공통)
+    const renderCartSection = (cartNumber, position, isLower = false) => {
         const cartIndex = cartNumber - 1;
+        
+        return (
+            <div 
+                className={`p-6 rounded-2xl border shadow-2xl overflow-x-auto sm:overflow-x-visible scrollbar-hide cart-box-transition ${theme === 'space' ? 'border-purple-500/30' : 'border-blue-300/50'}`}
+                style={{
+                    background: theme === 'space' 
+                        ? 'linear-gradient(145deg, rgba(30, 30, 30, 0.95) 0%, rgba(20, 20, 20, 0.9) 100%)'
+                        : 'rgba(248, 250, 255, 0.5)',
+                    backdropFilter: 'blur(25px)',
+                    WebkitBackdropFilter: 'blur(25px)',
+                    ...(isLower && { animationDelay: '0.15s' })
+                }}
+            >
+                {/* 큰 슬롯 4개 + 리프트 */}
+                <div className="mb-6">
+                    <div className="flex justify-center items-center gap-1 md:gap-1 lg:gap-2 min-w-max sm:min-w-0">
+                        {/* 큰 슬롯 4개 */}
+                        {Array.from({ length: 4 }, (_, i) => {
+                            const slotNumber = getSlotNumber(cartNumber, position, i);
+                            const slotIndex = getSlotIndexFromNumber(slotNumber, cartNumber, position);
+                            const address = getVehicleAddress(cartIndex, slotIndex);
+                            const value = getPLCValue(address);
+                            const colorClass = getVehicleColor(value);
 
-    return (
-            <div className="space-y-6">
-                {/* 첫 번째 칸 - 상단 영역 */}
-                <div 
-                    className={`p-6 rounded-2xl border shadow-2xl overflow-x-auto sm:overflow-x-visible scrollbar-hide cart-box-transition ${theme === 'space' ? 'border-purple-500/30' : 'border-blue-300/50'}`}
-                    style={{
-                        background: theme === 'space' 
-                            ? 'linear-gradient(145deg, rgba(30, 30, 30, 0.95) 0%, rgba(20, 20, 20, 0.9) 100%)'
-                            : 'rgba(248, 250, 255, 0.5)',
-                backdropFilter: 'blur(25px)',
-                WebkitBackdropFilter: 'blur(25px)',
-                    }}
-                >
-                    {/* 상단 큰 슬롯 4개 + 리프트 */}
-                    <div className="mb-6">
-                        <div className="flex justify-center items-center gap-1 md:gap-1 lg:gap-2 min-w-max sm:min-w-0">
-                            {/* 큰 슬롯 4개 */}
-                            {Array.from({ length: 4 }, (_, i) => {
-                                const slotNumber = getSlotNumber(cartNumber, 'upper', i);
-                                const slotIndex = getSlotIndexFromNumber(slotNumber, cartNumber, 'upper');
-                                const address = getVehicleAddress(cartIndex, slotIndex);
-                                const value = getPLCValue(address);
-                                const colorClass = getVehicleColor(value);
-
-                        return (
-                            <div
-                                        key={`upper-${i}`} 
-                                        className={`w-20 h-28 md:w-16 md:h-24 lg:w-24 lg:h-32 flex flex-col items-center justify-center rounded-lg border-2 ${colorClass} text-xs font-bold transition-all duration-300 hover:scale-105 relative`}
-                                style={{
-                                            backdropFilter: 'blur(15px)',
-                                            WebkitBackdropFilter: 'blur(15px)'
-                                        }}
-                                    >
-                                        <div className="font-bold text-xs absolute top-2">{slotNumber}</div>
-                                        <div className="text-xl md:text-lg lg:text-2xl font-bold">
-                                            {value ? String(value).padStart(4, '0') : ''}
-                                        </div>
-                                    </div>
-                                );
-                            })}
-                            
-                            {/* 리프트 영역 */}
-                            <div className={`w-20 h-28 md:w-16 md:h-24 lg:w-24 lg:h-32 flex flex-col items-center justify-center rounded-lg border-2 transition-all duration-300 relative ${
-                                theme === 'space' 
-                                    ? 'bg-gradient-to-br from-cyan-400 via-cyan-500 to-cyan-600 border-cyan-500 text-cyan-100'
-                                    : 'bg-gradient-to-br from-orange-300 via-orange-400 to-orange-500 border-orange-600 text-orange-900'
-                            }`}
-                            style={{
-                                backdropFilter: 'blur(15px)',
-                                WebkitBackdropFilter: 'blur(15px)'
-                            }}>
-                                <div className="font-bold text-sm md:text-xs lg:text-sm">리프트</div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    {/* 중간 작은 슬롯들 */}
-                    <div className="mb-4">
-                        <div className="grid grid-cols-11 gap-1 md:gap-0.5 lg:gap-1 justify-center min-w-max sm:min-w-0">
-                            {Array.from({ length: 11 }, (_, i) => {
-                                const slotNumber = getSlotNumber(cartNumber, 'upper', i + 4);
-                                const slotIndex = getSlotIndexFromNumber(slotNumber, cartNumber, 'upper');
-                                const address = getVehicleAddress(cartIndex, slotIndex);
-                                                const value = getPLCValue(address);
-                                const colorClass = getVehicleColor(value);
-
-                                                return (
-                                                    <div
-                                        key={`middle-${i}`} 
-                                        className={`w-16 h-20 md:w-14 md:h-16 lg:w-20 lg:h-24 flex flex-col items-center justify-center rounded-lg border-2 ${colorClass} text-xs font-bold transition-all duration-300 hover:scale-105 relative`}
-                                                            style={{
-                                                                backdropFilter: 'blur(15px)',
-                                            WebkitBackdropFilter: 'blur(15px)'
-                                        }}
-                                    >
-                                        <div className="font-bold text-[8px] md:text-[8px] lg:text-[10px] absolute top-1">{slotNumber}</div>
-                                        <div className="text-base md:text-sm lg:text-xl font-bold">
-                                            {value ? String(value).padStart(4, '0') : ''}
-                                        </div>
-                                    </div>
-                                );
-                            })}
-                                                                </div>
-                                                                        </div>
-
-                                                                </div>
-
-                {/* 두 번째 칸 - 하단 영역 */}
-                <div 
-                    className={`p-6 rounded-2xl border shadow-2xl overflow-x-auto sm:overflow-x-visible scrollbar-hide cart-box-transition ${theme === 'space' ? 'border-purple-500/30' : 'border-blue-300/50'}`}
-                    style={{
-                        background: theme === 'space' 
-                            ? 'linear-gradient(145deg, rgba(30, 30, 30, 0.95) 0%, rgba(20, 20, 20, 0.9) 100%)'
-                            : 'rgba(248, 250, 255, 0.5)',
-                        backdropFilter: 'blur(25px)',
-                        WebkitBackdropFilter: 'blur(25px)',
-                        animationDelay: '0.15s'
-                    }}
-                >
-                    {/* 상단 큰 슬롯 4개 + 리프트 */}
-                    <div className="mb-6">
-                        <div className="flex justify-center items-center gap-1 md:gap-1 lg:gap-2 min-w-max sm:min-w-0">
-                            {Array.from({ length: 4 }, (_, i) => {
-                                const slotNumber = getSlotNumber(cartNumber, 'lower', i);
-                                const slotIndex = getSlotIndexFromNumber(slotNumber, cartNumber, 'lower');
-                                const address = getVehicleAddress(cartIndex, slotIndex);
-                                const value = getPLCValue(address);
-                                const colorClass = getVehicleColor(value);
-                                
-                                return (
-                                    <div 
-                                        key={`second-upper-${i}`} 
-                                        className={`w-20 h-28 md:w-16 md:h-24 lg:w-24 lg:h-32 flex flex-col items-center justify-center rounded-lg border-2 ${colorClass} text-xs font-bold transition-all duration-300 hover:scale-105 relative`}
-                                        style={{
-                                            backdropFilter: 'blur(15px)',
-                                            WebkitBackdropFilter: 'blur(15px)'
-                                        }}
-                                    >
-                                        <div className="font-bold text-xs absolute top-2">{slotNumber}</div>
-                                        <div className="text-xl md:text-lg lg:text-2xl font-bold">
-                                            {value ? String(value).padStart(4, '0') : ''}
-                                        </div>
-                                    </div>
-                                );
-                            })}
-                            
-                            {/* 리프트 영역 */}
-                            <div className={`w-20 h-28 md:w-16 md:h-24 lg:w-24 lg:h-32 flex flex-col items-center justify-center rounded-lg border-2 transition-all duration-300 relative ${
-                                theme === 'space' 
-                                    ? 'bg-gradient-to-br from-cyan-400 via-cyan-500 to-cyan-600 border-cyan-500 text-cyan-100'
-                                    : 'bg-gradient-to-br from-orange-300 via-orange-400 to-orange-500 border-orange-600 text-orange-900'
-                            }`}
-                            style={{
-                                backdropFilter: 'blur(15px)',
-                                WebkitBackdropFilter: 'blur(15px)'
-                            }}>
-                                <div className="font-bold text-sm md:text-xs lg:text-sm">리프트</div>
-                            </div>
-                                                                </div>
-                                                        </div>
-
-                    {/* 하단 작은 슬롯들 */}
-                    <div>
-                        <div className="grid grid-cols-11 gap-1 md:gap-0.5 lg:gap-1 justify-center min-w-max sm:min-w-0">
-                            {Array.from({ length: 11 }, (_, i) => {
-                                const slotNumber = getSlotNumber(cartNumber, 'lower', i + 4);
-                                const slotIndex = getSlotIndexFromNumber(slotNumber, cartNumber, 'lower');
-                                const address = getVehicleAddress(cartIndex, slotIndex);
-                                const value = getPLCValue(address);
-                                const colorClass = getVehicleColor(value);
-                                
-                                return (
-                                    <div 
-                                        key={`second-lower-${i}`} 
-                                        className={`w-16 h-20 md:w-14 md:h-16 lg:w-20 lg:h-24 flex flex-col items-center justify-center rounded-lg border-2 ${colorClass} text-xs font-bold transition-all duration-300 hover:scale-105 relative`}
-                                        style={{
-                                            backdropFilter: 'blur(15px)',
-                                            WebkitBackdropFilter: 'blur(15px)'
-                                        }}
-                                    >
-                                        <div className="font-bold text-[8px] md:text-[8px] lg:text-[10px] absolute top-1">{slotNumber}</div>
-                                        <div className="text-base md:text-sm lg:text-lg font-bold">
-                                            {value || ''}
-                                                            </div>
-                                                    </div>
-                                                );
-                            })}
-                        </div>
+                            return (
+                                <div
+                                    key={`${position}-large-${i}`} 
+                                    className={`w-20 h-28 md:w-16 md:h-24 lg:w-24 lg:h-32 flex flex-col items-center justify-center rounded-lg border-2 ${colorClass} text-xs font-bold transition-all duration-300 hover:scale-105 relative`}
+                                    style={{
+                                        backdropFilter: 'blur(15px)',
+                                        WebkitBackdropFilter: 'blur(15px)'
+                                    }}
+                                >
+                                    <div className="font-bold text-xs absolute top-2">{slotNumber}</div>
+                                    <div className="text-xl md:text-lg lg:text-2xl font-bold">
+                                        {value ? String(value).padStart(4, '0') : ''}
                                     </div>
                                 </div>
-                            </div>
-                        );
+                            );
+                        })}
+                        
+                        {/* 리프트 영역 */}
+                        <div className={`w-20 h-28 md:w-16 md:h-24 lg:w-24 lg:h-32 flex flex-col items-center justify-center rounded-lg border-2 transition-all duration-300 relative ${
+                            theme === 'space' 
+                                ? 'bg-gradient-to-br from-cyan-400 via-cyan-500 to-cyan-600 border-cyan-500 text-cyan-100'
+                                : 'bg-gradient-to-br from-orange-300 via-orange-400 to-orange-500 border-orange-600 text-orange-900'
+                        }`}
+                        style={{
+                            backdropFilter: 'blur(15px)',
+                            WebkitBackdropFilter: 'blur(15px)'
+                        }}>
+                            <div className="font-bold text-sm md:text-xs lg:text-sm">리프트</div>
+                        </div>
+                    </div>
+                </div>
+                
+                {/* 작은 슬롯들 */}
+                <div className={isLower ? '' : 'mb-4'}>
+                    <div className="grid grid-cols-11 gap-1 md:gap-0.5 lg:gap-1 justify-center min-w-max sm:min-w-0">
+                        {Array.from({ length: 11 }, (_, i) => {
+                            const slotNumber = getSlotNumber(cartNumber, position, i + 4);
+                            const slotIndex = getSlotIndexFromNumber(slotNumber, cartNumber, position);
+                            const address = getVehicleAddress(cartIndex, slotIndex);
+                            const value = getPLCValue(address);
+                            const colorClass = getVehicleColor(value);
+
+                            return (
+                                <div
+                                    key={`${position}-small-${i}`} 
+                                    className={`w-16 h-20 md:w-14 md:h-16 lg:w-20 lg:h-24 flex flex-col items-center justify-center rounded-lg border-2 ${colorClass} text-xs font-bold transition-all duration-300 hover:scale-105 relative`}
+                                    style={{
+                                        backdropFilter: 'blur(15px)',
+                                        WebkitBackdropFilter: 'blur(15px)'
+                                    }}
+                                >
+                                    <div className="font-bold text-[8px] md:text-[8px] lg:text-[10px] absolute top-1">{slotNumber}</div>
+                                    <div className="text-base md:text-sm lg:text-xl font-bold">
+                                        {value ? String(value).padStart(4, '0') : ''}
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+            </div>
+        );
+    };
+
+    // 카트 렌더링
+    const renderCart = (cartNumber) => {
+        return (
+            <div className="space-y-6">
+                {renderCartSection(cartNumber, 'upper', false)}
+            </div>
+        );
     };
 
     return (

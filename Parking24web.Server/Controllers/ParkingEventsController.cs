@@ -27,13 +27,13 @@ namespace Parking24web.Server.Controllers
             _siteConfig = siteConfig.Value;
         }
 
-        // 최근 이벤트 조회 (오늘 하루치)
+        // 최근 이벤트 조회 (최근 3일)
         [HttpGet("recent")]
         public async Task<IActionResult> GetRecentEvents()
         {
-            var today = DateTime.Today;
+            var threeDaysAgo = DateTime.Now.AddDays(-3);
             var events = await _context.ParkingEvents
-                .Where(e => e.Timestamp >= today)
+                .Where(e => e.Timestamp >= threeDaysAgo)
                 .OrderByDescending(e => e.Timestamp)
                 .Take(100)
                 .ToListAsync();

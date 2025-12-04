@@ -321,7 +321,7 @@ namespace Parking24web.Server.Services
                 case "Z":
                 case "S":
                     {
-                        nLength = 128 * 2;
+                        nLength = 256 * 2;  // P160-P169를 읽기 위해 256 워드로 확장
                         break;
                     }
                 default:

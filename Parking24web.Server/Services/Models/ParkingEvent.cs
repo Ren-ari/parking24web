@@ -22,5 +22,11 @@ namespace Parking24web.Server.Models
         public int Floor { get; set; }
 
         public DateTime CreatedAt { get; set; } = DateTime.Now;
+
+
+        // ✅ 중복 방지: 멱등성 키
+        [Required]
+        [MaxLength(100)]
+        public string IdempotencyKey { get; set; } = string.Empty;
     }
 }

@@ -30,7 +30,7 @@ if (!fs.existsSync(certFilePath) || !fs.existsSync(keyFilePath)) {
     }
 }
 
-const target = 'http://localhost:5123';
+const target = 'http://localhost:5125';
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -53,10 +53,7 @@ export default defineConfig({
                 target,
                 secure: false
             },
-            '^/thumbnails': {
-                target,
-                secure: false
-            },
+            // /thumbnails는 Vite가 public 폴더에서 직접 제공하도록 프록시 제외
 
             '^/hls': {
                 target,

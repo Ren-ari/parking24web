@@ -93,10 +93,61 @@ using (var scope = app.Services.CreateScope())
     var context = scope.ServiceProvider.GetRequiredService<ParkingDbContext>();
     context.Database.EnsureCreated();
 
-    // ServiceRecords 테이블 생성 확인 (기존 DB 호환)
+    // ✅ IdempotencyKey 컬럼 추가 (기존 DB 대응)
     var connection = context.Database.GetDbConnection();
     connection.Open();
+
     using var command = connection.CreateCommand();
+
+    // 1. 컬럼 존재 확인
+    command.CommandText = @"
+        SELECT COUNT(*) 
+        FROM pragma_table_info('ParkingEvents') 
+        WHERE name='IdempotencyKey'
+    ";
+    var columnExists = (long)command.ExecuteScalar()! > 0;
+
+    if (!columnExists)
+    {
+        Console.WriteLine("IdempotencyKey 컬럼 추가 중...");
+
+        // 2. 컬럼 추가
+        command.CommandText = @"
+            ALTER TABLE ParkingEvents 
+            ADD COLUMN IdempotencyKey TEXT NOT NULL DEFAULT '';
+        ";
+        command.ExecuteNonQuery();
+
+        // 3. 기존 데이터에 키 생성
+        command.CommandText = @"
+            UPDATE ParkingEvents 
+            SET IdempotencyKey = 
+                CarNumber || '_' || 
+                EventType || '_' || 
+                strftime('%Y%m%d%H%M', Timestamp) || '_' || 
+                SlotNumber
+            WHERE IdempotencyKey = '';
+        ";
+        var updated = command.ExecuteNonQuery();
+        Console.WriteLine($"{updated}개 기존 레코드에 IdempotencyKey 생성 완료");
+
+        // 4. UNIQUE 인덱스 생성
+        command.CommandText = @"
+            CREATE UNIQUE INDEX IF NOT EXISTS 
+            IX_ParkingEvents_IdempotencyKey 
+            ON ParkingEvents(IdempotencyKey);
+        ";
+        command.ExecuteNonQuery();
+
+        Console.WriteLine("IdempotencyKey UNIQUE 인덱스 생성 완료");
+    }
+    else
+    {
+        Console.WriteLine("IdempotencyKey 컬럼이 이미 존재합니다");
+    }
+
+    // ServiceRecords 테이블 수동 생성 (기존 DB 호환)
+
     command.CommandText = @"
         CREATE TABLE IF NOT EXISTS ServiceRecords (
             Id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -113,13 +164,13 @@ using (var scope = app.Services.CreateScope())
     ";
     command.ExecuteNonQuery();
 }
-// 서비스 시작시 설정 정보 출력
+// 시작시 사이트 설정 검증
 try
 {
     var siteConfig = app.Services.GetRequiredService<Microsoft.Extensions.Options.IOptions<SiteConfiguration>>().Value;
     var logger = app.Services.GetRequiredService<ILogger<Program>>();
 
-    logger.LogInformation($"사이트 정보: {siteConfig.SiteInfo?.Name} {siteConfig.SiteInfo?.UnitNumber}");
+    logger.LogInformation($"현장 정보: {siteConfig.SiteInfo?.Name} {siteConfig.SiteInfo?.UnitNumber}");
     logger.LogInformation($"PLC 설정: StartAddress={siteConfig.PlcConfig?.StartAddress}");
     logger.LogInformation($"제어 명령 개수: {siteConfig.ControlCommands?.Count ?? 0}개");
 

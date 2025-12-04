@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useRef, memo, useCallback } from 'react';
+﻿import { useState, useEffect, useRef, memo, useCallback, useMemo } from 'react';
 import Hls from 'hls.js';
 import siteConfig from '../../config/gapEulMyeongGaConfig';
 import { useTheme } from '../contexts/ThemeContext';
@@ -38,7 +38,7 @@ const ThumbnailCard = memo(({ channel, isActive, onClick, theme }) => (
         }}
     >
         <img
-            src={`/thumbnails/ch${channel.number}.jpg`}
+            src={`/thumbnails/${siteConfig.siteInfo.siteId}/ch${channel.number}.jpg`}
             alt={channel.name}
             className="w-full h-24 object-cover"
             loading="lazy"
@@ -266,6 +266,7 @@ const CCTVMonitor = () => {
 
     const stopStream = async (channel) => {
         const targetChannel = channel ?? currentChannel;
+
         try {
             // HLS 정리
             if (hlsRef.current) {
@@ -313,25 +314,7 @@ const CCTVMonitor = () => {
             });
 
             hls.on(Hls.Events.ERROR, (event, data) => {
-                console.error('HLS 오류:', {
-                    type: data.type,
-                    details: data.details,
-                    fatal: data.fatal,
-                    error: data.error,
-                    url: data.url,
-                    response: data.response
-                });
-                
-                // 버퍼 스톨 에러 처리
-                if (data.details === 'bufferStalledError' || data.details === 'bufferSeekOver') {
-                    console.warn('버퍼 부족 감지, 재시도 중...');
-                    // 버퍼가 부족하면 현재 위치에서 다시 로드
-                    if (videoRef.current && !videoRef.current.paused) {
-                        hls.startLoad();
-                    }
-                    return;
-                }
-                
+                console.error('HLS 오류:', data);
                 if (data.fatal) {
                     switch (data.type) {
                         case Hls.ErrorTypes.NETWORK_ERROR:
@@ -343,21 +326,9 @@ const CCTVMonitor = () => {
                             hls.recoverMediaError();
                             break;
                         default:
-                            console.log('복구 불가능한 오류:', data.details);
+                            console.log('복구 불가능한 오류');
                             hls.destroy();
                             break;
-                    }
-                } else {
-                    // 비치명적 에러 중에서도 버퍼 관련 에러는 처리
-                    if (data.details === 'bufferAppendingError' || data.details === 'bufferNudgeOnStall') {
-                        console.warn('버퍼 문제 감지, 재시도 중...', data.details);
-                        setTimeout(() => {
-                            if (hlsRef.current && videoRef.current && !videoRef.current.paused) {
-                                hls.startLoad();
-                            }
-                        }, 1000);
-                    } else {
-                        console.warn('HLS 경고 (비치명적):', data.details);
                     }
                 }
             });
@@ -371,10 +342,20 @@ const CCTVMonitor = () => {
 
     // 채널 목록 (설정 파일에서 가져오기)
     const channels = siteConfig.cctvConfig?.channels || [];
+    
+    // 썸네일 패널을 동적으로 나누기 (채널 개수에 따라)
+    const { leftChannels, rightChannels } = useMemo(() => {
+        const totalChannels = channels.length;
+        const midPoint = Math.ceil(totalChannels / 2);
+        return {
+            leftChannels: channels.slice(0, midPoint),
+            rightChannels: channels.slice(midPoint)
+        };
+    }, [channels]);
 
     return (
         <>
-            <style>{`
+            <style jsx>{`
                 .cctv-thumbnail-panel-left {
                     position: fixed;
                     top: 35%;
@@ -581,11 +562,11 @@ const CCTVMonitor = () => {
                 )}
             </div>
 
-            {/* 좌측 썸네일 패널 (1,2,3,4) - PC만 */}
-            {isConnected && showThumbnails && (
+            {/* 좌측 썸네일 패널 - PC만 (채널 개수에 따라 동적 분할) */}
+            {isConnected && showThumbnails && leftChannels.length > 0 && (
                 <div className={`cctv-thumbnail-panel-left show hidden xl:block`}>
                     <div className="flex flex-col gap-7">
-                        {channels.slice(0, 4).map(ch => (
+                        {leftChannels.map(ch => (
                             <ThumbnailCard
                                 key={ch.number}
                                 channel={ch}
@@ -598,11 +579,11 @@ const CCTVMonitor = () => {
                 </div>
             )}
 
-            {/* 우측 썸네일 패널 (5,6,7,8) - PC만 */}
-            {isConnected && showThumbnails && (
+            {/* 우측 썸네일 패널 - PC만 (채널 개수에 따라 동적 분할) */}
+            {isConnected && showThumbnails && rightChannels.length > 0 && (
                 <div className={`cctv-thumbnail-panel-right show hidden xl:block`}>
                     <div className="flex flex-col gap-7">
-                        {channels.slice(4, 8).map(ch => (
+                        {rightChannels.map(ch => (
                             <ThumbnailCard
                                 key={ch.number}
                                 channel={ch}

@@ -12,7 +12,7 @@ export const gapEulMyeongGaConfig = {
     // PLC 기본 설정
     plcConfig: {
         deviceType: "P",
-        startAddress: 0
+        startAddress: 100
     },
     
     // 연결 버튼 구성
