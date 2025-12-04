@@ -4,10 +4,17 @@ export const gapEulMyeongGaConfig = {
     siteInfo: {
         name: "갑을명가",
         unitNumber: "1호기",
+        siteId: "gapEulMyeongGa",
         location: "갑을명가",
         description: "갑을명가 현장 1호기 주차타워"
     },
 
+    // PLC 기본 설정
+    plcConfig: {
+        deviceType: "P",
+        startAddress: 0
+    },
+    
     // 연결 버튼 구성
     connectionConfig: {
         buttons: [
@@ -226,14 +233,6 @@ export const gapEulMyeongGaConfig = {
             liftSideVehicleDetect: "P151.C_리프트측_차량감지",
             roomSideVehicleDetect: "P151.D_룸측_차량감지",
         }
-    },
-
-    // PLC 기본 설정
-    plcConfig: {
-        ip: "192.168.1.2", 
-        port: 2005,
-        deviceType: "P",
-        startAddress: 0
     },
 
       // 기본 시스템 상태 주소
@@ -865,7 +864,7 @@ export const gapEulMyeongGaConfig = {
 
     api: {
         baseUrl: '',
-        devPort: 5123,
+        devPort: 5125,
         endpoints: {
             recent: '/api/parkingevents/recent',
             parked: '/api/parkingevents/parked',

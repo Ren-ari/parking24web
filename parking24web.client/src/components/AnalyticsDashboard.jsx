@@ -186,7 +186,6 @@ const AnalyticsDashboard = () => {
             };
 
             const baseUrl = getBaseUrl();
-            console.log('📊 대시보드 API 베이스 URL:', baseUrl);
             
             // 월별 데이터
             const monthlyResponse = await fetch(`${baseUrl}/api/analytics/monthly`);
@@ -214,8 +213,7 @@ const AnalyticsDashboard = () => {
             setTopSlotsData(topSlotsFormatted);
 
             setLoading(false);
-        } catch (error) {
-            console.error('분석 데이터 로드 실패:', error);
+        } catch {
             setLoading(false);
         }
     }, [processTopSlotsData]);
@@ -555,11 +553,39 @@ const AnalyticsDashboard = () => {
                             useMesh={true}
                             enableGridX={false}
                             enableGridY={true}
-                            tooltip={({ point }) => (
-                                <div style={tooltipStyle}>
-                                     <strong>{point.data.x}시 {point.serieId}</strong>: {point.data.y}대
-                                </div>
-                            )}
+                            tooltip={({ point }) => {
+                                // point.seriesIndex와 point.seriesId 사용 (복수형!)
+                                // hourlyData: [{ id: '입차' }, { id: '출차' }]
+                                // lineColors: [입차색, 출차색]
+                                const serieIndex = point.seriesIndex !== undefined ? point.seriesIndex : -1;
+                                const serieId = point.seriesId || (serieIndex >= 0 && serieIndex < hourlyData.length ? hourlyData[serieIndex].id : null);
+                                
+                                // 색상 결정: 0=입차, 1=출차
+                                const indicatorColor = point.seriesColor || 
+                                    (serieIndex === 1 ? lineColors[1] : lineColors[0]);
+                                
+                                // 시리즈 ID 가져오기
+                                const displayId = serieId || (serieIndex >= 0 && serieIndex < hourlyData.length 
+                                    ? hourlyData[serieIndex].id 
+                                    : 'N/A');
+                                
+                                return (
+                                    <div style={tooltipStyle}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                            <div 
+                                                style={{ 
+                                                    width: '12px', 
+                                                    height: '12px', 
+                                                    backgroundColor: indicatorColor,
+                                                    flexShrink: 0,
+                                                    border: `1px solid ${theme === 'space' ? '#333' : '#ccc'}`
+                                                }} 
+                                            />
+                                            <strong>{point.data.x}시 {displayId}</strong>: {point.data.y}대
+                                        </div>
+                                    </div>
+                                );
+                            }}
                             legends={[
                                 {
                                     anchor: 'top',

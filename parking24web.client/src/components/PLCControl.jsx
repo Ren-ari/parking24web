@@ -929,7 +929,7 @@ const PLCControl = ({ currentUser, onLogout }) => {
                                                 boxShadow: '0 3px 12px 0 rgba(31, 38, 135, 0.18)'
                                             }}>
                                             <div className="absolute inset-0 bg-gradient-to-br from-purple-500/6 to-pink-500/6 rounded-2xl"></div>
-                                            <label className={`block text-xs font-medium mb-1 relative z-10 text-center ${getCardLabelColorClass()}`}>전체주차</label>
+                                            <label className={`block text-xs font-medium mb-1 text-center relative z-10 ${getCardLabelColorClass()}`}>전체주차</label>
                                             <div className={`text-center rounded-2xl px-1 sm:px-2 py-3 sm:py-5 text-lg sm:text-2xl md:text-3xl font-bold relative z-10 ${getCardValueColorClass()}`} style={{
                                                 background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.75) 100%)',
                                                 backdropFilter: 'blur(8px)',
@@ -954,7 +954,7 @@ const PLCControl = ({ currentUser, onLogout }) => {
                                                 boxShadow: '0 3px 12px 0 rgba(31, 38, 135, 0.18)'
                                             }}>
                                             <div className="absolute inset-0 bg-gradient-to-br from-purple-500/6 to-pink-500/6 rounded-2xl"></div>
-                                            <label className={`block text-xs font-medium mb-1 relative z-10 text-center ${getCardLabelColorClass()}`}>전체공차</label>
+                                            <label className={`block text-xs font-medium mb-1 text-center relative z-10 ${getCardLabelColorClass()}`}>전체공차</label>
                                             <div className={`text-center rounded-2xl px-1 sm:px-2 py-3 sm:py-5 text-lg sm:text-2xl md:text-3xl font-bold relative z-10 ${getCardValueColorClass()}`} style={{
                                                 background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.75) 100%)',
                                                 backdropFilter: 'blur(8px)',
@@ -979,7 +979,7 @@ const PLCControl = ({ currentUser, onLogout }) => {
                                                 boxShadow: '0 3px 12px 0 rgba(31, 38, 135, 0.18)'
                                             }}>
                                             <div className="absolute inset-0 bg-gradient-to-br from-purple-500/6 to-pink-500/6 rounded-2xl"></div>
-                                            <label className={`block text-xs font-medium mb-1 relative z-10 text-center ${getCardLabelColorClass()}`}>일반입고</label>
+                                            <label className={`block text-xs font-medium mb-1 text-center relative z-10 ${getCardLabelColorClass()}`}>일반입고</label>
                                             <div className={`text-center rounded-2xl px-1 sm:px-2 py-3 sm:py-5 text-lg sm:text-2xl md:text-3xl font-bold relative z-10 ${getCardValueColorClass()}`} style={{
                                                 background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.75) 100%)',
                                                 backdropFilter: 'blur(8px)',
@@ -1004,7 +1004,7 @@ const PLCControl = ({ currentUser, onLogout }) => {
                                                 boxShadow: '0 3px 12px 0 rgba(31, 38, 135, 0.18)'
                                             }}>
                                             <div className="absolute inset-0 bg-gradient-to-br from-purple-500/6 to-pink-500/6 rounded-2xl"></div>
-                                            <label className={`block text-xs font-medium mb-1 relative z-10 text-center ${getCardLabelColorClass()}`}>일반출차</label>
+                                            <label className={`block text-xs font-medium mb-1 text-center relative z-10 ${getCardLabelColorClass()}`}>일반출차</label>
                                             <div className={`text-center rounded-2xl px-1 sm:px-2 py-3 sm:py-5 text-lg sm:text-2xl md:text-3xl font-bold relative z-10 ${getCardValueColorClass()}`} style={{
                                                 background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.75) 100%)',
                                                 backdropFilter: 'blur(8px)',

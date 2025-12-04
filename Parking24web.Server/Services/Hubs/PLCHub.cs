@@ -58,31 +58,6 @@ namespace Parking24web.Server.Hubs
             }
         }
 
-        // Config에서 PLC IP/Port 가져와서 연결하는 메서드
-        public async Task<bool> ConnectToPLCFromConfig()
-        {
-            try
-            {
-                if (_siteConfig.PlcConfig == null)
-                {
-                    await Clients.Caller.SendAsync("Error", "PLC 설정이 없습니다");
-                    return false;
-                }
-
-                var ip = _siteConfig.PlcConfig.Ip;
-                var port = _siteConfig.PlcConfig.Port;
-
-                _logger.LogInformation($"Config 기반 PLC 연결: {ip}:{port}");
-                return await ConnectToPLC(ip, port);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Config 기반 PLC 연결 중 오류");
-                await Clients.Caller.SendAsync("Error", $"Config 연결 실패: {ex.Message}");
-                return false;
-            }
-        }
-
         public async Task DisconnectFromPLC()
         {
             try
@@ -149,10 +124,7 @@ namespace Parking24web.Server.Hubs
                     siteName = _siteConfig.SiteInfo?.Name ?? "Unknown",
                     unitNumber = _siteConfig.SiteInfo?.UnitNumber ?? "Unknown",
                     location = _siteConfig.SiteInfo?.Location ?? "",
-                    plcIp = _siteConfig.PlcConfig?.Ip ?? "",
-                    plcPort = _siteConfig.PlcConfig?.Port ?? 0,
-                    commandCount = _siteConfig.ControlCommands?.Count ?? 0,
-                    dataAddressCount = _siteConfig.DataAddresses?.Count ?? 0
+                    commandCount = _siteConfig.ControlCommands?.Count ?? 0
                 });
             }
             catch (Exception ex)
@@ -170,10 +142,13 @@ namespace Parking24web.Server.Hubs
                 return -1;
             }
 
-            if (_siteConfig.ControlCommands.TryGetValue(commandName, out int address))
+            if (_siteConfig.ControlCommands.TryGetValue(commandName, out var command))
             {
-                _logger.LogDebug($"명령 주소 조회: {commandName} = P{address}");
-                return address;
+                if (command != null)
+                {
+                    _logger.LogDebug($"명령 주소 조회: {commandName} = {command.DeviceType}{command.Address}");
+                    return command.Address;
+                }
             }
 
             _logger.LogWarning($"명령 주소를 찾을 수 없습니다: {commandName}");
@@ -232,7 +207,14 @@ namespace Parking24web.Server.Hubs
                         return;
                 }
 
-                _logger.LogInformation($"PLC 명령 전송: {request.CommandType} {request.DeviceType}{request.Address} = {request.Value}");
+                if (request.CommandType.ToLower() == "writebit")
+                {
+                    _logger.LogInformation($"PLC 명령 전송: {request.CommandType} {request.DeviceType}{request.Address}.{request.BitPosition} = {(request.Value > 0 ? "ON" : "OFF")}");
+                }
+                else
+                {
+                    _logger.LogInformation($"PLC 명령 전송: {request.CommandType} {request.DeviceType}{request.Address} = {request.Value}");
+                }
                 await Clients.Caller.SendAsync("CommandExecuted", request);
             }
             catch (Exception ex)
@@ -247,22 +229,42 @@ namespace Parking24web.Server.Hubs
         {
             try
             {
-                int address = GetCommandAddress(commandName);
-                if (address == -1)
+                if (_siteConfig.ControlCommands == null || !_siteConfig.ControlCommands.TryGetValue(commandName, out var command) || command == null)
                 {
                     await Clients.Caller.SendAsync("Error", $"명령을 찾을 수 없습니다: {commandName}");
                     return;
                 }
 
-                await SendPLCCommand(new PLCCommandRequest
+                // BitPosition이 있으면 비트 단위 제어, 없으면 워드 단위 제어
+                bool isBitCommand = command.BitPosition.HasValue;
+                
+                if (isBitCommand)
                 {
-                    CommandType = "writeword",
-                    DeviceType = "P",
-                    Address = address,
-                    Value = value
-                });
+                    // 비트 단위 제어: value가 0이면 OFF, 0이 아니면 ON
+                    await SendPLCCommand(new PLCCommandRequest
+                    {
+                        CommandType = "writebit",
+                        DeviceType = command.DeviceType,
+                        Address = command.Address,
+                        BitPosition = command.BitPosition.Value,
+                        Value = value > 0 ? 1 : 0
+                    });
 
-                _logger.LogInformation($"Config 명령 전송: {commandName} (P{address}) = {value}");
+                    _logger.LogInformation($"Config 명령 전송: {commandName} ({command.DeviceType}{command.Address}.{command.BitPosition.Value}) = {(value > 0 ? "ON" : "OFF")}");
+                }
+                else
+                {
+                    // 워드 단위 제어: value를 그대로 전송
+                    await SendPLCCommand(new PLCCommandRequest
+                    {
+                        CommandType = "writeword",
+                        DeviceType = command.DeviceType,
+                        Address = command.Address,
+                        Value = value
+                    });
+
+                    _logger.LogInformation($"Config 명령 전송: {commandName} ({command.DeviceType}{command.Address}) = {value}");
+                }
             }
             catch (Exception ex)
             {

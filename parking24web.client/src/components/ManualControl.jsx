@@ -142,7 +142,7 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
 
                     newStates[sensorKey] = {
                         value: bitValue === 1,
-                        address: `${currentConfig.plcConfig.deviceType}${address}`,
+                        address: `${currentConfig.plcConfig?.deviceType || 'P'}${address}`,
                         bitIndex: parseInt(bitIndex),
                         wordIndex: address,
                         name: sensorInfo.name,
@@ -168,9 +168,9 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
         const transformedKey = sensorKey.replace(/[^a-zA-Z0-9]/g, '_');
         const sensor = sensorStates[transformedKey];
         if (sensor) {
-            return `${currentConfig.plcConfig.deviceType}${sensor.wordIndex}.${sensor.bitIndex}`;
+            return `${currentConfig.plcConfig?.deviceType || 'P'}${sensor.wordIndex}.${sensor.bitIndex}`;
         }
-        return `${currentConfig.plcConfig.deviceType}--.--`;
+        return `${currentConfig.plcConfig?.deviceType || 'P'}--.--`;
     };
 
     // config에서 센서 키 추출하는 헬퍼 함수
@@ -2194,11 +2194,11 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
                             {/* 두 번째 줄: 리프트측선택, 슬라이더선택, 전면선택, 후면선택 */}
                             <div className="page2-second-row flex gap-5 justify-center items-center flex-wrap">
                                 <HoldButton 
-                                    commandName="remoteSliderSelect1" 
+                                    commandName="remoteLiftSideSelect1" 
                                     label="리프트측선택" 
                                     onPress={sendCommand} 
                                     disabled={isDisabled} 
-                                    busy={isResourceBusy("remoteSliderSelect1")} 
+                                    busy={isResourceBusy("remoteLiftSideSelect1")} 
                                     theme={theme} 
                                     className="common-button" 
                                 />
@@ -2448,11 +2448,11 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
                             {/* 두 번째 줄: 리프트측선택, 슬라이더선택, 전면선택, 후면선택 */}
                             <div className="page2-second-row flex gap-5 justify-center items-center flex-wrap">
                                 <HoldButton 
-                                    commandName="remoteSliderSelect2" 
+                                    commandName="remoteLiftSideSelect2" 
                                     label="리프트측선택" 
                                     onPress={sendCommand} 
                                     disabled={isDisabled} 
-                                    busy={isResourceBusy("remoteSliderSelect2")} 
+                                    busy={isResourceBusy("remoteLiftSideSelect2")} 
                                     theme={theme} 
                                     className="common-button" 
                                 />
@@ -2710,11 +2710,11 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
                             {/* 두 번째 줄: 리프트측선택, 슬라이더선택, 전면선택, 후면선택 */}
                             <div className="page2-second-row flex gap-5 justify-center items-center flex-wrap">
                                 <HoldButton 
-                                    commandName="remoteSliderSelect4" 
+                                    commandName="remoteLiftSideSelect4" 
                                     label="리프트측선택" 
                                     onPress={sendCommand} 
                                     disabled={isDisabled} 
-                                    busy={isResourceBusy("remoteSliderSelect4")} 
+                                    busy={isResourceBusy("remoteLiftSideSelect4")} 
                                     theme={theme} 
                                     className="common-button" 
                                 />
@@ -2962,11 +2962,11 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
                             {/* 두 번째 줄: 리프트측선택, 슬라이더선택, 전면선택, 후면선택 */}
                             <div className="page2-second-row flex gap-5 justify-center items-center flex-wrap">
                                 <HoldButton 
-                                    commandName="remoteSliderSelect5" 
+                                    commandName="remoteLiftSideSelect5" 
                                     label="리프트측선택" 
                                     onPress={sendCommand} 
                                     disabled={isDisabled} 
-                                    busy={isResourceBusy("remoteSliderSelect5")} 
+                                    busy={isResourceBusy("remoteLiftSideSelect5")} 
                                     theme={theme} 
                                     className="common-button" 
                                 />

@@ -1,4 +1,5 @@
 ﻿using System.Collections.Concurrent;
+using Microsoft.Extensions.Options;
 
 namespace Parking24web.Server.Services
 {
@@ -18,11 +19,12 @@ namespace Parking24web.Server.Services
         private const int HEARTBEAT_INTERVAL = 1000; // 1초
 
         // 현장별 설정
-        private SiteConfig? _currentSiteConfig;
+        private readonly SiteConfiguration? _siteConfig;
 
-        public PLCService()
+        public PLCService(IOptions<SiteConfiguration> siteConfig = null)
         {
             _plc = new LSIS_FENet(0);
+             _siteConfig = siteConfig?.Value;
         }
 
         #region 연결 관리
@@ -105,8 +107,38 @@ namespace Parking24web.Server.Services
         {
             if (!IsConnected) return;
 
-            string plcAddress = $"%{deviceType}X{address}.{bitPosition:X}";
-            _plc.RegisterWriteBit(plcAddress, value);
+            // 비트 단위 쓰기가 작동하지 않으므로
+            // 워드를 읽어서 비트를 변경한 후 다시 쓰는 방식 사용
+            lock (_lock)
+            {
+                try
+                {
+                    // 현재 워드 값 읽기
+                    ushort[] data = GetSensorData();
+                    if (address >= data.Length) return;
+
+                    ushort currentValue = data[address];
+
+                    // 해당 비트 설정/해제
+                    if (value)
+                    {
+                        // 비트 ON: OR 연산 (예: 3번 비트 ON = 2^3 = 8)
+                        currentValue |= (ushort)(1 << bitPosition);
+                    }
+                    else
+                    {
+                        // 비트 OFF: AND 연산
+                        currentValue &= (ushort)(~(1 << bitPosition));
+                    }
+
+                    // 변경된 값 쓰기
+                    WriteWord(deviceType, address, currentValue);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"비트 쓰기 오류 (워드 방식): {ex.Message}");
+                }
+            }
         }
 
         #endregion
@@ -170,26 +202,28 @@ namespace Parking24web.Server.Services
 
         #region 현장별 설정
 
-        public void LoadSiteConfig(SiteConfig config)
-        {
-            _currentSiteConfig = config;
-        }
-
         public Dictionary<string, object> GetParsedSensorData()
         {
-            if (_currentSiteConfig == null || !IsConnected)
+            if (_siteConfig?.PlcConfig == null || !IsConnected)
                 return new Dictionary<string, object>();
 
             var rawData = GetSensorData();
             var result = new Dictionary<string, object>();
 
             // 현장 설정에 따라 센서값 파싱
-            var config = _currentSiteConfig.PlcConfig;
-            int startAddress = GetAddressIndex(config.AddressType, config.StartNumber);
+            var config = _siteConfig.PlcConfig;
+            
+            // SensorOffsets가 없으면 빈 결과 반환
+            if (config.SensorOffsets == null)
+                return result;
+
+            // StartAddress는 보통 0이므로 센서 주소를 직접 사용
+            int baseAddress = config.StartAddress;
 
             foreach (var sensor in config.SensorOffsets)
             {
-                int actualAddress = startAddress + sensor.Value;
+                  // 센서 오프셋이 실제 주소를 나타냄 (예: 60, 61, 62 등)
+                int actualAddress = baseAddress + sensor.Value;
                 if (actualAddress < rawData.Length)
                 {
                     ushort value = rawData[actualAddress];
@@ -200,13 +234,6 @@ namespace Parking24web.Server.Services
             return result;
         }
 
-        private int GetAddressIndex(string addressType, int startNumber)
-        {
-            // P101 -> 배열 인덱스 101
-            // P51 -> 배열 인덱스 51  
-            return startNumber;
-        }
-
         #endregion
 
         public void Dispose()
@@ -215,22 +242,5 @@ namespace Parking24web.Server.Services
             Disconnect();
             _plc?.Dispose();
         }
-    }
-
-    // 현장별 설정 클래스
-    public class SiteConfig
-    {
-        public string SiteName { get; set; } = string.Empty;
-        public PlcConfig PlcConfig { get; set; } = new();
-    }
-
-    public class PlcConfig
-    {
-        public string Ip { get; set; } = string.Empty;
-        public int Port { get; set; } = 2005;
-        public string AddressType { get; set; } = "P";
-        public int StartNumber { get; set; } = 101;
-        public Dictionary<string, int> SensorOffsets { get; set; } = new();
-        public Dictionary<string, int> ControlOffsets { get; set; } = new();
     }
 }

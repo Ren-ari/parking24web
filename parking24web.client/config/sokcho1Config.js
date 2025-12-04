@@ -9,6 +9,12 @@ export const sokcho1Config = {
         description: "속초 현장 1호기 주차타워"
     },
 
+    // PLC 기본 설정
+    plcConfig: {
+        deviceType: "C",
+        startAddress: 0
+    },
+
     // 연결 버튼 구성
     connectionConfig: {
         buttons: [

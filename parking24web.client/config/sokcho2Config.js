@@ -9,6 +9,12 @@ export const sokcho2Config = {
         description: "속초 현장 2,3호기 주차타워"
     },
 
+    // PLC 기본 설정
+    plcConfig: {
+        deviceType: "C",
+        startAddress: 0
+    },
+
     // 연결 버튼 구성
     connectionConfig: {
         buttons: [
@@ -351,7 +357,7 @@ export const sokcho2Config = {
             { number: 9, name: 'Channel 9 (D9)' }
         ],
         defaultConnection: {
-            ipAddress: '222.113.92.40',
+            ipAddress: 'epscctv02.iptime.org',
             port: 8081,
             rtspPort: 8889,
             username: 'admin',

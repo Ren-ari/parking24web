@@ -6,7 +6,7 @@ using Parking24web.Server.Services;
 var builder = WebApplication.CreateBuilder(args);
 
 // 환경별 설정 파일 로드
-var siteName = args.Length > 0 ? args[0] : "Sokcho1";
+var siteName = args.Length > 0 ? args[0] : "GabEulMyeongGa";
 Console.WriteLine($"사이트 이름: {siteName}");
 
 // 사이트별 설정 파일 로드
@@ -22,7 +22,7 @@ else
     Console.WriteLine("기본 설정을 사용합니다.");
 }
 
-var urls = builder.Configuration["Urls"] ?? "http://0.0.0.0:5123";
+var urls = builder.Configuration["Urls"] ?? "http://0.0.0.0:5125";
 builder.WebHost.UseUrls(urls);
 
 // 기본 서비스들
@@ -120,7 +120,7 @@ try
     var logger = app.Services.GetRequiredService<ILogger<Program>>();
 
     logger.LogInformation($"사이트 정보: {siteConfig.SiteInfo?.Name} {siteConfig.SiteInfo?.UnitNumber}");
-    logger.LogInformation($"PLC 연결: {siteConfig.PlcConfig?.Ip}:{siteConfig.PlcConfig?.Port}");
+    logger.LogInformation($"PLC 설정: StartAddress={siteConfig.PlcConfig?.StartAddress}");
     logger.LogInformation($"제어 명령 개수: {siteConfig.ControlCommands?.Count ?? 0}개");
 
     // 필수 설정 검증
@@ -229,12 +229,17 @@ public class SiteConfiguration
     public SiteInfo? SiteInfo { get; set; }
     public PlcConfig? PlcConfig { get; set; }
     public SystemAddresses? SystemAddresses { get; set; }
-    public Dictionary<string, int>? ControlCommands { get; set; }
-    public Dictionary<string, int>? DataAddresses { get; set; }
+    public Dictionary<string, ControlCommand>? ControlCommands { get; set; }
     public VehicleStorage? VehicleStorage { get; set; }
     public Dictionary<string, int>? LiftPositions { get; set; }
-    public ParkingMonitor? ParkingMonitor { get; set; }
-    public SensorRanges? SensorRanges { get; set; }
+}
+
+public class ControlCommand
+{
+    public string DeviceType { get; set; } = string.Empty;
+    public int Address { get; set; }
+    public int? BitPosition { get; set; }
+    public string Description { get; set; } = string.Empty;
 }
 
 public class SiteInfo
@@ -247,10 +252,8 @@ public class SiteInfo
 
 public class PlcConfig
 {
-    public string Ip { get; set; } = string.Empty;
-    public int Port { get; set; } = 2005;
-    public string DeviceType { get; set; } = "C";
     public int StartAddress { get; set; } = 0;
+    public Dictionary<string, int>? SensorOffsets { get; set; }
 }
 
 public class SystemAddresses
@@ -271,17 +274,6 @@ public class VehicleStorage
     public int StartAddress { get; set; }
     public int EndAddress { get; set; }
     public int TotalSlots { get; set; }
-}
-
-public class ParkingMonitor
-{
-    public int VehicleAddressStart { get; set; }
-    public int VehicleAddressEnd { get; set; }
-    public int TotalSlots { get; set; }
-    public bool HasPlateStatus { get; set; }
-    public int LiftPositionStart { get; set; }
-    public int EntranceLevel { get; set; }
-    public int TurnLevel { get; set; }
 }
 
 public class SensorRanges
