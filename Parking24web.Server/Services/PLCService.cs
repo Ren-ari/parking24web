@@ -88,8 +88,10 @@ namespace Parking24web.Server.Services
         {
             if (!IsConnected) return new ushort[256];
 
-            // 연속 읽기 요청
-            _plc.RegisterReadW("%PB0");
+            // 연속 읽기 요청 (StartAddress부터 256 워드)
+            int startAddress = _siteConfig?.PlcConfig?.StartAddress ?? 0;
+            int byteAddress = startAddress * 2; // 워드 주소를 바이트 주소로 변환
+            _plc.RegisterReadW($"%PB{byteAddress}");
             // Sleep 제거 - LSIS_FENet이 내부적으로 처리
 
             return _plc.DataBuff;

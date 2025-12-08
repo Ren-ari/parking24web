@@ -65,8 +65,8 @@ namespace Parking24web.Server.Services
 
             // C101~C180 영역 체크 (주차 슬롯 80개)
             // 설정 기반 차량 주소 범위 사용
-            var vehicleStart = _siteConfig.VehicleStorage?.StartAddress ?? 101;
-            var vehicleEnd = _siteConfig.VehicleStorage?.EndAddress ?? 180;
+            var vehicleStart = _siteConfig.VehicleStorage?.StartAddress ?? 211;
+            var vehicleEnd = _siteConfig.VehicleStorage?.EndAddress ?? 300;
 
             for (int i = vehicleStart; i <= vehicleEnd; i++)
             {
@@ -78,7 +78,7 @@ namespace Parking24web.Server.Services
                 if (prev == 0 && curr != 0)
                 {
                     var slotNumber = i - vehicleStart + 1;
-                    var floor = Math.Ceiling(slotNumber / 2.0);
+                    var floor = Math.Ceiling(slotNumber / 15.0);
 
                     events.Add(new ParkingEvent
                     {
@@ -89,13 +89,13 @@ namespace Parking24web.Server.Services
                         Floor = (int)floor
                     });
 
-                    _logger.LogInformation($"입차 감지: {curr.ToString().PadLeft(4, '0')} - {floor}층 {slotNumber}번");
+                    _logger.LogInformation($"입차 감지: {curr.ToString().PadLeft(4, '0')} - {floor}단 {slotNumber}번");
                 }
                 else if (prev != 0 && curr == 0)
                 {
                     // 출차 감지
-                    var slotNumber = i - 100;
-                    var floor = Math.Ceiling(slotNumber / 2.0);
+                    var slotNumber = i - vehicleStart + 1;
+                    var floor = Math.Ceiling(slotNumber / 15.0);
 
                     events.Add(new ParkingEvent
                     {

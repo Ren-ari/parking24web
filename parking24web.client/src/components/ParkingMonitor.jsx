@@ -54,8 +54,11 @@ const ParkingMonitor = ({ sensorData, isPLCConnected }) => {
 
     // PLC 값 가져오기
     const getPLCValue = (address) => {
-        if (!sensorData?.rawData || address >= sensorData.rawData.length) return 0;
-        return sensorData.rawData[address];
+        if (!sensorData?.rawData) return 0;
+        const startAddressOffset = siteConfig.plcConfig?.startAddress || 0;
+        const bufferIndex = address - startAddressOffset;
+        if (bufferIndex < 0 || bufferIndex >= sensorData.rawData.length) return 0;
+        return sensorData.rawData[bufferIndex];
     };
 
     // 차량 상태 색상 (개선된 디자인)

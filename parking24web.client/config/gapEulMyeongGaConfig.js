@@ -21,7 +21,7 @@ export const gapEulMyeongGaConfig = {
             {
                 unit: 1,
                 name: "1호기",
-                ip: "192.168.1.2",
+                ip: "192.168.0.100",
                 port: 2005
             },
         ]

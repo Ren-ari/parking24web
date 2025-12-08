@@ -152,7 +152,7 @@ const AnalyticsDashboard = () => {
             return [];
         }
 
-       // API 응답: { slotNumber, count }
+        // API 응답: { slotNumber, count }
         // Nivo Pie 차트 형식: { id, label, value }
         const result = data
             .slice(0, 5)
@@ -174,7 +174,7 @@ const AnalyticsDashboard = () => {
                 const currentHost = window.location.host;  // 예: "222.113.92.40:5124" or "localhost:5173"
                 const currentProtocol = window.location.protocol;  // "http:" or "https:"
 
-                // 개발 환경 감지 (Vite dev server는 5173 포트 사용)ㄴ
+                // 개발 환경 감지 (Vite dev server는 5173 포트 사용)
                 if (currentHost.includes(':5173')) {
                     return `http://localhost:${siteConfig.api.devPort}`;
                 }
@@ -221,17 +221,16 @@ const AnalyticsDashboard = () => {
     useEffect(() => {
         fetchAllAnalytics();
     }, [fetchAllAnalytics]);
-     
 
-     // isMobile이 변경될 때마다 topSlotsData 재처리
+    // isMobile이 변경될 때마다 topSlotsData 재처리
     useEffect(() => {
         if (topSlotsRawData.length > 0) {
             setTopSlotsData(processTopSlotsData(topSlotsRawData));
         }
     }, [isMobile, topSlotsRawData, processTopSlotsData]);
 
-      // 스타일 메모이제이션
-      const chartHeightStyle = useMemo(() => ({
+    // 스타일 메모이제이션
+    const chartHeightStyle = useMemo(() => ({
         height: isMobile ? 250 : 300
     }), [isMobile]);
 
@@ -244,7 +243,7 @@ const AnalyticsDashboard = () => {
         border: `1px solid ${theme === 'space' ? '#444' : '#ddd'}`,
         padding: '8px 12px',
         whiteSpace: 'nowrap'
-    }), [theme]);   
+    }), [theme]);
 
     if (loading) {
         return (
@@ -256,8 +255,8 @@ const AnalyticsDashboard = () => {
         );
     }
 
-    return (
-        <div className="space-y-6">
+        return (
+            <div className="space-y-6">
             {/* 반응형 그리드: 모바일 1열, 태블릿 1열, PC 2열 */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* 월별 입출차 추이 */}
@@ -272,7 +271,7 @@ const AnalyticsDashboard = () => {
                             indexBy="month"
                             margin={{ top: 60, right: 10, bottom: 50, left: 40 }}
                             padding={0.2}
-                            valueScale={{ type: 'linear', min: 0, max: 1000 }}
+                            valueScale={{ type: 'linear', min: 0, max: 1600 }}
                             indexScale={{ type: 'band', round: true }}
                             colors={barColors}
                             borderRadius={0}
@@ -384,7 +383,7 @@ const AnalyticsDashboard = () => {
                             ]}
                             margin={{ top: 60, right: 10, bottom: 50, left: 30 }}
                             xScale={{ type: 'point' }}
-                            yScale={{ type: 'linear', min: 0, max: '100', stacked: false, reverse: false }}
+                            yScale={{ type: 'linear', min: 0, max: '600', stacked: false, reverse: false }}
                             curve="monotoneX"
                             axisTop={null}
                             axisRight={null}
@@ -524,7 +523,7 @@ const AnalyticsDashboard = () => {
                                 left: isMobile ? 20 : 30 
                             }}
                             xScale={{ type: 'linear', min: 0, max: 23 }}
-                            yScale={{ type: 'linear', min: '0', max: '50', stacked: false }}
+                            yScale={{ type: 'linear', min: '0', max: '100', stacked: false }}
                             curve="catmullRom"
                             axisTop={null}
                             axisRight={null}

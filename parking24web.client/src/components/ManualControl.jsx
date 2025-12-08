@@ -46,9 +46,8 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
 
     // 리소스별 전송 중 상태
     const [pendingResources, setPendingResources] = useState(new Set());
-
-
     const currentConfig = siteConfig;
+    const startAddressOffset = currentConfig.plcConfig?.startAddress || 0;
 
     // 센서 패널 위치 조정을 위한 useEffect
     useEffect(() => {
@@ -127,13 +126,16 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
         if (!sensorData || !sensorData.rawData) return;
 
         const newStates = {};
+        const startAddressOffset = currentConfig.plcConfig?.startAddress || 0;
 
         // currentConfig의 센서 매핑을 기반으로 센서 상태 업데이트
         Object.entries(currentConfig.sensorMapping).forEach(([ , configData]) => {
             const { address, sensors } = configData;
+            const bufferIndex = address - startAddressOffset;
 
-            if (address < sensorData.rawData.length) {
-                const wordValue = sensorData.rawData[address];
+            if (bufferIndex >= 0 && bufferIndex < sensorData.rawData.length) {
+                const wordValue = sensorData.rawData[bufferIndex];
+                const actualAddress = address;
 
                 // 각 비트별 센서 상태 확인
                 Object.entries(sensors).forEach(([bitIndex, sensorInfo]) => {
@@ -142,9 +144,10 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
 
                     newStates[sensorKey] = {
                         value: bitValue === 1,
-                        address: `${currentConfig.plcConfig?.deviceType || 'P'}${address}`,
+                        address: `${currentConfig.plcConfig?.deviceType || 'P'}${actualAddress}`,
                         bitIndex: parseInt(bitIndex),
-                        wordIndex: address,
+                        wordIndex: bufferIndex,
+                        actualAddress: actualAddress,
                         name: sensorInfo.name,
                         description: sensorInfo.description,
                         category: sensorInfo.category
@@ -168,7 +171,8 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
         const transformedKey = sensorKey.replace(/[^a-zA-Z0-9]/g, '_');
         const sensor = sensorStates[transformedKey];
         if (sensor) {
-            return `${currentConfig.plcConfig?.deviceType || 'P'}${sensor.wordIndex}.${sensor.bitIndex}`;
+            const actualAddress = sensor.actualAddress !== undefined ? sensor.actualAddress : (sensor.wordIndex + (currentConfig.plcConfig?.startAddress || 0));
+            return `${currentConfig.plcConfig?.deviceType || 'P'}${actualAddress}.${sensor.bitIndex}`;
         }
         return `${currentConfig.plcConfig?.deviceType || 'P'}--.--`;
     };
@@ -2058,96 +2062,96 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
                     {activeTab === 'page2' && (
                         <div className="flex flex-col items-center gap-20 px-4">
 
-                            {/* 1단 카트 상태 데이터 (P160-P169) */}
+                            {/* 1단 카트 상태 데이터 */}
                             <div className={`hidden md:grid grid-cols-4 gap-4 max-w-4xl w-full mb-0 mt-0 -mb-8 ${theme === 'space' ? 'space-theme' : ''}`}>
                                 <div className={`data-value-card ${theme === 'space' ? 'space-theme' : ''}`}>
                                     <div className="data-label">카트적재파렛번호</div>
-                                    <div className="data-value">{sensorData?.rawData?.[currentConfig.pageDataAddresses.page2.cartLoadPalletNumber] || 0}</div>
-                                    <div className="data-address">P160</div>
+                                    <div className="data-value">{sensorData?.rawData?.[currentConfig.pageDataAddresses.page2.cartLoadPalletNumber - startAddressOffset] || 0}</div>
+                                    <div className="data-address">P{currentConfig.pageDataAddresses.page2.cartLoadPalletNumber}</div>
                                 </div>
                                 <div className={`data-value-card ${theme === 'space' ? 'space-theme' : ''}`}>
                                     <div className="data-label">룸측카운터</div>
-                                    <div className="data-value">{sensorData?.rawData?.[currentConfig.pageDataAddresses.page2.roomSideCounter] || 0}</div>
-                                    <div className="data-address">P161</div>
+                                    <div className="data-value">{sensorData?.rawData?.[currentConfig.pageDataAddresses.page2.roomSideCounter - startAddressOffset] || 0}</div>
+                                    <div className="data-address">P{currentConfig.pageDataAddresses.page2.roomSideCounter}</div>
                                 </div>
                                 <div className={`data-value-card ${theme === 'space' ? 'space-theme' : ''}`}>
                                     <div className="data-label">리프트측카운터</div>
-                                    <div className="data-value">{sensorData?.rawData?.[currentConfig.pageDataAddresses.page2.liftSideCounter] || 0}</div>
-                                    <div className="data-address">P162</div>
+                                    <div className="data-value">{sensorData?.rawData?.[currentConfig.pageDataAddresses.page2.liftSideCounter - startAddressOffset] || 0}</div>
+                                    <div className="data-address">P{currentConfig.pageDataAddresses.page2.liftSideCounter}</div>
                                 </div>
                                 <div className={`data-value-card ${theme === 'space' ? 'space-theme' : ''}`}>
                                     <div className="data-label">상태메시지 1</div>
-                                    <div className="data-value">{sensorData?.rawData?.[currentConfig.pageDataAddresses.page2.statusMessage1] || 0}</div>
-                                    <div className="data-address">P163</div>
+                                    <div className="data-value">{sensorData?.rawData?.[currentConfig.pageDataAddresses.page2.statusMessage1 - startAddressOffset] || 0}</div>
+                                    <div className="data-address">P{currentConfig.pageDataAddresses.page2.statusMessage1}</div>
                                 </div>
                                 <div className={`data-value-card ${theme === 'space' ? 'space-theme' : ''}`}>
                                     <div className="data-label">상태메시지 2</div>
-                                    <div className="data-value">{sensorData?.rawData?.[currentConfig.pageDataAddresses.page2.statusMessage2] || 0}</div>
-                                    <div className="data-address">P164</div>
+                                    <div className="data-value">{sensorData?.rawData?.[currentConfig.pageDataAddresses.page2.statusMessage2 - startAddressOffset] || 0}</div>
+                                    <div className="data-address">P{currentConfig.pageDataAddresses.page2.statusMessage2}</div>
                                 </div>
                                 <div className={`data-value-card ${theme === 'space' ? 'space-theme' : ''}`}>
                                     <div className="data-label">상태메시지 3</div>
-                                    <div className="data-value">{sensorData?.rawData?.[currentConfig.pageDataAddresses.page2.statusMessage3] || 0}</div>
-                                    <div className="data-address">P165</div>
+                                    <div className="data-value">{sensorData?.rawData?.[currentConfig.pageDataAddresses.page2.statusMessage3 - startAddressOffset] || 0}</div>
+                                    <div className="data-address">P{currentConfig.pageDataAddresses.page2.statusMessage3}</div>
                                 </div>
                                 <div className={`data-value-card ${theme === 'space' ? 'space-theme' : ''}`}>
                                     <div className="data-label">이송파렛번호</div>
-                                    <div className="data-value">{sensorData?.rawData?.[currentConfig.pageDataAddresses.page2.cartToLiftTransferPallet] || 0}</div>
-                                    <div className="data-address">P166</div>
+                                    <div className="data-value">{sensorData?.rawData?.[currentConfig.pageDataAddresses.page2.cartToLiftTransferPallet - startAddressOffset] || 0}</div>
+                                    <div className="data-address">P{currentConfig.pageDataAddresses.page2.cartToLiftTransferPallet}</div>
                                 </div>
                                 <div className={`data-value-card ${theme === 'space' ? 'space-theme' : ''}`}>
                                     <div className="data-label">에러리스트 1</div>
-                                    <div className="data-value">{sensorData?.rawData?.[currentConfig.pageDataAddresses.page2.errorList1] || 0}</div>
-                                    <div className="data-address">P167</div>
+                                    <div className="data-value">{sensorData?.rawData?.[currentConfig.pageDataAddresses.page2.errorList1 - startAddressOffset] || 0}</div>
+                                    <div className="data-address">P{currentConfig.pageDataAddresses.page2.errorList1}</div>
                                 </div>
                                 <div className={`data-value-card ${theme === 'space' ? 'space-theme' : ''}`}>
                                     <div className="data-label">에러리스트 2</div>
-                                    <div className="data-value">{sensorData?.rawData?.[currentConfig.pageDataAddresses.page2.errorList2] || 0}</div>
-                                    <div className="data-address">P168</div>
+                                    <div className="data-value">{sensorData?.rawData?.[currentConfig.pageDataAddresses.page2.errorList2 - startAddressOffset] || 0}</div>
+                                    <div className="data-address">P{currentConfig.pageDataAddresses.page2.errorList2}</div>
                                 </div>
                                 <div className={`data-value-card ${theme === 'space' ? 'space-theme' : ''}`}>
                                     <div className="data-label">에러리스트 3</div>
-                                    <div className="data-value">{sensorData?.rawData?.[currentConfig.pageDataAddresses.page2.errorList3] || 0}</div>
-                                    <div className="data-address">P169</div>
+                                    <div className="data-value">{sensorData?.rawData?.[currentConfig.pageDataAddresses.page2.errorList3 - startAddressOffset] || 0}</div>
+                                    <div className="data-address">P{currentConfig.pageDataAddresses.page2.errorList3}</div>
                                 </div>
                             </div>
 
                             {/* LED 상태 표시 영역 */}
                             <div className={`hidden md:grid grid-cols-4 gap-4 max-w-4xl w-full mb-0 -mt-8 ${theme === 'space' ? 'space-theme' : ''}`}>
                                 <div className={`led-status-card ${theme === 'space' ? 'space-theme' : ''}`}>
-                                    <div className={`led-indicator ${sensorData?.rawData?.[currentConfig.pageDataAddresses.page2.remoteManualMode.address] && (sensorData.rawData[currentConfig.pageDataAddresses.page2.remoteManualMode.address] >> currentConfig.pageDataAddresses.page2.remoteManualMode.bit) & 1 ? 'on' : 'off'}`}></div>
+                                    <div className={`led-indicator ${sensorData?.rawData?.[currentConfig.pageDataAddresses.page2.remoteManualMode.address - startAddressOffset] && (sensorData.rawData[currentConfig.pageDataAddresses.page2.remoteManualMode.address - startAddressOffset] >> currentConfig.pageDataAddresses.page2.remoteManualMode.bit) & 1 ? 'on' : 'off'}`}></div>
                                     <div className="led-label">수동모드</div>
-                                    <div className="led-address">P129.0</div>
+                                    <div className="led-address">P{currentConfig.pageDataAddresses.page2.remoteManualMode.address}.{currentConfig.pageDataAddresses.page2.remoteManualMode.bit}</div>
                                 </div>
                                 <div className={`led-status-card ${theme === 'space' ? 'space-theme' : ''}`}>
-                                    <div className={`led-indicator ${sensorData?.rawData?.[currentConfig.pageDataAddresses.page2.remoteSemiAutoMode.address] && (sensorData.rawData[currentConfig.pageDataAddresses.page2.remoteSemiAutoMode.address] >> currentConfig.pageDataAddresses.page2.remoteSemiAutoMode.bit) & 1 ? 'on' : 'off'}`}></div>
+                                    <div className={`led-indicator ${sensorData?.rawData?.[currentConfig.pageDataAddresses.page2.remoteSemiAutoMode.address - startAddressOffset] && (sensorData.rawData[currentConfig.pageDataAddresses.page2.remoteSemiAutoMode.address - startAddressOffset] >> currentConfig.pageDataAddresses.page2.remoteSemiAutoMode.bit) & 1 ? 'on' : 'off'}`}></div>
                                     <div className="led-label">반자동모드</div>
-                                    <div className="led-address">P129.1</div>
+                                    <div className="led-address">P{currentConfig.pageDataAddresses.page2.remoteSemiAutoMode.address}.{currentConfig.pageDataAddresses.page2.remoteSemiAutoMode.bit}</div>
                                 </div>
                                 <div className={`led-status-card ${theme === 'space' ? 'space-theme' : ''}`}>
-                                    <div className={`led-indicator ${sensorData?.rawData?.[currentConfig.pageDataAddresses.page2.remoteSliderSelect.address] && (sensorData.rawData[currentConfig.pageDataAddresses.page2.remoteSliderSelect.address] >> currentConfig.pageDataAddresses.page2.remoteSliderSelect.bit) & 1 ? 'on' : 'off'}`}></div>
+                                    <div className={`led-indicator ${sensorData?.rawData?.[currentConfig.pageDataAddresses.page2.remoteSliderSelect.address - startAddressOffset] && (sensorData.rawData[currentConfig.pageDataAddresses.page2.remoteSliderSelect.address - startAddressOffset] >> currentConfig.pageDataAddresses.page2.remoteSliderSelect.bit) & 1 ? 'on' : 'off'}`}></div>
                                     <div className="led-label">슬라이더선택</div>
-                                    <div className="led-address">P129.2</div>
+                                    <div className="led-address">P{currentConfig.pageDataAddresses.page2.remoteSliderSelect.address}.{currentConfig.pageDataAddresses.page2.remoteSliderSelect.bit}</div>
                                 </div>
                                 <div className={`led-status-card ${theme === 'space' ? 'space-theme' : ''}`}>
-                                    <div className={`led-indicator ${sensorData?.rawData?.[currentConfig.pageDataAddresses.page2.remoteLiftSelect.address] && (sensorData.rawData[currentConfig.pageDataAddresses.page2.remoteLiftSelect.address] >> currentConfig.pageDataAddresses.page2.remoteLiftSelect.bit) & 1 ? 'on' : 'off'}`}></div>
+                                    <div className={`led-indicator ${sensorData?.rawData?.[currentConfig.pageDataAddresses.page2.remoteLiftSelect.address - startAddressOffset] && (sensorData.rawData[currentConfig.pageDataAddresses.page2.remoteLiftSelect.address - startAddressOffset] >> currentConfig.pageDataAddresses.page2.remoteLiftSelect.bit) & 1 ? 'on' : 'off'}`}></div>
                                     <div className="led-label">리프트선택</div>
-                                    <div className="led-address">P129.3</div>
+                                    <div className="led-address">P{currentConfig.pageDataAddresses.page2.remoteLiftSelect.address}.{currentConfig.pageDataAddresses.page2.remoteLiftSelect.bit}</div>
                                 </div>
                                 <div className={`led-status-card ${theme === 'space' ? 'space-theme' : ''}`}>
-                                    <div className={`led-indicator ${sensorData?.rawData?.[currentConfig.pageDataAddresses.page2.remoteFrontSliderSelect.address] && (sensorData.rawData[currentConfig.pageDataAddresses.page2.remoteFrontSliderSelect.address] >> currentConfig.pageDataAddresses.page2.remoteFrontSliderSelect.bit) & 1 ? 'on' : 'off'}`}></div>
+                                    <div className={`led-indicator ${sensorData?.rawData?.[currentConfig.pageDataAddresses.page2.remoteFrontSliderSelect.address - startAddressOffset] && (sensorData.rawData[currentConfig.pageDataAddresses.page2.remoteFrontSliderSelect.address - startAddressOffset] >> currentConfig.pageDataAddresses.page2.remoteFrontSliderSelect.bit) & 1 ? 'on' : 'off'}`}></div>
                                     <div className="led-label">전면슬라이더선택</div>
-                                    <div className="led-address">P129.4</div>
+                                    <div className="led-address">P{currentConfig.pageDataAddresses.page2.remoteFrontSliderSelect.address}.{currentConfig.pageDataAddresses.page2.remoteFrontSliderSelect.bit}</div>
                                 </div>
                                 <div className={`led-status-card ${theme === 'space' ? 'space-theme' : ''}`}>
-                                    <div className={`led-indicator ${sensorData?.rawData?.[currentConfig.pageDataAddresses.page2.remoteRearSliderSelect.address] && (sensorData.rawData[currentConfig.pageDataAddresses.page2.remoteRearSliderSelect.address] >> currentConfig.pageDataAddresses.page2.remoteRearSliderSelect.bit) & 1 ? 'on' : 'off'}`}></div>
+                                    <div className={`led-indicator ${sensorData?.rawData?.[currentConfig.pageDataAddresses.page2.remoteRearSliderSelect.address - startAddressOffset] && (sensorData.rawData[currentConfig.pageDataAddresses.page2.remoteRearSliderSelect.address - startAddressOffset] >> currentConfig.pageDataAddresses.page2.remoteRearSliderSelect.bit) & 1 ? 'on' : 'off'}`}></div>
                                     <div className="led-label">후면슬라이더선택</div>
-                                    <div className="led-address">P129.5</div>
+                                    <div className="led-address">P{currentConfig.pageDataAddresses.page2.remoteRearSliderSelect.address}.{currentConfig.pageDataAddresses.page2.remoteRearSliderSelect.bit}</div>
                                 </div>
                                 <div className={`led-status-card ${theme === 'space' ? 'space-theme' : ''}`}>
-                                    <div className={`led-indicator ${sensorData?.rawData?.[currentConfig.pageDataAddresses.page2.remoteSimultaneousSelect.address] && (sensorData.rawData[currentConfig.pageDataAddresses.page2.remoteSimultaneousSelect.address] >> currentConfig.pageDataAddresses.page2.remoteSimultaneousSelect.bit) & 1 ? 'on' : 'off'}`}></div>
+                                    <div className={`led-indicator ${sensorData?.rawData?.[currentConfig.pageDataAddresses.page2.remoteSimultaneousSelect.address - startAddressOffset] && (sensorData.rawData[currentConfig.pageDataAddresses.page2.remoteSimultaneousSelect.address - startAddressOffset] >> currentConfig.pageDataAddresses.page2.remoteSimultaneousSelect.bit) & 1 ? 'on' : 'off'}`}></div>
                                     <div className="led-label">동시선택</div>
-                                    <div className="led-address">P129.6</div>
+                                    <div className="led-address">P{currentConfig.pageDataAddresses.page2.remoteSimultaneousSelect.address}.{currentConfig.pageDataAddresses.page2.remoteSimultaneousSelect.bit}</div>
                                 </div>
                             </div>         
 
@@ -2312,96 +2316,96 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
                     {/* 3페이지: 2단카트 */}
                     {activeTab === 'page3' && (
                         <div className="flex flex-col items-center gap-20 px-4">
-                            {/* 2단 카트 상태 데이터 (P170-P179) */}
+                            {/* 2단 카트 상태 데이터 */}
                             <div className={`hidden md:grid grid-cols-4 gap-4 max-w-4xl w-full mb-0 mt-0 -mb-8 ${theme === 'space' ? 'space-theme' : ''}`}>
                                 <div className={`data-value-card ${theme === 'space' ? 'space-theme' : ''}`}>
                                     <div className="data-label">카트적재파렛번호</div>
-                                    <div className="data-value">{sensorData?.rawData?.[currentConfig.pageDataAddresses.page3.cartLoadPalletNumber] || 0}</div>
-                                    <div className="data-address">P170</div>
+                                    <div className="data-value">{sensorData?.rawData?.[currentConfig.pageDataAddresses.page3.cartLoadPalletNumber - startAddressOffset] || 0}</div>
+                                    <div className="data-address">P{currentConfig.pageDataAddresses.page3.cartLoadPalletNumber}</div>
                                 </div>
                                 <div className={`data-value-card ${theme === 'space' ? 'space-theme' : ''}`}>
                                     <div className="data-label">룸측카운터</div>
-                                    <div className="data-value">{sensorData?.rawData?.[currentConfig.pageDataAddresses.page3.roomSideCounter] || 0}</div>
-                                    <div className="data-address">P171</div>
+                                    <div className="data-value">{sensorData?.rawData?.[currentConfig.pageDataAddresses.page3.roomSideCounter - startAddressOffset] || 0}</div>
+                                    <div className="data-address">P{currentConfig.pageDataAddresses.page3.roomSideCounter}</div>
                                 </div>
                                 <div className={`data-value-card ${theme === 'space' ? 'space-theme' : ''}`}>
                                     <div className="data-label">리프트측카운터</div>
-                                    <div className="data-value">{sensorData?.rawData?.[currentConfig.pageDataAddresses.page3.liftSideCounter] || 0}</div>
-                                    <div className="data-address">P172</div>
+                                    <div className="data-value">{sensorData?.rawData?.[currentConfig.pageDataAddresses.page3.liftSideCounter - startAddressOffset] || 0}</div>
+                                    <div className="data-address">P{currentConfig.pageDataAddresses.page3.liftSideCounter}</div>
                                 </div>
                                 <div className={`data-value-card ${theme === 'space' ? 'space-theme' : ''}`}>
                                     <div className="data-label">상태메시지 1</div>
-                                    <div className="data-value">{sensorData?.rawData?.[currentConfig.pageDataAddresses.page3.statusMessage1] || 0}</div>
-                                    <div className="data-address">P173</div>
+                                    <div className="data-value">{sensorData?.rawData?.[currentConfig.pageDataAddresses.page3.statusMessage1 - startAddressOffset] || 0}</div>
+                                    <div className="data-address">P{currentConfig.pageDataAddresses.page3.statusMessage1}</div>
                                 </div>
                                 <div className={`data-value-card ${theme === 'space' ? 'space-theme' : ''}`}>
                                     <div className="data-label">상태메시지 2</div>
-                                    <div className="data-value">{sensorData?.rawData?.[currentConfig.pageDataAddresses.page3.statusMessage2] || 0}</div>
-                                    <div className="data-address">P174</div>
+                                    <div className="data-value">{sensorData?.rawData?.[currentConfig.pageDataAddresses.page3.statusMessage2 - startAddressOffset] || 0}</div>
+                                    <div className="data-address">P{currentConfig.pageDataAddresses.page3.statusMessage2}</div>
                                 </div>
                                 <div className={`data-value-card ${theme === 'space' ? 'space-theme' : ''}`}>
                                     <div className="data-label">상태메시지 3</div>
-                                    <div className="data-value">{sensorData?.rawData?.[currentConfig.pageDataAddresses.page3.statusMessage3] || 0}</div>
-                                    <div className="data-address">P175</div>
+                                    <div className="data-value">{sensorData?.rawData?.[currentConfig.pageDataAddresses.page3.statusMessage3 - startAddressOffset] || 0}</div>
+                                    <div className="data-address">P{currentConfig.pageDataAddresses.page3.statusMessage3}</div>
                                 </div>
                                 <div className={`data-value-card ${theme === 'space' ? 'space-theme' : ''}`}>
                                     <div className="data-label">이송파렛번호</div>
-                                    <div className="data-value">{sensorData?.rawData?.[currentConfig.pageDataAddresses.page3.cartToLiftTransferPallet] || 0}</div>
-                                    <div className="data-address">P176</div>
+                                    <div className="data-value">{sensorData?.rawData?.[currentConfig.pageDataAddresses.page3.cartToLiftTransferPallet - startAddressOffset] || 0}</div>
+                                    <div className="data-address">P{currentConfig.pageDataAddresses.page3.cartToLiftTransferPallet}</div>
                                 </div>
                                 <div className={`data-value-card ${theme === 'space' ? 'space-theme' : ''}`}>
                                     <div className="data-label">에러리스트 1</div>
-                                    <div className="data-value">{sensorData?.rawData?.[currentConfig.pageDataAddresses.page3.errorList1] || 0}</div>
-                                    <div className="data-address">P177</div>
+                                    <div className="data-value">{sensorData?.rawData?.[currentConfig.pageDataAddresses.page3.errorList1 - startAddressOffset] || 0}</div>
+                                    <div className="data-address">P{currentConfig.pageDataAddresses.page3.errorList1}</div>
                                 </div>
                                 <div className={`data-value-card ${theme === 'space' ? 'space-theme' : ''}`}>
                                     <div className="data-label">에러리스트 2</div>
-                                    <div className="data-value">{sensorData?.rawData?.[currentConfig.pageDataAddresses.page3.errorList2] || 0}</div>
-                                    <div className="data-address">P178</div>
+                                    <div className="data-value">{sensorData?.rawData?.[currentConfig.pageDataAddresses.page3.errorList2 - startAddressOffset] || 0}</div>
+                                    <div className="data-address">P{currentConfig.pageDataAddresses.page3.errorList2}</div>
                                 </div>
                                 <div className={`data-value-card ${theme === 'space' ? 'space-theme' : ''}`}>
                                     <div className="data-label">에러리스트 3</div>
-                                    <div className="data-value">{sensorData?.rawData?.[currentConfig.pageDataAddresses.page3.errorList3] || 0}</div>
-                                    <div className="data-address">P179</div>
+                                    <div className="data-value">{sensorData?.rawData?.[currentConfig.pageDataAddresses.page3.errorList3 - startAddressOffset] || 0}</div>
+                                    <div className="data-address">P{currentConfig.pageDataAddresses.page3.errorList3}</div>
                                 </div>
                             </div>
 
                             {/* LED 상태 표시 영역 */}
                             <div className={`hidden md:grid grid-cols-4 gap-4 max-w-4xl w-full mb-0 -mt-8 ${theme === 'space' ? 'space-theme' : ''}`}>
                                 <div className={`led-status-card ${theme === 'space' ? 'space-theme' : ''}`}>
-                                    <div className={`led-indicator ${sensorData?.rawData?.[currentConfig.pageDataAddresses.page3.remoteManualMode.address] && (sensorData.rawData[currentConfig.pageDataAddresses.page3.remoteManualMode.address] >> currentConfig.pageDataAddresses.page3.remoteManualMode.bit) & 1 ? 'on' : 'off'}`}></div>
+                                    <div className={`led-indicator ${sensorData?.rawData?.[currentConfig.pageDataAddresses.page3.remoteManualMode.address - startAddressOffset] && (sensorData.rawData[currentConfig.pageDataAddresses.page3.remoteManualMode.address - startAddressOffset] >> currentConfig.pageDataAddresses.page3.remoteManualMode.bit) & 1 ? 'on' : 'off'}`}></div>
                                     <div className="led-label">수동모드</div>
-                                    <div className="led-address">P139.0</div>
+                                    <div className="led-address">P{currentConfig.pageDataAddresses.page3.remoteManualMode.address}.{currentConfig.pageDataAddresses.page3.remoteManualMode.bit}</div>
                                 </div>
                                 <div className={`led-status-card ${theme === 'space' ? 'space-theme' : ''}`}>
-                                    <div className={`led-indicator ${sensorData?.rawData?.[currentConfig.pageDataAddresses.page3.remoteSemiAutoMode.address] && (sensorData.rawData[currentConfig.pageDataAddresses.page3.remoteSemiAutoMode.address] >> currentConfig.pageDataAddresses.page3.remoteSemiAutoMode.bit) & 1 ? 'on' : 'off'}`}></div>
+                                    <div className={`led-indicator ${sensorData?.rawData?.[currentConfig.pageDataAddresses.page3.remoteSemiAutoMode.address - startAddressOffset] && (sensorData.rawData[currentConfig.pageDataAddresses.page3.remoteSemiAutoMode.address - startAddressOffset] >> currentConfig.pageDataAddresses.page3.remoteSemiAutoMode.bit) & 1 ? 'on' : 'off'}`}></div>
                                     <div className="led-label">반자동모드</div>
-                                    <div className="led-address">P139.1</div>
+                                    <div className="led-address">P{currentConfig.pageDataAddresses.page3.remoteSemiAutoMode.address}.{currentConfig.pageDataAddresses.page3.remoteSemiAutoMode.bit}</div>
                                 </div>
                                 <div className={`led-status-card ${theme === 'space' ? 'space-theme' : ''}`}>
-                                    <div className={`led-indicator ${sensorData?.rawData?.[currentConfig.pageDataAddresses.page3.remoteSliderSelect.address] && (sensorData.rawData[currentConfig.pageDataAddresses.page3.remoteSliderSelect.address] >> currentConfig.pageDataAddresses.page3.remoteSliderSelect.bit) & 1 ? 'on' : 'off'}`}></div>
+                                    <div className={`led-indicator ${sensorData?.rawData?.[currentConfig.pageDataAddresses.page3.remoteSliderSelect.address - startAddressOffset] && (sensorData.rawData[currentConfig.pageDataAddresses.page3.remoteSliderSelect.address - startAddressOffset] >> currentConfig.pageDataAddresses.page3.remoteSliderSelect.bit) & 1 ? 'on' : 'off'}`}></div>
                                     <div className="led-label">슬라이더선택</div>
-                                    <div className="led-address">P139.2</div>
+                                    <div className="led-address">P{currentConfig.pageDataAddresses.page3.remoteSliderSelect.address}.{currentConfig.pageDataAddresses.page3.remoteSliderSelect.bit}</div>
                                 </div>
                                 <div className={`led-status-card ${theme === 'space' ? 'space-theme' : ''}`}>
-                                    <div className={`led-indicator ${sensorData?.rawData?.[currentConfig.pageDataAddresses.page3.remoteLiftSelect.address] && (sensorData.rawData[currentConfig.pageDataAddresses.page3.remoteLiftSelect.address] >> currentConfig.pageDataAddresses.page3.remoteLiftSelect.bit) & 1 ? 'on' : 'off'}`}></div>
+                                    <div className={`led-indicator ${sensorData?.rawData?.[currentConfig.pageDataAddresses.page3.remoteLiftSelect.address - startAddressOffset] && (sensorData.rawData[currentConfig.pageDataAddresses.page3.remoteLiftSelect.address - startAddressOffset] >> currentConfig.pageDataAddresses.page3.remoteLiftSelect.bit) & 1 ? 'on' : 'off'}`}></div>
                                     <div className="led-label">리프트선택</div>
-                                    <div className="led-address">P139.3</div>
+                                    <div className="led-address">P{currentConfig.pageDataAddresses.page3.remoteLiftSelect.address}.{currentConfig.pageDataAddresses.page3.remoteLiftSelect.bit}</div>
                                 </div>
                                 <div className={`led-status-card ${theme === 'space' ? 'space-theme' : ''}`}>
-                                    <div className={`led-indicator ${sensorData?.rawData?.[currentConfig.pageDataAddresses.page3.remoteFrontSliderSelect.address] && (sensorData.rawData[currentConfig.pageDataAddresses.page3.remoteFrontSliderSelect.address] >> currentConfig.pageDataAddresses.page3.remoteFrontSliderSelect.bit) & 1 ? 'on' : 'off'}`}></div>
+                                    <div className={`led-indicator ${sensorData?.rawData?.[currentConfig.pageDataAddresses.page3.remoteFrontSliderSelect.address - startAddressOffset] && (sensorData.rawData[currentConfig.pageDataAddresses.page3.remoteFrontSliderSelect.address - startAddressOffset] >> currentConfig.pageDataAddresses.page3.remoteFrontSliderSelect.bit) & 1 ? 'on' : 'off'}`}></div>
                                     <div className="led-label">전면슬라이더선택</div>
-                                    <div className="led-address">P139.4</div>
+                                    <div className="led-address">P{currentConfig.pageDataAddresses.page3.remoteFrontSliderSelect.address}.{currentConfig.pageDataAddresses.page3.remoteFrontSliderSelect.bit}</div>
                                 </div>
                                 <div className={`led-status-card ${theme === 'space' ? 'space-theme' : ''}`}>
-                                    <div className={`led-indicator ${sensorData?.rawData?.[currentConfig.pageDataAddresses.page3.remoteRearSliderSelect.address] && (sensorData.rawData[currentConfig.pageDataAddresses.page3.remoteRearSliderSelect.address] >> currentConfig.pageDataAddresses.page3.remoteRearSliderSelect.bit) & 1 ? 'on' : 'off'}`}></div>
+                                    <div className={`led-indicator ${sensorData?.rawData?.[currentConfig.pageDataAddresses.page3.remoteRearSliderSelect.address - startAddressOffset] && (sensorData.rawData[currentConfig.pageDataAddresses.page3.remoteRearSliderSelect.address - startAddressOffset] >> currentConfig.pageDataAddresses.page3.remoteRearSliderSelect.bit) & 1 ? 'on' : 'off'}`}></div>
                                     <div className="led-label">후면슬라이더선택</div>
-                                    <div className="led-address">P139.5</div>
+                                    <div className="led-address">P{currentConfig.pageDataAddresses.page3.remoteRearSliderSelect.address}.{currentConfig.pageDataAddresses.page3.remoteRearSliderSelect.bit}</div>
                                 </div>
                                 <div className={`led-status-card ${theme === 'space' ? 'space-theme' : ''}`}>
-                                    <div className={`led-indicator ${sensorData?.rawData?.[currentConfig.pageDataAddresses.page3.remoteSimultaneousSelect.address] && (sensorData.rawData[currentConfig.pageDataAddresses.page3.remoteSimultaneousSelect.address] >> currentConfig.pageDataAddresses.page3.remoteSimultaneousSelect.bit) & 1 ? 'on' : 'off'}`}></div>
+                                    <div className={`led-indicator ${sensorData?.rawData?.[currentConfig.pageDataAddresses.page3.remoteSimultaneousSelect.address - startAddressOffset] && (sensorData.rawData[currentConfig.pageDataAddresses.page3.remoteSimultaneousSelect.address - startAddressOffset] >> currentConfig.pageDataAddresses.page3.remoteSimultaneousSelect.bit) & 1 ? 'on' : 'off'}`}></div>
                                     <div className="led-label">동시선택</div>
-                                    <div className="led-address">P139.6</div>
+                                    <div className="led-address">P{currentConfig.pageDataAddresses.page3.remoteSimultaneousSelect.address}.{currentConfig.pageDataAddresses.page3.remoteSimultaneousSelect.bit}</div>
                                 </div>
                             </div>
 
@@ -2574,96 +2578,96 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
                     {/* 5페이지: 4단카트 */}
                     {activeTab === 'page5' && (
                         <div className="flex flex-col items-center gap-20 px-4">
-                            {/* 4단 카트 상태 데이터 (P180-P189) */}
+                            {/* 4단 카트 상태 데이터 */}
                             <div className={`hidden md:grid grid-cols-4 gap-4 max-w-4xl w-full mb-0 mt-0 -mb-8 ${theme === 'space' ? 'space-theme' : ''}`}>
                                 <div className={`data-value-card ${theme === 'space' ? 'space-theme' : ''}`}>
                                     <div className="data-label">카트적재파렛번호</div>
-                                    <div className="data-value">{sensorData?.rawData?.[currentConfig.pageDataAddresses.page5.cartLoadPalletNumber] || 0}</div>
-                                    <div className="data-address">P180</div>
+                                    <div className="data-value">{sensorData?.rawData?.[currentConfig.pageDataAddresses.page5.cartLoadPalletNumber - startAddressOffset] || 0}</div>
+                                    <div className="data-address">P{currentConfig.pageDataAddresses.page5.cartLoadPalletNumber}</div>
                                 </div>
                                 <div className={`data-value-card ${theme === 'space' ? 'space-theme' : ''}`}>
                                     <div className="data-label">룸측카운터</div>
-                                    <div className="data-value">{sensorData?.rawData?.[currentConfig.pageDataAddresses.page5.roomSideCounter] || 0}</div>
-                                    <div className="data-address">P181</div>
+                                    <div className="data-value">{sensorData?.rawData?.[currentConfig.pageDataAddresses.page5.roomSideCounter - startAddressOffset] || 0}</div>
+                                    <div className="data-address">P{currentConfig.pageDataAddresses.page5.roomSideCounter}</div>
                                 </div>
                                 <div className={`data-value-card ${theme === 'space' ? 'space-theme' : ''}`}>
                                     <div className="data-label">리프트측카운터</div>
-                                    <div className="data-value">{sensorData?.rawData?.[currentConfig.pageDataAddresses.page5.liftSideCounter] || 0}</div>
-                                    <div className="data-address">P182</div>
+                                    <div className="data-value">{sensorData?.rawData?.[currentConfig.pageDataAddresses.page5.liftSideCounter - startAddressOffset] || 0}</div>
+                                    <div className="data-address">P{currentConfig.pageDataAddresses.page5.liftSideCounter}</div>
                                 </div>
                                 <div className={`data-value-card ${theme === 'space' ? 'space-theme' : ''}`}>
                                     <div className="data-label">상태메시지 1</div>
-                                    <div className="data-value">{sensorData?.rawData?.[currentConfig.pageDataAddresses.page5.statusMessage1] || 0}</div>
-                                    <div className="data-address">P183</div>
+                                    <div className="data-value">{sensorData?.rawData?.[currentConfig.pageDataAddresses.page5.statusMessage1 - startAddressOffset] || 0}</div>
+                                    <div className="data-address">P{currentConfig.pageDataAddresses.page5.statusMessage1}</div>
                                 </div>
                                 <div className={`data-value-card ${theme === 'space' ? 'space-theme' : ''}`}>
                                     <div className="data-label">상태메시지 2</div>
-                                    <div className="data-value">{sensorData?.rawData?.[currentConfig.pageDataAddresses.page5.statusMessage2] || 0}</div>
-                                    <div className="data-address">P184</div>
+                                    <div className="data-value">{sensorData?.rawData?.[currentConfig.pageDataAddresses.page5.statusMessage2 - startAddressOffset] || 0}</div>
+                                    <div className="data-address">P{currentConfig.pageDataAddresses.page5.statusMessage2}</div>
                                 </div>
                                 <div className={`data-value-card ${theme === 'space' ? 'space-theme' : ''}`}>
                                     <div className="data-label">상태메시지 3</div>
-                                    <div className="data-value">{sensorData?.rawData?.[currentConfig.pageDataAddresses.page5.statusMessage3] || 0}</div>
-                                    <div className="data-address">P185</div>
+                                    <div className="data-value">{sensorData?.rawData?.[currentConfig.pageDataAddresses.page5.statusMessage3 - startAddressOffset] || 0}</div>
+                                    <div className="data-address">P{currentConfig.pageDataAddresses.page5.statusMessage3}</div>
                                 </div>
                                 <div className={`data-value-card ${theme === 'space' ? 'space-theme' : ''}`}>
                                     <div className="data-label">이송파렛번호</div>
-                                    <div className="data-value">{sensorData?.rawData?.[currentConfig.pageDataAddresses.page5.cartToLiftTransferPallet] || 0}</div>
-                                    <div className="data-address">P186</div>
+                                    <div className="data-value">{sensorData?.rawData?.[currentConfig.pageDataAddresses.page5.cartToLiftTransferPallet - startAddressOffset] || 0}</div>
+                                    <div className="data-address">P{currentConfig.pageDataAddresses.page5.cartToLiftTransferPallet}</div>
                                 </div>
                                 <div className={`data-value-card ${theme === 'space' ? 'space-theme' : ''}`}>
                                     <div className="data-label">에러리스트 1</div>
-                                    <div className="data-value">{sensorData?.rawData?.[currentConfig.pageDataAddresses.page5.errorList1] || 0}</div>
-                                    <div className="data-address">P187</div>
+                                    <div className="data-value">{sensorData?.rawData?.[currentConfig.pageDataAddresses.page5.errorList1 - startAddressOffset] || 0}</div>
+                                    <div className="data-address">P{currentConfig.pageDataAddresses.page5.errorList1}</div>
                                 </div>
                                 <div className={`data-value-card ${theme === 'space' ? 'space-theme' : ''}`}>
                                     <div className="data-label">에러리스트 2</div>
-                                    <div className="data-value">{sensorData?.rawData?.[currentConfig.pageDataAddresses.page5.errorList2] || 0}</div>
-                                    <div className="data-address">P188</div>
+                                    <div className="data-value">{sensorData?.rawData?.[currentConfig.pageDataAddresses.page5.errorList2 - startAddressOffset] || 0}</div>
+                                    <div className="data-address">P{currentConfig.pageDataAddresses.page5.errorList2}</div>
                                 </div>
                                 <div className={`data-value-card ${theme === 'space' ? 'space-theme' : ''}`}>
                                     <div className="data-label">에러리스트 3</div>
-                                    <div className="data-value">{sensorData?.rawData?.[currentConfig.pageDataAddresses.page5.errorList3] || 0}</div>
-                                    <div className="data-address">P189</div>
+                                    <div className="data-value">{sensorData?.rawData?.[currentConfig.pageDataAddresses.page5.errorList3 - startAddressOffset] || 0}</div>
+                                    <div className="data-address">P{currentConfig.pageDataAddresses.page5.errorList3}</div>
                                 </div>
                             </div>
 
                             {/* LED 상태 표시 영역 */}
                             <div className={`hidden md:grid grid-cols-4 gap-4 max-w-4xl w-full mb-0 -mt-8 ${theme === 'space' ? 'space-theme' : ''}`}>
                                 <div className={`led-status-card ${theme === 'space' ? 'space-theme' : ''}`}>
-                                    <div className={`led-indicator ${sensorData?.rawData?.[currentConfig.pageDataAddresses.page5.remoteManualMode.address] && (sensorData.rawData[currentConfig.pageDataAddresses.page5.remoteManualMode.address] >> currentConfig.pageDataAddresses.page5.remoteManualMode.bit) & 1 ? 'on' : 'off'}`}></div>
+                                    <div className={`led-indicator ${sensorData?.rawData?.[currentConfig.pageDataAddresses.page5.remoteManualMode.address - startAddressOffset] && (sensorData.rawData[currentConfig.pageDataAddresses.page5.remoteManualMode.address - startAddressOffset] >> currentConfig.pageDataAddresses.page5.remoteManualMode.bit) & 1 ? 'on' : 'off'}`}></div>
                                     <div className="led-label">수동모드</div>
-                                    <div className="led-address">P149.0</div>
+                                    <div className="led-address">P{currentConfig.pageDataAddresses.page5.remoteManualMode.address}.{currentConfig.pageDataAddresses.page5.remoteManualMode.bit}</div>
                                 </div>
                                 <div className={`led-status-card ${theme === 'space' ? 'space-theme' : ''}`}>
-                                    <div className={`led-indicator ${sensorData?.rawData?.[currentConfig.pageDataAddresses.page5.remoteSemiAutoMode.address] && (sensorData.rawData[currentConfig.pageDataAddresses.page5.remoteSemiAutoMode.address] >> currentConfig.pageDataAddresses.page5.remoteSemiAutoMode.bit) & 1 ? 'on' : 'off'}`}></div>
+                                    <div className={`led-indicator ${sensorData?.rawData?.[currentConfig.pageDataAddresses.page5.remoteSemiAutoMode.address - startAddressOffset] && (sensorData.rawData[currentConfig.pageDataAddresses.page5.remoteSemiAutoMode.address - startAddressOffset] >> currentConfig.pageDataAddresses.page5.remoteSemiAutoMode.bit) & 1 ? 'on' : 'off'}`}></div>
                                     <div className="led-label">반자동모드</div>
-                                    <div className="led-address">P149.1</div>
+                                    <div className="led-address">P{currentConfig.pageDataAddresses.page5.remoteSemiAutoMode.address}.{currentConfig.pageDataAddresses.page5.remoteSemiAutoMode.bit}</div>
                                 </div>
                                 <div className={`led-status-card ${theme === 'space' ? 'space-theme' : ''}`}>
-                                    <div className={`led-indicator ${sensorData?.rawData?.[currentConfig.pageDataAddresses.page5.remoteSliderSelect.address] && (sensorData.rawData[currentConfig.pageDataAddresses.page5.remoteSliderSelect.address] >> currentConfig.pageDataAddresses.page5.remoteSliderSelect.bit) & 1 ? 'on' : 'off'}`}></div>
+                                    <div className={`led-indicator ${sensorData?.rawData?.[currentConfig.pageDataAddresses.page5.remoteSliderSelect.address - startAddressOffset] && (sensorData.rawData[currentConfig.pageDataAddresses.page5.remoteSliderSelect.address - startAddressOffset] >> currentConfig.pageDataAddresses.page5.remoteSliderSelect.bit) & 1 ? 'on' : 'off'}`}></div>
                                     <div className="led-label">슬라이더선택</div>
-                                    <div className="led-address">P149.2</div>
+                                    <div className="led-address">P{currentConfig.pageDataAddresses.page5.remoteSliderSelect.address}.{currentConfig.pageDataAddresses.page5.remoteSliderSelect.bit}</div>
                                 </div>
                                 <div className={`led-status-card ${theme === 'space' ? 'space-theme' : ''}`}>
-                                    <div className={`led-indicator ${sensorData?.rawData?.[currentConfig.pageDataAddresses.page5.remoteLiftSelect.address] && (sensorData.rawData[currentConfig.pageDataAddresses.page5.remoteLiftSelect.address] >> currentConfig.pageDataAddresses.page5.remoteLiftSelect.bit) & 1 ? 'on' : 'off'}`}></div>
+                                    <div className={`led-indicator ${sensorData?.rawData?.[currentConfig.pageDataAddresses.page5.remoteLiftSelect.address - startAddressOffset] && (sensorData.rawData[currentConfig.pageDataAddresses.page5.remoteLiftSelect.address - startAddressOffset] >> currentConfig.pageDataAddresses.page5.remoteLiftSelect.bit) & 1 ? 'on' : 'off'}`}></div>
                                     <div className="led-label">리프트선택</div>
-                                    <div className="led-address">P149.3</div>
+                                    <div className="led-address">P{currentConfig.pageDataAddresses.page5.remoteLiftSelect.address}.{currentConfig.pageDataAddresses.page5.remoteLiftSelect.bit}</div>
                                 </div>
                                 <div className={`led-status-card ${theme === 'space' ? 'space-theme' : ''}`}>
-                                    <div className={`led-indicator ${sensorData?.rawData?.[currentConfig.pageDataAddresses.page5.remoteFrontSliderSelect.address] && (sensorData.rawData[currentConfig.pageDataAddresses.page5.remoteFrontSliderSelect.address] >> currentConfig.pageDataAddresses.page5.remoteFrontSliderSelect.bit) & 1 ? 'on' : 'off'}`}></div>
+                                    <div className={`led-indicator ${sensorData?.rawData?.[currentConfig.pageDataAddresses.page5.remoteFrontSliderSelect.address - startAddressOffset] && (sensorData.rawData[currentConfig.pageDataAddresses.page5.remoteFrontSliderSelect.address - startAddressOffset] >> currentConfig.pageDataAddresses.page5.remoteFrontSliderSelect.bit) & 1 ? 'on' : 'off'}`}></div>
                                     <div className="led-label">전면슬라이더선택</div>
-                                    <div className="led-address">P149.4</div>
+                                    <div className="led-address">P{currentConfig.pageDataAddresses.page5.remoteFrontSliderSelect.address}.{currentConfig.pageDataAddresses.page5.remoteFrontSliderSelect.bit}</div>
                                 </div>
                                 <div className={`led-status-card ${theme === 'space' ? 'space-theme' : ''}`}>
-                                    <div className={`led-indicator ${sensorData?.rawData?.[currentConfig.pageDataAddresses.page5.remoteRearSliderSelect.address] && (sensorData.rawData[currentConfig.pageDataAddresses.page5.remoteRearSliderSelect.address] >> currentConfig.pageDataAddresses.page5.remoteRearSliderSelect.bit) & 1 ? 'on' : 'off'}`}></div>
+                                    <div className={`led-indicator ${sensorData?.rawData?.[currentConfig.pageDataAddresses.page5.remoteRearSliderSelect.address - startAddressOffset] && (sensorData.rawData[currentConfig.pageDataAddresses.page5.remoteRearSliderSelect.address - startAddressOffset] >> currentConfig.pageDataAddresses.page5.remoteRearSliderSelect.bit) & 1 ? 'on' : 'off'}`}></div>
                                     <div className="led-label">후면슬라이더선택</div>
-                                    <div className="led-address">P149.5</div>
+                                    <div className="led-address">P{currentConfig.pageDataAddresses.page5.remoteRearSliderSelect.address}.{currentConfig.pageDataAddresses.page5.remoteRearSliderSelect.bit}</div>
                                 </div>
                                 <div className={`led-status-card ${theme === 'space' ? 'space-theme' : ''}`}>
-                                    <div className={`led-indicator ${sensorData?.rawData?.[currentConfig.pageDataAddresses.page5.remoteSimultaneousSelect.address] && (sensorData.rawData[currentConfig.pageDataAddresses.page5.remoteSimultaneousSelect.address] >> currentConfig.pageDataAddresses.page5.remoteSimultaneousSelect.bit) & 1 ? 'on' : 'off'}`}></div>
+                                    <div className={`led-indicator ${sensorData?.rawData?.[currentConfig.pageDataAddresses.page5.remoteSimultaneousSelect.address - startAddressOffset] && (sensorData.rawData[currentConfig.pageDataAddresses.page5.remoteSimultaneousSelect.address - startAddressOffset] >> currentConfig.pageDataAddresses.page5.remoteSimultaneousSelect.bit) & 1 ? 'on' : 'off'}`}></div>
                                     <div className="led-label">동시선택</div>
-                                    <div className="led-address">P149.6</div>
+                                    <div className="led-address">P{currentConfig.pageDataAddresses.page5.remoteSimultaneousSelect.address}.{currentConfig.pageDataAddresses.page5.remoteSimultaneousSelect.bit}</div>
                                 </div>
                             </div>
 
@@ -2826,96 +2830,96 @@ const ManualControl = ({ isPLCConnected, isAuthenticated, sensorData, isMobileMe
                     {/* 6페이지: 5단카트 */}
                     {activeTab === 'page6' && (
                         <div className="flex flex-col items-center gap-20 px-4">
-                            {/* 5단 카트 상태 데이터 (P190-P199) */}
+                            {/* 5단 카트 상태 데이터 */}
                             <div className={`hidden md:grid grid-cols-4 gap-4 max-w-4xl w-full mb-0 mt-0 -mb-8 ${theme === 'space' ? 'space-theme' : ''}`}>
                                 <div className={`data-value-card ${theme === 'space' ? 'space-theme' : ''}`}>
                                     <div className="data-label">카트적재파렛번호</div>
-                                    <div className="data-value">{sensorData?.rawData?.[currentConfig.pageDataAddresses.page6.cartLoadPalletNumber] || 0}</div>
-                                    <div className="data-address">P190</div>
+                                    <div className="data-value">{sensorData?.rawData?.[currentConfig.pageDataAddresses.page6.cartLoadPalletNumber - startAddressOffset] || 0}</div>
+                                    <div className="data-address">P{currentConfig.pageDataAddresses.page6.cartLoadPalletNumber}</div>
                                 </div>
                                 <div className={`data-value-card ${theme === 'space' ? 'space-theme' : ''}`}>
                                     <div className="data-label">룸측카운터</div>
-                                    <div className="data-value">{sensorData?.rawData?.[currentConfig.pageDataAddresses.page6.roomSideCounter] || 0}</div>
-                                    <div className="data-address">P191</div>
+                                    <div className="data-value">{sensorData?.rawData?.[currentConfig.pageDataAddresses.page6.roomSideCounter - startAddressOffset] || 0}</div>
+                                    <div className="data-address">P{currentConfig.pageDataAddresses.page6.roomSideCounter}</div>
                                 </div>
                                 <div className={`data-value-card ${theme === 'space' ? 'space-theme' : ''}`}>
                                     <div className="data-label">리프트측카운터</div>
-                                    <div className="data-value">{sensorData?.rawData?.[currentConfig.pageDataAddresses.page6.liftSideCounter] || 0}</div>
-                                    <div className="data-address">P192</div>
+                                    <div className="data-value">{sensorData?.rawData?.[currentConfig.pageDataAddresses.page6.liftSideCounter - startAddressOffset] || 0}</div>
+                                    <div className="data-address">P{currentConfig.pageDataAddresses.page6.liftSideCounter}</div>
                                 </div>
                                 <div className={`data-value-card ${theme === 'space' ? 'space-theme' : ''}`}>
                                     <div className="data-label">상태메시지 1</div>
-                                    <div className="data-value">{sensorData?.rawData?.[currentConfig.pageDataAddresses.page6.statusMessage1] || 0}</div>
-                                    <div className="data-address">P193</div>
+                                    <div className="data-value">{sensorData?.rawData?.[currentConfig.pageDataAddresses.page6.statusMessage1 - startAddressOffset] || 0}</div>
+                                    <div className="data-address">P{currentConfig.pageDataAddresses.page6.statusMessage1}</div>
                                 </div>
                                 <div className={`data-value-card ${theme === 'space' ? 'space-theme' : ''}`}>
                                     <div className="data-label">상태메시지 2</div>
-                                    <div className="data-value">{sensorData?.rawData?.[currentConfig.pageDataAddresses.page6.statusMessage2] || 0}</div>
-                                    <div className="data-address">P194</div>
+                                    <div className="data-value">{sensorData?.rawData?.[currentConfig.pageDataAddresses.page6.statusMessage2 - startAddressOffset] || 0}</div>
+                                    <div className="data-address">P{currentConfig.pageDataAddresses.page6.statusMessage2}</div>
                                 </div>
                                 <div className={`data-value-card ${theme === 'space' ? 'space-theme' : ''}`}>
                                     <div className="data-label">상태메시지 3</div>
-                                    <div className="data-value">{sensorData?.rawData?.[currentConfig.pageDataAddresses.page6.statusMessage3] || 0}</div>
-                                    <div className="data-address">P195</div>
+                                    <div className="data-value">{sensorData?.rawData?.[currentConfig.pageDataAddresses.page6.statusMessage3 - startAddressOffset] || 0}</div>
+                                    <div className="data-address">P{currentConfig.pageDataAddresses.page6.statusMessage3}</div>
                                 </div>
                                 <div className={`data-value-card ${theme === 'space' ? 'space-theme' : ''}`}>
                                     <div className="data-label">이송파렛번호</div>
-                                    <div className="data-value">{sensorData?.rawData?.[currentConfig.pageDataAddresses.page6.cartToLiftTransferPallet] || 0}</div>
-                                    <div className="data-address">P196</div>
+                                    <div className="data-value">{sensorData?.rawData?.[currentConfig.pageDataAddresses.page6.cartToLiftTransferPallet - startAddressOffset] || 0}</div>
+                                    <div className="data-address">P{currentConfig.pageDataAddresses.page6.cartToLiftTransferPallet}</div>
                                 </div>
                                 <div className={`data-value-card ${theme === 'space' ? 'space-theme' : ''}`}>
                                     <div className="data-label">에러리스트 1</div>
-                                    <div className="data-value">{sensorData?.rawData?.[currentConfig.pageDataAddresses.page6.errorList1] || 0}</div>
-                                    <div className="data-address">P197</div>
+                                    <div className="data-value">{sensorData?.rawData?.[currentConfig.pageDataAddresses.page6.errorList1 - startAddressOffset] || 0}</div>
+                                    <div className="data-address">P{currentConfig.pageDataAddresses.page6.errorList1}</div>
                                 </div>
                                 <div className={`data-value-card ${theme === 'space' ? 'space-theme' : ''}`}>
                                     <div className="data-label">에러리스트 2</div>
-                                    <div className="data-value">{sensorData?.rawData?.[currentConfig.pageDataAddresses.page6.errorList2] || 0}</div>
-                                    <div className="data-address">P198</div>
+                                    <div className="data-value">{sensorData?.rawData?.[currentConfig.pageDataAddresses.page6.errorList2 - startAddressOffset] || 0}</div>
+                                    <div className="data-address">P{currentConfig.pageDataAddresses.page6.errorList2}</div>
                                 </div>
                                 <div className={`data-value-card ${theme === 'space' ? 'space-theme' : ''}`}>
                                     <div className="data-label">에러리스트 3</div>
-                                    <div className="data-value">{sensorData?.rawData?.[currentConfig.pageDataAddresses.page6.errorList3] || 0}</div>
-                                    <div className="data-address">P199</div>
+                                    <div className="data-value">{sensorData?.rawData?.[currentConfig.pageDataAddresses.page6.errorList3 - startAddressOffset] || 0}</div>
+                                    <div className="data-address">P{currentConfig.pageDataAddresses.page6.errorList3}</div>
                                 </div>
                             </div>
 
                             {/* LED 상태 표시 영역 */}
                             <div className={`hidden md:grid grid-cols-4 gap-4 max-w-4xl w-full mb-0 -mt-8 ${theme === 'space' ? 'space-theme' : ''}`}>
                                 <div className={`led-status-card ${theme === 'space' ? 'space-theme' : ''}`}>
-                                    <div className={`led-indicator ${sensorData?.rawData?.[currentConfig.pageDataAddresses.page6.remoteManualMode.address] && (sensorData.rawData[currentConfig.pageDataAddresses.page6.remoteManualMode.address] >> currentConfig.pageDataAddresses.page6.remoteManualMode.bit) & 1 ? 'on' : 'off'}`}></div>
+                                    <div className={`led-indicator ${sensorData?.rawData?.[currentConfig.pageDataAddresses.page6.remoteManualMode.address - startAddressOffset] && (sensorData.rawData[currentConfig.pageDataAddresses.page6.remoteManualMode.address - startAddressOffset] >> currentConfig.pageDataAddresses.page6.remoteManualMode.bit) & 1 ? 'on' : 'off'}`}></div>
                                     <div className="led-label">수동모드</div>
-                                    <div className="led-address">P159.0</div>
+                                    <div className="led-address">P{currentConfig.pageDataAddresses.page6.remoteManualMode.address}.{currentConfig.pageDataAddresses.page6.remoteManualMode.bit}</div>
                                 </div>
                                 <div className={`led-status-card ${theme === 'space' ? 'space-theme' : ''}`}>
-                                    <div className={`led-indicator ${sensorData?.rawData?.[currentConfig.pageDataAddresses.page6.remoteSemiAutoMode.address] && (sensorData.rawData[currentConfig.pageDataAddresses.page6.remoteSemiAutoMode.address] >> currentConfig.pageDataAddresses.page6.remoteSemiAutoMode.bit) & 1 ? 'on' : 'off'}`}></div>
+                                    <div className={`led-indicator ${sensorData?.rawData?.[currentConfig.pageDataAddresses.page6.remoteSemiAutoMode.address - startAddressOffset] && (sensorData.rawData[currentConfig.pageDataAddresses.page6.remoteSemiAutoMode.address - startAddressOffset] >> currentConfig.pageDataAddresses.page6.remoteSemiAutoMode.bit) & 1 ? 'on' : 'off'}`}></div>
                                     <div className="led-label">반자동모드</div>
-                                    <div className="led-address">P159.1</div>
+                                    <div className="led-address">P{currentConfig.pageDataAddresses.page6.remoteSemiAutoMode.address}.{currentConfig.pageDataAddresses.page6.remoteSemiAutoMode.bit}</div>
                                 </div>
                                 <div className={`led-status-card ${theme === 'space' ? 'space-theme' : ''}`}>
-                                    <div className={`led-indicator ${sensorData?.rawData?.[currentConfig.pageDataAddresses.page6.remoteSliderSelect.address] && (sensorData.rawData[currentConfig.pageDataAddresses.page6.remoteSliderSelect.address] >> currentConfig.pageDataAddresses.page6.remoteSliderSelect.bit) & 1 ? 'on' : 'off'}`}></div>
+                                    <div className={`led-indicator ${sensorData?.rawData?.[currentConfig.pageDataAddresses.page6.remoteSliderSelect.address - startAddressOffset] && (sensorData.rawData[currentConfig.pageDataAddresses.page6.remoteSliderSelect.address - startAddressOffset] >> currentConfig.pageDataAddresses.page6.remoteSliderSelect.bit) & 1 ? 'on' : 'off'}`}></div>
                                     <div className="led-label">슬라이더선택</div>
-                                    <div className="led-address">P159.2</div>
+                                    <div className="led-address">P{currentConfig.pageDataAddresses.page6.remoteSliderSelect.address}.{currentConfig.pageDataAddresses.page6.remoteSliderSelect.bit}</div>
                                 </div>
                                 <div className={`led-status-card ${theme === 'space' ? 'space-theme' : ''}`}>
-                                    <div className={`led-indicator ${sensorData?.rawData?.[currentConfig.pageDataAddresses.page6.remoteLiftSelect.address] && (sensorData.rawData[currentConfig.pageDataAddresses.page6.remoteLiftSelect.address] >> currentConfig.pageDataAddresses.page6.remoteLiftSelect.bit) & 1 ? 'on' : 'off'}`}></div>
+                                    <div className={`led-indicator ${sensorData?.rawData?.[currentConfig.pageDataAddresses.page6.remoteLiftSelect.address - startAddressOffset] && (sensorData.rawData[currentConfig.pageDataAddresses.page6.remoteLiftSelect.address - startAddressOffset] >> currentConfig.pageDataAddresses.page6.remoteLiftSelect.bit) & 1 ? 'on' : 'off'}`}></div>
                                     <div className="led-label">리프트선택</div>
-                                    <div className="led-address">P159.3</div>
+                                    <div className="led-address">P{currentConfig.pageDataAddresses.page6.remoteLiftSelect.address}.{currentConfig.pageDataAddresses.page6.remoteLiftSelect.bit}</div>
                                 </div>
                                 <div className={`led-status-card ${theme === 'space' ? 'space-theme' : ''}`}>
-                                    <div className={`led-indicator ${sensorData?.rawData?.[currentConfig.pageDataAddresses.page6.remoteFrontSliderSelect.address] && (sensorData.rawData[currentConfig.pageDataAddresses.page6.remoteFrontSliderSelect.address] >> currentConfig.pageDataAddresses.page6.remoteFrontSliderSelect.bit) & 1 ? 'on' : 'off'}`}></div>
+                                    <div className={`led-indicator ${sensorData?.rawData?.[currentConfig.pageDataAddresses.page6.remoteFrontSliderSelect.address - startAddressOffset] && (sensorData.rawData[currentConfig.pageDataAddresses.page6.remoteFrontSliderSelect.address - startAddressOffset] >> currentConfig.pageDataAddresses.page6.remoteFrontSliderSelect.bit) & 1 ? 'on' : 'off'}`}></div>
                                     <div className="led-label">전면슬라이더선택</div>
-                                    <div className="led-address">P159.4</div>
+                                    <div className="led-address">P{currentConfig.pageDataAddresses.page6.remoteFrontSliderSelect.address}.{currentConfig.pageDataAddresses.page6.remoteFrontSliderSelect.bit}</div>
                                 </div>
                                 <div className={`led-status-card ${theme === 'space' ? 'space-theme' : ''}`}>
-                                    <div className={`led-indicator ${sensorData?.rawData?.[currentConfig.pageDataAddresses.page6.remoteRearSliderSelect.address] && (sensorData.rawData[currentConfig.pageDataAddresses.page6.remoteRearSliderSelect.address] >> currentConfig.pageDataAddresses.page6.remoteRearSliderSelect.bit) & 1 ? 'on' : 'off'}`}></div>
+                                    <div className={`led-indicator ${sensorData?.rawData?.[currentConfig.pageDataAddresses.page6.remoteRearSliderSelect.address - startAddressOffset] && (sensorData.rawData[currentConfig.pageDataAddresses.page6.remoteRearSliderSelect.address - startAddressOffset] >> currentConfig.pageDataAddresses.page6.remoteRearSliderSelect.bit) & 1 ? 'on' : 'off'}`}></div>
                                     <div className="led-label">후면슬라이더선택</div>
-                                    <div className="led-address">P159.5</div>
+                                    <div className="led-address">P{currentConfig.pageDataAddresses.page6.remoteRearSliderSelect.address}.{currentConfig.pageDataAddresses.page6.remoteRearSliderSelect.bit}</div>
                                 </div>
                                 <div className={`led-status-card ${theme === 'space' ? 'space-theme' : ''}`}>
-                                    <div className={`led-indicator ${sensorData?.rawData?.[currentConfig.pageDataAddresses.page6.remoteSimultaneousSelect.address] && (sensorData.rawData[currentConfig.pageDataAddresses.page6.remoteSimultaneousSelect.address] >> currentConfig.pageDataAddresses.page6.remoteSimultaneousSelect.bit) & 1 ? 'on' : 'off'}`}></div>
+                                    <div className={`led-indicator ${sensorData?.rawData?.[currentConfig.pageDataAddresses.page6.remoteSimultaneousSelect.address - startAddressOffset] && (sensorData.rawData[currentConfig.pageDataAddresses.page6.remoteSimultaneousSelect.address - startAddressOffset] >> currentConfig.pageDataAddresses.page6.remoteSimultaneousSelect.bit) & 1 ? 'on' : 'off'}`}></div>
                                     <div className="led-label">동시선택</div>
-                                    <div className="led-address">P159.6</div>
+                                    <div className="led-address">P{currentConfig.pageDataAddresses.page6.remoteSimultaneousSelect.address}.{currentConfig.pageDataAddresses.page6.remoteSimultaneousSelect.bit}</div>
                                 </div>
                             </div>
 

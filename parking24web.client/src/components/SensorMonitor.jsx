@@ -18,6 +18,7 @@ const SensorMonitor = ({ sensorData, isPLCConnected }) => {
     // 센서 데이터 필터링 및 정렬
     const filteredData = useMemo(() => {
         let data = [];
+        const startAddressOffset = (siteConfig.plcConfig?.startAddress || 0);
 
         if (viewMode === 'parsed' && sensorData.parsedData) {
             // 파싱된 데이터 표시
@@ -28,9 +29,9 @@ const SensorMonitor = ({ sensorData, isPLCConnected }) => {
                 type: 'parsed'
             }));
         } else if (viewMode === 'raw' && sensorData.rawData) {
-            // 원시 데이터 표시 (P0 ~ P255)
+            // 원시 데이터 표시
             data = sensorData.rawData.map((value, index) => ({
-                address: `P${index}`,
+                address: `P${index + startAddressOffset}`,
                 value: value,
                 displayValue: value.toString(),
                 type: 'raw'
@@ -38,7 +39,7 @@ const SensorMonitor = ({ sensorData, isPLCConnected }) => {
         } else if (viewMode === 'hex' && sensorData.rawData) {
             // 16진수로 표시
             data = sensorData.rawData.map((value, index) => ({
-                address: `P${index}`,
+                address: `P${index + startAddressOffset}`,
                 value: value,
                 displayValue: `0x${value.toString(16).toUpperCase().padStart(4, '0')}`,
                 type: 'hex'
@@ -50,9 +51,10 @@ const SensorMonitor = ({ sensorData, isPLCConnected }) => {
             // 속초 config의 센서 매핑을 기반으로 비트 데이터 생성
             Object.entries(siteConfig.sensorMapping).forEach(([  , configData]) => {
                 const { address, sensors } = configData;
+                const bufferIndex = address - startAddressOffset;
 
-                if (address < sensorData.rawData.length) {
-                    const wordValue = sensorData.rawData[address];
+                if (bufferIndex >= 0 && bufferIndex < sensorData.rawData.length) {
+                    const wordValue = sensorData.rawData[bufferIndex];
 
                     // 각 비트별 센서 상태 확인
                     Object.entries(sensors).forEach(([bitIndex, sensorInfo]) => {
@@ -68,7 +70,7 @@ const SensorMonitor = ({ sensorData, isPLCConnected }) => {
                             displayValue: bitValue ? 'ON' : 'OFF',
                             type: 'bits',
                             status: bitValue ? 'active' : 'inactive',
-                            wordIndex: address,
+                            wordIndex: bufferIndex,
                             bitIndex: parseInt(bitIndex)
                         });
                     });
@@ -92,19 +94,21 @@ const SensorMonitor = ({ sensorData, isPLCConnected }) => {
         }
 
         return data;
-    }, [sensorData, viewMode, showZeroValues, searchFilter]);
+    }, [sensorData, viewMode, showZeroValues, searchFilter, siteConfig.plcConfig?.startAddress]);
 
     // PLC 체크리스트용 데이터 (비트 모니터 기반)
     const plcChecklistData = useMemo(() => {
         let data = [];
+        const startAddressOffset = (siteConfig.plcConfig?.startAddress || 0);
 
         if (sensorData.rawData) {
             // 속초 config의 센서 매핑을 기반으로 비트 데이터 생성
             Object.entries(siteConfig.sensorMapping).forEach(([  , configData]) => {
                 const { address, sensors } = configData;
+                const bufferIndex = address - startAddressOffset;
 
-                if (address < sensorData.rawData.length) {
-                    const wordValue = sensorData.rawData[address];
+                if (bufferIndex >= 0 && bufferIndex < sensorData.rawData.length) {
+                    const wordValue = sensorData.rawData[bufferIndex];
 
                     // 각 비트별 센서 상태 확인
                     Object.entries(sensors).forEach(([bitIndex, sensorInfo]) => {
@@ -160,7 +164,7 @@ const SensorMonitor = ({ sensorData, isPLCConnected }) => {
         });
 
         return data;
-    }, [sensorData, sortField, sortDirection]);
+    }, [sensorData, sortField, sortDirection, siteConfig.plcConfig?.startAddress]);
 
     // 실시간 raw 데이터 로그 업데이트
     useEffect(() => {
@@ -481,7 +485,9 @@ const SensorMonitor = ({ sensorData, isPLCConnected }) => {
                 <div className={`mb-6 bg-gradient-to-br from-gray-900 via-black to-gray-900 text-green-400 p-6 rounded-2xl shadow-2xl border transform transition-all duration-700 ease-in-out ${theme === 'space' ? 'border-purple-700' : 'border-gray-700'}`}>
                     <div className="mb-4 flex items-center space-x-2">
                         <div className={`animate-pulse w-3 h-3 rounded-full ${theme === 'space' ? 'bg-purple-500' : 'bg-green-500'}`}></div>
-                        <div className={`font-semibold ${theme === 'space' ? 'text-purple-400' : 'text-yellow-400'}`}>실시간 속초 PLC 데이터 스트림</div>                     
+                        <div className={`font-semibold ${theme === 'space' ? 'text-purple-400' : 'text-yellow-400'}`}>
+                            실시간 PLC 데이터 스트림 (P{siteConfig.plcConfig?.startAddress || 0}~P{(siteConfig.plcConfig?.startAddress || 0) + 19})
+                        </div>                     
                     </div>
                     <div className={`h-64 overflow-y-auto font-mono text-xs space-y-1 ${theme === 'space' ? 'custom-scrollbar-purple' : 'custom-scrollbar'}`}>
                         {rawLog.map((entry, index) => (
@@ -495,14 +501,18 @@ const SensorMonitor = ({ sensorData, isPLCConnected }) => {
                             >
                                 <span className={`font-semibold ${theme === 'space' ? 'text-purple-400' : 'text-blue-400'}`}>[{entry.timestamp}]</span>
                                 <span className="ml-2 text-green-300">
-                                    {entry.data.map((byte, byteIndex) => (
-                                        <span
-                                            key={byteIndex}
-                                            className="hover:bg-yellow-400 hover:text-black rounded px-1 transition-colors duration-200"
-                                        >
-                                            {byte.toString(16).padStart(2, '0')}
-                                        </span>
-                                    )).reduce((prev, curr, index) => [prev, <span key={`sep-${index}`} className="text-gray-500"> </span>, curr])}
+                                    {entry.data.map((byte, byteIndex) => {
+                                        const actualAddress = (siteConfig.plcConfig?.startAddress || 0) + byteIndex;
+                                        return (
+                                            <span
+                                                key={byteIndex}
+                                                className="hover:bg-yellow-400 hover:text-black rounded px-1 transition-colors duration-200"
+                                                title={`P${actualAddress}: ${byte.toString(16).padStart(4, '0').toUpperCase()}`}
+                                            >
+                                                {byte.toString(16).padStart(4, '0').toUpperCase()}
+                                            </span>
+                                        );
+                                    }).reduce((prev, curr, index) => [prev, <span key={`sep-${index}`} className="text-gray-500"> </span>, curr])}
                                     <span className="text-purple-400">...</span>
                                 </span>
                             </div>
