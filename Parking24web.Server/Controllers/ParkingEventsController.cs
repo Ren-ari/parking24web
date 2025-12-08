@@ -54,24 +54,27 @@ namespace Parking24web.Server.Controllers
                 var sensorData = _plcService.GetSensorData();
 
                 // 설정 기반 차량 주소 범위 사용
-                var vehicleStart = _siteConfig.VehicleStorage?.StartAddress ?? 101;
-                var vehicleEnd = _siteConfig.VehicleStorage?.EndAddress ?? 180;
+                var vehicleStart = _siteConfig.VehicleStorage?.StartAddress ?? 211;
+                var vehicleEnd = _siteConfig.VehicleStorage?.EndAddress ?? 300;
+                var plcStartAddress = _siteConfig.PlcConfig?.StartAddress ?? 100;
 
-                for (int i = vehicleStart; i <= vehicleEnd; i++)
+                // PLC 주소를 배열 인덱스로 변환 (배열[0] = P100이므로)
+                for (int plcAddress = vehicleStart; plcAddress <= vehicleEnd; plcAddress++)
                 {
-                    if (i < sensorData.Length && sensorData[i] != 0)
-                    {
-                        var slotNumber = i - vehicleStart + 1;
-                        var floor = Math.Ceiling(slotNumber / 2.0);
+                    int arrayIndex = plcAddress - plcStartAddress;
+                    if (arrayIndex < 0 || arrayIndex >= sensorData.Length || sensorData[arrayIndex] == 0) continue;
 
-                        parkedVehicles.Add(new
-                        {
-                            CarNumber = sensorData[i].ToString().PadLeft(4, '0'),
-                            SlotNumber = slotNumber,
-                            Floor = (int)floor,
-                            Status = "주차중"
-                        });
-                    }
+                    var slotNumber = plcAddress - vehicleStart + 1;
+                    // 1~15번: 1단, 16~30번: 2단, 31~45번: 3단, 46~60번: 4단, 61~75번: 5단, 76~90번: 6단
+                    var floor = Math.Ceiling(slotNumber / 15.0);
+
+                    parkedVehicles.Add(new
+                    {
+                        CarNumber = sensorData[arrayIndex].ToString().PadLeft(4, '0'),
+                        SlotNumber = slotNumber,
+                        Floor = (int)floor,
+                        Status = "주차중"
+                    });
                 }
             }
 
@@ -118,11 +121,15 @@ namespace Parking24web.Server.Controllers
             if (_plcService.IsConnected)
             {
                 var sensorData = _plcService.GetSensorData();
-                var vehicleStart = _siteConfig.VehicleStorage?.StartAddress ?? 101;
-                var vehicleEnd = _siteConfig.VehicleStorage?.EndAddress ?? 180;
-                for (int i = vehicleStart; i <= vehicleEnd; i++)
+                var vehicleStart = _siteConfig.VehicleStorage?.StartAddress ?? 211;
+                var vehicleEnd = _siteConfig.VehicleStorage?.EndAddress ?? 300;
+                var plcStartAddress = _siteConfig.PlcConfig?.StartAddress ?? 100;
+
+                // PLC 주소를 배열 인덱스로 변환
+                for (int plcAddress = vehicleStart; plcAddress <= vehicleEnd; plcAddress++)
                 {
-                    if (i < sensorData.Length && sensorData[i] != 0)
+                    int arrayIndex = plcAddress - plcStartAddress;
+                    if (arrayIndex >= 0 && arrayIndex < sensorData.Length && sensorData[arrayIndex] != 0)
                         currentTotal++;
                 }
             }
@@ -147,27 +154,30 @@ namespace Parking24web.Server.Controllers
             if (_plcService.IsConnected)
             {
                 var sensorData = _plcService.GetSensorData();
-                var vehicleStart = _siteConfig.VehicleStorage?.StartAddress ?? 101;
-                var vehicleEnd = _siteConfig.VehicleStorage?.EndAddress ?? 180;
+                var vehicleStart = _siteConfig.VehicleStorage?.StartAddress ?? 211;
+                var vehicleEnd = _siteConfig.VehicleStorage?.EndAddress ?? 300;
+                var plcStartAddress = _siteConfig.PlcConfig?.StartAddress ?? 100;
 
-                for (int i = vehicleStart; i <= vehicleEnd; i++)
+                // PLC 주소를 배열 인덱스로 변환
+                for (int plcAddress = vehicleStart; plcAddress <= vehicleEnd; plcAddress++)
                 {
-                    if (i < sensorData.Length && sensorData[i] != 0)
-                    {
-                        var vehicleNumber = sensorData[i].ToString().PadLeft(4, '0');
-                        if (vehicleNumber.Contains(carNumber))
-                        {
-                            var slotNumber = i - vehicleStart + 1;
-                            var floor = Math.Ceiling(slotNumber / 2.0);
+                    int arrayIndex = plcAddress - plcStartAddress;
+                    if (arrayIndex < 0 || arrayIndex >= sensorData.Length || sensorData[arrayIndex] == 0) continue;
 
-                            allEvents.Add(new
-                            {
-                                eventType = "주차중",
-                                carNumber = vehicleNumber,
-                                slotNumber,
-                                timestamp = DateTime.Now
-                            });
-                        }
+                    var vehicleNumber = sensorData[arrayIndex].ToString().PadLeft(4, '0');
+                    if (vehicleNumber.Contains(carNumber))
+                    {
+                        var slotNumber = plcAddress - vehicleStart + 1;
+                        // 1~15번: 1단, 16~30번: 2단, 31~45번: 3단, 46~60번: 4단, 61~75번: 5단, 76~90번: 6단
+                        var floor = Math.Ceiling(slotNumber / 15.0);
+
+                        allEvents.Add(new
+                        {
+                            eventType = "주차중",
+                            carNumber = vehicleNumber,
+                            slotNumber,
+                            timestamp = DateTime.Now
+                        });
                     }
                 }
             }

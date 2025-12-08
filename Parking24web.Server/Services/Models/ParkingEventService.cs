@@ -63,21 +63,23 @@ namespace Parking24web.Server.Services
 
             var events = new List<ParkingEvent>();
 
-            // C101~C180 영역 체크 (주차 슬롯 80개)
-            // 설정 기반 차량 주소 범위 사용
+            // 설정 기반 차량 주소 범위 사용 (예: P211~P300, 90개 슬롯)
             var vehicleStart = _siteConfig.VehicleStorage?.StartAddress ?? 211;
             var vehicleEnd = _siteConfig.VehicleStorage?.EndAddress ?? 300;
+            var plcStartAddress = _siteConfig.PlcConfig?.StartAddress ?? 100;
 
-            for (int i = vehicleStart; i <= vehicleEnd; i++)
+            // PLC 주소를 배열 인덱스로 변환 (배열[0] = P100이므로)
+            for (int plcAddress = vehicleStart; plcAddress <= vehicleEnd; plcAddress++)
             {
-                if (i >= currentData.Length || i >= _previousData.Length) continue;
+                int arrayIndex = plcAddress - plcStartAddress;
+                if (arrayIndex < 0 || arrayIndex >= currentData.Length || arrayIndex >= _previousData.Length) continue;
 
-                var prev = _previousData[i];
-                var curr = currentData[i];
+                var prev = _previousData[arrayIndex];
+                var curr = currentData[arrayIndex];
 
                 if (prev == 0 && curr != 0)
                 {
-                    var slotNumber = i - vehicleStart + 1;
+                    var slotNumber = plcAddress - vehicleStart + 1;
                     var floor = Math.Ceiling(slotNumber / 15.0);
 
                     events.Add(new ParkingEvent
@@ -94,7 +96,7 @@ namespace Parking24web.Server.Services
                 else if (prev != 0 && curr == 0)
                 {
                     // 출차 감지
-                    var slotNumber = i - vehicleStart + 1;
+                    var slotNumber = plcAddress - vehicleStart + 1;
                     var floor = Math.Ceiling(slotNumber / 15.0);
 
                     events.Add(new ParkingEvent
