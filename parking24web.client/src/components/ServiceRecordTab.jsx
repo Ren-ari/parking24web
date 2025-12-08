@@ -1,7 +1,7 @@
 ﻿import React, { useState, useEffect, useMemo } from 'react';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../hooks/useAuth';
-import siteConfig from '../../config/gapEulMyeongGaConfig.js';
+import siteConfig from '../../config/gapEulMyeongGaConfig';
 
 const ServiceRecordTab = () => {
     const { theme } = useTheme();

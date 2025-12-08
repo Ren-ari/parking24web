@@ -1,5 +1,5 @@
 ﻿import * as signalR from "@microsoft/signalr";
-import siteConfig from '../../config/gapEulMyeongGaConfig.js';
+import siteConfig from '../../config/gapEulMyeongGaConfig';
 
 
 class SignalRService {

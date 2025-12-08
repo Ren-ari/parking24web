@@ -1,7 +1,7 @@
 ﻿import React, { useState, useMemo, useEffect } from 'react';
 // 속초 1호기 config import
 
-import siteConfig from '../../config/gapEulMyeongGaConfig.js';
+import siteConfig from '../../config/gapEulMyeongGaConfig';
 import { useTheme } from '../contexts/ThemeContext';
 
 const SensorMonitor = ({ sensorData, isPLCConnected }) => {

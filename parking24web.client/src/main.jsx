@@ -1,6 +1,6 @@
 ﻿import { createRoot } from 'react-dom/client'
 import './index.css'
-import App from './App.jsx'
+import App from './App'
 
 // PWA 서비스 워커 등록
 if ('serviceWorker' in navigator) {

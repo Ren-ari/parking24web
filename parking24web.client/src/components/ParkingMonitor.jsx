@@ -1,6 +1,6 @@
 ﻿import React, { useState, useEffect } from "react";
 import { useAuth } from '../hooks/useAuth';
-import siteConfig from '../../config/gapEulMyeongGaConfig.js';
+import siteConfig from '../../config/gapEulMyeongGaConfig';
 import { useTheme } from '../contexts/ThemeContext';
 
 const ParkingMonitor = ({ sensorData, isPLCConnected }) => {

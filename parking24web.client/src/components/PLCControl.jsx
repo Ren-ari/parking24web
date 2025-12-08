@@ -10,8 +10,9 @@ import EventMonitor from './EventMonitor';
 import ServiceRecordTab from './ServiceRecordTab';
 const CCTVMonitor = React.lazy(() => import('./CCTVMonitor'));
 // 속초 1호기 config import 추가
-import siteConfig from '../../config/gapEulMyeongGaConfig.js';
+import siteConfig from '../../config/gapEulMyeongGaConfig';
 import { ROLE_TABS } from './auth';
+import './PLCControl.css';
 
 const PLCControl = ({ currentUser, onLogout }) => {
     const { isClient } = useAuth();
@@ -433,12 +434,7 @@ const PLCControl = ({ currentUser, onLogout }) => {
                                 e.currentTarget.style.transform = '';
                                 e.currentTarget.style.backgroundColor = '';
                             }}
-                            className="p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100 relative z-[70] active:scale-90 transition-transform duration-150"
-                            style={{ 
-                                pointerEvents: 'auto',
-                                position: 'relative',
-                                zIndex: 9999
-                            }}
+                            className="p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100 relative z-[70] active:scale-90 transition-transform duration-150 hamburger-button"
                         >
                             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
@@ -451,23 +447,18 @@ const PLCControl = ({ currentUser, onLogout }) => {
 
             {/* 모바일/태블릿 탭 메뉴 - 헤더 밖에서 전체 화면 오버레이로 렌더링 */}
             {isMobileMenuOpen && (
-                <div className={`fixed inset-x-0 bottom-0 top-16 xl:hidden z-[40] overflow-y-auto ${isSpaceTheme ? 'bg-gradient-to-br from-gray-900 via-purple-900 to-black' : 'mobile-menu-bg'} transition-all duration-300 ${isClosing ? 'opacity-0 scale-95' : 'opacity-100 scale-100'}`} style={{
-                    WebkitOverflowScrolling: 'touch',
-                    overscrollBehavior: 'contain'
-                }}>
+                <div className={`fixed inset-x-0 bottom-0 top-16 xl:hidden z-[40] overflow-y-auto ${isSpaceTheme ? 'bg-gradient-to-br from-gray-900 via-purple-900 to-black' : 'mobile-menu-bg'} transition-all duration-300 ${isClosing ? 'opacity-0 scale-95' : 'opacity-100 scale-100'} mobile-menu-overlay`}>
                     {/* 우주 테마 전용 배경 효과들 */}
                     {isSpaceTheme && (
                         <>
                             {/* 어둡기 오버레이 */}
-                            <div className="absolute inset-0 pointer-events-none" style={{
-                                background: 'radial-gradient(circle at 30% 30%, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.4) 25%, rgba(0,0,0,0.2) 50%, rgba(0,0,0,0.1) 75%, rgba(0,0,0,0) 100%)'
-                            }}></div>
+                            <div className="absolute inset-0 pointer-events-none space-dark-overlay"></div>
                             
                             {/* 우주 네뷸라 효과 */}
                             <div className="absolute inset-0 pointer-events-none overflow-hidden">
                                 <div className="absolute top-1/6 left-1/6 w-64 h-64 bg-purple-800/15 rounded-full blur-3xl animate-pulse"></div>
-                                <div className="absolute bottom-1/6 right-1/6 w-48 h-48 bg-indigo-700/12 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }}></div>
-                                <div className="absolute top-1/2 left-1/2 w-32 h-32 bg-blue-600/10 rounded-full blur-2xl animate-pulse" style={{ animationDelay: '4s' }}></div>
+                                <div className="absolute bottom-1/6 right-1/6 w-48 h-48 bg-indigo-700/12 rounded-full blur-3xl animate-pulse space-nebula-delay-2s"></div>
+                                <div className="absolute top-1/2 left-1/2 w-32 h-32 bg-blue-600/10 rounded-full blur-2xl animate-pulse space-nebula-delay-4s"></div>
                             </div>
 
                             {/* 별들 */}
@@ -500,12 +491,8 @@ const PLCControl = ({ currentUser, onLogout }) => {
                             </div>
 
                             {/* 코너 어둡기 */}
-                            <div className="absolute inset-0 pointer-events-none" style={{
-                                background: 'radial-gradient(circle at 85% 15%, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.3) 20%, rgba(0,0,0,0.1) 40%, rgba(0,0,0,0) 60%)'
-                            }}></div>
-                            <div className="absolute inset-0 pointer-events-none" style={{
-                                background: 'radial-gradient(circle at 15% 85%, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.3) 20%, rgba(0,0,0,0.1) 40%, rgba(0,0,0,0) 60%)'
-                            }}></div>
+                            <div className="absolute inset-0 pointer-events-none corner-dark-top-right"></div>
+                            <div className="absolute inset-0 pointer-events-none corner-dark-bottom-left"></div>
                         </>
                     )}
                     <div className="h-full flex items-start justify-center p-4 pt-6 relative z-10">
@@ -526,13 +513,11 @@ const PLCControl = ({ currentUser, onLogout }) => {
                                             ? `${activeTab === tab.id
                                                 ? 'bg-purple-700 text-white border-purple-300 ring-1 ring-purple-300/50 shadow-2xl shadow-[0_0_30px_6px_rgba(167,139,250,0.35)]'
                                                 : 'bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-gray-200 border-gray-700 hover:from-gray-800 hover:via-gray-700 hover:to-gray-800'} shadow-lg border-2 rounded-2xl relative px-4 overflow-hidden`
-                                            : `${getTabStyle(tab.id)} w-full`} h-24 md:h-20 flex items-center justify-center text-center transform transition-all duration-300 hover:scale-105 hover:rotate-1 active:scale-95`}
+                                            : `${getTabStyle(tab.id)} w-full`} h-24 md:h-20 flex items-center justify-center text-center transform transition-all duration-300 hover:scale-105 hover:rotate-1 active:scale-95 ${isClosing ? 'closing' : ''} tab-button-animated`}
                                         style={{
                                             animationName: isClosing ? 'slideOutToLeft' : (index % 2 === 0 ? 'slideInFromLeft' : 'slideInFromRight'),
                                             animationDuration: isClosing ? '0.3s' : '0.6s',
-                                            animationTimingFunction: isClosing ? 'ease-in' : 'ease-out',
-                                            animationDelay: isClosing ? '0s' : `${(index + 1) * 0.1}s`,
-                                            animationFillMode: 'both'
+                                            animationDelay: isClosing ? '0s' : `${(index + 1) * 0.1}s`
                                         }}
                                     >
                                         <div className="flex flex-col items-center">
@@ -551,13 +536,11 @@ const PLCControl = ({ currentUser, onLogout }) => {
                                     }}
                                     className={`${isSpaceTheme
                                         ? 'relative px-8 py-4 font-bold rounded-2xl transition-all duration-300 ease-in-out text-sm transform hover:scale-105 hover:-translate-y-1 shadow-xl border-2 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-gray-200 hover:from-gray-800 hover:via-gray-700 hover:to-gray-800 border-gray-700 w-full h-24 md:h-20 flex items-center justify-center text-center'
-                                        : 'relative px-8 py-4 font-bold rounded-2xl transition-all duration-300 ease-in-out text-sm transform hover:scale-105 hover:-translate-y-1 shadow-lg hover:shadow-xl border-2 bg-gradient-to-r from-white to-gray-50 text-gray-600 hover:from-blue-50 hover:to-indigo-50 hover:text-blue-700 border-gray-200 hover:border-blue-300 hover:shadow-lg w-full h-24 md:h-20 flex items-center justify-center text-center'}`}
+                                        : 'relative px-8 py-4 font-bold rounded-2xl transition-all duration-300 ease-in-out text-sm transform hover:scale-105 hover:-translate-y-1 shadow-lg hover:shadow-xl border-2 bg-gradient-to-r from-white to-gray-50 text-gray-600 hover:from-blue-50 hover:to-indigo-50 hover:text-blue-700 border-gray-200 hover:border-blue-300 hover:shadow-lg w-full h-24 md:h-20 flex items-center justify-center text-center'} ${isClosing ? 'closing' : ''} tab-button-animated`}
                                     style={{
                                         animationName: isClosing ? 'slideOutToRight' : (allowedTabs.length % 2 === 0 ? 'slideInFromLeft' : 'slideInFromRight'),
                                         animationDuration: isClosing ? '0.3s' : '0.6s',
-                                        animationTimingFunction: isClosing ? 'ease-in' : 'ease-out',
-                                        animationDelay: isClosing ? '0s' : `${(allowedTabs.length + 1) * 0.1}s`,
-                                        animationFillMode: 'both'
+                                        animationDelay: isClosing ? '0s' : `${(allowedTabs.length + 1) * 0.1}s`
                                     }}
                                 >
                                     <div className="flex flex-col items-center">
@@ -571,27 +554,14 @@ const PLCControl = ({ currentUser, onLogout }) => {
             )}
 
             {/* 메인 컨텐츠 */}
-            <div className={`min-h-screen pt-20 ${getMainBackgroundClass()} bg-render-fix`} style={{ 
-                width: '100vw',
-                WebkitOverflowScrolling: 'touch',
-                overscrollBehavior: 'contain',
-                touchAction: 'pan-x pan-y',
-                transform: 'translateZ(0)',
-                willChange: 'background, transform',
-                backfaceVisibility: 'hidden',
-                WebkitTransform: 'translateZ(0)',
-                WebkitBackfaceVisibility: 'hidden'
-            }}>
+            <div className={`min-h-screen pt-20 ${getMainBackgroundClass()} bg-render-fix main-content-optimized`}>
                 {/* 우주 테마 효과 */}
                 {isSpaceTheme && (
                     <>
                         {/* 중앙 어둡기 오버레이 (전역, 컨텐츠 아래) */}
-                        <div className="pointer-events-none fixed inset-0" style={{
-                            zIndex: 1,
-                            background: 'radial-gradient(circle at 50% 45%, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.45) 20%, rgba(0,0,0,0.25) 45%, rgba(0,0,0,0.12) 60%, rgba(0,0,0,0) 75%)'
-                        }}></div>
+                        <div className="pointer-events-none fixed inset-0 central-dark-overlay"></div>
                         {/* 별들 - 클릭 방해 방지용 래퍼 */}
-                        <div className="pointer-events-none fixed inset-0" style={{ zIndex: 0 }}>
+                        <div className="pointer-events-none fixed inset-0 stars-layer">
                         {Array.from({ length: 120 }, (_, i) => {
                             // 더 랜덤한 분포를 위한 시드 기반 랜덤
                             const seed = i * 137.5; // 황금각도 비율 사용
@@ -629,14 +599,8 @@ const PLCControl = ({ currentUser, onLogout }) => {
                         </div>
 
                         {/* 코너 어둡기 오버레이 (우상단, 좌하단) */}
-                        <div className="pointer-events-none fixed inset-0" style={{
-                            zIndex: 1,
-                            background: 'radial-gradient(circle at 85% 15%, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.28) 18%, rgba(0,0,0,0.14) 35%, rgba(0,0,0,0) 55%)'
-                        }}></div>
-                        <div className="pointer-events-none fixed inset-0" style={{
-                            zIndex: 1,
-                            background: 'radial-gradient(circle at 15% 85%, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.28) 18%, rgba(0,0,0,0.14) 35%, rgba(0,0,0,0) 55%)'
-                        }}></div>
+                        <div className="pointer-events-none fixed inset-0 corner-dark-top-right-light" style={{ zIndex: 1 }}></div>
+                        <div className="pointer-events-none fixed inset-0 corner-dark-bottom-left-light" style={{ zIndex: 1 }}></div>
                     </>
                 )}
                 
@@ -648,11 +612,7 @@ const PLCControl = ({ currentUser, onLogout }) => {
                             <div className="flex items-stretch">
                                 <div className="flex-1 min-w-0 flex flex-col">
 
-                                        <div className={`text-white text-xs font-medium px-1 py-2 text-center h-10 flex items-center justify-center ${sensorData?.rawData?.[siteConfig.systemAddresses.remoteOp] === 1 ? (theme === 'space' ? 'bg-purple-600' : 'bg-blue-500') : 'bg-gray-400'}`} style={{
-
-                                        backdropFilter: 'blur(10px)',
-                                        WebkitBackdropFilter: 'blur(10px)',
-                                    }}>
+                                        <div className={`text-white text-xs font-medium px-1 py-2 text-center h-10 flex items-center justify-center ${sensorData?.rawData?.[siteConfig.systemAddresses.remoteOp] === 1 ? (theme === 'space' ? 'bg-purple-600' : 'bg-blue-500') : 'bg-gray-400'} data-panel-header`}>
                                         원격조작
                                     </div>
 
@@ -663,10 +623,7 @@ const PLCControl = ({ currentUser, onLogout }) => {
                                 </div>
 
                                 <div className="flex-1 min-w-0 flex flex-col">
-                                    <div className={`text-white text-xs font-medium px-1 py-2 text-center h-10 flex items-center justify-center ${isPLCConnected ? (theme === 'space' ? 'bg-purple-600' : 'bg-blue-500') : 'bg-gray-400'}`} style={{
-                                        backdropFilter: 'blur(10px)',
-                                        WebkitBackdropFilter: 'blur(10px)',
-                                    }}>
+                                    <div className={`text-white text-xs font-medium px-1 py-2 text-center h-10 flex items-center justify-center ${isPLCConnected ? (theme === 'space' ? 'bg-purple-600' : 'bg-blue-500') : 'bg-gray-400'} data-panel-header`}>
                                         위치정보
                                     </div>
 
@@ -677,10 +634,7 @@ const PLCControl = ({ currentUser, onLogout }) => {
                                 </div>
 
                                 <div className="flex-1 min-w-0 flex flex-col">
-                                    <div className={`text-white text-xs font-medium px-1 py-2 text-center h-10 flex items-center justify-center ${isPLCConnected ? (theme === 'space' ? 'bg-purple-600' : 'bg-blue-500') : 'bg-gray-400'}`} style={{
-                                        backdropFilter: 'blur(10px)',
-                                        WebkitBackdropFilter: 'blur(10px)',
-                                    }}>
+                                    <div className={`text-white text-xs font-medium px-1 py-2 text-center h-10 flex items-center justify-center ${isPLCConnected ? (theme === 'space' ? 'bg-purple-600' : 'bg-blue-500') : 'bg-gray-400'} data-panel-header`}>
                                         호기번호
                                     </div>
                                     <div className={`text-sm px-2 py-3 text-center border-r h-16 flex items-center justify-center ${isPLCConnected ? (theme === 'space' ? 'bg-purple-50 text-purple-700' : 'bg-blue-50 text-blue-700') : 'bg-gray-100 text-gray-800'}`}>
@@ -689,10 +643,7 @@ const PLCControl = ({ currentUser, onLogout }) => {
                                 </div>
 
                                 <div className="flex-1 min-w-0 flex flex-col">
-                                    <div className={`text-white text-xs font-medium px-1 py-2 text-center h-10 flex items-center justify-center ${isPLCConnected ? (theme === 'space' ? 'bg-purple-600' : 'bg-blue-500') : 'bg-gray-400'}`} style={{
-                                        backdropFilter: 'blur(10px)',
-                                        WebkitBackdropFilter: 'blur(10px)',
-                                    }}>
+                                    <div className={`text-white text-xs font-medium px-1 py-2 text-center h-10 flex items-center justify-center ${isPLCConnected ? (theme === 'space' ? 'bg-purple-600' : 'bg-blue-500') : 'bg-gray-400'} data-panel-header`}>
                                         운전모드
                                     </div>
 
@@ -703,10 +654,7 @@ const PLCControl = ({ currentUser, onLogout }) => {
                                 </div>
 
                                 <div className="flex-1 min-w-0 flex flex-col">
-                                        <div className={`text-white text-xs font-medium px-1 py-2 text-center h-10 flex items-center justify-center ${isPLCConnected ? (sensorData.rawData[siteConfig.systemAddresses.errorStatus] === 1 ? 'bg-red-500' : (theme === 'space' ? 'bg-purple-600' : 'bg-green-500')) : 'bg-gray-400'}`} style={{
-                                        backdropFilter: 'blur(10px)',
-                                        WebkitBackdropFilter: 'blur(10px)',
-                                    }}>
+                                        <div className={`text-white text-xs font-medium px-1 py-2 text-center h-10 flex items-center justify-center ${isPLCConnected ? (sensorData.rawData[siteConfig.systemAddresses.errorStatus] === 1 ? 'bg-red-500' : (theme === 'space' ? 'bg-purple-600' : 'bg-green-500')) : 'bg-gray-400'} data-panel-header`}>
                                         에러상태
                                     </div>
                                         <div className={`text-sm px-2 py-3 text-center border-r h-16 flex items-center justify-center ${isPLCConnected ? (sensorData.rawData[siteConfig.systemAddresses.errorStatus] === 1 ? 'bg-red-50 text-red-700' : (theme === 'space' ? 'bg-purple-50 text-purple-700' : 'bg-green-50 text-green-700')) : 'bg-gray-100 text-gray-800'}`}>
